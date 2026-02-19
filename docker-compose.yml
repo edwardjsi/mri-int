@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  data_loader:
+    build: .
+    environment:
+      - DB_SECRET_ARN=arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-doP9bL
+      - S3_BUCKET=mri-dev-outputs-251876202726
+      - AWS_DEFAULT_REGION=ap-south-1
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    command: python -m src.data_loader
