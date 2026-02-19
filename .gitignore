@@ -1,0 +1,10 @@
+
+# Terraform providers and state — never commit these
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfstate
+*.tfstate.backup
+*.tfvars
