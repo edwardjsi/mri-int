@@ -61,4 +61,22 @@ Decision: Use PostgreSQL 15.15 on RDS instead of 15.4 or 17.
 Reason: 15.4 not available in ap-south-1. 15.15 confirmed available.
 Status: FINAL.
 
+## Decision 010 — WSL-Only Execution
+Date: 2026-02-19
+Decision: Repo lives on Windows filesystem /mnt/c/ — all execution via WSL only.
+Reason: Avoids Windows/Linux line ending and permission conflicts.
+Status: FINAL.
+
+## Decision 011 — Scoring Model Adapted to 0–3
+Date: 2026-02-19
+Decision: Prototype uses 0–3 score (ADX>25, RSI 50–70, price >90% of 52W high) instead of original 0–5.
+Reason: EMA-based conditions require more historical data; simplified for speed.
+Status: FINAL for prototype only.
+
+## Decision 012 — SMA-200 (Not EMA-200) for Regime Filter
+Date: 2026-02-19
+Decision: Use SMA-200 instead of EMA-200 for market regime classification.
+Reason: Simpler, sufficient for prototype, widely understood.
+Status: FINAL for prototype only.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

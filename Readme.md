@@ -116,6 +116,14 @@ Scores overall market health (0–100):
 | Relative strength vs Nifty > 1     | 1      |
 | **Total**                          | **5**  |
 
+| Condition                          | Points |
+|------------------------------------|--------|
+| ADX > 25 (strong trend)            | 1      |
+| RSI between 50–70                  | 1      |
+| Price > 90% of 52-week high        | 1      |
+| **Total**                          | **3**  |
+
+
 ### 3. Portfolio Risk Engine
 User uploads holdings → system returns weighted risk level:
 
@@ -135,11 +143,14 @@ User uploads holdings → system returns weighted risk level:
 - Stock Score ≥ 4 out of 5
 - Select Top 10 highest scoring stocks
 - Equal weight allocation (10% per stock)
+- Stock Score ≥ 2 (out of 3)
 
 ### Exit
 - Stock Score drops to ≤ 2, OR
 - Market Regime shifts to Risk-Off, OR
 - 20% trailing stop is hit
+- Stock Score drops to 0
+
 
 ### Assumptions
 - Transaction cost: 0.4% round-trip
