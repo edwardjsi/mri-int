@@ -1,0 +1,509 @@
+nohup: ignoring input
+Total symbols to ingest: 501
+  [1/501] ✅ 360ONE.NS: 246 rows
+  [2/501] ✅ 3MINDIA.NS: 246 rows
+  [3/501] ✅ AADHARHFC.NS: 247 rows
+  [4/501] ✅ AARTIIND.NS: 247 rows
+  [5/501] ✅ AAVAS.NS: 247 rows
+  [6/501] ✅ ABB.NS: 247 rows
+  [7/501] ✅ ABBOTINDIA.NS: 247 rows
+  [8/501] ✅ ABCAPITAL.NS: 247 rows
+  [9/501] ✅ ABFRL.NS: 247 rows
+  [10/501] ✅ ABLBL.NS: 164 rows
+  [11/501] ✅ ABREL.NS: 247 rows
+  [12/501] ✅ ABSLAMC.NS: 247 rows
+  [13/501] ✅ ACC.NS: 247 rows
+  [14/501] ✅ ACE.NS: 247 rows
+  [15/501] ✅ ACMESOLAR.NS: 247 rows
+  [16/501] ✅ ADANIENSOL.NS: 246 rows
+  [17/501] ✅ ADANIENT.NS: 247 rows
+  [18/501] ✅ ADANIGREEN.NS: 247 rows
+  [19/501] ✅ ADANIPORTS.NS: 247 rows
+  [20/501] ✅ ADANIPOWER.NS: 247 rows
+  [21/501] ✅ AEGISLOG.NS: 246 rows
+  [22/501] ✅ AEGISVOPAK.NS: 181 rows
+  [23/501] ✅ AFCONS.NS: 247 rows
+  [24/501] ✅ AFFLE.NS: 247 rows
+  [25/501] ✅ AGARWALEYE.NS: 246 rows
+  [26/501] ✅ AIAENG.NS: 246 rows
+  [27/501] ✅ AIIL.NS: 246 rows
+  [28/501] ✅ AJANTPHARM.NS: 246 rows
+  [29/501] ✅ AKUMS.NS: 245 rows
+  [30/501] ✅ AKZOINDIA.NS: 247 rows
+  [31/501] ✅ ALKEM.NS: 246 rows
+  [32/501] ✅ ALKYLAMINE.NS: 247 rows
+  [33/501] ✅ ALOKINDS.NS: 247 rows
+  [34/501] ✅ AMBER.NS: 247 rows
+  [35/501] ✅ AMBUJACEM.NS: 247 rows
+  [36/501] ✅ ANANDRATHI.NS: 246 rows
+  [37/501] ✅ ANANTRAJ.NS: 247 rows
+  [38/501] ✅ ANGELONE.NS: 247 rows
+  [39/501] ✅ APARINDS.NS: 247 rows
+  [40/501] ✅ APLAPOLLO.NS: 247 rows
+  [41/501] ✅ APLLTD.NS: 247 rows
+  [42/501] ✅ APOLLOHOSP.NS: 247 rows
+  [43/501] ✅ APOLLOTYRE.NS: 247 rows
+  [44/501] ✅ APTUS.NS: 247 rows
+  [45/501] ✅ ARE&M.NS: 246 rows
+  [46/501] ✅ ASAHIINDIA.NS: 247 rows
+  [47/501] ✅ ASHOKLEY.NS: 247 rows
+  [48/501] ✅ ASIANPAINT.NS: 247 rows
+  [49/501] ✅ ASTERDM.NS: 247 rows
+  [50/501] ✅ ASTRAL.NS: 247 rows
+  [51/501] ✅ ASTRAZEN.NS: 246 rows
+  [52/501] ✅ ATGL.NS: 247 rows
+  [53/501] ✅ ATHERENERG.NS: 200 rows
+  [54/501] ✅ ATUL.NS: 247 rows
+  [55/501] ✅ AUBANK.NS: 247 rows
+  [56/501] ✅ AUROPHARMA.NS: 246 rows
+  [57/501] ✅ AWL.NS: 247 rows
+  [58/501] ✅ AXISBANK.NS: 247 rows
+  [59/501] ✅ BAJAJ-AUTO.NS: 247 rows
+  [60/501] ✅ BAJAJFINSV.NS: 247 rows
+  [61/501] ✅ BAJAJHFL.NS: 247 rows
+  [62/501] ✅ BAJAJHLDNG.NS: 247 rows
+  [63/501] ✅ BAJFINANCE.NS: 247 rows
+  [64/501] ✅ BALKRISIND.NS: 247 rows
+  [65/501] ✅ BALRAMCHIN.NS: 247 rows
+  [66/501] ✅ BANDHANBNK.NS: 247 rows
+  [67/501] ✅ BANKBARODA.NS: 247 rows
+  [68/501] ✅ BANKINDIA.NS: 247 rows
+  [69/501] ✅ BASF.NS: 247 rows
+  [70/501] ✅ BATAINDIA.NS: 247 rows
+  [71/501] ✅ BAYERCROP.NS: 247 rows
+  [72/501] ✅ BBTC.NS: 247 rows
+  [73/501] ✅ BDL.NS: 247 rows
+  [74/501] ✅ BEL.NS: 247 rows
+  [75/501] ✅ BEML.NS: 247 rows
+  [76/501] ✅ BERGEPAINT.NS: 247 rows
+  [77/501] ✅ BHARATFORG.NS: 246 rows
+  [78/501] ✅ BHARTIARTL.NS: 247 rows
+  [79/501] ✅ BHARTIHEXA.NS: 247 rows
+  [80/501] ✅ BHEL.NS: 247 rows
+  [81/501] ✅ BIKAJI.NS: 247 rows
+  [82/501] ✅ BIOCON.NS: 247 rows
+  [83/501] ✅ BLS.NS: 247 rows
+  [84/501] ✅ BLUEDART.NS: 247 rows
+  [85/501] ✅ BLUEJET.NS: 247 rows
+  [86/501] ✅ BLUESTARCO.NS: 247 rows
+  [87/501] ✅ BOSCHLTD.NS: 247 rows
+  [88/501] ✅ BPCL.NS: 247 rows
+  [89/501] ✅ BRIGADE.NS: 247 rows
+  [90/501] ✅ BRITANNIA.NS: 247 rows
+  [91/501] ✅ BSE.NS: 247 rows
+  [92/501] ✅ BSOFT.NS: 247 rows
+  [93/501] ✅ CAMPUS.NS: 247 rows
+  [94/501] ✅ CAMS.NS: 247 rows
+  [95/501] ✅ CANBK.NS: 247 rows
+  [96/501] ✅ CANFINHOME.NS: 247 rows
+  [97/501] ✅ CAPLIPOINT.NS: 247 rows
+  [98/501] ✅ CARBORUNIV.NS: 246 rows
+  [99/501] ✅ CASTROLIND.NS: 247 rows
+  [100/501] ✅ CCL.NS: 247 rows
+  [101/501] ✅ CDSL.NS: 247 rows
+  [102/501] ✅ CEATLTD.NS: 247 rows
+  [103/501] ✅ CENTRALBK.NS: 247 rows
+  [104/501] ✅ CENTURYPLY.NS: 246 rows
+  [105/501] ✅ CERA.NS: 246 rows
+  [106/501] ✅ CESC.NS: 247 rows
+  [107/501] ✅ CGCL.NS: 247 rows
+  [108/501] ✅ CGPOWER.NS: 247 rows
+  [109/501] ✅ CHALET.NS: 247 rows
+  [110/501] ✅ CHAMBLFERT.NS: 247 rows
+  [111/501] ✅ CHENNPETRO.NS: 247 rows
+  [112/501] ✅ CHOICEIN.NS: 247 rows
+  [113/501] ✅ CHOLAFIN.NS: 247 rows
+  [114/501] ✅ CHOLAHLDNG.NS: 247 rows
+  [115/501] ✅ CIPLA.NS: 247 rows
+  [116/501] ✅ CLEAN.NS: 247 rows
+  [117/501] ✅ COALINDIA.NS: 247 rows
+  [118/501] ✅ COCHINSHIP.NS: 247 rows
+  [119/501] ✅ COFORGE.NS: 247 rows
+  [120/501] ✅ COHANCE.NS: 197 rows
+  [121/501] ✅ COLPAL.NS: 247 rows
+  [122/501] ✅ CONCORDBIO.NS: 247 rows
+  [123/501] ✅ CONCOR.NS: 247 rows
+  [124/501] ✅ COROMANDEL.NS: 247 rows
+  [125/501] ✅ CRAFTSMAN.NS: 246 rows
+  [126/501] ✅ CREDITACC.NS: 247 rows
+  [127/501] ✅ CRISIL.NS: 247 rows
+  [128/501] ✅ CROMPTON.NS: 247 rows
+  [129/501] ✅ CUB.NS: 247 rows
+  [130/501] ✅ CUMMINSIND.NS: 247 rows
+  [131/501] ✅ CYIENT.NS: 247 rows
+  [132/501] ✅ DABUR.NS: 247 rows
+  [133/501] ✅ DALBHARAT.NS: 247 rows
+  [134/501] ✅ DATAPATTNS.NS: 247 rows
+  [135/501] ✅ DBREALTY.NS: 247 rows
+  [136/501] ✅ DCMSHRIRAM.NS: 246 rows
+  [137/501] ✅ DEEPAKFERT.NS: 247 rows
+  [138/501] ✅ DEEPAKNTR.NS: 247 rows
+  [139/501] ✅ DELHIVERY.NS: 247 rows
+  [140/501] ✅ DEVYANI.NS: 247 rows
+  [141/501] ✅ DIVISLAB.NS: 247 rows
+  [142/501] ✅ DIXON.NS: 247 rows
+  [143/501] ✅ DLF.NS: 247 rows
+  [144/501] ✅ DMART.NS: 247 rows
+  [145/501] ✅ DOMS.NS: 247 rows
+  [146/501] ✅ DRREDDY.NS: 247 rows
+  [147/501] ✅ ECLERX.NS: 247 rows
+  [148/501] ✅ EICHERMOT.NS: 247 rows
+  [149/501] ✅ EIDPARRY.NS: 247 rows
+  [150/501] ✅ EIHOTEL.NS: 247 rows
+  [151/501] ✅ ELECON.NS: 247 rows
+  [152/501] ✅ ELGIEQUIP.NS: 247 rows
+  [153/501] ✅ EMAMILTD.NS: 247 rows
+  [154/501] ✅ EMCURE.NS: 245 rows
+  [155/501] ✅ ENDURANCE.NS: 247 rows
+  [156/501] ✅ ENGINERSIN.NS: 247 rows
+  [157/501] ✅ ENRIN.NS: 166 rows
+  [158/501] ✅ ERIS.NS: 246 rows
+  [159/501] ✅ ESCORTS.NS: 247 rows
+  [160/501] ✅ ETERNAL.NS: 246 rows
+  [161/501] ✅ EXIDEIND.NS: 247 rows
+  [162/501] ✅ FACT.NS: 247 rows
+  [163/501] ✅ FEDERALBNK.NS: 247 rows
+  [164/501] ✅ FINCABLES.NS: 247 rows
+  [165/501] ✅ FINPIPE.NS: 246 rows
+  [166/501] ✅ FIRSTCRY.NS: 247 rows
+  [167/501] ✅ FIVESTAR.NS: 247 rows
+  [168/501] ✅ FLUOROCHEM.NS: 247 rows
+  [169/501] ✅ FORCEMOT.NS: 247 rows
+  [170/501] ✅ FORTIS.NS: 247 rows
+  [171/501] ✅ FSL.NS: 247 rows
+  [172/501] ✅ GAIL.NS: 247 rows
+  [173/501] ✅ GESHIP.NS: 247 rows
+  [174/501] ✅ GICRE.NS: 247 rows
+  [175/501] ✅ GILLETTE.NS: 247 rows
+  [176/501] ✅ GLAND.NS: 246 rows
+  [177/501] ✅ GLAXO.NS: 247 rows
+  [178/501] ✅ GLENMARK.NS: 247 rows
+  [179/501] ✅ GMDCLTD.NS: 247 rows
+  [180/501] ✅ GMRAIRPORT.NS: 247 rows
+  [181/501] ✅ GODFRYPHLP.NS: 247 rows
+  [182/501] ✅ GODIGIT.NS: 246 rows
+  [183/501] ✅ GODREJAGRO.NS: 247 rows
+  [184/501] ✅ GODREJCP.NS: 247 rows
+  [185/501] ✅ GODREJIND.NS: 247 rows
+  [186/501] ✅ GODREJPROP.NS: 247 rows
+  [187/501] ✅ GPIL.NS: 247 rows
+  [188/501] ✅ GRANULES.NS: 246 rows
+  [189/501] ✅ GRAPHITE.NS: 247 rows
+  [190/501] ✅ GRASIM.NS: 247 rows
+  [191/501] ✅ GRAVITA.NS: 247 rows
+  [192/501] ✅ GRSE.NS: 247 rows
+  [193/501] ✅ GSPL.NS: 246 rows
+  [194/501] ✅ GUJGASLTD.NS: 246 rows
+  [195/501] ✅ GVT&D.NS: 247 rows
+  [196/501] ✅ HAL.NS: 247 rows
+  [197/501] ✅ HAPPSTMNDS.NS: 247 rows
+  [198/501] ✅ HAVELLS.NS: 247 rows
+  [199/501] ✅ HBLENGINE.NS: 246 rows
+  [200/501] ✅ HCLTECH.NS: 247 rows
+  [201/501] ✅ HDFCAMC.NS: 247 rows
+  [202/501] ✅ HDFCBANK.NS: 247 rows
+  [203/501] ✅ HDFCLIFE.NS: 247 rows
+  [204/501] ✅ HEG.NS: 247 rows
+  [205/501] ✅ HEROMOTOCO.NS: 247 rows
+  [206/501] ✅ HEXT.NS: 245 rows
+  [207/501] ✅ HFCL.NS: 247 rows
+
+1 Failed download:
+['HINDALCO.NS']: TypeError("'NoneType' object is not subscriptable")
+  [208/501] ⚠ No data: HINDALCO.NS
+  [209/501] ❌ HINDCOPPER.NS: SSL SYSCALL error: EOF detected
+
+  [210/501] ❌ HINDPETRO.NS: cursor already closed
+  [211/501] ❌ HINDUNILVR.NS: cursor already closed
+  [212/501] ❌ HINDZINC.NS: cursor already closed
+  [213/501] ❌ HOMEFIRST.NS: cursor already closed
+  [214/501] ❌ HONASA.NS: cursor already closed
+  [215/501] ❌ HONAUT.NS: cursor already closed
+  [216/501] ❌ HSCL.NS: cursor already closed
+  [217/501] ❌ HUDCO.NS: cursor already closed
+  [218/501] ❌ HYUNDAI.NS: cursor already closed
+  [219/501] ❌ ICICIBANK.NS: cursor already closed
+  [220/501] ❌ ICICIGI.NS: cursor already closed
+  [221/501] ❌ ICICIPRULI.NS: cursor already closed
+  [222/501] ❌ IDBI.NS: cursor already closed
+  [223/501] ❌ IDEA.NS: cursor already closed
+  [224/501] ❌ IDFCFIRSTB.NS: cursor already closed
+  [225/501] ❌ IEX.NS: cursor already closed
+  [226/501] ❌ IFCI.NS: cursor already closed
+  [227/501] ❌ IGIL.NS: cursor already closed
+  [228/501] ❌ IGL.NS: cursor already closed
+  [229/501] ❌ IIFL.NS: cursor already closed
+  [230/501] ❌ IKS.NS: cursor already closed
+  [231/501] ❌ INDGN.NS: cursor already closed
+  [232/501] ❌ INDHOTEL.NS: cursor already closed
+  [233/501] ❌ INDIACEM.NS: cursor already closed
+  [234/501] ❌ INDIAMART.NS: cursor already closed
+  [235/501] ❌ INDIANB.NS: cursor already closed
+  [236/501] ❌ INDIGO.NS: cursor already closed
+  [237/501] ❌ INDUSINDBK.NS: cursor already closed
+  [238/501] ❌ INDUSTOWER.NS: cursor already closed
+  [239/501] ❌ INFY.NS: cursor already closed
+  [240/501] ❌ INOXINDIA.NS: cursor already closed
+  [241/501] ❌ INOXWIND.NS: cursor already closed
+  [242/501] ❌ INTELLECT.NS: cursor already closed
+  [243/501] ❌ IOB.NS: cursor already closed
+  [244/501] ❌ IOC.NS: cursor already closed
+  [245/501] ❌ IPCALAB.NS: cursor already closed
+  [246/501] ❌ IRB.NS: cursor already closed
+  [247/501] ❌ IRCON.NS: cursor already closed
+  [248/501] ❌ IRCTC.NS: cursor already closed
+  [249/501] ❌ IREDA.NS: cursor already closed
+  [250/501] ❌ IRFC.NS: cursor already closed
+  [251/501] ❌ ITCHOTELS.NS: cursor already closed
+  [252/501] ❌ ITC.NS: cursor already closed
+  [253/501] ❌ ITI.NS: cursor already closed
+  [254/501] ❌ JBCHEPHARM.NS: cursor already closed
+  [255/501] ❌ JBMA.NS: cursor already closed
+  [256/501] ❌ JINDALSAW.NS: cursor already closed
+  [257/501] ❌ JINDALSTEL.NS: cursor already closed
+  [258/501] ❌ JIOFIN.NS: cursor already closed
+  [259/501] ❌ J&KBANK.NS: cursor already closed
+  [260/501] ❌ JKCEMENT.NS: cursor already closed
+  [261/501] ❌ JKTYRE.NS: cursor already closed
+  [262/501] ❌ JMFINANCIL.NS: cursor already closed
+  [263/501] ❌ JPPOWER.NS: cursor already closed
+  [264/501] ❌ JSL.NS: cursor already closed
+  [265/501] ❌ JSWCEMENT.NS: cursor already closed
+  [266/501] ❌ JSWENERGY.NS: cursor already closed
+  [267/501] ❌ JSWINFRA.NS: cursor already closed
+  [268/501] ❌ JSWSTEEL.NS: cursor already closed
+  [269/501] ❌ JUBLFOOD.NS: cursor already closed
+  [270/501] ❌ JUBLINGREA.NS: cursor already closed
+  [271/501] ❌ JUBLPHARMA.NS: cursor already closed
+  [272/501] ❌ JWL.NS: cursor already closed
+  [273/501] ❌ JYOTHYLAB.NS: cursor already closed
+  [274/501] ❌ JYOTICNC.NS: cursor already closed
+  [275/501] ❌ KAJARIACER.NS: cursor already closed
+  [276/501] ❌ KALYANKJIL.NS: cursor already closed
+  [277/501] ❌ KARURVYSYA.NS: cursor already closed
+  [278/501] ❌ KAYNES.NS: cursor already closed
+  [279/501] ❌ KEC.NS: cursor already closed
+  [280/501] ❌ KEI.NS: cursor already closed
+  [281/501] ❌ KFINTECH.NS: cursor already closed
+  [282/501] ❌ KIMS.NS: cursor already closed
+  [283/501] ❌ KIRLOSBROS.NS: cursor already closed
+  [284/501] ❌ KIRLOSENG.NS: cursor already closed
+  [285/501] ❌ KOTAKBANK.NS: cursor already closed
+  [286/501] ❌ KPIL.NS: cursor already closed
+  [287/501] ❌ KPITTECH.NS: cursor already closed
+  [288/501] ❌ KPRMILL.NS: cursor already closed
+  [289/501] ❌ KSB.NS: cursor already closed
+  [290/501] ❌ KWIL.NS: cursor already closed
+  [291/501] ❌ LALPATHLAB.NS: cursor already closed
+  [292/501] ❌ LATENTVIEW.NS: cursor already closed
+  [293/501] ❌ LAURUSLABS.NS: cursor already closed
+  [294/501] ❌ LEMONTREE.NS: cursor already closed
+  [295/501] ❌ LICHSGFIN.NS: cursor already closed
+  [296/501] ❌ LICI.NS: cursor already closed
+  [297/501] ❌ LINDEINDIA.NS: cursor already closed
+  [298/501] ❌ LLOYDSME.NS: cursor already closed
+  [299/501] ❌ LODHA.NS: cursor already closed
+  [300/501] ❌ LTF.NS: cursor already closed
+  [301/501] ❌ LTFOODS.NS: cursor already closed
+  [302/501] ❌ LTIM.NS: cursor already closed
+  [303/501] ❌ LT.NS: cursor already closed
+  [304/501] ❌ LTTS.NS: cursor already closed
+  [305/501] ❌ LUPIN.NS: cursor already closed
+  [306/501] ❌ MAHABANK.NS: cursor already closed
+  [307/501] ❌ MAHSCOOTER.NS: cursor already closed
+  [308/501] ❌ MAHSEAMLES.NS: cursor already closed
+  [309/501] ❌ MANAPPURAM.NS: cursor already closed
+  [310/501] ❌ MANKIND.NS: cursor already closed
+  [311/501] ❌ MANYAVAR.NS: cursor already closed
+  [312/501] ❌ MAPMYINDIA.NS: cursor already closed
+  [313/501] ❌ MARICO.NS: cursor already closed
+  [314/501] ❌ MARUTI.NS: cursor already closed
+  [315/501] ❌ MAXHEALTH.NS: cursor already closed
+  [316/501] ❌ MAZDOCK.NS: cursor already closed
+  [317/501] ❌ MCX.NS: cursor already closed
+  [318/501] ❌ MEDANTA.NS: cursor already closed
+  [319/501] ❌ METROPOLIS.NS: cursor already closed
+  [320/501] ❌ MFSL.NS: cursor already closed
+  [321/501] ❌ MGL.NS: cursor already closed
+  [322/501] ❌ MINDACORP.NS: cursor already closed
+  [323/501] ❌ M&MFIN.NS: cursor already closed
+  [324/501] ❌ M&M.NS: cursor already closed
+  [325/501] ❌ MMTC.NS: cursor already closed
+  [326/501] ❌ MOTHERSON.NS: cursor already closed
+  [327/501] ❌ MOTILALOFS.NS: cursor already closed
+  [328/501] ❌ MPHASIS.NS: cursor already closed
+  [329/501] ❌ MRF.NS: cursor already closed
+  [330/501] ❌ MRPL.NS: cursor already closed
+  [331/501] ❌ MSUMI.NS: cursor already closed
+  [332/501] ❌ MUTHOOTFIN.NS: cursor already closed
+  [333/501] ❌ NAM-INDIA.NS: cursor already closed
+  [334/501] ❌ NATCOPHARM.NS: cursor already closed
+  [335/501] ❌ NATIONALUM.NS: cursor already closed
+  [336/501] ❌ NAUKRI.NS: cursor already closed
+  [337/501] ❌ NAVA.NS: cursor already closed
+  [338/501] ❌ NAVINFLUOR.NS: cursor already closed
+  [339/501] ❌ NBCC.NS: cursor already closed
+  [340/501] ❌ NCC.NS: cursor already closed
+  [341/501] ❌ NESTLEIND.NS: cursor already closed
+  [342/501] ❌ NETWEB.NS: cursor already closed
+  [343/501] ❌ NEULANDLAB.NS: cursor already closed
+  [344/501] ❌ NEWGEN.NS: cursor already closed
+  [345/501] ❌ NH.NS: cursor already closed
+  [346/501] ❌ NHPC.NS: cursor already closed
+  [347/501] ❌ NIACL.NS: cursor already closed
+  [348/501] ❌ NIVABUPA.NS: cursor already closed
+  [349/501] ❌ NLCINDIA.NS: cursor already closed
+  [350/501] ❌ NMDC.NS: cursor already closed
+  [351/501] ❌ NSLNISP.NS: cursor already closed
+  [352/501] ❌ NTPCGREEN.NS: cursor already closed
+  [353/501] ❌ NTPC.NS: cursor already closed
+  [354/501] ❌ NUVAMA.NS: cursor already closed
+  [355/501] ❌ NUVOCO.NS: cursor already closed
+  [356/501] ❌ NYKAA.NS: cursor already closed
+  [357/501] ❌ OBEROIRLTY.NS: cursor already closed
+  [358/501] ❌ OFSS.NS: cursor already closed
+  [359/501] ❌ OIL.NS: cursor already closed
+  [360/501] ❌ OLAELEC.NS: cursor already closed
+  [361/501] ❌ OLECTRA.NS: cursor already closed
+  [362/501] ❌ ONESOURCE.NS: cursor already closed
+  [363/501] ❌ ONGC.NS: cursor already closed
+  [364/501] ❌ PAGEIND.NS: cursor already closed
+  [365/501] ❌ PATANJALI.NS: cursor already closed
+  [366/501] ❌ PAYTM.NS: cursor already closed
+  [367/501] ❌ PCBL.NS: cursor already closed
+  [368/501] ❌ PERSISTENT.NS: cursor already closed
+  [369/501] ❌ PETRONET.NS: cursor already closed
+  [370/501] ❌ PFC.NS: cursor already closed
+  [371/501] ❌ PFIZER.NS: cursor already closed
+  [372/501] ❌ PGEL.NS: cursor already closed
+  [373/501] ❌ PGHH.NS: cursor already closed
+  [374/501] ❌ PHOENIXLTD.NS: cursor already closed
+  [375/501] ❌ PIDILITIND.NS: cursor already closed
+  [376/501] ❌ PIIND.NS: cursor already closed
+  [377/501] ❌ PNBHOUSING.NS: cursor already closed
+  [378/501] ❌ PNB.NS: cursor already closed
+  [379/501] ❌ POLICYBZR.NS: cursor already closed
+  [380/501] ❌ POLYCAB.NS: cursor already closed
+  [381/501] ❌ POLYMED.NS: cursor already closed
+  [382/501] ❌ POONAWALLA.NS: cursor already closed
+  [383/501] ❌ POWERGRID.NS: cursor already closed
+  [384/501] ❌ POWERINDIA.NS: cursor already closed
+  [385/501] ❌ PPLPHARMA.NS: cursor already closed
+  [386/501] ❌ PRAJIND.NS: cursor already closed
+  [387/501] ❌ PREMIERENE.NS: cursor already closed
+  [388/501] ❌ PRESTIGE.NS: cursor already closed
+  [389/501] ❌ PTCIL.NS: cursor already closed
+  [390/501] ❌ PVRINOX.NS: cursor already closed
+  [391/501] ❌ RADICO.NS: cursor already closed
+  [392/501] ❌ RAILTEL.NS: cursor already closed
+  [393/501] ❌ RAINBOW.NS: cursor already closed
+  [394/501] ❌ RAMCOCEM.NS: cursor already closed
+  [395/501] ❌ RBLBANK.NS: cursor already closed
+  [396/501] ❌ RCF.NS: cursor already closed
+  [397/501] ❌ RECLTD.NS: cursor already closed
+  [398/501] ❌ REDINGTON.NS: cursor already closed
+  [399/501] ❌ RELIANCE.NS: cursor already closed
+  [400/501] ❌ RELINFRA.NS: cursor already closed
+  [401/501] ❌ RHIM.NS: cursor already closed
+  [402/501] ❌ RITES.NS: cursor already closed
+  [403/501] ❌ RKFORGE.NS: cursor already closed
+  [404/501] ❌ RPOWER.NS: cursor already closed
+  [405/501] ❌ RRKABEL.NS: cursor already closed
+  [406/501] ❌ RVNL.NS: cursor already closed
+  [407/501] ❌ SAGILITY.NS: cursor already closed
+  [408/501] ❌ SAILIFE.NS: cursor already closed
+  [409/501] ❌ SAIL.NS: cursor already closed
+  [410/501] ❌ SAMMAANCAP.NS: cursor already closed
+  [411/501] ❌ SAPPHIRE.NS: cursor already closed
+  [412/501] ❌ SARDAEN.NS: cursor already closed
+  [413/501] ❌ SAREGAMA.NS: cursor already closed
+  [414/501] ❌ SBFC.NS: cursor already closed
+  [415/501] ❌ SBICARD.NS: cursor already closed
+  [416/501] ❌ SBILIFE.NS: cursor already closed
+  [417/501] ❌ SBIN.NS: cursor already closed
+  [418/501] ❌ SCHAEFFLER.NS: cursor already closed
+  [419/501] ❌ SCHNEIDER.NS: cursor already closed
+  [420/501] ❌ SCI.NS: cursor already closed
+  [421/501] ❌ SHREECEM.NS: cursor already closed
+  [422/501] ❌ SHRIRAMFIN.NS: cursor already closed
+  [423/501] ❌ SHYAMMETL.NS: cursor already closed
+  [424/501] ❌ SIEMENS.NS: cursor already closed
+  [425/501] ❌ SIGNATURE.NS: cursor already closed
+  [426/501] ❌ SJVN.NS: cursor already closed
+  [427/501] ❌ SOBHA.NS: cursor already closed
+  [428/501] ❌ SOLARINDS.NS: cursor already closed
+  [429/501] ❌ SONACOMS.NS: cursor already closed
+  [430/501] ❌ SONATSOFTW.NS: cursor already closed
+  [431/501] ❌ SRF.NS: cursor already closed
+  [432/501] ❌ STARHEALTH.NS: cursor already closed
+  [433/501] ❌ SUMICHEM.NS: cursor already closed
+  [434/501] ❌ SUNDARMFIN.NS: cursor already closed
+  [435/501] ❌ SUNDRMFAST.NS: cursor already closed
+  [436/501] ❌ SUNPHARMA.NS: cursor already closed
+  [437/501] ❌ SUNTV.NS: cursor already closed
+  [438/501] ❌ SUPREMEIND.NS: cursor already closed
+  [439/501] ❌ SUZLON.NS: cursor already closed
+  [440/501] ❌ SWANCORP.NS: cursor already closed
+  [441/501] ❌ SWIGGY.NS: cursor already closed
+  [442/501] ❌ SYNGENE.NS: cursor already closed
+  [443/501] ❌ SYRMA.NS: cursor already closed
+  [444/501] ❌ TARIL.NS: cursor already closed
+  [445/501] ❌ TATACHEM.NS: cursor already closed
+  [446/501] ❌ TATACOMM.NS: cursor already closed
+  [447/501] ❌ TATACONSUM.NS: cursor already closed
+  [448/501] ❌ TATAELXSI.NS: cursor already closed
+  [449/501] ❌ TATAINVEST.NS: cursor already closed
+  [450/501] ❌ TATAPOWER.NS: cursor already closed
+  [451/501] ❌ TATASTEEL.NS: cursor already closed
+  [452/501] ❌ TATATECH.NS: cursor already closed
+  [453/501] ❌ TBOTEK.NS: cursor already closed
+  [454/501] ❌ TCS.NS: cursor already closed
+  [455/501] ❌ TECHM.NS: cursor already closed
+  [456/501] ❌ TECHNOE.NS: cursor already closed
+  [457/501] ❌ TEJASNET.NS: cursor already closed
+  [458/501] ❌ THELEELA.NS: cursor already closed
+  [459/501] ❌ THERMAX.NS: cursor already closed
+  [460/501] ❌ TIINDIA.NS: cursor already closed
+  [461/501] ❌ TIMKEN.NS: cursor already closed
+  [462/501] ❌ TITAGARH.NS: cursor already closed
+  [463/501] ❌ TITAN.NS: cursor already closed
+  [464/501] ❌ TMPV.NS: cursor already closed
+  [465/501] ❌ TORNTPHARM.NS: cursor already closed
+  [466/501] ❌ TORNTPOWER.NS: cursor already closed
+  [467/501] ❌ TRENT.NS: cursor already closed
+  [468/501] ❌ TRIDENT.NS: cursor already closed
+  [469/501] ❌ TRITURBINE.NS: cursor already closed
+  [470/501] ❌ TRIVENI.NS: cursor already closed
+  [471/501] ❌ TTML.NS: cursor already closed
+  [472/501] ❌ TVSMOTOR.NS: cursor already closed
+  [473/501] ❌ UBL.NS: cursor already closed
+  [474/501] ❌ UCOBANK.NS: cursor already closed
+  [475/501] ❌ ULTRACEMCO.NS: cursor already closed
+  [476/501] ❌ UNIONBANK.NS: cursor already closed
+  [477/501] ❌ UNITDSPR.NS: cursor already closed
+  [478/501] ❌ UNOMINDA.NS: cursor already closed
+  [479/501] ❌ UPL.NS: cursor already closed
+  [480/501] ❌ USHAMART.NS: cursor already closed
+  [481/501] ❌ UTIAMC.NS: cursor already closed
+  [482/501] ❌ VBL.NS: cursor already closed
+  [483/501] ❌ VEDL.NS: cursor already closed
+  [484/501] ❌ VENTIVE.NS: cursor already closed
+  [485/501] ❌ VGUARD.NS: cursor already closed
+  [486/501] ❌ VIJAYA.NS: cursor already closed
+  [487/501] ❌ VMM.NS: cursor already closed
+  [488/501] ❌ VOLTAS.NS: cursor already closed
+  [489/501] ❌ VTL.NS: cursor already closed
+  [490/501] ❌ WAAREEENER.NS: cursor already closed
+  [491/501] ❌ WELCORP.NS: cursor already closed
+  [492/501] ❌ WELSPUNLIV.NS: cursor already closed
+  [493/501] ❌ WHIRLPOOL.NS: cursor already closed
+  [494/501] ❌ WIPRO.NS: cursor already closed
+  [495/501] ❌ WOCKPHARMA.NS: cursor already closed
+  [496/501] ❌ YESBANK.NS: cursor already closed
+  [497/501] ❌ ZEEL.NS: cursor already closed
+  [498/501] ❌ ZENSARTECH.NS: cursor already closed
+  [499/501] ❌ ZENTEC.NS: cursor already closed
+  [500/501] ❌ ZFCVINDIA.NS: cursor already closed
+  [501/501] ❌ ZYDUSLIFE.NS: cursor already closed
+
+🎉 Done. Inserted: 50768 | Skipped: 1 | Failed: 293
