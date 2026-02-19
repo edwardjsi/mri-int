@@ -42,4 +42,42 @@
 > Confirm: `terraform apply` outputs VPC ID, RDS endpoint, S3 bucket name
 
 ---
+
+## Session 001 — 2026-02-19 (COMPLETED)
+
+### What Was Done
+- Created GitHub repo: edwardjsi/mri-int
+- Created session persistence infrastructure (README, SESSION, DECISIONS, PROGRESS, .llm-context)
+- Designed deterministic naming convention (mri-dev-{resource}) — no random suffixes
+- Created full Terraform module structure (vpc, rds, s3, iam)
+- Fixed PostgreSQL version 15.4 → 15.15 (15.4 not available in ap-south-1)
+- Successfully ran terraform apply — all 6 outputs confirmed
+
+### AWS Resources Live
+- VPC: vpc-016df78c5fcbfab4e
+- RDS: mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com
+- S3: mri-dev-outputs-251876202726
+- Secret: arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-doP9bL
+- IAM Execution Role: arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role
+- IAM Task Role: arn:aws:iam::251876202726:role/mri-dev-ecs-task-role
+
+### Decisions Made
+- Decision 009: PostgreSQL 15.15 (not 15.4 or 17)
+- Decision 010: Repo lives on Windows filesystem /mnt/c/ — all execution via WSL only
+
+### Current State
+- Day 1 complete ✅
+- Infrastructure live on AWS
+- No Python code written yet
+- Ready for Day 2: Data ingestion
+
+### Next Session Must Start With
+> Day 2: NSE EOD data ingestion
+> - Confirm data source (eod2 / openchart / nsepython)
+> - Write data_loader.py
+> - Connect to RDS using credentials from Secrets Manager
+> - Load NSE historical data 2005–present into daily_prices table
+> - Run data quality checks
+> DONE criteria: Row count > 0 in daily_prices, no duplicates, no missing dates
+
 <!-- Append new sessions below. Never delete old ones. -->

@@ -54,4 +54,11 @@ Reason: Output is CSV + PDF performance report only. SaaS UI comes after viabili
 Status: FINAL.
 
 ---
+
+## Decision 009 — PostgreSQL Engine Version 15.15
+Date: 2026-02-19
+Decision: Use PostgreSQL 15.15 on RDS instead of 15.4 or 17.
+Reason: 15.4 not available in ap-south-1. 15.15 confirmed available.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

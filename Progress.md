@@ -14,12 +14,13 @@
 ---
 
 ## Day 1 — Terraform Infrastructure
-- ⬜ VPC provisioned (ap-south-1)
-- ⬜ RDS PostgreSQL created (db.t3.micro)
-- ⬜ S3 bucket created (mri-outputs)
-- ⬜ IAM roles created (ECS task execution, S3, Secrets Manager)
-- ⬜ Secrets Manager: DB credentials stored
-- ⬜ `terraform apply` outputs confirmed
+- ✅ VPC provisioned (ap-south-1)
+- ✅ RDS PostgreSQL created (db.t3.micro, engine 15.15)
+- ✅ S3 bucket created (mri-dev-outputs-251876202726)
+- ✅ IAM roles created (ECS task execution + task role)
+- ✅ Secrets Manager: DB credentials stored
+- ✅ terraform apply outputs confirmed
+
 
 ## Day 2 — Data Ingestion
 - ⬜ NSE EOD data source confirmed
