@@ -49,5 +49,6 @@ module "rds" {
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   app_security_group = module.vpc.app_security_group_id
+  rds_security_group = module.vpc.rds_security_group_id
   tags               = local.tags
 }

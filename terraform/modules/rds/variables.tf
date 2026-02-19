@@ -21,3 +21,7 @@ variable "app_security_group" {
 variable "tags" {
   type = map(string)
 }
+
+variable "rds_security_group" {
+  type = string
+}
