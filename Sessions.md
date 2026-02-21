@@ -161,4 +161,30 @@
 > - Generate the 90-day relative strength metrics vs Nifty.
 > - Compute these indicators retrospectively for all 1.6m rows and store them in the RDS DB.
 
+## Session 004 — 2026-02-21
+
+### What Was Done
+- Planned Indicator Engine implementation (Day 3), defined database schema changes and Python code structure for `indicator_engine.py`.
+- Resolved issues with the bastion host's SSM connection.
+- Backed up the RDS database to an S3 bucket to ensure data persistence.
+- Destroyed the existing AWS infrastructure using Terraform to pause costs.
+- Prepared for a project rebuild next week.
+
+### Decisions Made
+- Decision 015: Teardown AWS infrastructure via Terraform to save costs over the weekend, utilizing the DB backup for next week's rebuild.
+
+### Current State
+- Infrastructure torn down ✅
+- DB securely backed up in S3 ✅
+- Ready to rebuild infrastructure and begin Day 3 (Indicator Engine) next week.
+
+### Blockers / Open Questions
+- None.
+
+### Next Session Must Start With
+> Rebuild Phase
+> - Run `terraform apply` to restore AWS infrastructure
+> - Restore RDS database from S3 backup
+> - Proceed with Indicator Engine implementation (Day 3)
+
 <!-- Append new sessions below. Never delete old ones. -->

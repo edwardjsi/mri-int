@@ -99,6 +99,7 @@ The project has graduated from a 20-stock proof-of-concept into a fully function
 - **Ingestion**: Automated robust backoff & retry mechanism to handle AWS SSM tunnel drops during multi-hour data loads.
 - **Infrastructure**: AWS RDS PostgreSQL housed securely in a private subnet, accessed locally via an EC2 Bastion port-forwarding tunnel.
 - **Data Quality**: 100% clean ingestion, 0 duplicates, 0 nulls, enforced by strict PostgreSQL unique constraints and `ON CONFLICT DO NOTHING` logic.
+- **Infrastructure State**: Currently torn down to save costs. Database is backed up to S3, ready for a standard Terraform rebuild and RDS restore.
 
 ---
 

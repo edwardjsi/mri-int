@@ -91,4 +91,10 @@ Decision: Acknowledge ~1.6 million rows is the maximum historical dataset for Ni
 Reason: Due to recent IPOs, most companies do not have 20 years of history.
 Status: FINAL.
 
+## Decision 015 — Weekend Infrastructure Teardown
+Date: 2026-02-21
+Decision: Destroy AWS infrastructure using Terraform and back up the RDS database to S3.
+Reason: To save costs over the weekend/pause period and prove the infrastructure-as-code and data recovery processes.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->
