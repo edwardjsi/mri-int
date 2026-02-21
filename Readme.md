@@ -92,6 +92,16 @@ mri-intelligence/
 
 ---
 
+## Current Pipeline Status (Post-Day 2)
+
+The project has graduated from a 20-stock proof-of-concept into a fully functional, highly robust data pipeline:
+- **Dataset**: Full Nifty 500 universe (~1.64 million daily data points from 2005-present).
+- **Ingestion**: Automated robust backoff & retry mechanism to handle AWS SSM tunnel drops during multi-hour data loads.
+- **Infrastructure**: AWS RDS PostgreSQL housed securely in a private subnet, accessed locally via an EC2 Bastion port-forwarding tunnel.
+- **Data Quality**: 100% clean ingestion, 0 duplicates, 0 nulls, enforced by strict PostgreSQL unique constraints and `ON CONFLICT DO NOTHING` logic.
+
+---
+
 ## Core Intelligence Engines
 
 ### 1. Market Regime Engine

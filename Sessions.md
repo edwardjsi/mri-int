@@ -131,3 +131,34 @@
 > - Equal weight position sizing across selected stocks
 > - Daily portfolio returns vs Nifty benchmark
 > - SSH tunnel must be active before running any DB scripts
+## Session 003 — 2026-02-21
+
+### What Was Done
+- Overcame major Docker mapping, WSL local port collision (port 5432), and SSM tunnel timeout obstacles.
+- Shifted SSM tunnel from port 5432 to local port 5433 to bypass WSL Postgres collision.
+- Attempted to use the Bastion EC2 instance directly for execution, but reverted to the local WSL machine due to Amazon Linux 2 package limitations.
+- Wrote and tested robust retry and timeout stabilization logic in `src/db.py` to prevent SSM disconnections during long `yfinance` API calls.
+- Ran `python -m src.data_loader` locally via the stable `5433` tunnel.
+- Successfully ingested **1,643,292 rows** of clean 20-year daily historical pricing data for the full Nifty 500.
+- Upsert (`ON CONFLICT DO NOTHING`) logic verified fully functional with 0 duplicates and 0 null close prices.
+
+### Decisions Made
+- Decision 013: Built robust SSM-aware DB retry mechanisms.
+- Decision 014: Confirmed ~1.6m rows is the absolute max ceiling due to recent IPO listings without 20y histories.
+
+### Current State
+- Day 2 complete ✅
+- AWS RDS PostgreSQL database is populated with full baseline historical datasets.
+- Ready for Day 3: Indicator Engine.
+
+### Blockers / Open Questions
+- None. Data pipe is rock solid.
+
+### Next Session Must Start With
+> Day 3: Indicator Engine
+> - Implement EMA 50 / 200 functions.
+> - Calculate 200 EMA slope (20-day regression).
+> - Generate the 90-day relative strength metrics vs Nifty.
+> - Compute these indicators retrospectively for all 1.6m rows and store them in the RDS DB.
+
+<!-- Append new sessions below. Never delete old ones. -->

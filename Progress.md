@@ -23,11 +23,11 @@
 
 
 ## Day 2 — Data Ingestion
-- ⬜ NSE EOD data source confirmed
-- ⬜ data_loader.py written
-- ⬜ Historical data (2005–present) loaded into RDS
-- ⬜ Data quality report generated
-- ⬜ Duplicate/missing row validation passed
+- ✅ NSE EOD data source confirmed
+- ✅ data_loader.py written
+- ✅ Historical data (2005–present) loaded into RDS
+- ✅ Data quality report generated
+- ✅ Duplicate/missing row validation passed
 
 ## Day 3 — Indicator Engine
 - ⬜ EMA 50 implemented + unit tested

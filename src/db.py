@@ -2,22 +2,32 @@ import psycopg2
 from psycopg2.extras import execute_batch
 from src.config import get_db_credentials
 import logging
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_connection():
+def get_connection(retries=3, delay=5):
     creds = get_db_credentials()
-    conn = psycopg2.connect(
-        host=creds["host"],
-        port=creds.get("port", 5432),
-        dbname=creds["dbname"],
-        user=creds["username"],
-        password=creds["password"],
-        connect_timeout=10
-    )
-    return conn
+    for attempt in range(retries):
+        try:
+            conn = psycopg2.connect(
+                host=creds["host"],
+                port=creds.get("port", 5432),
+                dbname=creds["dbname"],
+                user=creds["username"],
+                password=creds["password"],
+                connect_timeout=30  # Increased from 10 to 30 for SSM tunnel stability
+            )
+            return conn
+        except psycopg2.OperationalError as e:
+            if attempt < retries - 1:
+                logger.warning(f"Database connection failed, retrying in {delay} seconds... ({e})")
+                time.sleep(delay)
+            else:
+                logger.error("Failed to connect to the database after multiple attempts.")
+                raise
 
 
 def create_tables():
@@ -26,6 +36,8 @@ def create_tables():
     cur = conn.cursor()
 
     cur.execute("""
+        DROP TABLE IF EXISTS daily_prices CASCADE;
+        
         CREATE TABLE IF NOT EXISTS daily_prices (
             id              SERIAL PRIMARY KEY,
             symbol          VARCHAR(20)  NOT NULL,

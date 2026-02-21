@@ -79,4 +79,16 @@ Decision: Use SMA-200 instead of EMA-200 for market regime classification.
 Reason: Simpler, sufficient for prototype, widely understood.
 Status: FINAL for prototype only.
 
+## Decision 013 — Robust DB Connection Retries over SSM
+Date: 2026-02-21
+Decision: Implement automated connection retries in psycopg2 with increased TCP timeouts.
+Reason: AWS SSM Port Forwarding tunnels aggressively time out idle TCP connections while yfinance is processing data.
+Status: FINAL.
+
+## Decision 014 — Nifty 500 Row Limit Expectation
+Date: 2026-02-21
+Decision: Acknowledge ~1.6 million rows is the maximum historical dataset for Nifty 500 from 2005-present.
+Reason: Due to recent IPOs, most companies do not have 20 years of history.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->
