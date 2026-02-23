@@ -27,3 +27,8 @@ output "iam_task_role_arn" {
   description = "ECS task role ARN"
   value       = module.iam.ecs_task_role_arn
 }
+
+output "bastion_id" {
+  description = "EC2 Bastion Host ID"
+  value       = module.vpc.bastion_id
+}

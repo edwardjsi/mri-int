@@ -188,3 +188,34 @@
 > - Proceed with Indicator Engine implementation (Day 3)
 
 <!-- Append new sessions below. Never delete old ones. -->
+
+## Session 005 — 2026-02-23
+
+### What Was Done
+- Day 3 completed!
+- Added `python3.12-venv` package via `apt` to correctly isolate dependencies in a new `venv` environment.
+- Corrected missing `bastion_id` output in Terraform `vpc/main.tf` by deploying a managed Amazon Linux 2023 EC2 instance instead of a manual one.
+- Attached `AmazonSSMManagedInstanceCore` IAM policy directly to the Bastion instance profile via Terraform for reproducible SSH tunneling.
+- Established secure port forwarding from local port 5433 to RDS port 5432 using the AWS Session Manager Plugin.
+- Restored `index_prices` and `daily_prices` (~1.6M rows) from local CSV backups natively into PostgreSQL using `\copy` and absolute paths.
+- Authored `src/indicator_engine.py` using Pandas to pull, compute, and push moving averages (`ema_50`, `ema_200`), regressions (`ema_200_slope_20`), rolling highs, average volume, and 90-day relative strength metrics back into the database.
+- Created helper scripts (`run_indicators.sh`, `check_index.sh`) to automate DB credential extraction from AWS Secrets Manager.
+- Corrected yFinance index baseline naming from `^NSEI` to `NIFTY50`.
+
+### Decisions Made
+- Infrastructure is now fully reproducible; Bastion is no longer an untracked manual AWS Console resource.
+- All Python execution for the indicator engine must run within the `venv` with `PYTHONPATH=.` exported to resolve module imports.
+
+### Current State
+- Day 3 complete ✅
+- RDS database fully restored containing all 1.6M rows plus 6 calculated indicator columns.
+- Ready to begin Day 4: Regime Engine.
+
+### Blockers / Open Questions
+- None. Infrastructure rebuild succeeded and data pipeline is enriched.
+
+### Next Session Must Start With
+> Day 4: Regime Engine
+> - Write logic to define Market Regime (BULL/BEAR/NEUTRAL) based on the Nifty 50 Index's 200 EMA and Slope.
+> - Apply the Stock Trend Score logic (0-5) based on ADX, RSI, Relative Strength, and moving average crossovers.
+> - Log day-by-day regime states and stock scores into the `market_regime` and `stock_scores` tables.
