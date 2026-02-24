@@ -39,10 +39,10 @@
 - ⬜ Indicators stored in RDS
 
 ## Day 4 — Regime Engine
-- ⬜ regime_engine.py written
-- ⬜ Daily Risk-On/Off classification computed
-- ⬜ Regime history table (2005–present) stored
-- ⬜ Regime vs index chart generated
+- [x] regime_engine.py written
+- [x] Daily Risk-On/Off classification computed
+- [x] Regime history table (2005–present) stored
+- [x] Regime vs index chart generated
 
 ## Day 5–6 — Stock Trend Scoring Engine
 - ⬜ trend_engine.py written
