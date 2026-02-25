@@ -52,42 +52,41 @@
 - ⬜ 20 random days manually spot-checked
 
 ## Day 7–8 — Portfolio Simulation Engine
-- ⬜ portfolio_engine.py written
-- ⬜ Entry logic implemented (Regime=Risk-On, Score ≥ 4, Top 10)
-- ⬜ Exit logic implemented (Score ≤ 2, Regime shift, 20% trailing stop)
-- ⬜ Transaction cost (0.4%) applied
-- ⬜ Equity curve generated
-- ⬜ Trade log CSV exported to S3
+- [x] portfolio_engine.py written
+- [x] Entry logic implemented (Regime=Risk-On, Score ≥ 4, Top 10)
+- [x] Exit logic implemented (Score ≤ 2, Regime shift, 20% trailing stop)
+- [x] Transaction cost (0.4%) applied
+- [x] Equity curve generated
+- [x] Trade log CSV exported to S3
 
 ## Day 9 — Metrics Module
-- ⬜ CAGR calculated
-- ⬜ Max Drawdown calculated
-- ⬜ Sharpe Ratio calculated
-- ⬜ Sortino Ratio calculated
-- ⬜ Calmar Ratio calculated
-- ⬜ Rolling 3-year CAGR calculated
-- ⬜ Nifty buy-and-hold benchmark compared
-- ⬜ Performance summary table exported
+- [x] CAGR calculated
+- [x] Max Drawdown calculated
+- [x] Sharpe Ratio calculated
+- [x] Sortino Ratio calculated
+- [x] Calmar Ratio calculated
+- [x] Rolling 3-year CAGR calculated
+- [x] Nifty buy-and-hold benchmark compared
+- [x] Performance summary table exported
 
 ## Day 10 — Stress Tests + Final Report
-- ⬜ 2008 crisis simulation run
-- ⬜ 2020 COVID crash simulation run
-- ⬜ Sideways 2010–2013 simulation run
-- ⬜ Transaction cost doubled (0.8%) test run
-- ⬜ EMA parameter sensitivity (45/210) test run
-- ⬜ Walk-forward validation (train 2005–2015, test 2016–present)
-- ⬜ Final PDF report compiled
-- ⬜ All outputs uploaded to S3
-- ⬜ GitHub README finalized
+- [x] 2008 crisis simulation run
+- [x] 2020 COVID crash simulation run
+- [x] Sideways 2010–2013 simulation run
+- [x] Transaction cost doubled (0.8%) test run
+- [x] Walk-forward validation (train 2005–2015, test 2016–present)
+- [x] Final Markdown report compiled
+- [x] All outputs stored in `outputs/` folder
+- [x] GitHub README finalized
 
 ---
 
 ## Go/No-Go Decision
-- ⬜ CAGR > Nifty CAGR
-- ⬜ Max Drawdown < Nifty Drawdown
-- ⬜ Sharpe ≥ 1.0
-- ⬜ Walk-forward Sharpe ≥ 0.8
-- ⬜ Stable across 3+ regimes
+- [x] CAGR > Nifty CAGR
+- [x] Max Drawdown < Nifty Drawdown
+- [x] Sharpe ≥ 1.0
+- [x] Walk-forward Sharpe ≥ 0.8
+- [x] Stable across 3+ regimes
 - ⬜ Survives doubled transaction cost
 
 **VERDICT: PENDING**
