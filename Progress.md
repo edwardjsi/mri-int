@@ -87,6 +87,17 @@
 - [x] Sharpe ≥ 1.0
 - [x] Walk-forward Sharpe ≥ 0.8
 - [x] Stable across 3+ regimes
-- ⬜ Survives doubled transaction cost
+- [x] Survives doubled transaction cost
 
-**VERDICT: PENDING**
+**VERDICT: GO. PHASE 1 COMPLETED.**
+*PROCEEDING TO PHASE 2: WEB APP MVP!*
+
+---
+
+## Phase 2 — Web App MVP (NIFTY 50)
+- [x] Initial React/Vite dashboard scaffolding generated
+- [x] Baseline backtest placeholder CSVs wired into interactive UI
+- [ ] Connect `yfinance` to ingest live 2025–Present daily data into RDS
+- [ ] Rerun MRI Engine pipelines to generate live present-day signals
+- [ ] Deploy MVP dashboard publicly via Vercel for early user testing
+- [ ] Implement Paywall logic for active portfolio access

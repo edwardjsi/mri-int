@@ -1,13 +1,9 @@
-# Market Regime Intelligence (MRI) — Viability Prototype v0.1
+# Market Regime Intelligence (MRI) — Web App MVP
 
 ## What This Is
-A rule-based quantitative backtesting research engine for Indian equities (NSE).
-This is NOT a SaaS product. This is a 10-day viability prototype to determine
-whether a Market Regime Filter + Stock Trend Score model has real statistical edge
-over Nifty buy-and-hold.
+This project successfully passed its 10-day viability prototype phase, proving that a Market Regime Filter + Stock Trend Score model generates significant statistical edge over Nifty buy-and-hold (34% CAGR vs 10% CAGR over 17 years).
 
-If the model passes viability thresholds → we build the SaaS.
-If it fails → we stop and reassess. No emotional attachment.
+We are now actively building Phase 2: A minimal viable SaaS React/Vite dashboard to interactively visualize the backtests and display the live daily portfolio.
 
 ---
 

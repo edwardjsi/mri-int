@@ -323,8 +323,8 @@
 - Discovered a minor scope bug where the High Friction variable was passed into `portfolio_engine` but it relied internally on the static global `TRANSACTION_COST` multiplier, meaning it repeated the baseline test. Can easily be hotfixed before deploying to AWS.
 
 ### Next Session Must Start With
-> Phase 2: Live AWS Deployment
-> - Pivot from local batch processing into daily lambda executions.
-> - Expand from NIFTY50 to NIFTY500 array.
-> - Configure actual cloud-based DB triggers for generating trade alerts on telegram/discord.
-
+> Phase 2: Web App MVP
+> - Write `yfinance` Python scraper to fetch Jan 2025 to Present candles.
+> - Insert scraped data into local RDS.
+> - Run MRI Portfolio Engine to generate live, present-day Phase 2 outputs.
+> - Deploy the MVP React dashboard to Vercel for live public access.
