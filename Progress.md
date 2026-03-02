@@ -94,10 +94,31 @@
 
 ---
 
-## Phase 2 — Web App MVP (NIFTY 50)
+## Phase 2 — Web App MVP (NIFTY 50 first → NIFTY 500)
 - [x] Initial React/Vite dashboard scaffolding generated
 - [x] Baseline backtest placeholder CSVs wired into interactive UI
-- [ ] Connect `yfinance` to ingest live 2025–Present daily data into RDS
-- [ ] Rerun MRI Engine pipelines to generate live present-day signals
+- [x] AWS billing audit performed — identified idle NAT GW ($32/mo) + Bastion ($7/mo)
+
+### Step 1: Data Bridge — Nifty 50 (2024–March 2026)
+- [x] Resume RDS from paused state
+- [x] Establish Bastion SSM tunnel (local 5433 → RDS 5432)
+- [x] Run `run_bridge_load.sh` to ingest bridge data for Nifty 50 stocks (+55,826 rows → 1,699,118 total)
+- [x] Run bridge load for Nifty 50 index (4,527 index rows through 2026-02-27)
+- [x] Verify: 0 duplicates, 0 null close prices, data through 2026-02-27
+
+### Step 2: Engine Pipeline Re-run
+- [x] Rerun `indicator_engine.py` — 1,699,118 rows computed
+- [x] Rerun `regime_engine.py` — 4,527 regime days (BULL: 2916, BEAR: 788, NEUTRAL: 823)
+- [x] Rerun `portfolio_engine.py` — 567 trades, ₹9,750,142 final equity, ~29% CAGR
+- [x] Rerun `metrics_engine.py` — CAGR 28.18%, Sharpe 1.23, Max DD -33.53%, all Go/No-Go ✅
+
+### Step 2b: Next-Day Execution Realism Test
+- [x] Created `portfolio_engine_nextday.py` — executes at next-day open instead of same-day close
+- [x] Created `run_portfolio_nextday.sh` runner script
+- [ ] Run next-day backtest and compare results vs original
+
+
+### Step 3: Frontend Wiring
+- [ ] Connect dashboard to live engine outputs
 - [ ] Deploy MVP dashboard publicly via Vercel for early user testing
 - [ ] Implement Paywall logic for active portfolio access

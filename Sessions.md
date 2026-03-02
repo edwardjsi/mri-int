@@ -328,3 +328,37 @@
 > - Insert scraped data into local RDS.
 > - Run MRI Portfolio Engine to generate live, present-day Phase 2 outputs.
 > - Deploy the MVP React dashboard to Vercel for live public access.
+
+## Session 010 — 2026-03-02
+
+### What Was Done
+- Performed a full AWS billing audit while RDS was paused — discovered NAT Gateway ($32/mo) and Bastion EC2 ($7/mo) were silently billing even with RDS suspended.
+- Identified data coverage gap: DB had data only through early 2024, needed ~2 years of bridge data.
+- Decided Nifty 50 first strategy (Decision 018): launch with 50 stocks, expand to 500 after validation.
+- Fixed SERIAL `id` sequence conflict caused by CSV backup restore.
+- Created safe `run_bridge_load.sh` that skips `create_tables()` (which drops data) and uses upsert only.
+- Successfully bridged the data gap: +55,826 new rows → 1,699,118 total stock rows, data through 2026-02-27.
+- Reran full engine pipeline: Indicators → Regime → Portfolio → Metrics.
+- **Updated Performance (18.4 years)**: CAGR 28.18%, Sharpe 1.23, Max DD -33.53%, Total Return 9,650%.
+- All Go/No-Go criteria passed ✅.
+- Created `portfolio_engine_nextday.py` — realistic execution model using next-day open prices instead of same-day close (Decision 019).
+
+### Decisions Made
+- Decision 016: Bridge data gap before frontend work.
+- Decision 017: Use RDS pause/resume for short breaks; terraform destroy for week+ gaps.
+- Decision 018: Nifty 50 first, then Nifty 500 expansion after validation.
+
+### Current State
+- Data pipeline fully current through 2026-02-27 for Nifty 50 ✅
+- All 4 engines rerun with updated metrics ✅
+- Strategy continues to massively outperform: 28.18% CAGR vs 9.79% Nifty benchmark
+- Ready for Phase 2 Step 3: Frontend Wiring
+
+### Blockers / Open Questions
+- NIFTYSMALL index (`^CNXSC`) appears delisted on Yahoo Finance — not critical (regime uses NIFTY50 only).
+- SSM tunnel drops on idle — known issue, restart as needed.
+
+### Next Session Must Start With
+> - Wire the React frontend dashboard to live engine outputs
+> - Expand data bridge to full Nifty 500 (remaining 450 stocks)
+> - Deploy MVP dashboard publicly

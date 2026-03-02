@@ -1,0 +1,83 @@
+# AWS Billing Audit — MRI Dev Environment
+
+> **Date**: 2026-03-02 | **Region**: `ap-south-1` (Mumbai) | **RDS Status**: Paused
+
+## Summary
+
+Even with RDS paused, you have **several resources still actively billing**. The biggest cost driver right now is the **NAT Gateway + Elastic IP** combo.
+
+---
+
+## 💰 Active Billable Resources
+
+| # | Resource | Type / Details | Estimated Monthly Cost | Status |
+|---|----------|---------------|----------------------|--------|
+| 1 | **NAT Gateway** | `mri-dev-nat` | **~$32–35/mo** (hourly charge + data) | 🔴 **Actively billing** |
+| 2 | **Elastic IP** | `mri-dev-nat-eip` (attached to NAT GW) | ~$3.60/mo (free when attached to running instance, but NAT GW charges separately) | 🟡 Billing via NAT GW |
+| 3 | **EC2 Bastion** | `mri-dev-bastion` · `t3.micro` | **~$7–8/mo** (or free if under Free Tier) | 🔴 **Running 24/7** |
+| 4 | **RDS PostgreSQL** | `mri-dev-db` · `db.t3.micro` · 20GB gp2 | **~$0** while paused (storage: ~$2.30/mo) | 🟢 Paused (auto-resumes after 7 days!) |
+| 5 | **S3 Bucket** | `mri-dev-outputs-{account_id}` · versioned | **~$0.01–0.50/mo** (depends on data stored) | 🟢 Minimal cost |
+| 6 | **Secrets Manager** | `mri-dev-db-credentials` | **$0.40/mo** | 🟡 Fixed cost |
+| 7 | **VPC** | VPC, subnets, IGW, route tables, security groups | **$0** (no charge for these) | 🟢 Free |
+| 8 | **IAM** | ECS execution/task roles, bastion SSM role | **$0** | 🟢 Free |
+
+---
+
+## 🚨 Key Findings
+
+### 1. NAT Gateway is your #1 cost — ~$32/mo
+The NAT Gateway charges **$0.045/hr** (~$32/mo) regardless of traffic, plus data processing fees. This is likely your single biggest cost right now.
+
+> [!CAUTION]
+> The NAT Gateway alone costs more than your paused RDS would when running!
+
+### 2. Bastion EC2 is running 24/7 — ~$7/mo
+The `t3.micro` bastion is in a public subnet, running continuously. If you're past the AWS Free Tier eligibility for EC2, this costs ~$7-8/mo.
+
+### 3. RDS auto-resumes after 7 days
+AWS automatically restarts a paused RDS instance after **7 days**. If you paused it today, it will resume around **March 9, 2026** and start billing again at ~$13/mo.
+
+> [!WARNING]
+> You must manually re-pause RDS every 7 days, or it will silently resume and start billing!
+
+---
+
+## 💡 Recommendations to Stop All Billing
+
+### Option A: Full Teardown (Recommended if not using for a week+)
+
+```bash
+cd ~/mri-int/terraform/environments/dev
+terraform destroy
+```
+
+This removes **everything**. Your data is already backed up to S3 per Decision 015. You can `terraform apply` to recreate it all later.
+
+**Estimated savings: ~$40–45/mo**
+
+### Option B: Targeted Resource Removal (Keep VPC/S3)
+
+If you want to keep the VPC and S3 for quick re-deployment:
+
+1. **Stop the Bastion EC2**: Go to AWS Console → EC2 → Stop `mri-dev-bastion` (saves ~$7/mo)
+2. **Delete the NAT Gateway**: AWS Console → VPC → NAT Gateways → Delete (saves ~$32/mo)
+3. **Release the Elastic IP**: After deleting NAT GW, release the EIP (otherwise it costs ~$3.60/mo when unattached!)
+4. **Keep RDS paused**: But remember to re-pause every 7 days
+
+> [!IMPORTANT]
+> If you delete the NAT Gateway, resources in private subnets (like RDS) won't have outbound internet access. This is fine when paused, but you'll need to recreate the NAT GW before re-deploying.
+
+### Option C: Just Stop the Bleeders
+
+At minimum, **stop the Bastion and delete the NAT Gateway**. These two are costing ~$40/mo for infrastructure you're not actively using.
+
+---
+
+## Cost Breakdown: Current vs. Optimized
+
+| Scenario | Monthly Cost |
+|----------|-------------|
+| **Current** (RDS paused, everything else running) | **~$43/mo** |
+| **Option A** (Full teardown) | **~$0.50/mo** (S3 storage only if data remains) |
+| **Option B** (Stop EC2 + delete NAT GW) | **~$3/mo** (S3 + Secrets Manager + RDS storage) |
+| **Option C** (Delete NAT GW only) | **~$11/mo** |

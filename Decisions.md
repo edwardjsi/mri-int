@@ -97,4 +97,28 @@ Decision: Destroy AWS infrastructure using Terraform and back up the RDS databas
 Reason: To save costs over the weekend/pause period and prove the infrastructure-as-code and data recovery processes.
 Status: FINAL.
 
+## Decision 016 — Bridge Data Gap Before Frontend
+Date: 2026-03-02
+Decision: Ingest the ~2-year data gap (early 2024 – March 2026) for all Nifty 500 stocks + Nifty 50 index before advancing Phase 2 frontend work. Rerun the full engine pipeline (Indicators → Regime → Scores → Portfolio) to produce current-day signals.
+Reason: The existing DB has data only through early 2024. The dashboard must show live, present-day signals to be useful. Data foundation must be current before any frontend wiring.
+Status: FINAL.
+
+## Decision 017 — AWS Cost Management: Pause/Resume Pattern
+Date: 2026-03-02
+Decision: Use RDS pause/resume (not full Terraform teardown) for short breaks. Reserve `terraform destroy` for week-long gaps only. Monitor NAT Gateway and Bastion costs actively.
+Reason: Billing audit revealed NAT Gateway ($32/mo) and Bastion EC2 ($7/mo) were silently billing while RDS was paused. Full teardown saves ~$43/mo but adds rebuild overhead.
+Status: FINAL.
+
+## Decision 018 — Nifty 50 First, Then Nifty 500
+Date: 2026-03-02
+Decision: Launch the Phase 2 Web App MVP with Nifty 50 stocks only. Expand to Nifty 500 after successful validation.
+Reason: Faster iteration, lower API load, quicker validation cycle. Nifty 50 covers the most liquid and widely followed stocks. Full 500 expansion follows once the pipeline is proven end-to-end.
+Status: FINAL.
+
+## Decision 019 — Next-Day Open Execution Engine
+Date: 2026-03-02
+Decision: Add `portfolio_engine_nextday.py` that executes trades at next day's open price instead of same-day close. Signals generated at EOD, execution deferred to next morning open. This is the realistic execution model.
+Reason: Same-day close execution is unrealistic — in practice, signals are reviewed after market close and orders placed for the next morning. This eliminates execution timing bias.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

@@ -39,7 +39,7 @@ AWS_REGION = "ap-south-1"
 
 # Backtest config
 START_DATE = "2005-01-01"
-END_DATE   = "2024-12-31"
+END_DATE   = "2026-03-02"
 
 # Strategy config
 REGIME_RISK_ON_THRESHOLD  = 60
