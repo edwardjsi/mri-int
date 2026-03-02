@@ -120,12 +120,15 @@
 
 
 ### Step 3: Client Signal Platform
-- [ ] Database migration: `clients`, `client_signals`, `client_actions`, `client_portfolio`, `client_equity`, `email_log`
-- [ ] FastAPI backend: auth (JWT), signals API, action recording API
-- [ ] Signal generator: daily script that creates BUY/SELL per client from latest scores/regime
-- [ ] Email service: AWS SES for daily signal digests, MailerLite for onboarding
-- [ ] React dashboard: regime card, signal cards with Executed/Skipped buttons, per-client equity chart vs Nifty
-- [ ] Cron automation: 4PM IST Mon-Fri pipeline (engines → signals → emails)
+- [x] Database migration: 6 tables created (`clients`, `client_signals`, `client_actions`, `client_portfolio`, `client_equity`, `email_log`)
+- [x] FastAPI backend: auth (JWT + bcrypt), signals API, action recording, portfolio/equity endpoints
+- [x] Signal generator: `src/signal_generator.py` — BUY/SELL per client from latest scores/regime
+- [x] Email service: `src/email_service.py` — AWS SES HTML digest with regime + signal tables
+- [x] React dashboard: Login, regime card, signal cards with Executed/Skipped, screener, equity chart vs Nifty
+- [x] Cron pipeline: `run_daily_pipeline.sh` — 5-step automated pipeline (ingest → indicators → regime → signals → emails)
+- [x] First client registered and dashboard verified (regime: NEUTRAL, screener: working)
+- [ ] AWS SES sandbox verification for email delivery
+- [ ] Cron entry on production server
 
 ### Step 4: Nifty 500 Expansion
 - [ ] Run `run_bridge_load.sh` for remaining 450 stocks

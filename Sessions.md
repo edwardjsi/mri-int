@@ -377,14 +377,24 @@ Designed the full architecture for a client-facing testing platform (Decision 02
 - Client signal platform designed and approved ✅
 - Ready to begin implementation
 
+### Client Signal Platform Build
+- Built complete FastAPI backend (`api/` — 7 files): auth (JWT + bcrypt), signals, actions, portfolio endpoints.
+- Created `src/signal_generator.py` — per-client BUY/SELL signal generation from latest regime/scores.
+- Created `src/email_service.py` — AWS SES HTML email digests with regime cards and signal tables.
+- Created `migrations/001_client_tables.sh` — 6 new tables: `clients`, `client_signals`, `client_actions`, `client_portfolio`, `client_equity`, `email_log`.
+- Built React dashboard (Login, Dashboard with regime/signals/screener, History, Performance pages).
+- Created `run_daily_pipeline.sh` (5-step cron) and `run_api.sh` (dev server runner).
+- Fixed passlib/bcrypt 4.1 incompatibility on Python 3.12 — switched to direct bcrypt usage.
+- Successfully registered first test client and verified dashboard showing NEUTRAL regime + stock screener.
+
 ### Blockers / Open Questions
 - NIFTYSMALL index (`^CNXSC`) appears delisted on Yahoo Finance — not critical.
 - SSM tunnel drops on idle — known issue, restart as needed.
 - AWS SES requires sandbox verification before sending test emails.
+- Managing 3 simultaneous WSL terminals (SSM tunnel, API server, commands) is cumbersome.
 
 ### Next Session Must Start With
-> - Create database migration for client tables
-> - Build FastAPI backend (auth → signals → actions)
-> - Build signal generator script
-> - Wire React dashboard to API
-> - Set up cron automation
+> - Verify SES sandbox and send first test email
+> - Deploy API + frontend to AWS (ECS or EC2)
+> - Set up cron entry for daily pipeline
+> - Expand data to Nifty 500
