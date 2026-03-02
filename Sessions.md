@@ -342,6 +342,7 @@
 - **Updated Performance (18.4 years)**: CAGR 28.18%, Sharpe 1.23, Max DD -33.53%, Total Return 9,650%.
 - All Go/No-Go criteria passed ✅.
 - Created `portfolio_engine_nextday.py` — realistic execution model using next-day open prices instead of same-day close (Decision 019).
+- **Next-Day Execution Result**: CAGR 25.32% (573 trades, ₹5,764,534) vs Original 29.04% — only 3.7pp gap confirms strategy robustness under realistic execution.
 
 ### Decisions Made
 - Decision 016: Bridge data gap before frontend work.

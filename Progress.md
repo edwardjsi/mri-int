@@ -115,7 +115,8 @@
 ### Step 2b: Next-Day Execution Realism Test
 - [x] Created `portfolio_engine_nextday.py` — executes at next-day open instead of same-day close
 - [x] Created `run_portfolio_nextday.sh` runner script
-- [ ] Run next-day backtest and compare results vs original
+- [x] Next-day backtest results: 573 trades, ₹5,764,534 equity, **CAGR 25.32%** (vs 29.04% original, -3.7pp gap = overnight execution cost)
+
 
 
 ### Step 3: Frontend Wiring
