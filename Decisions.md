@@ -121,4 +121,10 @@ Decision: Add `portfolio_engine_nextday.py` that executes trades at next day's o
 Reason: Same-day close execution is unrealistic — in practice, signals are reviewed after market close and orders placed for the next morning. This eliminates execution timing bias.
 Status: FINAL.
 
+## Decision 020 — Client Signal Platform Architecture
+Date: 2026-03-02
+Decision: Build a client-facing signal platform with: MailerLite for onboarding emails, AWS SES for daily signal digests, cron-based automation (4PM IST Mon-Fri), three-tier price capture (default→self-reported→broker API), per-client equity tracking vs Nifty.
+Reason: Enables controlled testing with a small crowd before full SaaS launch. Self-reported prices with next-day-open defaults balances accuracy with user effort.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

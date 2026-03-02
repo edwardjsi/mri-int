@@ -341,25 +341,50 @@
 - Reran full engine pipeline: Indicators → Regime → Portfolio → Metrics.
 - **Updated Performance (18.4 years)**: CAGR 28.18%, Sharpe 1.23, Max DD -33.53%, Total Return 9,650%.
 - All Go/No-Go criteria passed ✅.
-- Created `portfolio_engine_nextday.py` — realistic execution model using next-day open prices instead of same-day close (Decision 019).
-- **Next-Day Execution Result**: CAGR 25.32% (573 trades, ₹5,764,534) vs Original 29.04% — only 3.7pp gap confirms strategy robustness under realistic execution.
+
+### Backtesting Realism Analysis
+Before proceeding to the frontend, we conducted a critical review of the backtest validity:
+1. **Backtested or live?** — 100% backtested. No live/paper trading yet. Key risks: survivorship bias (today's Nifty 50 list applied retroactively), look-ahead bias mitigated by day-by-day simulation.
+2. **Transaction costs?** — 0.4% round-trip included. NOT included: slippage, STT/stamp duty, brokerage, GST. Realistic total cost ~0.5-0.7%. The 0.8% stress test passed previously.
+3. **Scalable with real capital?** — Yes up to ~₹5Cr for Nifty 50 stocks (highly liquid). Beyond that, market impact becomes a concern.
+4. **Survives different market cycles?** — Yes within dataset: 2008 crash, 2020 COVID, 2010-2013 sideways. Walk-forward test (train 2005-15, test 2016+) passed. No 3+ year prolonged bear market in dataset though.
+
+### Next-Day Execution Test
+- Created `portfolio_engine_nextday.py` — signals at EOD close, execution at next-day open (Decision 019).
+- **Result**: CAGR 25.32% (573 trades, ₹5,764,534) vs Original 29.04% — only 3.7pp gap.
+- Conclusion: Strategy is robust under realistic execution. The 3.7pp gap is the overnight execution cost. Real-world performance expected between 25-29% CAGR.
+
+### Client Signal Platform Design
+Designed the full architecture for a client-facing testing platform (Decision 020):
+- **Email**: MailerLite for onboarding/marketing, AWS SES for daily signal digests.
+- **Automation**: Cron job at 4PM IST Mon-Fri runs full pipeline → signals → emails.
+- **Price Recording**: Three-tier approach: (1) Default to recommended next-day open, (2) Client self-reports actual fill price, (3) Future broker API integration.
+- **Performance Tracking**: Per-client equity curve computed daily, displayed against Nifty 50 benchmark.
+- **Database**: New tables — `clients`, `client_signals`, `client_actions`, `client_portfolio`, `client_equity`, `email_log`.
+- **Frontend**: React dashboard with regime card, signal cards with "Executed/Skipped" buttons, performance chart.
 
 ### Decisions Made
 - Decision 016: Bridge data gap before frontend work.
 - Decision 017: Use RDS pause/resume for short breaks; terraform destroy for week+ gaps.
 - Decision 018: Nifty 50 first, then Nifty 500 expansion after validation.
+- Decision 019: Next-day open execution engine for realistic backtesting.
+- Decision 020: Client signal platform architecture (MailerLite + SES, cron, self-reported prices, per-client equity).
 
 ### Current State
 - Data pipeline fully current through 2026-02-27 for Nifty 50 ✅
 - All 4 engines rerun with updated metrics ✅
-- Strategy continues to massively outperform: 28.18% CAGR vs 9.79% Nifty benchmark
-- Ready for Phase 2 Step 3: Frontend Wiring
+- Next-day execution validated: 25.32% CAGR (still 2.5x Nifty) ✅
+- Client signal platform designed and approved ✅
+- Ready to begin implementation
 
 ### Blockers / Open Questions
-- NIFTYSMALL index (`^CNXSC`) appears delisted on Yahoo Finance — not critical (regime uses NIFTY50 only).
+- NIFTYSMALL index (`^CNXSC`) appears delisted on Yahoo Finance — not critical.
 - SSM tunnel drops on idle — known issue, restart as needed.
+- AWS SES requires sandbox verification before sending test emails.
 
 ### Next Session Must Start With
-> - Wire the React frontend dashboard to live engine outputs
-> - Expand data bridge to full Nifty 500 (remaining 450 stocks)
-> - Deploy MVP dashboard publicly
+> - Create database migration for client tables
+> - Build FastAPI backend (auth → signals → actions)
+> - Build signal generator script
+> - Wire React dashboard to API
+> - Set up cron automation

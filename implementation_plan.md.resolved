@@ -1,0 +1,183 @@
+# MRI Client Signal Platform — Implementation Plan
+
+## Goal
+Build a client-facing platform where testers can view daily buy/sell signals, receive email notifications, and have all decisions recorded per-client in the database.
+
+## Architecture Overview
+
+```mermaid
+graph LR
+    A[MRI Quant Engines] -->|Daily EOD| B[(RDS PostgreSQL)]
+    B --> C[FastAPI Backend]
+    C --> D[React Dashboard]
+    C --> E[Email Service - AWS SES]
+    D --> F[Client Browser]
+    C --> B
+```
+
+**Flow**: Engines run after market close → Generate signals → API serves them → Dashboard displays + Email sent → Client actions recorded
+
+---
+
+## Proposed Changes
+
+### Backend — FastAPI API Server
+
+#### [NEW] `api/main.py`
+FastAPI application entry point with CORS, route mounting.
+
+#### [NEW] `api/routes/signals.py`
+- `GET /api/signals/today` — Returns today's buy/sell signals for the logged-in client
+- `GET /api/signals/history` — Returns historical signal + action log
+- `GET /api/regime/current` — Current market regime (BULL/BEAR/NEUTRAL)
+- `GET /api/screener` — Nifty 50 stocks with scores, filterable
+
+#### [NEW] `api/routes/auth.py`
+- `POST /api/auth/register` — Create client account (email/password)
+- `POST /api/auth/login` — JWT token generation
+- `GET /api/auth/me` — Current client profile
+
+#### [NEW] `api/routes/actions.py`
+- `POST /api/actions/record` — Client records "I bought" / "I skipped" / "I sold" for a signal
+- `GET /api/actions/history` — Full action audit trail for this client
+
+---
+
+### Database — New Client Tables
+
+#### [MODIFY] RDS Schema (via migration script)
+
+```sql
+-- Client accounts
+CREATE TABLE clients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(100),
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Daily signals generated for each client
+CREATE TABLE client_signals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id),
+    date DATE NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    action VARCHAR(10) NOT NULL,  -- 'BUY' or 'SELL'
+    signal_price NUMERIC(12,4),   -- Price at signal generation (prev close)
+    exec_price NUMERIC(12,4),     -- Next-day open price (recommended)
+    score INT,                     -- Stock score at signal time
+    regime VARCHAR(20),            -- Market regime at signal time
+    reason TEXT,                   -- Why this signal (e.g., "Score >= 4, Regime BULL")
+    email_sent BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(client_id, date, symbol, action)
+);
+
+-- Client actions (what they actually did)
+CREATE TABLE client_actions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id),
+    signal_id UUID REFERENCES client_signals(id),
+    action_taken VARCHAR(20) NOT NULL,  -- 'EXECUTED', 'SKIPPED', 'PARTIAL'
+    actual_price NUMERIC(12,4),
+    actual_quantity INT,
+    notes TEXT,
+    recorded_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Email log
+CREATE TABLE email_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id),
+    date DATE NOT NULL,
+    subject VARCHAR(255),
+    status VARCHAR(20),  -- 'SENT', 'FAILED', 'BOUNCED'
+    sent_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+---
+
+### Signal Generator
+
+#### [NEW] `src/signal_generator.py`
+Runs after the regime/score engines complete each day:
+1. Reads latest [stock_scores](file://wsl$/Ubuntu/home/edwar/mri-int/src/regime_engine.py#109-181) and [market_regime](file://wsl$/Ubuntu/home/edwar/mri-int/src/regime_engine.py#58-107) for today
+2. Compares against each client's current positions (from `client_actions`)
+3. Generates BUY signals: Regime=BULL, Score >= 4, not already holding
+4. Generates SELL signals: Score <= 2, or Regime=BEAR, or trailing stop
+5. Inserts into `client_signals` table
+6. Triggers email notifications via AWS SES
+
+#### [NEW] `src/email_service.py`
+- Uses AWS SES (already have IAM roles in ap-south-1)
+- Sends daily digest email per client: "Today's Signals: BUY RELIANCE, SELL AXISBANK"
+- HTML template with stock details, scores, regime status
+- Records send status in `email_log`
+
+---
+
+### Frontend — React Dashboard
+
+#### [MODIFY] [frontend/src/App.tsx](file://wsl$/Ubuntu/home/edwar/mri-int/frontend/src/App.tsx)
+Replace CSV-based placeholder with API-connected dashboard.
+
+#### [NEW] `frontend/src/pages/Dashboard.tsx`
+- **Market Regime Card**: Current BULL/BEAR/NEUTRAL with color coding
+- **Today's Signals Panel**: Buy/Sell recommendations with prices and scores
+- **Action Buttons**: "Executed" / "Skipped" per signal (records to DB)
+- **Equity Curve Chart**: Interactive chart from Recharts
+
+#### [NEW] `frontend/src/pages/SignalHistory.tsx`
+- Historical log of all signals + what the client did
+- Filterable by date range, action type
+
+#### [NEW] `frontend/src/pages/Login.tsx`
+- Simple email/password login form
+- JWT stored in localStorage
+
+#### [NEW] `frontend/src/components/SignalCard.tsx`
+- Per-stock signal card: symbol, score, regime, recommended action, price
+- Action buttons to record client response
+
+---
+
+### Infrastructure
+
+#### [MODIFY] `terraform/modules/` (if needed)
+- Verify SES is available in ap-south-1
+- Add email sending permissions to task role if using SES
+
+#### [NEW] `docker-compose.yml` update
+- Add FastAPI service alongside frontend
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Email Service**: AWS SES requires email address verification in sandbox mode. You'll need to verify your sender email (and recipient emails for testing) before going live. Should we use SES or a simpler service like Resend/SendGrid for the MVP?
+
+> [!IMPORTANT]
+> **Authentication**: For the testing crowd, do we want proper JWT auth, or is a simple invite-code/passphrase approach sufficient for the MVP?
+
+> [!WARNING]
+> **Daily Signal Generation Timing**: The signal generator needs to run AFTER market close (~3:30 PM IST) and AFTER the engine pipeline completes. Currently this is manual. Should we automate this with a cron job or keep it manual for now?
+
+---
+
+## Verification Plan
+
+### Manual Verification
+1. Start the FastAPI server locally
+2. Register a test client via `/api/auth/register`
+3. Login and get JWT token
+4. Call `/api/signals/today` — verify correct buy/sell signals based on latest regime/scores
+5. Record an action via `/api/actions/record` — verify it appears in DB
+6. Open the React dashboard — verify signals display correctly
+7. Check email delivery (requires SES sandbox verification first)
+
+### Automated Tests
+- Will be determined after user confirms architecture choices above

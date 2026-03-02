@@ -119,7 +119,15 @@
 
 
 
-### Step 3: Frontend Wiring
-- [ ] Connect dashboard to live engine outputs
-- [ ] Deploy MVP dashboard publicly via Vercel for early user testing
-- [ ] Implement Paywall logic for active portfolio access
+### Step 3: Client Signal Platform
+- [ ] Database migration: `clients`, `client_signals`, `client_actions`, `client_portfolio`, `client_equity`, `email_log`
+- [ ] FastAPI backend: auth (JWT), signals API, action recording API
+- [ ] Signal generator: daily script that creates BUY/SELL per client from latest scores/regime
+- [ ] Email service: AWS SES for daily signal digests, MailerLite for onboarding
+- [ ] React dashboard: regime card, signal cards with Executed/Skipped buttons, per-client equity chart vs Nifty
+- [ ] Cron automation: 4PM IST Mon-Fri pipeline (engines → signals → emails)
+
+### Step 4: Nifty 500 Expansion
+- [ ] Run `run_bridge_load.sh` for remaining 450 stocks
+- [ ] Rerun engines on full 500-stock universe
+- [ ] Verify performance metrics hold
