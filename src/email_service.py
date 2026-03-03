@@ -12,7 +12,7 @@ from datetime import date
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "signals@mri-platform.com")
+SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 
 

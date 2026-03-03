@@ -52,3 +52,27 @@ module "rds" {
   rds_security_group = module.vpc.rds_security_group_id
   tags               = local.tags
 }
+
+module "ecs" {
+  source                = "../../modules/ecs"
+  prefix                = local.prefix
+  names                 = local.names
+  tags                  = local.tags
+  region                = local.region
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  app_security_group_id = module.vpc.app_security_group_id
+  execution_role_arn    = module.iam.ecs_task_execution_role_arn
+  task_role_arn         = module.iam.ecs_task_role_arn
+  db_host               = module.rds.db_endpoint
+  db_secret_arn         = module.rds.db_secret_arn
+}
+
+module "frontend" {
+  source       = "../../modules/frontend"
+  prefix       = local.prefix
+  account_id   = local.account_id
+  tags         = local.tags
+  alb_dns_name = module.ecs.alb_dns_name
+}

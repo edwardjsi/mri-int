@@ -127,4 +127,17 @@ Decision: Build a client-facing signal platform with: MailerLite for onboarding 
 Reason: Enables controlled testing with a small crowd before full SaaS launch. Self-reported prices with next-day-open defaults balances accuracy with user effort.
 Status: FINAL.
 
+## Decision 021 — Nifty 500 Expansion Deferred Until Post-SaaS Launch
+Date: 2026-03-03
+Decision: Do NOT expand to Nifty 500 until the SaaS product is successfully launched and operational with Nifty 50. This supersedes the timing implied in Decision 018.
+Reason: Focus all engineering effort on shipping a working SaaS product with Nifty 50 first. Nifty 500 expansion is a scaling concern, not a launch requirement. Premature expansion adds data load time, API costs, and complexity without improving the core product validation.
+Status: FINAL.
+
+## Decision 022 — SaaS Deployment Architecture: ECS Fargate + CloudFront + EventBridge
+Date: 2026-03-03
+Decision: Deploy MRI platform using: (1) ECS Fargate behind ALB for FastAPI backend, (2) S3 + CloudFront for React frontend with API proxy via `/api/*` path pattern, (3) EventBridge scheduled ECS task at 4PM IST Mon-Fri for the daily data pipeline. All infrastructure managed via Terraform. SES in sandbox mode for email delivery.
+Reason: ECS Fargate provides fully managed container orchestration (no EC2 to maintain), CloudFront serves as a single domain for both frontend and API (avoiding CORS), and EventBridge + Fargate gives serverless cron execution (pay only for ~5min/day pipeline runtime). This architecture demonstrates DevOps best practices for portfolio/interview purposes.
+Endpoints: API: `mri-dev-alb-*.ap-south-1.elb.amazonaws.com`, Frontend: `d1evxo8lp0e0eg.cloudfront.net`
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

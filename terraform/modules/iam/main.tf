@@ -24,6 +24,23 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Execution role needs Secrets Manager access to inject secrets into task definitions
+resource "aws_iam_role_policy" "execution_secrets" {
+  name = "${var.prefix}-execution-secrets-policy"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue"
+      ]
+      Resource = "arn:aws:secretsmanager:*:*:secret:${var.prefix}-*"
+    }]
+  })
+}
+
 resource "aws_iam_role" "ecs_task" {
   name = var.names["iam_task_role"]
 
@@ -99,6 +116,24 @@ resource "aws_iam_role_policy" "ecs_task_cloudwatch" {
         "logs:DescribeLogStreams"
       ]
       Resource = "arn:aws:logs:*:*:log-group:/mri/*"
+    }]
+  })
+}
+
+# SES permissions for sending signal emails from the API
+resource "aws_iam_role_policy" "ecs_task_ses" {
+  name = "${var.prefix}-ses-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+      ]
+      Resource = "*"
     }]
   })
 }

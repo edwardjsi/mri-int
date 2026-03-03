@@ -32,3 +32,40 @@ output "bastion_id" {
   description = "EC2 Bastion Host ID"
   value       = module.vpc.bastion_id
 }
+
+# --- ECS Outputs ---
+output "ecr_repository_url" {
+  description = "ECR repository URL"
+  value       = module.ecs.ecr_repository_url
+}
+
+output "alb_dns_name" {
+  description = "ALB DNS name for API access"
+  value       = module.ecs.alb_dns_name
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = module.ecs.ecs_cluster_name
+}
+
+output "ecs_service_name" {
+  description = "ECS service name"
+  value       = module.ecs.ecs_service_name
+}
+
+# --- Frontend Outputs ---
+output "cloudfront_domain" {
+  description = "CloudFront URL for the frontend"
+  value       = module.frontend.cloudfront_domain
+}
+
+output "frontend_bucket_name" {
+  description = "S3 bucket for frontend static files"
+  value       = module.frontend.frontend_bucket_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID"
+  value       = module.frontend.cloudfront_distribution_id
+}
