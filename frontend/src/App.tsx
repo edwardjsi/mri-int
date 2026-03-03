@@ -258,6 +258,7 @@ function AddCapitalDialog({ onConfirm, onCancel }: {
 function DashboardPage() {
   const [regime, setRegime] = useState<any>(null);
   const [signals, setSignals] = useState<any>(null);
+  const [pending, setPending] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showAddCapital, setShowAddCapital] = useState(false);
@@ -265,14 +266,16 @@ function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const [r, s, sum, prof] = await Promise.all([
+      const [r, s, p, sum, prof] = await Promise.all([
         api.getRegime(),
         api.getTodaySignals().catch(() => ({ signals: [] })),
+        api.getPendingSignals().catch(() => []),
         api.getDailySummary().catch(() => null),
         api.getProfile().catch(() => null),
       ]);
       setRegime(r);
       setSignals(s);
+      setPending(p);
       setSummary(sum);
       setProfile(prof);
     } catch (err) { console.error(err); }
@@ -283,7 +286,8 @@ function DashboardPage() {
 
   const handleAction = async (signalId: string, action: string, price?: number, qty?: number) => {
     try {
-      const sig = signals.signals.find((s: any) => s.id === signalId);
+      const allSignals = [...(pending || []), ...(signals?.signals || [])];
+      const sig = allSignals.find((s: any) => s.id === signalId);
       await api.recordAction(signalId, action, price || sig?.recommended_price, qty || 0);
       loadData();
     } catch (err: any) { alert(err.message); }
@@ -301,6 +305,11 @@ function DashboardPage() {
 
   const totalCapital = profile?.total_capital || profile?.initial_capital || 100000;
 
+  // Split pending into "older" (not today) signals
+  const todayDate = signals?.date;
+  const pendingOlder = (pending || []).filter((s: any) => s.date !== todayDate);
+  const todaySignals = signals?.signals || [];
+
   return (
     <div className="dashboard">
       <div className="dashboard-top-row">
@@ -317,16 +326,39 @@ function DashboardPage() {
 
       <DailySummaryCard summary={summary} />
 
-      <section className="section">
-        <h2 className="section-title">Today's Signals</h2>
-        {signals?.signals?.length > 0 ? (
+      {/* ── SECTION 1: Pending Trades (from previous days) ── */}
+      {pendingOlder.length > 0 && (
+        <section className="section pending-section">
+          <h2 className="section-title pending-title">
+            ⏳ Pending — Execute Your Trades
+          </h2>
+          <p className="section-subtitle">
+            You received these signals earlier. Mark them as Executed (with actual price + qty from your broker) or Skip.
+          </p>
           <div className="signals-grid">
-            {signals.signals.map((s: any) => (
+            {pendingOlder.map((s: any) => (
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── SECTION 2: Today's Fresh Signals ── */}
+      <section className="section">
+        <h2 className="section-title today-title">
+          📊 Today's New Signals {todayDate ? `(${todayDate})` : ''}
+        </h2>
+        <p className="section-subtitle">
+          Fresh signals from today's pipeline. Execute these in your broker tomorrow at 9:15 AM.
+        </p>
+        {todaySignals.length > 0 ? (
+          <div className="signals-grid">
+            {todaySignals.map((s: any) => (
               <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} />
             ))}
           </div>
         ) : (
-          <div className="empty-state">No signals for today. The market may be closed or there are no actionable setups.</div>
+          <div className="empty-state">No new signals today. The market may be closed or there are no actionable setups.</div>
         )}
       </section>
 

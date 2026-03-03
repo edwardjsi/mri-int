@@ -68,6 +68,39 @@ def get_todays_signals(
     }
 
 
+@router.get("/pending")
+def get_pending_signals(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """All signals the client hasn't acted on yet (from any date)."""
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT cs.id, cs.date, cs.symbol, cs.action, cs.recommended_price,
+               cs.score, cs.regime, cs.reason
+        FROM client_signals cs
+        LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+        WHERE cs.client_id = %s
+          AND ca.id IS NULL
+        ORDER BY cs.date DESC, cs.action, cs.score DESC
+    """, (str(client["id"]),))
+    signals = cur.fetchall()
+
+    return [
+        {
+            "id": str(s["id"]),
+            "date": str(s["date"]),
+            "symbol": s["symbol"],
+            "action": s["action"],
+            "recommended_price": float(s["recommended_price"]) if s["recommended_price"] else None,
+            "score": s["score"],
+            "regime": s["regime"],
+            "reason": s["reason"],
+        }
+        for s in signals
+    ]
+
+
 @router.get("/history")
 def get_signal_history(
     client=Depends(get_current_client),

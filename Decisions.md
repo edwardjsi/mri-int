@@ -159,4 +159,10 @@ Decision: Enhance client-facing platform with: (1) RS-based stock ranking — si
 Reason: Previous system generated signals without position sizing guidance and hardcoded qty=10. These features make the platform usable for real testing with actual capital.
 Status: FINAL.
 
+## Decision 025 — Daily Operations Workflow for Testing Phase
+Date: 2026-03-03
+Decision: Use a single `mri_daily.sh` script that: (1) starts RDS + bastion, (2) opens SSM tunnel, (3) runs the full pipeline locally, (4) starts a local API server for testers to log in and execute signals, (5) waits for admin to press Enter, (6) tears down everything. Testers get ~15min daily at 4PM IST to mark yesterday's signals as executed and view new signals. Signals generated at 4PM Day N are executed in broker at 9:15AM Day N+1, and marked in the system at 4PM Day N+1. Smallcase/Zerodha subscription is the eventual monetization path (~6 months out).
+Reason: Minimises AWS costs (~$0.07/day) while giving testers a functional daily window. The admin controls the lifecycle manually until the platform scales.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->
