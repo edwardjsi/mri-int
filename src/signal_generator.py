@@ -35,13 +35,16 @@ def get_latest_regime(cur):
 
 
 def get_latest_scores(cur, min_score=0):
-    """Get the most recent stock scores."""
+    """Get the most recent stock scores with RS for ranking."""
     cur.execute("""
-        SELECT symbol, total_score, date
-        FROM stock_scores
-        WHERE date = (SELECT MAX(date) FROM stock_scores)
-          AND total_score >= %s
-        ORDER BY total_score DESC
+        SELECT ss.symbol, ss.total_score, ss.date,
+               COALESCE(dp.rs_90d, 0) AS rs_90d
+        FROM stock_scores ss
+        LEFT JOIN daily_prices dp
+          ON dp.symbol = ss.symbol AND dp.date = ss.date
+        WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
+          AND ss.total_score >= %s
+        ORDER BY ss.total_score DESC, dp.rs_90d DESC NULLS LAST
     """, (min_score,))
     return cur.fetchall()
 
@@ -127,7 +130,7 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
                 "recommended_price": price_data.get("close"),
                 "score": stock["total_score"],
                 "regime": regime,
-                "reason": f"Score={stock['total_score']}, Regime=BULL, top-ranked eligible",
+                "reason": f"Score={stock['total_score']}, RS={stock.get('rs_90d', 0):.1%}, Regime=BULL, ranked by strength",
             })
 
     return signals

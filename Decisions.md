@@ -139,5 +139,24 @@ Decision: Deploy MRI platform using: (1) ECS Fargate behind ALB for FastAPI back
 Reason: ECS Fargate provides fully managed container orchestration (no EC2 to maintain), CloudFront serves as a single domain for both frontend and API (avoiding CORS), and EventBridge + Fargate gives serverless cron execution (pay only for ~5min/day pipeline runtime). This architecture demonstrates DevOps best practices for portfolio/interview purposes.
 Endpoints: API: `mri-dev-alb-*.ap-south-1.elb.amazonaws.com`, Frontend: `d1evxo8lp0e0eg.cloudfront.net`
 Status: FINAL.
+## Decision 023 — Full-Scale Architecture Demonstrated → Cost-Conscious Testing Phase
+Date: 2026-03-03
+Context: The MRI platform was built and deployed as a **production-grade, full-scale DevOps project** demonstrating enterprise best practices:
+  - **Infrastructure as Code**: Terraform modules for VPC, RDS, IAM, ECS, S3, CloudFront (6 modules, ~30 resources)
+  - **Container Orchestration**: ECS Fargate behind ALB with ECR, health checks, auto-restart
+  - **CI/CD Pipeline**: One-command `deploy.sh` — Docker build → ECR push → ECS rolling deployment → S3 sync → CloudFront invalidation
+  - **Serverless Automation**: EventBridge scheduled ECS tasks for daily pipeline
+  - **Security**: Private subnets for RDS + ECS, NAT Gateway, Secrets Manager, IAM least-privilege roles
+  - **Frontend CDN**: S3 + CloudFront with API proxy, SPA routing, OAC-based access control
+  - **Email Service**: AWS SES for client signal digests
+  Full-scale cost: ~$80/month.
+Decision: Transition to a **cost-conscious testing phase** for the next 6 months. Keep only RDS (stopped, ~$3/mo storage) and CloudFront/S3 (free). Spin up infrastructure daily at 4PM IST for ~30 minutes, run pipeline, then tear down. Estimated cost: ~$5/month. The full-scale architecture can be restored at any time via `terraform apply` + `deploy.sh` (~10 minutes) when going public.
+Reason: During the testing phase with a small group of users, 24/7 infrastructure is unnecessary. This reduces 6-month costs from ~$480 to ~$27 while retaining all data and the ability to scale back up instantly.
+Status: FINAL.
+## Decision 024 — Client Investment Features: RS Ranking, Capital Management, Execution Tracking
+Date: 2026-03-03
+Decision: Enhance client-facing platform with: (1) RS-based stock ranking — signals sorted by score DESC then relative strength DESC to resolve ties, (2) Add Capital — users can increase their investment capital at any time, (3) Execution Dialog — prompts for actual price and quantity with auto-calculated 10% allocation suggestion, (4) Daily P&L Summary — shows today's portfolio change vs yesterday, (5) Auto-quantity — signal cards display suggested share count based on 10% of total capital / stock price.
+Reason: Previous system generated signals without position sizing guidance and hardcoded qty=10. These features make the platform usable for real testing with actual capital.
+Status: FINAL.
 
 <!-- Append new decisions below. Never delete or modify old ones. -->

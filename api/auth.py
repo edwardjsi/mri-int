@@ -78,11 +78,43 @@ def login(req: LoginRequest, conn=Depends(get_db)):
 
 
 @router.get("/me")
-def get_profile(client=Depends(get_current_client)):
+def get_profile(client=Depends(get_current_client), conn=Depends(get_db)):
+    cur = conn.cursor()
+    cur.execute("SELECT COALESCE(SUM(amount), 0) AS added FROM capital_additions WHERE client_id = %s", (str(client["id"]),))
+    added = float(cur.fetchone()["added"])
+    total = float(client["initial_capital"]) + added
     return {
         "id": str(client["id"]),
         "email": client["email"],
         "name": client["name"],
         "initial_capital": float(client["initial_capital"]),
+        "added_capital": added,
+        "total_capital": total,
         "created_at": str(client["created_at"]),
     }
+
+
+class UpdateCapitalRequest(BaseModel):
+    amount: float
+
+
+@router.post("/capital")
+def add_capital(req: UpdateCapitalRequest, client=Depends(get_current_client), conn=Depends(get_db)):
+    """Add more capital to the client's account."""
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+    cur = conn.cursor()
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS capital_additions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID NOT NULL REFERENCES clients(id),
+            amount NUMERIC(14,2) NOT NULL,
+            added_at TIMESTAMPTZ DEFAULT NOW()
+        )"""
+    )
+    cur.execute(
+        "INSERT INTO capital_additions (client_id, amount) VALUES (%s, %s)",
+        (str(client["id"]), req.amount),
+    )
+    conn.commit()
+    return {"message": f"₹{req.amount:,.0f} added", "new_amount": req.amount}

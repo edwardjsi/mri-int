@@ -116,3 +116,54 @@ def get_performance(
         "initial_capital": client_base,
         "latest_equity": float(client_eq[-1]["equity"]) if client_eq else 0,
     }
+
+
+@router.get("/daily-summary")
+def get_daily_summary(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Today's portfolio P&L summary."""
+    cur = conn.cursor()
+
+    # Get last 2 equity entries to calculate daily change
+    cur.execute("""
+        SELECT date, equity, cash, open_positions
+        FROM client_equity
+        WHERE client_id = %s
+        ORDER BY date DESC LIMIT 2
+    """, (str(client["id"]),))
+    rows = cur.fetchall()
+
+    if not rows:
+        return {
+            "has_data": False,
+            "message": "No portfolio data yet. Execute some signals to start tracking.",
+        }
+
+    today = rows[0]
+    yesterday = rows[1] if len(rows) > 1 else None
+
+    today_equity = float(today["equity"])
+    prev_equity = float(yesterday["equity"]) if yesterday else today_equity
+    daily_change = today_equity - prev_equity
+    daily_pct = (daily_change / prev_equity * 100) if prev_equity else 0
+
+    # Overall return
+    cur.execute("SELECT initial_capital FROM clients WHERE id = %s", (str(client["id"]),))
+    capital = float(cur.fetchone()["initial_capital"])
+    total_return = today_equity - capital
+    total_pct = (total_return / capital * 100) if capital else 0
+
+    return {
+        "has_data": True,
+        "date": str(today["date"]),
+        "equity": today_equity,
+        "cash": float(today["cash"]),
+        "open_positions": today["open_positions"],
+        "daily_change": round(daily_change, 2),
+        "daily_pct": round(daily_pct, 2),
+        "total_return": round(total_return, 2),
+        "total_pct": round(total_pct, 2),
+        "initial_capital": capital,
+    }

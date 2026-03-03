@@ -82,31 +82,174 @@ function RegimeCard({ regime }: { regime: any }) {
   );
 }
 
-/* ─── Signal Card ────────────────────────────────────────── */
-function SignalCard({ signal, onAction }: { signal: any; onAction: (id: string, action: string) => void }) {
-  const isBuy = signal.action === 'BUY';
+/* ─── Daily P&L Summary Card ─────────────────────────────── */
+function DailySummaryCard({ summary }: { summary: any }) {
+  if (!summary?.has_data) return null;
+
   return (
-    <div className={`signal-card ${isBuy ? 'signal-buy' : 'signal-sell'}`}>
-      <div className="signal-header">
-        <span className="signal-symbol">{signal.symbol}</span>
-        <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
-      </div>
-      <div className="signal-details">
-        <div className="signal-detail"><span className="detail-label">Price</span><span className="detail-value">₹{signal.recommended_price?.toLocaleString()}</span></div>
-        <div className="signal-detail"><span className="detail-label">Score</span><span className="detail-value">{signal.score}/5</span></div>
-      </div>
-      <div className="signal-reason">{signal.reason}</div>
-      {signal.client_action ? (
-        <div className={`action-status ${signal.client_action === 'EXECUTED' ? 'status-executed' : 'status-skipped'}`}>
-          {signal.client_action === 'EXECUTED' ? '✅ Executed' : '⏭️ Skipped'}
-          {signal.actual_price && ` @ ₹${signal.actual_price.toLocaleString()}`}
+    <div className="card daily-summary-card">
+      <div className="card-label">Portfolio Summary · {summary.date}</div>
+      <div className="summary-stats">
+        <div className="summary-stat">
+          <span className="summary-label">Equity</span>
+          <span className="summary-value">₹{summary.equity?.toLocaleString()}</span>
         </div>
-      ) : (
-        <div className="signal-actions">
-          <button className="btn-execute" onClick={() => onAction(signal.id, 'EXECUTED')}>✅ Executed</button>
-          <button className="btn-skip" onClick={() => onAction(signal.id, 'SKIPPED')}>⏭️ Skip</button>
+        <div className="summary-stat">
+          <span className="summary-label">Today</span>
+          <span className="summary-value" style={{ color: summary.daily_change >= 0 ? '#22c55e' : '#ef4444' }}>
+            {summary.daily_change >= 0 ? '+' : ''}₹{summary.daily_change?.toLocaleString()} ({summary.daily_pct}%)
+          </span>
         </div>
+        <div className="summary-stat">
+          <span className="summary-label">Overall</span>
+          <span className="summary-value" style={{ color: summary.total_return >= 0 ? '#22c55e' : '#ef4444' }}>
+            {summary.total_return >= 0 ? '+' : ''}₹{summary.total_return?.toLocaleString()} ({summary.total_pct}%)
+          </span>
+        </div>
+        <div className="summary-stat">
+          <span className="summary-label">Cash</span>
+          <span className="summary-value">₹{summary.cash?.toLocaleString()}</span>
+        </div>
+        <div className="summary-stat">
+          <span className="summary-label">Positions</span>
+          <span className="summary-value">{summary.open_positions}/10</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Execution Dialog ───────────────────────────────────── */
+function ExecutionDialog({ signal, totalCapital, onConfirm, onCancel }: {
+  signal: any;
+  totalCapital: number;
+  onConfirm: (price: number, qty: number) => void;
+  onCancel: () => void;
+}) {
+  const allocation = totalCapital * 0.1;
+  const suggestedQty = signal.recommended_price ? Math.floor(allocation / signal.recommended_price) : 0;
+  const [price, setPrice] = useState(signal.recommended_price?.toString() || '');
+  const [qty, setQty] = useState(suggestedQty.toString());
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <h3 className="modal-title">
+          {signal.action === 'BUY' ? '🟢' : '🔴'} Execute {signal.action}: {signal.symbol}
+        </h3>
+        <div className="modal-info">
+          <div className="info-row">
+            <span>10% Allocation:</span>
+            <span className="font-bold">₹{allocation.toLocaleString()}</span>
+          </div>
+          <div className="info-row">
+            <span>Recommended Price:</span>
+            <span>₹{signal.recommended_price?.toLocaleString()}</span>
+          </div>
+          <div className="info-row">
+            <span>Suggested Qty:</span>
+            <span className="font-bold">{suggestedQty} shares</span>
+          </div>
+        </div>
+        <div className="modal-form">
+          <label className="modal-label">
+            Actual Price (₹)
+            <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="form-input" step="0.05" />
+          </label>
+          <label className="modal-label">
+            Quantity
+            <input type="number" value={qty} onChange={e => setQty(e.target.value)} className="form-input" min="1" />
+          </label>
+          {price && qty && (
+            <div className="modal-total">
+              Total: ₹{(parseFloat(price) * parseInt(qty)).toLocaleString()}
+            </div>
+          )}
+        </div>
+        <div className="modal-actions">
+          <button className="btn-cancel" onClick={onCancel}>Cancel</button>
+          <button className="btn-execute" onClick={() => onConfirm(parseFloat(price), parseInt(qty))}>
+            Confirm {signal.action}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Signal Card ────────────────────────────────────────── */
+function SignalCard({ signal, totalCapital, onAction }: {
+  signal: any;
+  totalCapital: number;
+  onAction: (id: string, action: string, price?: number, qty?: number) => void;
+}) {
+  const [showDialog, setShowDialog] = useState(false);
+  const isBuy = signal.action === 'BUY';
+  const allocation = totalCapital * 0.1;
+  const suggestedQty = signal.recommended_price ? Math.floor(allocation / signal.recommended_price) : 0;
+
+  return (
+    <>
+      <div className={`signal-card ${isBuy ? 'signal-buy' : 'signal-sell'}`}>
+        <div className="signal-header">
+          <span className="signal-symbol">{signal.symbol}</span>
+          <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
+        </div>
+        <div className="signal-details">
+          <div className="signal-detail"><span className="detail-label">Price</span><span className="detail-value">₹{signal.recommended_price?.toLocaleString()}</span></div>
+          <div className="signal-detail"><span className="detail-label">Score</span><span className="detail-value">{signal.score}/5</span></div>
+          {isBuy && (
+            <div className="signal-detail"><span className="detail-label">Qty</span><span className="detail-value suggested-qty">{suggestedQty} shares (₹{allocation.toLocaleString()})</span></div>
+          )}
+        </div>
+        <div className="signal-reason">{signal.reason}</div>
+        {signal.client_action ? (
+          <div className={`action-status ${signal.client_action === 'EXECUTED' ? 'status-executed' : 'status-skipped'}`}>
+            {signal.client_action === 'EXECUTED' ? '✅ Executed' : '⏭️ Skipped'}
+            {signal.actual_price && ` @ ₹${signal.actual_price.toLocaleString()}`}
+            {signal.quantity && signal.quantity > 0 && ` × ${signal.quantity}`}
+          </div>
+        ) : (
+          <div className="signal-actions">
+            <button className="btn-execute" onClick={() => setShowDialog(true)}>✅ Execute</button>
+            <button className="btn-skip" onClick={() => onAction(signal.id, 'SKIPPED')}>⏭️ Skip</button>
+          </div>
+        )}
+      </div>
+      {showDialog && (
+        <ExecutionDialog
+          signal={signal}
+          totalCapital={totalCapital}
+          onConfirm={(price, qty) => { onAction(signal.id, 'EXECUTED', price, qty); setShowDialog(false); }}
+          onCancel={() => setShowDialog(false)}
+        />
       )}
+    </>
+  );
+}
+
+/* ─── Add Capital Dialog ─────────────────────────────────── */
+function AddCapitalDialog({ onConfirm, onCancel }: {
+  onConfirm: (amount: number) => void;
+  onCancel: () => void;
+}) {
+  const [amount, setAmount] = useState('');
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content modal-sm" onClick={e => e.stopPropagation()}>
+        <h3 className="modal-title">💰 Add Capital</h3>
+        <label className="modal-label">
+          Amount (₹)
+          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="form-input" min="1000" placeholder="e.g. 50000" autoFocus />
+        </label>
+        <div className="modal-actions">
+          <button className="btn-cancel" onClick={onCancel}>Cancel</button>
+          <button className="btn-execute" onClick={() => { if (parseFloat(amount) > 0) onConfirm(parseFloat(amount)); }} disabled={!amount || parseFloat(amount) <= 0}>
+            Add ₹{amount ? parseFloat(amount).toLocaleString() : '0'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -115,87 +258,81 @@ function SignalCard({ signal, onAction }: { signal: any; onAction: (id: string, 
 function DashboardPage() {
   const [regime, setRegime] = useState<any>(null);
   const [signals, setSignals] = useState<any>(null);
-  const [screener, setScreener] = useState<any>(null);
+  const [summary, setSummary] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
-      const [r, s, sc] = await Promise.all([
+      const [r, s, sum, prof] = await Promise.all([
         api.getRegime(),
         api.getTodaySignals().catch(() => ({ signals: [] })),
-        api.getScreener(4).catch(() => ({ stocks: [] })),
+        api.getDailySummary().catch(() => null),
+        api.getProfile().catch(() => null),
       ]);
       setRegime(r);
       setSignals(s);
-      setScreener(sc);
+      setSummary(sum);
+      setProfile(prof);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { loadData(); }, []);
 
-  const handleAction = async (signalId: string, action: string) => {
+  const handleAction = async (signalId: string, action: string, price?: number, qty?: number) => {
     try {
       const sig = signals.signals.find((s: any) => s.id === signalId);
-      await api.recordAction(signalId, action, sig?.recommended_price, action === 'EXECUTED' ? 10 : 0);
+      await api.recordAction(signalId, action, price || sig?.recommended_price, qty || 0);
+      loadData();
+    } catch (err: any) { alert(err.message); }
+  };
+
+  const handleAddCapital = async (amount: number) => {
+    try {
+      await api.addCapital(amount);
+      setShowAddCapital(false);
       loadData();
     } catch (err: any) { alert(err.message); }
   };
 
   if (loading) return <div className="loading">Loading dashboard...</div>;
 
+  const totalCapital = profile?.total_capital || profile?.initial_capital || 100000;
+
   return (
     <div className="dashboard">
-      <RegimeCard regime={regime} />
+      <div className="dashboard-top-row">
+        <RegimeCard regime={regime} />
+        <div className="card capital-card">
+          <div className="card-label">My Capital</div>
+          <div className="capital-value">₹{totalCapital.toLocaleString()}</div>
+          <div className="card-meta">
+            Per stock: ₹{(totalCapital * 0.1).toLocaleString()} (10%)
+          </div>
+          <button className="btn-add-capital" onClick={() => setShowAddCapital(true)}>+ Add Capital</button>
+        </div>
+      </div>
+
+      <DailySummaryCard summary={summary} />
 
       <section className="section">
         <h2 className="section-title">Today's Signals</h2>
         {signals?.signals?.length > 0 ? (
           <div className="signals-grid">
-            {signals.signals.map((s: any) => <SignalCard key={s.id} signal={s} onAction={handleAction} />)}
+            {signals.signals.map((s: any) => (
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} />
+            ))}
           </div>
         ) : (
           <div className="empty-state">No signals for today. The market may be closed or there are no actionable setups.</div>
         )}
       </section>
 
-      <section className="section">
-        <h2 className="section-title">Top Scoring Stocks (Score ≥ 4)</h2>
-        {screener?.stocks?.length > 0 ? (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Score</th>
-                  <th>Price</th>
-                  <th>EMA 50/200</th>
-                  <th>200 Slope</th>
-                  <th>6M High</th>
-                  <th>Volume</th>
-                  <th>RS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {screener.stocks.map((s: any) => (
-                  <tr key={s.symbol}>
-                    <td className="font-bold">{s.symbol}</td>
-                    <td><span className="score-badge">{s.score}/5</span></td>
-                    <td>₹{s.close?.toLocaleString()}</td>
-                    <td>{s.conditions.ema_50_200 ? '✅' : '❌'}</td>
-                    <td>{s.conditions.ema_200_slope ? '✅' : '❌'}</td>
-                    <td>{s.conditions['6m_high'] ? '✅' : '❌'}</td>
-                    <td>{s.conditions.volume ? '✅' : '❌'}</td>
-                    <td>{s.conditions.relative_strength ? '✅' : '❌'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state">No stocks meeting minimum score criteria.</div>
-        )}
-      </section>
+      {showAddCapital && (
+        <AddCapitalDialog onConfirm={handleAddCapital} onCancel={() => setShowAddCapital(false)} />
+      )}
     </div>
   );
 }

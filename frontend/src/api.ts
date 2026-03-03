@@ -93,6 +93,14 @@ export const api = {
     getPositions: () => apiFetch('/portfolio/positions'),
     getEquity: () => apiFetch('/portfolio/equity'),
     getPerformance: () => apiFetch('/portfolio/performance'),
+    getDailySummary: () => apiFetch('/portfolio/daily-summary'),
+
+    // Capital
+    addCapital: (amount: number) =>
+        apiFetch('/auth/capital', {
+            method: 'POST',
+            body: JSON.stringify({ amount }),
+        }),
 
     // Health
     health: () => fetch(`${API_BASE}/health`).then(r => r.json()),
