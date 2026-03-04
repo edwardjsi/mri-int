@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 MAX_POSITIONS = 10
 MIN_BUY_SCORE = 4
 MAX_SELL_SCORE = 2
+MIN_ADTV = 100_000_000       # ₹10 Cr minimum avg daily turnover
+MAX_SECTOR_STOCKS = 3         # Max stocks from any single sector
+MIN_ABSOLUTE_SCORE = 3        # Cash toggle: skip if best available < this
 
 
 def get_connection():
@@ -34,18 +37,47 @@ def get_latest_regime(cur):
     return row["classification"] if row else "NEUTRAL"
 
 
+# Cache for sector lookups (populated once per run)
+_sector_cache = {}
+
+
+def _get_sector_proxy(cur, symbol):
+    """Get sector/industry for a stock.
+    Uses NSE Nifty 500 industry classification cached in memory.
+    Falls back to 'UNKNOWN' if not available.
+    """
+    global _sector_cache
+    if not _sector_cache:
+        # Try to load from a sector mapping table if it exists
+        try:
+            cur.execute("""
+                SELECT symbol, industry FROM stock_sectors
+            """)
+            rows = cur.fetchall()
+            _sector_cache = {r["symbol"]: r["industry"] for r in rows}
+        except Exception:
+            # Table doesn't exist yet — use empty cache
+            _sector_cache = {"_initialized": True}
+
+    return _sector_cache.get(symbol, "UNKNOWN")
+
+
 def get_latest_scores(cur, min_score=0):
-    """Get the most recent stock scores with RS for ranking."""
+    """Get the most recent stock scores with RS for ranking.
+    Applies ₹10 Cr ADTV liquidity gate to filter illiquid stocks.
+    """
     cur.execute("""
         SELECT ss.symbol, ss.total_score, ss.date,
-               COALESCE(dp.rs_90d, 0) AS rs_90d
+               COALESCE(dp.rs_90d, 0) AS rs_90d,
+               COALESCE(dp.avg_volume_20d * dp.close, 0) AS adtv
         FROM stock_scores ss
         LEFT JOIN daily_prices dp
           ON dp.symbol = ss.symbol AND dp.date = ss.date
         WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
           AND ss.total_score >= %s
+          AND COALESCE(dp.avg_volume_20d * dp.close, 0) >= %s
         ORDER BY ss.total_score DESC, dp.rs_90d DESC NULLS LAST
-    """, (min_score,))
+    """, (min_score, MIN_ADTV))
     return cur.fetchall()
 
 
@@ -113,15 +145,41 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
 
     if regime == "BULL" and effective_positions < MAX_POSITIONS:
         slots = MAX_POSITIONS - effective_positions
-        # Top scoring stocks not already held
+        # Top scoring stocks not already held, passing liquidity gate
         eligible = [
             s for s in scores
             if s["total_score"] >= MIN_BUY_SCORE
             and s["symbol"] not in open_positions
             and s["symbol"] in prices
         ]
-        for stock in eligible[:slots]:
+
+        # Track sector concentration for this client's portfolio+new picks
+        sector_count = {}  # sector -> count of stocks
+        selected = []
+
+        for stock in eligible:
+            if len(selected) >= slots:
+                break
+
+            # Cash toggle: skip if score below absolute momentum threshold
+            if stock["total_score"] < MIN_ABSOLUTE_SCORE:
+                logger.info(f"  Cash toggle: skipping {stock['symbol']} (score={stock['total_score']} < {MIN_ABSOLUTE_SCORE})")
+                continue
+
+            # Sector concentration cap (use first letter of symbol as proxy
+            # until sector data is available; future: use actual GICS sector)
+            sector = _get_sector_proxy(cur, stock["symbol"])
+            current_sector_count = sector_count.get(sector, 0)
+            if current_sector_count >= MAX_SECTOR_STOCKS:
+                logger.info(f"  Sector cap: skipping {stock['symbol']} (sector={sector}, already {current_sector_count} stocks)")
+                continue
+
+            sector_count[sector] = current_sector_count + 1
+            selected.append(stock)
+
+        for stock in selected:
             price_data = prices.get(stock["symbol"], {})
+            adtv_cr = stock.get("adtv", 0) / 10_000_000  # Convert to Cr
             signals.append({
                 "client_id": client_id,
                 "date": signal_date,
@@ -130,7 +188,7 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
                 "recommended_price": price_data.get("close"),
                 "score": stock["total_score"],
                 "regime": regime,
-                "reason": f"Score={stock['total_score']}, RS={stock.get('rs_90d', 0):.1%}, Regime=BULL, ranked by strength",
+                "reason": f"Score={stock['total_score']}, RS={stock.get('rs_90d', 0):.1%}, ADTV=₹{adtv_cr:.0f}Cr, Regime=BULL",
             })
 
     return signals

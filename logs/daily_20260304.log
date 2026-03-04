@@ -1,0 +1,164 @@
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-060624f65152387a1",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-yfc7xaz838ygcz4kbhck7pkv3y
+2026-03-04 12:15:17,769 - INFO - === MRI Daily Pipeline — 2026-03-04 12:15 ===
+2026-03-04 12:15:17,769 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-04 12:15:18,150 - INFO - Loading index data...
+2026-03-04 12:15:25,121 - INFO -   Loaded 4527 rows for NIFTY50
+2026-03-04 12:15:31,629 - INFO -   Loaded 4495 rows for NIFTYMID
+2026-03-04 12:15:31,865 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2005-01-01 -> 2026-03-02)
+2026-03-04 12:15:31,873 - ERROR - 
+1 Failed download:
+2026-03-04 12:15:31,873 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2005-01-01 -> 2026-03-02)
+2026-03-04 12:15:31,879 - WARNING - No data for index NIFTYSMALL
+2026-03-04 12:15:31,880 - INFO - Index data load complete.
+2026-03-04 12:15:32,454 - INFO -   Fetched 50 Nifty 50 symbols
+2026-03-04 12:15:32,454 - INFO - Loading stock data for 50 symbols...
+Loading stocks:   0%|          | 0/1 [00:00<?, ?it/s]Terminate signal received, exiting.
+
+
+Exiting session with sessionId: Auser-yfc7xaz838ygcz4kbhck7pkv3y.
+
+Cannot perform start session: listen tcp 127.0.0.1:5433: bind: address already in use
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-060624f65152387a1",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-8nehs2jez7l8q57snht4edlcv8
+Cannot perform start session: listen tcp 127.0.0.1:5433: bind: address already in use
+2026-03-04 12:34:33,980 - INFO - === MRI Daily Pipeline — 2026-03-04 12:34 ===
+2026-03-04 12:34:33,980 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-04 12:34:34,348 - INFO - Loading index data...
+2026-03-04 12:34:37,789 - INFO -   Loaded 4527 rows for NIFTY50
+2026-03-04 12:34:41,376 - INFO -   Loaded 4495 rows for NIFTYMID
+2026-03-04 12:34:41,499 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2005-01-01 -> 2026-03-02)
+2026-03-04 12:34:41,501 - ERROR - 
+1 Failed download:
+2026-03-04 12:34:41,501 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2005-01-01 -> 2026-03-02)
+2026-03-04 12:34:41,506 - WARNING - No data for index NIFTYSMALL
+2026-03-04 12:34:41,506 - INFO - Index data load complete.
+2026-03-04 12:34:41,930 - INFO -   Fetched 50 Nifty 50 symbols
+2026-03-04 12:34:41,930 - INFO - Loading stock data for 50 symbols...
+Loading stocks:   0%|          | 0/1 [00:00<?, ?it/s]Loading stocks: 100%|██████████| 1/1 [03:32<00:00, 212.22s/it]Loading stocks: 100%|██████████| 1/1 [03:32<00:00, 212.22s/it]
+2026-03-04 12:38:14,159 - INFO - Stock data load complete. Failed: 0 symbols.
+2026-03-04 12:38:14,160 - INFO -   ✅ Data ingestion complete
+2026-03-04 12:38:14,160 - INFO - [2/5] Running Indicator Engine...
+2026-03-04 12:38:15,132 - INFO - Indicator columns added/verified in daily_prices.
+2026-03-04 12:38:15,133 - INFO - Fetching daily prices (this may take a minute for 1.6M rows)...
+/home/edwar/mri-int/src/indicator_engine.py:36: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql("SELECT id, symbol, date, high, close, volume FROM daily_prices ORDER BY symbol, date", conn)
+2026-03-04 12:41:23,868 - INFO - Fetching index prices for Relative Strength...
+/home/edwar/mri-int/src/indicator_engine.py:39: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  idx_df = pd.read_sql("SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+2026-03-04 12:41:24,277 - INFO - Computing indicators...
+2026-03-04 12:41:24,703 - INFO - Calculating EMAs and Rolling values per stock...
+/home/edwar/mri-int/src/indicator_engine.py:73: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['ema_200'].replace(0, np.nan, inplace=True) # Exclude extreme anomalies if any
+2026-03-04 12:41:24,925 - INFO - Calculating 20-day regression slope of 200 EMA...
+2026-03-04 12:42:39,362 - INFO - Updating database with calculated indicators for 1699118 rows...
+2026-03-04 12:43:11,551 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+)
+2026-03-04 12:43:48,816 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+)
+2026-03-04 12:44:25,998 - ERROR - Failed to connect to the database after multiple attempts.
+2026-03-04 12:44:25,999 - ERROR -   ❌ Indicator engine failed: connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-060624f65152387a1",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-8qufktgdr63jae28oknxlfr69a
+2026-03-04 12:47:07,472 - INFO - === MRI Daily Pipeline — 2026-03-04 12:47 ===
+2026-03-04 12:47:07,472 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-04 12:47:07,926 - INFO - Loading index data...
+2026-03-04 12:47:41,475 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+)
+2026-03-04 12:48:18,649 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+)
+2026-03-04 12:48:55,848 - ERROR - Failed to connect to the database after multiple attempts.
+2026-03-04 12:48:55,849 - ERROR -   ❌ Data ingestion failed: connection to server at "localhost" (127.0.0.1), port 5433 failed: timeout expired
+
+
+
+Exiting session with sessionId: Auser-8qufktgdr63jae28oknxlfr69a.
+
+Cannot perform start session: listen tcp 127.0.0.1:5433: bind: address already in use

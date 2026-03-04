@@ -36,22 +36,22 @@ output "bastion_id" {
 # --- ECS Outputs ---
 output "ecr_repository_url" {
   description = "ECR repository URL"
-  value       = module.ecs.ecr_repository_url
+  value       = var.cost_conscious_mode ? null : module.ecs[0].ecr_repository_url
 }
 
 output "alb_dns_name" {
   description = "ALB DNS name for API access"
-  value       = module.ecs.alb_dns_name
+  value       = var.cost_conscious_mode ? null : module.ecs[0].alb_dns_name
 }
 
 output "ecs_cluster_name" {
   description = "ECS cluster name"
-  value       = module.ecs.ecs_cluster_name
+  value       = var.cost_conscious_mode ? null : module.ecs[0].ecs_cluster_name
 }
 
 output "ecs_service_name" {
   description = "ECS service name"
-  value       = module.ecs.ecs_service_name
+  value       = var.cost_conscious_mode ? null : module.ecs[0].ecs_service_name
 }
 
 # --- Frontend Outputs ---

@@ -20,10 +20,11 @@ provider "aws" {
 }
 
 module "vpc" {
-  source      = "../../modules/vpc"
-  prefix      = local.prefix
-  names       = local.names
-  tags        = local.tags
+  source             = "../../modules/vpc"
+  prefix             = local.prefix
+  names              = local.names
+  tags               = local.tags
+  enable_nat_gateway = !var.cost_conscious_mode
 }
 
 module "s3" {
@@ -54,6 +55,7 @@ module "rds" {
 }
 
 module "ecs" {
+  count                 = var.cost_conscious_mode ? 0 : 1
   source                = "../../modules/ecs"
   prefix                = local.prefix
   names                 = local.names
@@ -74,5 +76,5 @@ module "frontend" {
   prefix       = local.prefix
   account_id   = local.account_id
   tags         = local.tags
-  alb_dns_name = module.ecs.alb_dns_name
+  alb_dns_name = var.cost_conscious_mode ? "localhost" : module.ecs[0].alb_dns_name
 }

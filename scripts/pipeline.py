@@ -28,13 +28,13 @@ def run_pipeline():
 
         load_indices()
 
-        url = "https://archives.nseindia.com/content/indices/ind_nifty50list.csv"
+        url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
         df = pd.read_csv(io.StringIO(response.text))
         symbols = df["Symbol"].dropna().unique().tolist()
-        logger.info(f"  Fetched {len(symbols)} Nifty 50 symbols")
+        logger.info(f"  Fetched {len(symbols)} Nifty 500 symbols")
         load_stocks(symbols)
         logger.info("  ✅ Data ingestion complete")
     except Exception as e:
@@ -63,8 +63,9 @@ def run_pipeline():
     # Step 3: Compute regime + scores
     logger.info("[3/5] Running Regime Engine...")
     try:
-        from src.regime_engine import compute_market_regime, compute_stock_scores
+        from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores
 
+        create_market_regime_and_scores_tables()
         compute_market_regime()
         compute_stock_scores()
         logger.info("  ✅ Regime and scores computed")

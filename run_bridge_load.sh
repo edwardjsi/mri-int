@@ -45,7 +45,7 @@ load_indices()
 
 # Step 2: Fetch Nifty 50 stock list (NOT Nifty 500)
 logger.info('Step 2: Fetching Nifty 50 stock list...')
-url = 'https://archives.nseindia.com/content/indices/ind_nifty50list.csv'
+url = 'https://archives.nseindia.com/content/indices/ind_nifty500list.csv'
 headers = {'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html,application/xhtml+xml'}
 try:
     response = requests.get(url, headers=headers, timeout=30)

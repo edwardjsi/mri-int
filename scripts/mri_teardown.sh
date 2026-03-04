@@ -8,7 +8,7 @@ set -euo pipefail
 
 REGION="ap-south-1"
 RDS_INSTANCE="mri-dev-db"
-BASTION_ID="i-01a0923e978370fc9"
+BASTION_ID="i-060624f65152387a1"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 

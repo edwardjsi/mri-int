@@ -165,4 +165,45 @@ Decision: Use a single `mri_daily.sh` script that: (1) starts RDS + bastion, (2)
 Reason: Minimises AWS costs (~$0.07/day) while giving testers a functional daily window. The admin controls the lifecycle manually until the platform scales.
 Status: FINAL.
 
+## Decision 026 — INCIDENT: RDS Destroyed by Terraform Dependency Cascade
+Date: 2026-03-04
+Incident: Running `terraform destroy -target=module.vpc -target=module.s3 -target=module.iam -target=module.frontend` **also destroyed `module.rds`** because the RDS module depends on VPC resources (subnets, security groups). Terraform's `-target` flag follows the dependency graph and destroys dependents. All 1.7M rows of stock data, 3 client accounts, indicators, signals, and portfolio data were lost. S3 buckets were also emptied by the destroy.
+Root Causes:
+  1. `deletion_protection = false` — AWS allowed the RDS instance to be deleted
+  2. `skip_final_snapshot = true` — no backup was taken before deletion
+  3. `prevent_destroy` lifecycle rule was not set — Terraform did not block the destroy
+  4. `-target=module.vpc` cascaded to destroy the RDS module (dependency chain)
+Recovery: Full pipeline re-run from Yahoo Finance data + re-register client accounts.
+Lesson: **NEVER use `terraform destroy -target` on resources that have dependents you want to keep.** Always use state removal (`terraform state rm`) to protect resources before destroying.
+Status: FINAL — NEVER FORGET.
+
+## Decision 027 — Triple-Layer RDS Protection
+Date: 2026-03-04
+Decision: Implement three safeguards to prevent accidental RDS destruction:
+  1. **Terraform `prevent_destroy = true`** — Terraform will refuse to plan any destroy of the RDS instance. Must be manually removed from config to destroy.
+  2. **AWS `deletion_protection = true`** — AWS API will reject delete requests. Must be disabled in AWS Console or via CLI first.
+  3. **`skip_final_snapshot = false`** — Even if both above are bypassed, AWS takes a final snapshot (`mri-dev-db-final-snapshot`) before deletion.
+  4. **Safe teardown script** (`scripts/mri_safe_teardown.sh`) — Removes RDS from Terraform state before running destroy, so Terraform never even attempts to touch RDS.
+  5. **Original teardown script deprecated** — `scripts/mri_teardown.sh` replaced by `mri_safe_teardown.sh` for daily use.
+Reason: Decision 026 incident. Data loss is unacceptable.
+Status: FINAL — DO NOT WEAKEN THESE PROTECTIONS.
+
+## Decision 028 — Nifty 500 Expansion (Overrides Decision 021)
+Date: 2026-03-04
+Decision: Expand the daily pipeline from Nifty 50 to Nifty 500 immediately. Updated NSE symbol list URL in `scripts/pipeline.py`, `run_daily_pipeline.sh`, and `run_bridge_load.sh`. The existing database already contains ~488 Nifty 500 stocks from historical backup data.
+Reason: User decision to broaden signal coverage now rather than waiting for SaaS launch. Historical data already covers most Nifty 500 stocks.
+Impact: Daily data ingestion will take ~15-20 min (vs ~3 min for Nifty 50). Indicator and scoring computation will process more rows.
+Status: FINAL — supersedes Decision 021.
+
+## Decision 029 — Phase 1 Risk Filters: Liquidity Gate + Sector Cap + Cash Toggle
+Date: 2026-03-04
+Context: Based on comprehensive quantitative research (see `docs/market_cap_diversification.md`, 37 cited sources) on the "Problem of Equivalence" when scoring stocks across different market caps.
+Decision: Implement three filters in `signal_generator.py` before stock selection:
+  1. **₹10 Cr ADTV Liquidity Gate** — `avg_volume_20d × close > ₹10 Cr` applied in SQL. Eliminates illiquid stocks at the database level. Based on O'Neil/Minervini methodology and Nifty 500 Momentum 50 Index methodology.
+  2. **Sector Concentration Cap** — Max 3 stocks from any single sector (30%). Prevents "thematic traps" where a sector correction wipes out the portfolio. Uses `stock_sectors` table (to be populated), falls back to UNKNOWN.
+  3. **Cash Toggle** — Skip a slot if the best available stock scores below 3/5. Implements "Absolute Momentum" — don't invest in the best of a bad bunch.
+Impact: Signal reason text now includes ADTV (₹ Cr) for transparency. Scoring query returns ADTV alongside RS.
+Phase 2 (future): Hybrid multi-cap slotting (7+3), volatility-adjusted momentum, quality factor integration, correlation filtering.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

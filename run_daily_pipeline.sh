@@ -30,7 +30,7 @@ import pandas as pd, requests, io
 load_indices()
 
 # Load Nifty 50 stocks only
-url = 'https://archives.nseindia.com/content/indices/ind_nifty50list.csv'
+url = 'https://archives.nseindia.com/content/indices/ind_nifty500list.csv'
 headers = {'User-Agent': 'Mozilla/5.0'}
 response = requests.get(url, headers=headers, timeout=30)
 df = pd.read_csv(io.StringIO(response.text))

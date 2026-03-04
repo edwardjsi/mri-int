@@ -93,10 +93,10 @@ def compute_indicators(df, idx_df):
     return update_data
 
 def update_db_with_indicators(update_data):
-    logger.info(f"Updating database with calculated indicators for {len(update_data)} rows...")
-    conn = get_connection()
-    cur = conn.cursor()
-    
+    total = len(update_data)
+    logger.info(f"Updating database with calculated indicators for {total} rows (chunked)...")
+
+    CHUNK_SIZE = 200_000
     sql = """
         UPDATE daily_prices
         SET ema_50 = %(ema_50)s,
@@ -107,9 +107,35 @@ def update_db_with_indicators(update_data):
             rs_90d = %(rs_90d)s
         WHERE id = %(id)s
     """
-    
-    execute_batch(cur, sql, update_data, page_size=5000)
-    conn.commit()
+
+    conn = get_connection()
+    cur = conn.cursor()
+    done = 0
+
+    for i in range(0, total, CHUNK_SIZE):
+        chunk = update_data[i:i + CHUNK_SIZE]
+        retries = 3
+        for attempt in range(retries):
+            try:
+                execute_batch(cur, sql, chunk, page_size=2000)
+                conn.commit()
+                done += len(chunk)
+                logger.info(f"  Progress: {done:,}/{total:,} rows ({done * 100 // total}%)")
+                break
+            except Exception as e:
+                logger.warning(f"  Chunk {i // CHUNK_SIZE + 1} failed (attempt {attempt + 1}): {e}")
+                try:
+                    cur.close()
+                    conn.close()
+                except Exception:
+                    pass
+                import time
+                time.sleep(5)
+                conn = get_connection()
+                cur = conn.cursor()
+                if attempt == retries - 1:
+                    raise
+
     cur.close()
     conn.close()
     logger.info("Database update complete!")
