@@ -216,4 +216,11 @@ Impact: Daily pipeline drops from ~3.5 hours to ~30 minutes. The 30-min floor is
 To force full recompute (e.g., after formula change): `UPDATE daily_prices SET ema_50 = NULL;` and `DELETE FROM stock_scores;`
 Status: FINAL.
 
+## Decision 031 — Incremental Yahoo Finance Data Fetch
+Date: 2026-03-05
+Context: Daily pipeline Step 1 was downloading full 20-year history (2005→today) for all 500 stocks every run, taking ~25 min even though only 1-2 new days were needed.
+Decision: Add `get_last_date()` to `data_loader.py`. Queries DB for `MAX(date)`, then fetches from `(last_date - 5 days)` to today. The 5-day overlap catches any gaps or corrections. Falls back to `START_DATE` (2005) if no data exists.
+Impact: Daily Yahoo download drops from ~25 min to ~2-3 min. Full pipeline total: ~3.5 hrs → ~5-8 min.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

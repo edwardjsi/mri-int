@@ -3,13 +3,33 @@ import requests
 import io
 import time
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from tqdm import tqdm
-from src.db import create_tables, insert_daily_prices, insert_index_prices, run_quality_checks
+from src.db import create_tables, insert_daily_prices, insert_index_prices, run_quality_checks, get_connection
 from src.config import START_DATE, END_DATE
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def get_last_date(table, fallback=START_DATE):
+    """Get the latest date in a table. Returns a start date for incremental fetch.
+    Goes back 5 days from last known date to catch any gaps/corrections.
+    """
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(f"SELECT MAX(date) FROM {table}")
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if row and row[0]:
+            # Go back 5 days to catch any gaps or corrections
+            start = row[0] - timedelta(days=5)
+            return start.strftime("%Y-%m-%d")
+    except Exception:
+        pass
+    return fallback
 
 # NSE indices to track
 INDICES = {
@@ -126,10 +146,12 @@ def fetch_index_history_yfinance(symbol: str,
 
 
 def load_indices():
-    """Load all index historical data into index_prices table."""
+    """Load index data incrementally — only fetches from last known date."""
     logger.info("Loading index data...")
+    incremental_start = get_last_date("index_prices")
+    logger.info(f"  Fetching from {incremental_start} to {END_DATE}")
     for name, ticker in INDICES.items():
-        df = fetch_index_history_yfinance(name, ticker, START_DATE, END_DATE)
+        df = fetch_index_history_yfinance(name, ticker, incremental_start, END_DATE)
         if df.empty:
             logger.warning(f"No data for index {name}")
             continue
@@ -141,17 +163,18 @@ def load_indices():
 
 def load_stocks(symbols: list, batch_size: int = 50):
     """
-    Load historical EOD data for all NSE stocks.
-    Processes in batches to avoid overwhelming the API.
+    Load historical EOD data incrementally.
+    Fetches only from the last known date in the database.
     """
-    logger.info(f"Loading stock data for {len(symbols)} symbols...")
+    incremental_start = get_last_date("daily_prices")
+    logger.info(f"Loading stock data for {len(symbols)} symbols from {incremental_start}...")
     failed = []
 
     for i in tqdm(range(0, len(symbols), batch_size),
                   desc="Loading stocks"):
         batch = symbols[i:i + batch_size]
         for symbol in batch:
-            df = fetch_stock_history_yfinance(symbol, START_DATE, END_DATE)
+            df = fetch_stock_history_yfinance(symbol, incremental_start, END_DATE)
             if df.empty:
                 failed.append(symbol)
                 continue

@@ -1,6 +1,7 @@
 import boto3
 import json
 import os
+from datetime import datetime
 
 def get_db_credentials():
     """
@@ -39,7 +40,7 @@ AWS_REGION = "ap-south-1"
 
 # Backtest config
 START_DATE = "2005-01-01"
-END_DATE   = "2026-03-02"
+END_DATE   = datetime.now().strftime("%Y-%m-%d")
 
 # Strategy config
 REGIME_RISK_ON_THRESHOLD  = 60
