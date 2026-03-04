@@ -31,9 +31,28 @@ def add_indicator_columns_if_missing():
     logger.info("Indicator columns added/verified in daily_prices.")
 
 def fetch_data():
-    logger.info("Fetching daily prices (this may take a minute for 1.6M rows)...")
+    """Fetch daily prices. In incremental mode, identifies which rows need computation."""
     conn = get_connection()
-    df = pd.read_sql("SELECT id, symbol, date, high, close, volume FROM daily_prices ORDER BY symbol, date", conn)
+
+    # Count how many rows need indicators
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM daily_prices WHERE ema_50 IS NULL")
+    null_count = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM daily_prices")
+    total_count = cur.fetchone()[0]
+    cur.close()
+
+    logger.info(f"Total rows: {total_count:,} | Need indicators: {null_count:,} | Already computed: {total_count - null_count:,}")
+
+    if null_count == 0:
+        logger.info("All rows already have indicators. Skipping computation.")
+        conn.close()
+        return None, None
+
+    # We always need full history for correct EMA computation (EMA depends on all prior values)
+    # But we'll only UPDATE new rows in the write step
+    logger.info("Fetching daily prices for indicator computation...")
+    df = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn)
     
     logger.info("Fetching index prices for Relative Strength...")
     idx_df = pd.read_sql("SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
@@ -53,8 +72,19 @@ def calc_slope(s):
     return pd.Series(result, index=s.index)
 
 def compute_indicators(df, idx_df):
+    """Compute indicators for all rows. Returns only rows that need DB update."""
+    if df is None:
+        return []
+
     logger.info("Computing indicators...")
     
+    # Track which rows need updating (ema_50 was NULL in the DB)
+    needs_update = df['ema_50'].isna()
+    logger.info(f"Rows needing update: {needs_update.sum():,}")
+
+    # Drop the DB ema_50 column before computing fresh values
+    df.drop(columns=['ema_50'], inplace=True)
+
     # Calculate index return over 90 trading days for Relative Strength comparison
     idx_df.sort_values('date', inplace=True)
     idx_df['index_return_90d'] = idx_df['index_close'].pct_change(periods=90)
@@ -70,7 +100,7 @@ def compute_indicators(df, idx_df):
     gp = df.groupby('symbol')
     df['ema_50'] = gp['close'].transform(lambda x: x.ewm(span=50, adjust=False).mean())
     df['ema_200'] = gp['close'].transform(lambda x: x.ewm(span=200, adjust=False).mean())
-    df['ema_200'].replace(0, np.nan, inplace=True) # Exclude extreme anomalies if any
+    df['ema_200'].replace(0, np.nan, inplace=True)
     
     # 20-day slope of 200 EMA
     logger.info("Calculating 20-day regression slope of 200 EMA...")
@@ -86,17 +116,25 @@ def compute_indicators(df, idx_df):
     df['stock_return_90d'] = gp['close'].transform(lambda x: x.pct_change(periods=90))
     df['rs_90d'] = df['stock_return_90d'] - df['index_return_90d']
     
-    # Prepare data for DB update
+    # Prepare data for DB update — ONLY rows that need it
     df.replace({np.nan: None}, inplace=True)
     
-    update_data = df[['ema_50', 'ema_200', 'ema_200_slope_20', 'rolling_high_6m', 'avg_volume_20d', 'rs_90d', 'id']].to_dict('records')
+    # Filter to only rows that had NULL indicators
+    df_to_update = df[needs_update]
+    logger.info(f"Computed all indicators. Writing {len(df_to_update):,} new rows (skipping {len(df) - len(df_to_update):,} already-computed rows).")
+    
+    update_data = df_to_update[['ema_50', 'ema_200', 'ema_200_slope_20', 'rolling_high_6m', 'avg_volume_20d', 'rs_90d', 'id']].to_dict('records')
     return update_data
 
 def update_db_with_indicators(update_data):
-    total = len(update_data)
-    logger.info(f"Updating database with calculated indicators for {total} rows (chunked)...")
+    if not update_data:
+        logger.info("No rows to update. Database is current.")
+        return
 
-    CHUNK_SIZE = 200_000
+    total = len(update_data)
+    logger.info(f"Updating database with indicators for {total:,} rows (chunked)...")
+
+    CHUNK_SIZE = 50_000
     sql = """
         UPDATE daily_prices
         SET ema_50 = %(ema_50)s,

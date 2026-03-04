@@ -206,4 +206,14 @@ Impact: Signal reason text now includes ADTV (₹ Cr) for transparency. Scoring 
 Phase 2 (future): Hybrid multi-cap slotting (7+3), volatility-adjusted momentum, quality factor integration, correlation filtering.
 Status: FINAL.
 
+## Decision 030 — Incremental Pipeline Optimization
+Date: 2026-03-05
+Context: Full pipeline on Nifty 500 (1.79M rows) took ~3.5 hours via SSM tunnel. Bottleneck was DB writes for indicators (2 hrs) and stock scores (25 min), both rewriting all 1.79M rows every run.
+Decision: Make both engines incremental — compute on full history (needed for EMA accuracy) but only write new rows:
+  1. **indicator_engine.py**: Fetches `ema_50` column to detect NULL rows. Only UPDATEs rows where `ema_50 IS NULL`. Early-exits if 0 new rows.
+  2. **regime_engine.py**: Uses `LEFT JOIN stock_scores ... WHERE ss.date IS NULL` to only fetch and score unscored rows. Tables no longer DROPped on each run (`CREATE IF NOT EXISTS`).
+Impact: Daily pipeline drops from ~3.5 hours to ~30 minutes. The 30-min floor is Yahoo Finance download time for 500 stocks.
+To force full recompute (e.g., after formula change): `UPDATE daily_prices SET ema_50 = NULL;` and `DELETE FROM stock_scores;`
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

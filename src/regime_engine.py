@@ -10,21 +10,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_market_regime_and_scores_tables():
-    """Drop and recreate the regime and scores tables to fit the latest 0-5 prototype schema."""
+    """Create regime and scores tables if they don't exist (preserves existing data)."""
     conn = get_connection()
     cur = conn.cursor()
     
     cur.execute("""
-        DROP TABLE IF EXISTS market_regime CASCADE;
-        CREATE TABLE market_regime (
+        CREATE TABLE IF NOT EXISTS market_regime (
             date DATE PRIMARY KEY,
             sma_200 NUMERIC(12,4),
             sma_200_slope_20 NUMERIC(12,4),
             classification VARCHAR(20)
         );
 
-        DROP TABLE IF EXISTS stock_scores CASCADE;
-        CREATE TABLE stock_scores (
+        CREATE TABLE IF NOT EXISTS stock_scores (
             date DATE,
             symbol VARCHAR(20),
             total_score INT,
@@ -41,7 +39,7 @@ def create_market_regime_and_scores_tables():
     conn.commit()
     cur.close()
     conn.close()
-    logger.info("Recreated market_regime and stock_scores tables.")
+    logger.info("Market regime and stock scores tables ready.")
 
 def calc_slope(s):
     """Calculate 20-day linear regression slope."""
@@ -107,16 +105,36 @@ def compute_market_regime():
 
 
 def compute_stock_scores():
-    logger.info("Computing 0-5 Stock Scores for Nifty 500 (Processing in batches)...")
+    """Compute 0-5 stock scores. Incremental: only processes rows not already in stock_scores."""
     read_conn = get_connection()
+
+    # Check how many rows need scoring
+    check_cur = read_conn.cursor()
+    check_cur.execute("""
+        SELECT COUNT(*) FROM daily_prices dp
+        LEFT JOIN stock_scores ss ON dp.symbol = ss.symbol AND dp.date = ss.date
+        WHERE (dp.ema_50 IS NOT NULL OR dp.rolling_high_6m IS NOT NULL)
+          AND ss.date IS NULL
+    """)
+    pending_count = check_cur.fetchone()[0]
+    check_cur.close()
+
+    if pending_count == 0:
+        logger.info("All rows already have scores. Skipping computation.")
+        read_conn.close()
+        return
+
+    logger.info(f"Computing stock scores for {pending_count:,} new rows (skipping already-scored rows)...")
     
-    # We only need the pre-computed day 3 indicators
+    # Only fetch rows that don't have scores yet
     sql = """
-        SELECT symbol, date, close, volume, ema_50, ema_200, 
-               ema_200_slope_20, rolling_high_6m, avg_volume_20d, rs_90d
-        FROM daily_prices
-        WHERE ema_50 IS NOT NULL OR rolling_high_6m IS NOT NULL
-        ORDER BY symbol, date
+        SELECT dp.symbol, dp.date, dp.close, dp.volume, dp.ema_50, dp.ema_200, 
+               dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d
+        FROM daily_prices dp
+        LEFT JOIN stock_scores ss ON dp.symbol = ss.symbol AND dp.date = ss.date
+        WHERE (dp.ema_50 IS NOT NULL OR dp.rolling_high_6m IS NOT NULL)
+          AND ss.date IS NULL
+        ORDER BY dp.symbol, dp.date
     """
     
     cur = read_conn.cursor('cursor_scores_read')
@@ -177,7 +195,7 @@ def compute_stock_scores():
         
     cur.close()
     read_conn.close()
-    logger.info(f"Stock score computation complete. Total rows processed: {total_inserted}")
+    logger.info(f"Stock score computation complete. {total_inserted:,} new rows scored.")
 
 
 if __name__ == "__main__":

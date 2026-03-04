@@ -36,6 +36,33 @@ def run_pipeline():
         symbols = df["Symbol"].dropna().unique().tolist()
         logger.info(f"  Fetched {len(symbols)} Nifty 500 symbols")
         load_stocks(symbols)
+
+        # Populate stock_sectors table for sector concentration cap
+        from src.db import get_connection as get_db_conn
+        sector_conn = get_db_conn()
+        sector_cur = sector_conn.cursor()
+        sector_cur.execute("""
+            CREATE TABLE IF NOT EXISTS stock_sectors (
+                symbol VARCHAR(20) PRIMARY KEY,
+                company_name VARCHAR(255),
+                industry VARCHAR(100),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+            DELETE FROM stock_sectors;
+        """)
+        from psycopg2.extras import execute_batch as eb
+        sector_data = df[["Symbol", "Company Name", "Industry"]].dropna().to_dict("records")
+        eb(sector_cur, """
+            INSERT INTO stock_sectors (symbol, company_name, industry)
+            VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
+            ON CONFLICT (symbol) DO UPDATE
+            SET industry = EXCLUDED.industry, company_name = EXCLUDED.company_name, updated_at = NOW()
+        """, sector_data, page_size=500)
+        sector_conn.commit()
+        sector_cur.close()
+        sector_conn.close()
+        logger.info(f"  ✅ Stock sectors updated ({len(sector_data)} stocks)")
+
         logger.info("  ✅ Data ingestion complete")
     except Exception as e:
         logger.error(f"  ❌ Data ingestion failed: {e}")
