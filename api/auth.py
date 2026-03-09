@@ -4,6 +4,7 @@ Authentication endpoints: register, login, profile.
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 import bcrypt
+import psycopg2.extras
 
 from api.deps import get_db, create_access_token, get_current_client
 
@@ -17,7 +18,9 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-
+import secrets
+from datetime import datetime, timedelta
+from src.email_service import send_password_reset_email
 
 # ── Schemas ─────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
@@ -118,3 +121,87 @@ def add_capital(req: UpdateCapitalRequest, client=Depends(get_current_client), c
     )
     conn.commit()
     return {"message": f"₹{req.amount:,.0f} added", "new_amount": req.amount}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
+    """Generate a reset token and send an email."""
+    cur = conn.cursor()
+    
+    # Check if email exists
+    cur.execute("SELECT id, name FROM clients WHERE email = %s", (req.email,))
+    client = cur.fetchone()
+    
+    if not client:
+        raise HTTPException(status_code=404, detail="No account found with that email address.")
+    
+    # Generate token
+    token = secrets.token_urlsafe(32)
+    client_id = str(client["id"])
+    
+    # Ensure table exists
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID NOT NULL REFERENCES clients(id),
+            token VARCHAR(255) UNIQUE NOT NULL,
+            expires_at TIMESTAMPTZ NOT NULL,
+            used BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )"""
+    )
+    
+    # Insert token (expires in 1 hour)
+    expires_at = datetime.now() + timedelta(hours=1)
+    cur.execute(
+        """INSERT INTO password_reset_tokens (client_id, token, expires_at)
+           VALUES (%s, %s, %s)""",
+        (client_id, token, expires_at)
+    )
+    conn.commit()
+    
+    # Send email
+    success = send_password_reset_email(req.email, client["name"], token)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to send reset email. Please try again later.")
+        
+    return {"message": "Password reset link sent! Please check your email."}
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, conn=Depends(get_db)):
+    """Verify token and update password."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) if hasattr(conn, 'cursor_factory') else conn.cursor()
+    
+    # Verify token
+    cur.execute(
+        """SELECT id, client_id FROM password_reset_tokens 
+           WHERE token = %s AND used = FALSE AND expires_at > NOW()""",
+        (req.token,)
+    )
+    token_record = cur.fetchone()
+    
+    if not token_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired password reset token.")
+    
+    client_id = str(token_record["client_id"] if isinstance(token_record, dict) else token_record[1])
+    token_id = str(token_record["id"] if isinstance(token_record, dict) else token_record[0])
+    
+    # Hash new password
+    hashed = hash_password(req.new_password)
+    
+    # Update password and mark token as used
+    cur.execute("UPDATE clients SET password_hash = %s WHERE id = %s", (hashed, client_id))
+    cur.execute("UPDATE password_reset_tokens SET used = TRUE WHERE id = %s", (token_id,))
+    
+    conn.commit()
+    return {"message": "Password successfully reset."}

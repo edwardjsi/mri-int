@@ -6,24 +6,31 @@ import './App.css';
 /* ─── Login Page ─────────────────────────────────────────── */
 function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [isRegister, setIsRegister] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [capital, setCapital] = useState('100000');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setLoading(true);
     try {
-      if (isRegister) {
+      if (isForgotPassword) {
+        const res = await api.forgotPassword(email);
+        setSuccessMsg(res.message || 'Password reset link sent! Check your email.');
+      } else if (isRegister) {
         await api.register(email, name, password, parseFloat(capital));
+        onLogin();
       } else {
         await api.login(email, password);
+        onLogin();
       }
-      onLogin();
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -39,24 +46,102 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
           <p className="brand-subtitle">Market Regime Intelligence</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
-          <h2 className="form-title">{isRegister ? 'Create Account' : 'Sign In'}</h2>
+          <h2 className="form-title">
+            {isForgotPassword ? 'Reset Password' : (isRegister ? 'Create Account' : 'Sign In')}
+          </h2>
+
           {error && <div className="error-alert">{error}</div>}
-          {isRegister && (
+          {successMsg && <div className="success-alert" style={{ color: '#15803d', backgroundColor: '#dcfce7', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '14px' }}>{successMsg}</div>}
+
+          {isRegister && !isForgotPassword && (
             <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="form-input" required />
           )}
+
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="form-input" required />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required minLength={6} />
-          {isRegister && (
+
+          {!isForgotPassword && (
+            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required minLength={6} />
+          )}
+
+          {isRegister && !isForgotPassword && (
             <input type="number" placeholder="Initial Capital (₹)" value={capital} onChange={e => setCapital(e.target.value)} className="form-input" min="10000" />
           )}
+
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Please wait...' : (isRegister ? 'Create Account' : 'Sign In')}
+            {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isRegister ? 'Create Account' : 'Sign In'))}
           </button>
+
+          <div className="toggle-text" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {!isForgotPassword && (
+              <button type="button" className="link-btn" style={{ alignSelf: 'center' }} onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); }}>
+                Forgot your password?
+              </button>
+            )}
+
+            <p>
+              {isForgotPassword ? 'Remember your password?' : (isRegister ? 'Already have an account?' : "Don't have an account?")}{' '}
+              <button type="button" className="link-btn" onClick={() => {
+                setIsRegister(!isRegister);
+                setIsForgotPassword(false);
+                setError('');
+                setSuccessMsg('');
+              }}>
+                {isForgotPassword || isRegister ? 'Sign In' : 'Register'}
+              </button>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Reset Password Page ─────────────────────────────────── */
+function ResetPasswordPage({ token, onComplete }: { token: string, onComplete: () => void }) {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await api.resetPassword(token, password);
+      alert('Password successfully reset! Please log in with your new password.');
+      onComplete();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password. The link might be expired.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <h1 className="brand-title">📊 MRI</h1>
+          <p className="brand-subtitle">Market Regime Intelligence</p>
+        </div>
+        <form onSubmit={handleSubmit} className="login-form">
+          <h2 className="form-title">Enter New Password</h2>
+          {error && <div className="error-alert">{error}</div>}
+
+          <input type="password" placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required minLength={6} />
+          <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" required minLength={6} />
+
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Please wait...' : 'Save New Password'}
+          </button>
+
           <p className="toggle-text">
-            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button type="button" className="link-btn" onClick={() => { setIsRegister(!isRegister); setError(''); }}>
-              {isRegister ? 'Sign In' : 'Register'}
-            </button>
+            <button type="button" className="link-btn" onClick={onComplete}>Back to Sign In</button>
           </p>
         </form>
       </div>
@@ -524,6 +609,21 @@ function PerformancePage() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [page, setPage] = useState<'dashboard' | 'history' | 'performance'>('dashboard');
+
+  // Custom simple routing for password reset link
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('reset_token');
+  const [isResetFlow, setIsResetFlow] = useState(!!resetToken);
+
+  const handleResetComplete = () => {
+    // Clear URL without page reload
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setIsResetFlow(false);
+  };
+
+  if (isResetFlow && resetToken) {
+    return <ResetPasswordPage token={resetToken} onComplete={handleResetComplete} />;
+  }
 
   if (!authed) return <LoginPage onLogin={() => setAuthed(true)} />;
 

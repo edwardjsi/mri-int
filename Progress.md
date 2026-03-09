@@ -127,6 +127,7 @@
 - [x] React dashboard: Login, regime card, signal cards with Executed/Skipped, screener, equity chart vs Nifty
 - [x] Cron pipeline: `run_daily_pipeline.sh` — 5-step automated pipeline (ingest → indicators → regime → signals → emails)
 - [x] First client registered and dashboard verified (regime: NEUTRAL, screener: working)
+- [x] Forgot Password flow: Backend endpoints, React UI, AWS SES integration, explicit 404 feedback.
 - [ ] AWS SES sandbox verification for email delivery
 - [ ] Cron entry on production server
 

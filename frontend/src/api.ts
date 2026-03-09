@@ -71,6 +71,18 @@ export const api = {
             body: JSON.stringify({ email, password }),
         }).then((data: LoginResponse) => { setAuth(data); return data; }),
 
+    forgotPassword: (email: string) =>
+        apiFetch('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        }),
+
+    resetPassword: (token: string, new_password: string) =>
+        apiFetch('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, new_password }),
+        }),
+
     logout: () => { clearAuth(); window.location.reload(); },
 
     getProfile: () => apiFetch('/auth/me'),

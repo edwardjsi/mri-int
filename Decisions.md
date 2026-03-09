@@ -223,4 +223,10 @@ Decision: Add `get_last_date()` to `data_loader.py`. Queries DB for `MAX(date)`,
 Impact: Daily Yahoo download drops from ~25 min to ~2-3 min. Full pipeline total: ~3.5 hrs → ~5-8 min.
 Status: FINAL.
 
+## Decision 032 — Forgot Password Flow using AWS SES
+Date: 2026-03-09
+Decision: Implemented a "Forgot Password" feature that uses secure, random 32-character tokens stored in a new `password_reset_tokens` table, and sends reset links via AWS SES. Returns explicit 404 for missing accounts rather than a generic security message.
+Reason: Users need a way to recover access. AWS SES is already configured. Returning an explicit 404 improves UX over security-through-obscurity since this is a private prototype phase.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

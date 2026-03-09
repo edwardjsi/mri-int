@@ -111,6 +111,50 @@ def build_signal_email_html(client_name, signals, regime):
     return html
 
 
+def send_password_reset_email(email: str, name: str, token: str):
+    """Send a password reset link to the user."""
+    ses = boto3.client("ses", region_name=AWS_REGION)
+    
+    reset_link = f"http://localhost:5173/?reset_token={token}"
+    
+    subject = "MRI - Password Reset Request"
+    
+    html_body = f"""
+    <html>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb">
+        <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+            <h1 style="margin:0 0 16px;font-size:20px;color:#111827">🔒 Reset Your Password</h1>
+            <p style="color:#374151">Hi {name or 'User'},</p>
+            <p style="color:#374151">We received a request to reset your password for your MRI account.</p>
+            <div style="margin:30px 0;text-align:center">
+                <a href="{reset_link}" style="background-color:#3b82f6;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">Reset Password</a>
+            </div>
+            <p style="color:#6b7280;font-size:14px">If you didn't request this, you can safely ignore this email. This link will expire in 1 hour.</p>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0 20px">
+            <p style="font-size:12px;color:#9ca3af;text-align:center">
+                Market Regime Intelligence
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    try:
+        ses.send_email(
+            Source=SENDER_EMAIL,
+            Destination={"ToAddresses": [email]},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+            },
+        )
+        logger.info(f"✅ Password reset email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send reset email to {email}: {e}")
+        return False
+
+
 def send_signal_emails():
     """Send daily signal digest to all clients with unsent signals."""
     conn = get_connection()
