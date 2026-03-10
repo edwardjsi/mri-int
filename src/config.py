@@ -62,7 +62,8 @@ AWS_REGION = "ap-south-1"
 
 # Backtest config
 START_DATE = "2005-01-01"
-END_DATE   = datetime.now().strftime("%Y-%m-%d")
+from datetime import timedelta
+END_DATE   = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
 # Strategy config
 REGIME_RISK_ON_THRESHOLD  = 60
