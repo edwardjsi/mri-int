@@ -8,6 +8,7 @@ from psycopg2.extras import RealDictCursor, execute_batch
 import logging
 import os
 from datetime import date
+from src.db import get_connection as _get_raw_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -17,14 +18,10 @@ AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 
 
 def get_connection():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5433"),
-        dbname=os.getenv("DB_NAME", "mri_db"),
-        user=os.getenv("DB_USER", "mri_admin"),
-        password=os.getenv("DB_PASSWORD", ""),
-        cursor_factory=RealDictCursor,
-    )
+    """Get DB connection with RealDictCursor using shared config (supports DATABASE_URL)."""
+    conn = _get_raw_connection()
+    conn.cursor_factory = RealDictCursor
+    return conn
 
 
 def build_signal_email_html(client_name, signals, regime):
