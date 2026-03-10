@@ -1,6 +1,7 @@
 """
 MRI Client Signal Platform — FastAPI Application
 """
+import os
 import traceback
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -27,10 +28,11 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": str(exc), "traceback": tb},
     )
 
-# CORS — allow React frontend
+# CORS — allow React frontend (configurable via env)
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=cors_origins + ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

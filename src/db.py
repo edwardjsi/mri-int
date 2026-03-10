@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import execute_batch
-from src.config import get_db_credentials
+from src.config import get_db_credentials, DB_SSL
 import logging
 import time
 
@@ -10,16 +10,19 @@ logger = logging.getLogger(__name__)
 
 def get_connection(retries=3, delay=5):
     creds = get_db_credentials()
+    connect_kwargs = dict(
+        host=creds["host"],
+        port=creds.get("port", 5432),
+        dbname=creds["dbname"],
+        user=creds["username"],
+        password=creds["password"],
+        connect_timeout=30,
+    )
+    if DB_SSL:
+        connect_kwargs["sslmode"] = "require"
     for attempt in range(retries):
         try:
-            conn = psycopg2.connect(
-                host=creds["host"],
-                port=creds.get("port", 5432),
-                dbname=creds["dbname"],
-                user=creds["username"],
-                password=creds["password"],
-                connect_timeout=30  # Increased from 10 to 30 for SSM tunnel stability
-            )
+            conn = psycopg2.connect(**connect_kwargs)
             return conn
         except psycopg2.OperationalError as e:
             if attempt < retries - 1:

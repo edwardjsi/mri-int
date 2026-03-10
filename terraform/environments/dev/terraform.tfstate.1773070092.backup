@@ -1,7 +1,7 @@
 {
   "version": 4,
   "terraform_version": "1.14.5",
-  "serial": 549,
+  "serial": 548,
   "lineage": "bf5c77aa-4178-779a-6b4f-89bbbef3065e",
   "outputs": {
     "bastion_id": {
@@ -746,6 +746,50 @@
           "dependencies": [
             "module.iam.aws_iam_role.ecs_task_execution"
           ]
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "random_password",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/random\"]",
+      "instances": [
+        {
+          "schema_version": 3,
+          "attributes": {
+            "bcrypt_hash": "$2a$10$FQZ0c9mn9iYtc1vSM077mer4sg./OPJffZe4OrkhiTXCq.fXU61lS",
+            "id": "none",
+            "keepers": null,
+            "length": 16,
+            "lower": true,
+            "min_lower": 0,
+            "min_numeric": 0,
+            "min_special": 0,
+            "min_upper": 0,
+            "number": true,
+            "numeric": true,
+            "override_special": null,
+            "result": "9WP9SBQV6QeafagC",
+            "special": false,
+            "upper": true
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "bcrypt_hash"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "result"
+              }
+            ]
+          ],
+          "identity_schema_version": 0
         }
       ]
     },

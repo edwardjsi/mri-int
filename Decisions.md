@@ -229,4 +229,16 @@ Decision: Implemented a "Forgot Password" feature that uses secure, random 32-ch
 Reason: Users need a way to recover access. AWS SES is already configured. Returning an explicit 404 improves UX over security-through-obscurity since this is a private prototype phase.
 Status: FINAL.
 
+## Decision 033 — Free-Tier Cloud Migration: Neon.tech + Render.com
+Date: 2026-03-10
+Decision: Migrate from full AWS stack (~$80/mo) to a free-tier hybrid deployment for the 6-month testing phase:
+  1. **Database**: AWS RDS → **Neon.tech** free tier (500MB Serverless PostgreSQL). Standard PostgreSQL = zero code changes. ~200-300MB data fits within limit.
+  2. **API Backend**: ECS Fargate + ALB + NAT → **Render.com** free tier Docker web service. Same `Dockerfile.api`, health checks, env vars.
+  3. **Frontend**: S3 + CloudFront remains as-is (essentially free at current traffic).
+  4. **Daily Pipeline**: EventBridge → ECS → `scripts/pipeline_cloud.sh` connecting directly to Neon (no bastion tunnel needed).
+  5. **Config Changes**: Added `DATABASE_URL` env var support, `DB_SSL=true` toggle, `VITE_API_URL` build-time config, `CORS_ORIGINS` env var. All backward-compatible with original AWS setup.
+  All AWS Terraform IaC preserved in repository. Set `cost_conscious_mode = false` and run `terraform apply` + `deploy.sh` to restore full AWS in ~10 minutes.
+Reason: $0/month vs $80/month for a testing phase with <10 users. Infrastructure-as-code portfolio value retained. Pragmatic, cost-aware engineering decision.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

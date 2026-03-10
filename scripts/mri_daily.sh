@@ -33,6 +33,15 @@ echo -e "${GREEN}  MRI Daily Run — $(date +%Y-%m-%d)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════${NC}"
 echo ""
 
+# ── Phase 0: Start RDS ─────────────────────────────────────────
+cd "$PROJECT_DIR"
+log "Starting RDS instance (needs to be available for Terraform)..."
+aws rds start-db-instance --db-instance-identifier $RDS_INSTANCE --region $REGION >> "$LOGFILE" 2>&1 || warn "RDS may already be running"
+
+log "Waiting for RDS to become available (this takes ~5-10 min)..."
+aws rds wait db-instance-available --db-instance-identifier $RDS_INSTANCE --region $REGION 2>&1 | tee -a "$LOGFILE"
+ok "RDS is available"
+
 # ── Phase 1: Rebuild Infrastructure ────────────────────────
 
 log "Phase 1: Rebuilding infrastructure with Terraform..."
@@ -44,7 +53,7 @@ if ! terraform state list 2>/dev/null | grep -q "module.rds.aws_db_instance.main
     terraform import module.rds.aws_db_instance.main "$RDS_INSTANCE" >> "$LOGFILE" 2>&1 || true
 
     # Import other RDS-related resources if needed
-    terraform import module.rds.aws_db_subnet_group.main "mri-dev-rds-subnet-group" >> "$LOGFILE" 2>&1 || true
+    terraform import module.rds.aws_db_subnet_group.main "mri-dev-db-subnet-group" >> "$LOGFILE" 2>&1 || true
     terraform import module.rds.aws_secretsmanager_secret.db "mri-dev-db-credentials" >> "$LOGFILE" 2>&1 || true
     terraform import module.rds.random_password.db "ignored" >> "$LOGFILE" 2>&1 || true
     ok "RDS imported into state"
@@ -54,16 +63,17 @@ log "Running terraform apply (this may take 1-2 minutes)..."
 terraform apply -auto-approve >> "$LOGFILE" 2>&1
 ok "Infrastructure ready"
 
+log "Syncing database password..."
+bash "$PROJECT_DIR/scripts/sync_password.sh" >> "$LOGFILE" 2>&1
+ok "Database password synced"
+
 # Get the current bastion ID from terraform output
 BASTION_ID=$(terraform output -raw bastion_id 2>/dev/null)
 log "Bastion ID: $BASTION_ID"
 
-# ── Phase 2: Start RDS + Bastion ──────────────────────────
+# ── Phase 2: Start Bastion ──────────────────────────
 
 cd "$PROJECT_DIR"
-
-log "Starting RDS instance..."
-aws rds start-db-instance --db-instance-identifier $RDS_INSTANCE --region $REGION >> "$LOGFILE" 2>&1 || warn "RDS may already be running"
 
 log "Starting Bastion host..."
 aws ec2 start-instances --instance-ids $BASTION_ID --region $REGION >> "$LOGFILE" 2>&1 || warn "Bastion may already be running"
@@ -118,13 +128,21 @@ echo ""
 ok "Pipeline complete!"
 echo ""
 
-# ── Phase 6: Serve API for testers ─────────────────────────
+# ── Phase 6: Serve API & Frontend for testers ─────────────────────────
 
 log "Starting local API server for testers..."
 uvicorn api.main:app --host 0.0.0.0 --port 8000 >> "$LOGFILE" 2>&1 &
 API_PID=$!
 sleep 2
 ok "API running at http://localhost:8000"
+
+log "Starting local Frontend server for testers..."
+cd "$PROJECT_DIR/frontend"
+npm run dev -- --host >> "$LOGFILE" 2>&1 &
+FRONTEND_PID=$!
+sleep 2
+ok "Frontend running at http://localhost:5173"
+cd "$PROJECT_DIR"
 echo ""
 
 echo -e "${GREEN}═══════════════════════════════════════${NC}"

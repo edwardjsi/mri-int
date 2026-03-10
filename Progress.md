@@ -132,6 +132,6 @@
 - [ ] Cron entry on production server
 
 ### Step 4: Nifty 500 Expansion
-- [ ] Run `run_bridge_load.sh` for remaining 450 stocks
-- [ ] Rerun engines on full 500-stock universe
-- [ ] Verify performance metrics hold
+- [x] Run `run_bridge_load.sh` for remaining 450 stocks
+- [x] Rerun engines on full 500-stock universe
+- [x] Verify performance metrics hold

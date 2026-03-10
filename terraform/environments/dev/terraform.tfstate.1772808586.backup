@@ -1,19 +1,19 @@
 {
   "version": 4,
   "terraform_version": "1.14.5",
-  "serial": 549,
+  "serial": 374,
   "lineage": "bf5c77aa-4178-779a-6b4f-89bbbef3065e",
   "outputs": {
     "bastion_id": {
-      "value": "i-07fdabe814c478766",
+      "value": "i-0fd441ad872d2c47d",
       "type": "string"
     },
     "cloudfront_distribution_id": {
-      "value": "E3C32LHJDK5NA4",
+      "value": "E16WAKZW5ZJFW3",
       "type": "string"
     },
     "cloudfront_domain": {
-      "value": "d25tdygicgbojg.cloudfront.net",
+      "value": "djczq5u8hbno3.cloudfront.net",
       "type": "string"
     },
     "db_secret_arn": {
@@ -75,9 +75,9 @@
         {
           "schema_version": 1,
           "attributes": {
-            "aliases": [],
-            "arn": "arn:aws:cloudfront::251876202726:distribution/E3C32LHJDK5NA4",
-            "caller_reference": "terraform-20260309125409285800000006",
+            "aliases": null,
+            "arn": "arn:aws:cloudfront::251876202726:distribution/E16WAKZW5ZJFW3",
+            "caller_reference": "terraform-20260306143239832600000006",
             "comment": "MRI Signal Platform Frontend",
             "continuous_deployment_policy_id": "",
             "custom_error_response": [
@@ -142,15 +142,15 @@
               }
             ],
             "default_root_object": "index.html",
-            "domain_name": "d25tdygicgbojg.cloudfront.net",
+            "domain_name": "djczq5u8hbno3.cloudfront.net",
             "enabled": true,
             "etag": "E23ZP02F085DFQ",
             "hosted_zone_id": "Z2FDTNDATAQYW2",
             "http_version": "http2",
-            "id": "E3C32LHJDK5NA4",
+            "id": "E16WAKZW5ZJFW3",
             "in_progress_validation_batches": 0,
             "is_ipv6_enabled": false,
-            "last_modified_time": "2026-03-09 12:54:10.517 +0000 UTC",
+            "last_modified_time": "2026-03-06 14:32:42.066 +0000 UTC",
             "logging_config": [],
             "ordered_cache_behavior": [
               {
@@ -176,7 +176,7 @@
                     "cookies": [
                       {
                         "forward": "all",
-                        "whitelisted_names": []
+                        "whitelisted_names": null
                       }
                     ],
                     "headers": [
@@ -203,8 +203,8 @@
                 "response_headers_policy_id": "",
                 "smooth_streaming": false,
                 "target_origin_id": "alb-api",
-                "trusted_key_groups": [],
-                "trusted_signers": [],
+                "trusted_key_groups": null,
+                "trusted_signers": null,
                 "viewer_protocol_policy": "allow-all"
               }
             ],
@@ -239,7 +239,7 @@
                 "custom_header": [],
                 "custom_origin_config": [],
                 "domain_name": "mri-dev-frontend-251876202726.s3.ap-south-1.amazonaws.com",
-                "origin_access_control_id": "EJ4T8A0QJK54X",
+                "origin_access_control_id": "E10PVZKU4551JV",
                 "origin_id": "s3-frontend",
                 "origin_path": "",
                 "origin_shield": [],
@@ -324,10 +324,10 @@
         {
           "schema_version": 0,
           "attributes": {
-            "arn": "arn:aws:cloudfront::251876202726:origin-access-control/EJ4T8A0QJK54X",
+            "arn": "arn:aws:cloudfront::251876202726:origin-access-control/E10PVZKU4551JV",
             "description": "Managed by Terraform",
             "etag": "ETVPDKIKX0DER",
-            "id": "EJ4T8A0QJK54X",
+            "id": "E10PVZKU4551JV",
             "name": "mri-dev-frontend-oac",
             "origin_access_control_origin_type": "s3",
             "signing_behavior": "always",
@@ -374,7 +374,7 @@
             "logging": [],
             "object_lock_configuration": [],
             "object_lock_enabled": false,
-            "policy": "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Condition\":{\"StringEquals\":{\"AWS:SourceArn\":\"arn:aws:cloudfront::251876202726:distribution/E3C32LHJDK5NA4\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudfront.amazonaws.com\"},\"Resource\":\"arn:aws:s3:::mri-dev-frontend-251876202726/*\",\"Sid\":\"AllowCloudFrontServicePrincipal\"}],\"Version\":\"2012-10-17\"}",
+            "policy": "",
             "region": "ap-south-1",
             "replication_configuration": [],
             "request_payer": "BucketOwner",
@@ -437,7 +437,7 @@
           "attributes": {
             "bucket": "mri-dev-frontend-251876202726",
             "id": "mri-dev-frontend-251876202726",
-            "policy": "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Condition\":{\"StringEquals\":{\"AWS:SourceArn\":\"arn:aws:cloudfront::251876202726:distribution/E3C32LHJDK5NA4\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudfront.amazonaws.com\"},\"Resource\":\"arn:aws:s3:::mri-dev-frontend-251876202726/*\",\"Sid\":\"AllowCloudFrontServicePrincipal\"}],\"Version\":\"2012-10-17\"}"
+            "policy": "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Condition\":{\"StringEquals\":{\"AWS:SourceArn\":\"arn:aws:cloudfront::251876202726:distribution/E16WAKZW5ZJFW3\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cloudfront.amazonaws.com\"},\"Resource\":\"arn:aws:s3:::mri-dev-frontend-251876202726/*\",\"Sid\":\"AllowCloudFrontServicePrincipal\"}],\"Version\":\"2012-10-17\"}"
           },
           "sensitive_attributes": [],
           "identity_schema_version": 0,
@@ -495,28 +495,11 @@
           "attributes": {
             "arn": "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role",
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
-            "create_date": "2026-03-09T12:53:59Z",
+            "create_date": "2026-03-06T14:32:30Z",
             "description": "",
             "force_detach_policies": false,
             "id": "mri-dev-ecs-task-role",
-            "inline_policy": [
-              {
-                "name": "mri-dev-cloudwatch-policy",
-                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\",\"logs:DescribeLogStreams\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:logs:*:*:log-group:/mri/*\"}]}"
-              },
-              {
-                "name": "mri-dev-s3-policy",
-                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:PutObject\",\"s3:GetObject\",\"s3:ListBucket\",\"s3:DeleteObject\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::mri-dev-outputs-251876202726\",\"arn:aws:s3:::mri-dev-outputs-251876202726/*\"]}]}"
-              },
-              {
-                "name": "mri-dev-secrets-policy",
-                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"secretsmanager:GetSecretValue\",\"secretsmanager:DescribeSecret\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:secretsmanager:*:*:secret:mri-dev-*\"}]}"
-              },
-              {
-                "name": "mri-dev-ses-policy",
-                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ses:SendEmail\",\"ses:SendRawEmail\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
-              }
-            ],
+            "inline_policy": [],
             "managed_policy_arns": [],
             "max_session_duration": 3600,
             "name": "mri-dev-ecs-task-role",
@@ -537,7 +520,7 @@
               "Owner": "edwardjsi",
               "Project": "mri"
             },
-            "unique_id": "AROATVJH53DTIYT42KA7T"
+            "unique_id": "AROATVJH53DTHVOM6PEX7"
           },
           "sensitive_attributes": [],
           "identity_schema_version": 0,
@@ -558,19 +541,12 @@
           "attributes": {
             "arn": "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role",
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
-            "create_date": "2026-03-09T12:53:59Z",
+            "create_date": "2026-03-06T14:32:30Z",
             "description": "",
             "force_detach_policies": false,
             "id": "mri-dev-ecs-execution-role",
-            "inline_policy": [
-              {
-                "name": "mri-dev-execution-secrets-policy",
-                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"secretsmanager:GetSecretValue\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:secretsmanager:*:*:secret:mri-dev-*\"}]}"
-              }
-            ],
-            "managed_policy_arns": [
-              "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-            ],
+            "inline_policy": [],
+            "managed_policy_arns": [],
             "max_session_duration": 3600,
             "name": "mri-dev-ecs-execution-role",
             "name_prefix": "",
@@ -590,7 +566,7 @@
               "Owner": "edwardjsi",
               "Project": "mri"
             },
-            "unique_id": "AROATVJH53DTPPXJLWHHW"
+            "unique_id": "AROATVJH53DTORBPDLYCC"
           },
           "sensitive_attributes": [],
           "identity_schema_version": 0,
@@ -736,7 +712,7 @@
         {
           "schema_version": 0,
           "attributes": {
-            "id": "mri-dev-ecs-execution-role-20260309125400532900000002",
+            "id": "mri-dev-ecs-execution-role-20260306143230917100000003",
             "policy_arn": "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
             "role": "mri-dev-ecs-execution-role"
           },
@@ -746,6 +722,201 @@
           "dependencies": [
             "module.iam.aws_iam_role.ecs_task_execution"
           ]
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "aws_db_subnet_group",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:rds:ap-south-1:251876202726:subgrp:mri-dev-db-subnet-group",
+            "description": "Managed by Terraform",
+            "id": "mri-dev-db-subnet-group",
+            "name": "mri-dev-db-subnet-group",
+            "name_prefix": "",
+            "subnet_ids": [
+              "subnet-0cb48e306b66afffe",
+              "subnet-0e3610095698903e8"
+            ],
+            "supported_network_types": [
+              "IPV4"
+            ],
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "terraform",
+              "Name": "mri-dev-db-subnet-group",
+              "Owner": "edwardjsi",
+              "Project": "mri"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "terraform",
+              "Name": "mri-dev-db-subnet-group",
+              "Owner": "edwardjsi",
+              "Project": "mri"
+            },
+            "vpc_id": "vpc-00fe799c6d993f6a3"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.vpc.aws_subnet.private",
+            "module.vpc.aws_vpc.main",
+            "module.vpc.data.aws_availability_zones.available"
+          ],
+          "create_before_destroy": true
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "aws_secretsmanager_secret",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS",
+            "description": "",
+            "force_overwrite_replica_secret": false,
+            "id": "mri-dev-db-credentials",
+            "kms_key_id": "",
+            "name": "mri-dev-db-credentials",
+            "name_prefix": "",
+            "policy": "",
+            "recovery_window_in_days": 0,
+            "replica": [],
+            "tags": {
+              "Environment": "dev",
+              "ManagedBy": "terraform",
+              "Name": "mri-dev-db-credentials",
+              "Owner": "edwardjsi",
+              "Project": "mri"
+            },
+            "tags_all": {
+              "Environment": "dev",
+              "ManagedBy": "terraform",
+              "Name": "mri-dev-db-credentials",
+              "Owner": "edwardjsi",
+              "Project": "mri"
+            }
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "aws_secretsmanager_secret_version",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS",
+            "has_secret_string_wo": null,
+            "id": "mri-dev-db-credentials|terraform-20260306143354743300000007",
+            "secret_binary": "",
+            "secret_id": "mri-dev-db-credentials",
+            "secret_string": "{\"dbname\":\"mri_db\",\"host\":\"mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com\",\"password\":\"loDJG2bhK6XUdQzL\",\"port\":5432,\"username\":\"mri_admin\"}",
+            "secret_string_wo": null,
+            "secret_string_wo_version": null,
+            "version_id": "terraform-20260306143354743300000007",
+            "version_stages": [
+              "AWSCURRENT"
+            ]
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_binary"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_string"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_string_wo"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.rds.aws_db_instance.main",
+            "module.rds.aws_db_subnet_group.main",
+            "module.rds.aws_secretsmanager_secret.db",
+            "module.rds.random_password.db",
+            "module.vpc.aws_security_group.app",
+            "module.vpc.aws_security_group.bastion",
+            "module.vpc.aws_security_group.rds",
+            "module.vpc.aws_subnet.private",
+            "module.vpc.aws_vpc.main",
+            "module.vpc.data.aws_availability_zones.available"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "random_password",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/random\"]",
+      "instances": [
+        {
+          "schema_version": 3,
+          "attributes": {
+            "bcrypt_hash": "$2a$10$zIW7cN1JfC.kTKHvrlHHceBNCEEgmFD/ZS3hp8Oaw7AGaUNDNQMVi",
+            "id": "none",
+            "keepers": null,
+            "length": 16,
+            "lower": true,
+            "min_lower": 0,
+            "min_numeric": 0,
+            "min_special": 0,
+            "min_upper": 0,
+            "number": true,
+            "numeric": true,
+            "override_special": null,
+            "result": "loDJG2bhK6XUdQzL",
+            "special": false,
+            "upper": true
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "bcrypt_hash"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "result"
+              }
+            ]
+          ],
+          "identity_schema_version": 0
         }
       ]
     },
@@ -820,7 +991,7 @@
             "timeouts": null,
             "versioning": [
               {
-                "enabled": true,
+                "enabled": false,
                 "mfa_delete": false
               }
             ],
@@ -885,7 +1056,7 @@
                     "sse_algorithm": "AES256"
                   }
                 ],
-                "bucket_key_enabled": false
+                "bucket_key_enabled": null
               }
             ]
           },
@@ -941,7 +1112,7 @@
           "schema_version": 0,
           "attributes": {
             "architecture": "x86_64",
-            "arn": "arn:aws:ec2:ap-south-1::image/ami-0e267a9919cdf778f",
+            "arn": "arn:aws:ec2:ap-south-1::image/ami-051a31ab2f4d498f5",
             "block_device_mappings": [
               {
                 "device_name": "/dev/xvda",
@@ -949,7 +1120,7 @@
                   "delete_on_termination": "true",
                   "encrypted": "false",
                   "iops": "3000",
-                  "snapshot_id": "snap-0d2daef0cee125983",
+                  "snapshot_id": "snap-06bc91252979e201e",
                   "throughput": "125",
                   "volume_initialization_rate": "0",
                   "volume_size": "8",
@@ -960,9 +1131,9 @@
               }
             ],
             "boot_mode": "uefi-preferred",
-            "creation_date": "2026-03-03T18:01:50.000Z",
-            "deprecation_time": "2026-06-01T23:47:00.000Z",
-            "description": "Amazon Linux 2023 AMI 2023.10.20260302.1 x86_64 HVM kernel-6.12",
+            "creation_date": "2026-02-16T19:58:48.000Z",
+            "deprecation_time": "2026-05-17T20:04:00.000Z",
+            "description": "Amazon Linux 2023 AMI 2023.10.20260216.1 x86_64 HVM kernel-6.1",
             "ena_support": true,
             "executable_users": null,
             "filter": [
@@ -974,9 +1145,9 @@
               }
             ],
             "hypervisor": "xen",
-            "id": "ami-0e267a9919cdf778f",
-            "image_id": "ami-0e267a9919cdf778f",
-            "image_location": "amazon/al2023-ami-2023.10.20260302.1-kernel-6.12-x86_64",
+            "id": "ami-051a31ab2f4d498f5",
+            "image_id": "ami-051a31ab2f4d498f5",
+            "image_location": "amazon/al2023-ami-2023.10.20260216.1-kernel-6.1-x86_64",
             "image_owner_alias": "amazon",
             "image_type": "machine",
             "imds_support": "v2.0",
@@ -984,7 +1155,7 @@
             "kernel_id": "",
             "last_launched_time": "",
             "most_recent": true,
-            "name": "al2023-ami-2023.10.20260302.1-kernel-6.12-x86_64",
+            "name": "al2023-ami-2023.10.20260216.1-kernel-6.1-x86_64",
             "name_regex": null,
             "owner_id": "137112412989",
             "owners": [
@@ -997,7 +1168,7 @@
             "ramdisk_id": "",
             "root_device_name": "/dev/xvda",
             "root_device_type": "ebs",
-            "root_snapshot_id": "snap-0d2daef0cee125983",
+            "root_snapshot_id": "snap-06bc91252979e201e",
             "sriov_net_support": "simple",
             "state": "available",
             "state_reason": {
@@ -1063,20 +1234,20 @@
           "schema_version": 0,
           "attributes": {
             "arn": "arn:aws:iam::251876202726:instance-profile/mri-dev-bastion-profile",
-            "create_date": "2026-03-09T12:54:00Z",
+            "create_date": "2026-03-06T14:32:31Z",
             "id": "mri-dev-bastion-profile",
             "name": "mri-dev-bastion-profile",
             "name_prefix": "",
             "path": "/",
             "role": "mri-dev-bastion-ssm-role",
-            "tags": {},
+            "tags": null,
             "tags_all": {
               "Environment": "dev",
               "ManagedBy": "terraform",
               "Owner": "edwardjsi",
               "Project": "mri"
             },
-            "unique_id": "AIPATVJH53DTMKCE4OAZA"
+            "unique_id": "AIPATVJH53DTEYSRFF6PA"
           },
           "sensitive_attributes": [],
           "identity_schema_version": 0,
@@ -1099,14 +1270,12 @@
           "attributes": {
             "arn": "arn:aws:iam::251876202726:role/mri-dev-bastion-ssm-role",
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
-            "create_date": "2026-03-09T12:53:59Z",
+            "create_date": "2026-03-06T14:32:30Z",
             "description": "",
             "force_detach_policies": false,
             "id": "mri-dev-bastion-ssm-role",
             "inline_policy": [],
-            "managed_policy_arns": [
-              "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-            ],
+            "managed_policy_arns": [],
             "max_session_duration": 3600,
             "name": "mri-dev-bastion-ssm-role",
             "name_prefix": "",
@@ -1126,7 +1295,7 @@
               "Owner": "edwardjsi",
               "Project": "mri"
             },
-            "unique_id": "AROATVJH53DTHXHFDN2KR"
+            "unique_id": "AROATVJH53DTMN55WI5XH"
           },
           "sensitive_attributes": [],
           "identity_schema_version": 0,
@@ -1144,7 +1313,7 @@
         {
           "schema_version": 0,
           "attributes": {
-            "id": "mri-dev-bastion-ssm-role-20260309125400904100000003",
+            "id": "mri-dev-bastion-ssm-role-20260306143230840300000002",
             "policy_arn": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
             "role": "mri-dev-bastion-ssm-role"
           },
@@ -1167,8 +1336,8 @@
         {
           "schema_version": 1,
           "attributes": {
-            "ami": "ami-0e267a9919cdf778f",
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:instance/i-07fdabe814c478766",
+            "ami": "ami-051a31ab2f4d498f5",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:instance/i-0fd441ad872d2c47d",
             "associate_public_ip_address": true,
             "availability_zone": "ap-south-1a",
             "capacity_reservation_specification": [
@@ -1207,7 +1376,7 @@
             "host_id": "",
             "host_resource_group_arn": null,
             "iam_instance_profile": "mri-dev-bastion-profile",
-            "id": "i-07fdabe814c478766",
+            "id": "i-0fd441ad872d2c47d",
             "instance_initiated_shutdown_behavior": "stop",
             "instance_lifecycle": "",
             "instance_market_options": [],
@@ -1237,8 +1406,8 @@
             "password_data": "",
             "placement_group": "",
             "placement_partition_number": 0,
-            "primary_network_interface_id": "eni-0aa61fc52a919cebc",
-            "private_dns": "ip-10-0-0-26.ap-south-1.compute.internal",
+            "primary_network_interface_id": "eni-0cead45f950e7496b",
+            "private_dns": "ip-10-0-0-73.ap-south-1.compute.internal",
             "private_dns_name_options": [
               {
                 "enable_resource_name_dns_a_record": false,
@@ -1246,9 +1415,9 @@
                 "hostname_type": "ip-name"
               }
             ],
-            "private_ip": "10.0.0.26",
-            "public_dns": "ec2-13-201-92-108.ap-south-1.compute.amazonaws.com",
-            "public_ip": "13.201.92.108",
+            "private_ip": "10.0.0.73",
+            "public_dns": "ec2-13-201-33-176.ap-south-1.compute.amazonaws.com",
+            "public_ip": "13.201.33.176",
             "root_block_device": [
               {
                 "delete_on_termination": true,
@@ -1269,7 +1438,7 @@
                   "Project": "mri"
                 },
                 "throughput": 125,
-                "volume_id": "vol-0b8f8cb2058b2a560",
+                "volume_id": "vol-08a99a5a0ec4d10c9",
                 "volume_size": 8,
                 "volume_type": "gp3"
               }
@@ -1278,7 +1447,7 @@
             "security_groups": [],
             "source_dest_check": true,
             "spot_instance_request_id": "",
-            "subnet_id": "subnet-0b25d886295b2c171",
+            "subnet_id": "subnet-088f919ff4eb4ebc1",
             "tags": {
               "Environment": "dev",
               "ManagedBy": "terraform",
@@ -1328,8 +1497,8 @@
         {
           "schema_version": 0,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:internet-gateway/igw-06e7788c4fafba710",
-            "id": "igw-06e7788c4fafba710",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:internet-gateway/igw-0cb7b2efe73112858",
+            "id": "igw-0cb7b2efe73112858",
             "owner_id": "251876202726",
             "tags": {
               "Environment": "dev",
@@ -1367,8 +1536,8 @@
         {
           "schema_version": 0,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:route-table/rtb-0e56c70842b84e77b",
-            "id": "rtb-0e56c70842b84e77b",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:route-table/rtb-013a8b4b7458cd651",
+            "id": "rtb-013a8b4b7458cd651",
             "owner_id": "251876202726",
             "propagating_vgws": [],
             "route": [],
@@ -1413,8 +1582,8 @@
         {
           "schema_version": 0,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:route-table/rtb-02ba9e1891754b832",
-            "id": "rtb-02ba9e1891754b832",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:route-table/rtb-0257387860384a74d",
+            "id": "rtb-0257387860384a74d",
             "owner_id": "251876202726",
             "propagating_vgws": [],
             "route": [
@@ -1424,7 +1593,7 @@
                 "core_network_arn": "",
                 "destination_prefix_list_id": "",
                 "egress_only_gateway_id": "",
-                "gateway_id": "igw-06e7788c4fafba710",
+                "gateway_id": "igw-0cb7b2efe73112858",
                 "ipv6_cidr_block": "",
                 "local_gateway_id": "",
                 "nat_gateway_id": "",
@@ -1473,8 +1642,8 @@
           "schema_version": 0,
           "attributes": {
             "gateway_id": "",
-            "id": "rtbassoc-02561bf889391df22",
-            "route_table_id": "rtb-0e56c70842b84e77b",
+            "id": "rtbassoc-0a2867b33326e891f",
+            "route_table_id": "rtb-013a8b4b7458cd651",
             "subnet_id": "subnet-0e3610095698903e8",
             "timeouts": null
           },
@@ -1497,9 +1666,9 @@
           "schema_version": 0,
           "attributes": {
             "gateway_id": "",
-            "id": "rtbassoc-03e79901029a3bd01",
-            "route_table_id": "rtb-0e56c70842b84e77b",
-            "subnet_id": "subnet-075875cad1bd04dae",
+            "id": "rtbassoc-0ba0d669a5116346c",
+            "route_table_id": "rtb-013a8b4b7458cd651",
+            "subnet_id": "subnet-0cb48e306b66afffe",
             "timeouts": null
           },
           "sensitive_attributes": [],
@@ -1530,9 +1699,9 @@
           "schema_version": 0,
           "attributes": {
             "gateway_id": "",
-            "id": "rtbassoc-03faf031e6b3d622b",
-            "route_table_id": "rtb-02ba9e1891754b832",
-            "subnet_id": "subnet-0b25d886295b2c171",
+            "id": "rtbassoc-009eb71b60a506e6f",
+            "route_table_id": "rtb-0257387860384a74d",
+            "subnet_id": "subnet-088f919ff4eb4ebc1",
             "timeouts": null
           },
           "sensitive_attributes": [],
@@ -1551,9 +1720,9 @@
           "schema_version": 0,
           "attributes": {
             "gateway_id": "",
-            "id": "rtbassoc-05a51c99d9ee1e61d",
-            "route_table_id": "rtb-02ba9e1891754b832",
-            "subnet_id": "subnet-01d402a479d5fc968",
+            "id": "rtbassoc-00e24e7db9d191277",
+            "route_table_id": "rtb-0257387860384a74d",
+            "subnet_id": "subnet-0fcb2e30649635fce",
             "timeouts": null
           },
           "sensitive_attributes": [],
@@ -1826,7 +1995,7 @@
           "index_key": 1,
           "schema_version": 1,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-075875cad1bd04dae",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-0cb48e306b66afffe",
             "assign_ipv6_address_on_creation": false,
             "availability_zone": "ap-south-1b",
             "availability_zone_id": "aps1-az3",
@@ -1836,7 +2005,7 @@
             "enable_lni_at_device_index": 0,
             "enable_resource_name_dns_a_record_on_launch": false,
             "enable_resource_name_dns_aaaa_record_on_launch": false,
-            "id": "subnet-075875cad1bd04dae",
+            "id": "subnet-0cb48e306b66afffe",
             "ipv6_cidr_block": "",
             "ipv6_cidr_block_association_id": "",
             "ipv6_native": false,
@@ -1884,7 +2053,7 @@
           "index_key": 0,
           "schema_version": 1,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-0b25d886295b2c171",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-088f919ff4eb4ebc1",
             "assign_ipv6_address_on_creation": false,
             "availability_zone": "ap-south-1a",
             "availability_zone_id": "aps1-az1",
@@ -1894,7 +2063,7 @@
             "enable_lni_at_device_index": 0,
             "enable_resource_name_dns_a_record_on_launch": false,
             "enable_resource_name_dns_aaaa_record_on_launch": false,
-            "id": "subnet-0b25d886295b2c171",
+            "id": "subnet-088f919ff4eb4ebc1",
             "ipv6_cidr_block": "",
             "ipv6_cidr_block_association_id": "",
             "ipv6_native": false,
@@ -1932,7 +2101,7 @@
           "index_key": 1,
           "schema_version": 1,
           "attributes": {
-            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-01d402a479d5fc968",
+            "arn": "arn:aws:ec2:ap-south-1:251876202726:subnet/subnet-0fcb2e30649635fce",
             "assign_ipv6_address_on_creation": false,
             "availability_zone": "ap-south-1b",
             "availability_zone_id": "aps1-az3",
@@ -1942,7 +2111,7 @@
             "enable_lni_at_device_index": 0,
             "enable_resource_name_dns_a_record_on_launch": false,
             "enable_resource_name_dns_aaaa_record_on_launch": false,
-            "id": "subnet-01d402a479d5fc968",
+            "id": "subnet-0fcb2e30649635fce",
             "ipv6_cidr_block": "",
             "ipv6_cidr_block_association_id": "",
             "ipv6_native": false,

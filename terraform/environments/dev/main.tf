@@ -76,5 +76,5 @@ module "frontend" {
   prefix       = local.prefix
   account_id   = local.account_id
   tags         = local.tags
-  alb_dns_name = var.cost_conscious_mode ? "localhost" : module.ecs[0].alb_dns_name
+  alb_dns_name = var.cost_conscious_mode ? "dummy.example.com" : module.ecs[0].alb_dns_name
 }

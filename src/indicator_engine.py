@@ -51,9 +51,20 @@ def fetch_data():
 
     # We always need full history for correct EMA computation (EMA depends on all prior values)
     # But we'll only UPDATE new rows in the write step
-    logger.info("Fetching daily prices for indicator computation...")
-    df = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn)
+    logger.info("Fetching daily prices for indicator computation (chunked)...")
     
+    # Read in chunks to avoid memory/tunnel timeouts on 1.7M rows
+    chunk_size = 100000
+    chunks = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn, chunksize=chunk_size)
+    
+    df_list = []
+    for i, chunk in enumerate(chunks):
+        df_list.append(chunk)
+        logger.info(f"  Fetched {(i+1) * chunk_size:,} rows...")
+        
+    df = pd.concat(df_list, ignore_index=True)
+    logger.info(f"Successfully fetched {len(df):,} total rows.")
+
     logger.info("Fetching index prices for Relative Strength...")
     idx_df = pd.read_sql("SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
     conn.close()

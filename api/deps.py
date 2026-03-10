@@ -20,14 +20,29 @@ security = HTTPBearer()
 # ── Database ────────────────────────────────────────────────
 def get_db():
     """Yield a psycopg2 connection with RealDictCursor."""
-    conn = psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5433"),
-        dbname=os.getenv("DB_NAME", "mri_db"),
-        user=os.getenv("DB_USER", "mri_admin"),
-        password=os.getenv("DB_PASSWORD", ""),
-        cursor_factory=RealDictCursor,
-    )
+    database_url = os.getenv("DATABASE_URL")
+    ssl_mode = os.getenv("DB_SSL", "false").lower() == "true"
+
+    if database_url:
+        # Cloud-native: Neon.tech / Render.com style
+        conn = psycopg2.connect(
+            database_url,
+            cursor_factory=RealDictCursor,
+            sslmode="require" if ssl_mode else "prefer",
+        )
+    else:
+        # Local dev / ECS with individual env vars
+        connect_kwargs = dict(
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", "5433"),
+            dbname=os.getenv("DB_NAME", "mri_db"),
+            user=os.getenv("DB_USER", "mri_admin"),
+            password=os.getenv("DB_PASSWORD", ""),
+            cursor_factory=RealDictCursor,
+        )
+        if ssl_mode:
+            connect_kwargs["sslmode"] = "require"
+        conn = psycopg2.connect(**connect_kwargs)
     try:
         yield conn
     finally:

@@ -1,7 +1,7 @@
 {
   "version": 4,
   "terraform_version": "1.14.5",
-  "serial": 549,
+  "serial": 547,
   "lineage": "bf5c77aa-4178-779a-6b4f-89bbbef3065e",
   "outputs": {
     "bastion_id": {
@@ -746,6 +746,110 @@
           "dependencies": [
             "module.iam.aws_iam_role.ecs_task_execution"
           ]
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "aws_secretsmanager_secret_version",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS",
+            "has_secret_string_wo": null,
+            "id": "mri-dev-db-credentials|terraform-20260309125520847300000007",
+            "secret_binary": "",
+            "secret_id": "mri-dev-db-credentials",
+            "secret_string": "{\"dbname\":\"mri_db\",\"host\":\"mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com\",\"password\":\"9WP9SBQV6QeafagC\",\"port\":5432,\"username\":\"mri_admin\"}",
+            "secret_string_wo": null,
+            "secret_string_wo_version": null,
+            "version_id": "terraform-20260309125520847300000007",
+            "version_stages": [
+              "AWSCURRENT"
+            ]
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_binary"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_string"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_string_wo"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.rds.aws_db_instance.main",
+            "module.rds.aws_db_subnet_group.main",
+            "module.rds.aws_secretsmanager_secret.db",
+            "module.rds.random_password.db",
+            "module.vpc.aws_security_group.app",
+            "module.vpc.aws_security_group.bastion",
+            "module.vpc.aws_security_group.rds",
+            "module.vpc.aws_subnet.private",
+            "module.vpc.aws_vpc.main",
+            "module.vpc.data.aws_availability_zones.available"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.rds",
+      "mode": "managed",
+      "type": "random_password",
+      "name": "db",
+      "provider": "provider[\"registry.terraform.io/hashicorp/random\"]",
+      "instances": [
+        {
+          "schema_version": 3,
+          "attributes": {
+            "bcrypt_hash": "$2a$10$FQZ0c9mn9iYtc1vSM077mer4sg./OPJffZe4OrkhiTXCq.fXU61lS",
+            "id": "none",
+            "keepers": null,
+            "length": 16,
+            "lower": true,
+            "min_lower": 0,
+            "min_numeric": 0,
+            "min_special": 0,
+            "min_upper": 0,
+            "number": true,
+            "numeric": true,
+            "override_special": null,
+            "result": "9WP9SBQV6QeafagC",
+            "special": false,
+            "upper": true
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "bcrypt_hash"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "result"
+              }
+            ]
+          ],
+          "identity_schema_version": 0
         }
       ]
     },

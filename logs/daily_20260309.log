@@ -1,0 +1,2046 @@
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.rds.aws_db_instance.main: Importing from ID "mri-dev-db"...[0m
+[0m[1m[32mmodule.rds.aws_db_instance.main: Import prepared![0m
+[0m[32m  Prepared aws_db_instance for import[0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=mri-dev-db][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[32m
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+[0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Importing from ID "mri-dev-db-subnet-group"...[0m
+[0m[1m[32mmodule.rds.aws_db_subnet_group.main: Import prepared![0m
+[0m[32m  Prepared aws_db_subnet_group for import[0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 1s [id=ami-0e267a9919cdf778f][0m
+[0m[32m
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Importing from ID "mri-dev-db-credentials"...[0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1m[32mmodule.rds.aws_secretsmanager_secret.db: Import prepared![0m
+[0m[32m  Prepared aws_secretsmanager_secret for import[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[32m
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+[0m
+[0m[1mmodule.rds.random_password.db: Importing from ID "ignored"...[0m
+[0m[1m[32mmodule.rds.random_password.db: Import prepared![0m
+[0m[32m  Prepared random_password for import[0m
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 1s [id=ami-0e267a9919cdf778f][0m
+[0m[32m
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+[0m
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mmodule.vpc.aws_vpc.main: Refreshing state... [id=vpc-00fe799c6d993f6a3][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[1mmodule.vpc.aws_security_group.bastion: Refreshing state... [id=sg-09c4cf94fa2f240b9][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0e3610095698903e8][0m
+[0m[1mmodule.vpc.aws_security_group.app: Refreshing state... [id=sg-04c2d48049788025f][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.aws_security_group.rds: Refreshing state... [id=sg-0f48da95ecf299941][0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+  [33m~[0m update in-place[0m
+[31m-[0m/[32m+[0m destroy and then create replacement[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.frontend.aws_cloudfront_distribution.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_cloudfront_distribution" "frontend" {
+      [32m+[0m[0m arn                             = (known after apply)
+      [32m+[0m[0m caller_reference                = (known after apply)
+      [32m+[0m[0m comment                         = "MRI Signal Platform Frontend"
+      [32m+[0m[0m continuous_deployment_policy_id = (known after apply)
+      [32m+[0m[0m default_root_object             = "index.html"
+      [32m+[0m[0m domain_name                     = (known after apply)
+      [32m+[0m[0m enabled                         = true
+      [32m+[0m[0m etag                            = (known after apply)
+      [32m+[0m[0m hosted_zone_id                  = (known after apply)
+      [32m+[0m[0m http_version                    = "http2"
+      [32m+[0m[0m id                              = (known after apply)
+      [32m+[0m[0m in_progress_validation_batches  = (known after apply)
+      [32m+[0m[0m is_ipv6_enabled                 = false
+      [32m+[0m[0m last_modified_time              = (known after apply)
+      [32m+[0m[0m price_class                     = "PriceClass_200"
+      [32m+[0m[0m retain_on_delete                = false
+      [32m+[0m[0m staging                         = false
+      [32m+[0m[0m status                          = (known after apply)
+      [32m+[0m[0m tags                            = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                        = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m trusted_key_groups              = (known after apply)
+      [32m+[0m[0m trusted_signers                 = (known after apply)
+      [32m+[0m[0m wait_for_deployment             = true
+
+      [32m+[0m[0m custom_error_response {
+          [32m+[0m[0m error_caching_min_ttl = 10
+          [32m+[0m[0m error_code            = 403
+          [32m+[0m[0m response_code         = 200
+          [32m+[0m[0m response_page_path    = "/index.html"
+        }
+      [32m+[0m[0m custom_error_response {
+          [32m+[0m[0m error_caching_min_ttl = 10
+          [32m+[0m[0m error_code            = 404
+          [32m+[0m[0m response_code         = 200
+          [32m+[0m[0m response_page_path    = "/index.html"
+        }
+
+      [32m+[0m[0m default_cache_behavior {
+          [32m+[0m[0m allowed_methods        = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+              [32m+[0m[0m "OPTIONS",
+            ]
+          [32m+[0m[0m cached_methods         = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+            ]
+          [32m+[0m[0m compress               = false
+          [32m+[0m[0m default_ttl            = 3600
+          [32m+[0m[0m max_ttl                = 86400
+          [32m+[0m[0m min_ttl                = 0
+          [32m+[0m[0m target_origin_id       = "s3-frontend"
+          [32m+[0m[0m trusted_key_groups     = (known after apply)
+          [32m+[0m[0m trusted_signers        = (known after apply)
+          [32m+[0m[0m viewer_protocol_policy = "allow-all"
+
+          [32m+[0m[0m forwarded_values {
+              [32m+[0m[0m headers                 = (known after apply)
+              [32m+[0m[0m query_string            = false
+              [32m+[0m[0m query_string_cache_keys = (known after apply)
+
+              [32m+[0m[0m cookies {
+                  [32m+[0m[0m forward           = "none"
+                  [32m+[0m[0m whitelisted_names = (known after apply)
+                }
+            }
+
+          [32m+[0m[0m grpc_config (known after apply)
+        }
+
+      [32m+[0m[0m ordered_cache_behavior {
+          [32m+[0m[0m allowed_methods        = [
+              [32m+[0m[0m "DELETE",
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+              [32m+[0m[0m "OPTIONS",
+              [32m+[0m[0m "PATCH",
+              [32m+[0m[0m "POST",
+              [32m+[0m[0m "PUT",
+            ]
+          [32m+[0m[0m cached_methods         = [
+              [32m+[0m[0m "GET",
+              [32m+[0m[0m "HEAD",
+            ]
+          [32m+[0m[0m compress               = false
+          [32m+[0m[0m default_ttl            = 0
+          [32m+[0m[0m max_ttl                = 0
+          [32m+[0m[0m min_ttl                = 0
+          [32m+[0m[0m path_pattern           = "/api/*"
+          [32m+[0m[0m target_origin_id       = "alb-api"
+          [32m+[0m[0m viewer_protocol_policy = "allow-all"
+
+          [32m+[0m[0m forwarded_values {
+              [32m+[0m[0m headers                 = [
+                  [32m+[0m[0m "Authorization",
+                  [32m+[0m[0m "Content-Type",
+                  [32m+[0m[0m "Origin",
+                ]
+              [32m+[0m[0m query_string            = true
+              [32m+[0m[0m query_string_cache_keys = (known after apply)
+
+              [32m+[0m[0m cookies {
+                  [32m+[0m[0m forward = "all"
+                }
+            }
+
+          [32m+[0m[0m grpc_config (known after apply)
+        }
+
+      [32m+[0m[0m origin {
+          [32m+[0m[0m connection_attempts      = 3
+          [32m+[0m[0m connection_timeout       = 10
+          [32m+[0m[0m domain_name              = "dummy.example.com"
+          [32m+[0m[0m origin_id                = "alb-api"
+            [90m# (2 unchanged attributes hidden)[0m[0m
+
+          [32m+[0m[0m custom_origin_config {
+              [32m+[0m[0m http_port                = 80
+              [32m+[0m[0m https_port               = 443
+              [32m+[0m[0m origin_keepalive_timeout = 5
+              [32m+[0m[0m origin_protocol_policy   = "http-only"
+              [32m+[0m[0m origin_read_timeout      = 30
+              [32m+[0m[0m origin_ssl_protocols     = [
+                  [32m+[0m[0m "TLSv1.2",
+                ]
+            }
+        }
+      [32m+[0m[0m origin {
+          [32m+[0m[0m connection_attempts      = 3
+          [32m+[0m[0m connection_timeout       = 10
+          [32m+[0m[0m domain_name              = (known after apply)
+          [32m+[0m[0m origin_access_control_id = (known after apply)
+          [32m+[0m[0m origin_id                = "s3-frontend"
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+
+      [32m+[0m[0m restrictions {
+          [32m+[0m[0m geo_restriction {
+              [32m+[0m[0m locations        = (known after apply)
+              [32m+[0m[0m restriction_type = "none"
+            }
+        }
+
+      [32m+[0m[0m viewer_certificate {
+          [32m+[0m[0m cloudfront_default_certificate = true
+          [32m+[0m[0m minimum_protocol_version       = "TLSv1"
+        }
+    }
+
+[1m  # module.frontend.aws_cloudfront_origin_access_control.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_cloudfront_origin_access_control" "frontend" {
+      [32m+[0m[0m arn                               = (known after apply)
+      [32m+[0m[0m description                       = "Managed by Terraform"
+      [32m+[0m[0m etag                              = (known after apply)
+      [32m+[0m[0m id                                = (known after apply)
+      [32m+[0m[0m name                              = "mri-dev-frontend-oac"
+      [32m+[0m[0m origin_access_control_origin_type = "s3"
+      [32m+[0m[0m signing_behavior                  = "always"
+      [32m+[0m[0m signing_protocol                  = "sigv4"
+    }
+
+[1m  # module.frontend.aws_s3_bucket.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket" "frontend" {
+      [32m+[0m[0m acceleration_status         = (known after apply)
+      [32m+[0m[0m acl                         = (known after apply)
+      [32m+[0m[0m arn                         = (known after apply)
+      [32m+[0m[0m bucket                      = "mri-dev-frontend-251876202726"
+      [32m+[0m[0m bucket_domain_name          = (known after apply)
+      [32m+[0m[0m bucket_prefix               = (known after apply)
+      [32m+[0m[0m bucket_regional_domain_name = (known after apply)
+      [32m+[0m[0m force_destroy               = true
+      [32m+[0m[0m hosted_zone_id              = (known after apply)
+      [32m+[0m[0m id                          = (known after apply)
+      [32m+[0m[0m object_lock_enabled         = (known after apply)
+      [32m+[0m[0m policy                      = (known after apply)
+      [32m+[0m[0m region                      = (known after apply)
+      [32m+[0m[0m request_payer               = (known after apply)
+      [32m+[0m[0m tags                        = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                    = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m website_domain              = (known after apply)
+      [32m+[0m[0m website_endpoint            = (known after apply)
+
+      [32m+[0m[0m cors_rule (known after apply)
+
+      [32m+[0m[0m grant (known after apply)
+
+      [32m+[0m[0m lifecycle_rule (known after apply)
+
+      [32m+[0m[0m logging (known after apply)
+
+      [32m+[0m[0m object_lock_configuration (known after apply)
+
+      [32m+[0m[0m replication_configuration (known after apply)
+
+      [32m+[0m[0m server_side_encryption_configuration (known after apply)
+
+      [32m+[0m[0m versioning (known after apply)
+
+      [32m+[0m[0m website (known after apply)
+    }
+
+[1m  # module.frontend.aws_s3_bucket_policy.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_policy" "frontend" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+      [32m+[0m[0m policy = (known after apply)
+    }
+
+[1m  # module.frontend.aws_s3_bucket_public_access_block.frontend[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_public_access_block" "frontend" {
+      [32m+[0m[0m block_public_acls       = true
+      [32m+[0m[0m block_public_policy     = true
+      [32m+[0m[0m bucket                  = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m ignore_public_acls      = true
+      [32m+[0m[0m restrict_public_buckets = true
+    }
+
+[1m  # module.iam.aws_iam_role.ecs_task[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role" "ecs_task" {
+      [32m+[0m[0m arn                   = (known after apply)
+      [32m+[0m[0m assume_role_policy    = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "sts:AssumeRole"
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Principal = {
+                          [32m+[0m[0m Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m create_date           = (known after apply)
+      [32m+[0m[0m force_detach_policies = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m managed_policy_arns   = (known after apply)
+      [32m+[0m[0m max_session_duration  = 3600
+      [32m+[0m[0m name                  = "mri-dev-ecs-task-role"
+      [32m+[0m[0m name_prefix           = (known after apply)
+      [32m+[0m[0m path                  = "/"
+      [32m+[0m[0m tags                  = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-ecs-task-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all              = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-ecs-task-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m unique_id             = (known after apply)
+
+      [32m+[0m[0m inline_policy (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role.ecs_task_execution[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role" "ecs_task_execution" {
+      [32m+[0m[0m arn                   = (known after apply)
+      [32m+[0m[0m assume_role_policy    = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "sts:AssumeRole"
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Principal = {
+                          [32m+[0m[0m Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m create_date           = (known after apply)
+      [32m+[0m[0m force_detach_policies = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m managed_policy_arns   = (known after apply)
+      [32m+[0m[0m max_session_duration  = 3600
+      [32m+[0m[0m name                  = "mri-dev-ecs-execution-role"
+      [32m+[0m[0m name_prefix           = (known after apply)
+      [32m+[0m[0m path                  = "/"
+      [32m+[0m[0m tags                  = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-ecs-execution-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all              = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-ecs-execution-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m unique_id             = (known after apply)
+
+      [32m+[0m[0m inline_policy (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy.ecs_task_cloudwatch[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_task_cloudwatch" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-cloudwatch-policy"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "logs:CreateLogGroup",
+                          [32m+[0m[0m "logs:CreateLogStream",
+                          [32m+[0m[0m "logs:PutLogEvents",
+                          [32m+[0m[0m "logs:DescribeLogStreams",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = "arn:aws:logs:*:*:log-group:/mri/*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy.ecs_task_s3[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_task_s3" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-s3-policy"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = (known after apply)
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy.ecs_task_secrets[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_task_secrets" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-secrets-policy"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "secretsmanager:GetSecretValue",
+                          [32m+[0m[0m "secretsmanager:DescribeSecret",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = "arn:aws:secretsmanager:*:*:secret:mri-dev-*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy.ecs_task_ses[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "ecs_task_ses" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-ses-policy"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "ses:SendEmail",
+                          [32m+[0m[0m "ses:SendRawEmail",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = "*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy.execution_secrets[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy" "execution_secrets" {
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-execution-secrets-policy"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m policy      = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action   = [
+                          [32m+[0m[0m "secretsmanager:GetSecretValue",
+                        ]
+                      [32m+[0m[0m Effect   = "Allow"
+                      [32m+[0m[0m Resource = "arn:aws:secretsmanager:*:*:secret:mri-dev-*"
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m role        = (known after apply)
+    }
+
+[1m  # module.iam.aws_iam_role_policy_attachment.ecs_execution[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy_attachment" "ecs_execution" {
+      [32m+[0m[0m id         = (known after apply)
+      [32m+[0m[0m policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+      [32m+[0m[0m role       = "mri-dev-ecs-execution-role"
+    }
+
+[1m  # module.rds.aws_db_instance.main[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_db_instance" "main" {
+      [32m+[0m[0m apply_immediately                     = true
+      [32m+[0m[0m final_snapshot_identifier             = "mri-dev-db-final-snapshot"
+        id                                    = "db-33LULZEO7RLGWFBLAVVQVQPULE"
+      [33m~[0m[0m skip_final_snapshot                   = true [33m->[0m[0m false
+      [33m~[0m[0m tags                                  = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+            "Name"        = "mri-dev-db"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+        [90m# (69 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # module.rds.aws_db_subnet_group.main[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_db_subnet_group" "main" {
+        id                      = "mri-dev-db-subnet-group"
+        name                    = "mri-dev-db-subnet-group"
+      [33m~[0m[0m subnet_ids              = [
+          [31m-[0m[0m "subnet-07c6b58411f88e48b",
+          [31m-[0m[0m "subnet-0e3610095698903e8",
+        ] -> (known after apply)
+      [33m~[0m[0m tags                    = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+            "Name"        = "mri-dev-db-subnet-group"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+        [90m# (6 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # module.rds.aws_secretsmanager_secret.db[0m will be updated in-place
+[0m  [33m~[0m[0m resource "aws_secretsmanager_secret" "db" {
+      [32m+[0m[0m force_overwrite_replica_secret = false
+        id                             = "mri-dev-db-credentials"
+        name                           = "mri-dev-db-credentials"
+      [32m+[0m[0m recovery_window_in_days        = 0
+      [33m~[0m[0m tags                           = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+            "Name"        = "mri-dev-db-credentials"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+        [90m# (6 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # module.rds.aws_secretsmanager_secret_version.db[0m will be created
+[0m  [32m+[0m[0m resource "aws_secretsmanager_secret_version" "db" {
+      [32m+[0m[0m arn                  = (known after apply)
+      [32m+[0m[0m has_secret_string_wo = (known after apply)
+      [32m+[0m[0m id                   = (known after apply)
+      [32m+[0m[0m secret_id            = "mri-dev-db-credentials"
+      [32m+[0m[0m secret_string        = (sensitive value)
+      [32m+[0m[0m secret_string_wo     = (write-only attribute)
+      [32m+[0m[0m version_id           = (known after apply)
+      [32m+[0m[0m version_stages       = (known after apply)
+    }
+
+[1m  # module.rds.random_password.db[0m must be [1m[31mreplaced[0m
+[0m[31m-[0m/[32m+[0m[0m resource "random_password" "db" {
+      [33m~[0m[0m bcrypt_hash = (sensitive value)
+      [33m~[0m[0m id          = "none" -> (known after apply)
+      [33m~[0m[0m length      = 7 [33m->[0m[0m 16 [31m# forces replacement[0m[0m
+      [33m~[0m[0m result      = (sensitive value)
+      [33m~[0m[0m special     = true [33m->[0m[0m false [31m# forces replacement[0m[0m
+        [90m# (8 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # module.s3.aws_s3_bucket.outputs[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket" "outputs" {
+      [32m+[0m[0m acceleration_status         = (known after apply)
+      [32m+[0m[0m acl                         = (known after apply)
+      [32m+[0m[0m arn                         = (known after apply)
+      [32m+[0m[0m bucket                      = "mri-dev-outputs-251876202726"
+      [32m+[0m[0m bucket_domain_name          = (known after apply)
+      [32m+[0m[0m bucket_prefix               = (known after apply)
+      [32m+[0m[0m bucket_regional_domain_name = (known after apply)
+      [32m+[0m[0m force_destroy               = true
+      [32m+[0m[0m hosted_zone_id              = (known after apply)
+      [32m+[0m[0m id                          = (known after apply)
+      [32m+[0m[0m object_lock_enabled         = (known after apply)
+      [32m+[0m[0m policy                      = (known after apply)
+      [32m+[0m[0m region                      = (known after apply)
+      [32m+[0m[0m request_payer               = (known after apply)
+      [32m+[0m[0m tags                        = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-outputs"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                    = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-outputs"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m website_domain              = (known after apply)
+      [32m+[0m[0m website_endpoint            = (known after apply)
+
+      [32m+[0m[0m cors_rule (known after apply)
+
+      [32m+[0m[0m grant (known after apply)
+
+      [32m+[0m[0m lifecycle_rule (known after apply)
+
+      [32m+[0m[0m logging (known after apply)
+
+      [32m+[0m[0m object_lock_configuration (known after apply)
+
+      [32m+[0m[0m replication_configuration (known after apply)
+
+      [32m+[0m[0m server_side_encryption_configuration (known after apply)
+
+      [32m+[0m[0m versioning (known after apply)
+
+      [32m+[0m[0m website (known after apply)
+    }
+
+[1m  # module.s3.aws_s3_bucket_public_access_block.outputs[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_public_access_block" "outputs" {
+      [32m+[0m[0m block_public_acls       = true
+      [32m+[0m[0m block_public_policy     = true
+      [32m+[0m[0m bucket                  = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m ignore_public_acls      = true
+      [32m+[0m[0m restrict_public_buckets = true
+    }
+
+[1m  # module.s3.aws_s3_bucket_server_side_encryption_configuration.outputs[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_server_side_encryption_configuration" "outputs" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m rule {
+          [32m+[0m[0m apply_server_side_encryption_by_default {
+              [32m+[0m[0m sse_algorithm     = "AES256"
+                [90m# (1 unchanged attribute hidden)[0m[0m
+            }
+        }
+    }
+
+[1m  # module.s3.aws_s3_bucket_versioning.outputs[0m will be created
+[0m  [32m+[0m[0m resource "aws_s3_bucket_versioning" "outputs" {
+      [32m+[0m[0m bucket = (known after apply)
+      [32m+[0m[0m id     = (known after apply)
+
+      [32m+[0m[0m versioning_configuration {
+          [32m+[0m[0m mfa_delete = (known after apply)
+          [32m+[0m[0m status     = "Enabled"
+        }
+    }
+
+[1m  # module.vpc.aws_iam_instance_profile.bastion[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_instance_profile" "bastion" {
+      [32m+[0m[0m arn         = (known after apply)
+      [32m+[0m[0m create_date = (known after apply)
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "mri-dev-bastion-profile"
+      [32m+[0m[0m name_prefix = (known after apply)
+      [32m+[0m[0m path        = "/"
+      [32m+[0m[0m role        = "mri-dev-bastion-ssm-role"
+      [32m+[0m[0m tags_all    = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m unique_id   = (known after apply)
+    }
+
+[1m  # module.vpc.aws_iam_role.bastion_ssm[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role" "bastion_ssm" {
+      [32m+[0m[0m arn                   = (known after apply)
+      [32m+[0m[0m assume_role_policy    = jsonencode(
+            {
+              [32m+[0m[0m Statement = [
+                  [32m+[0m[0m {
+                      [32m+[0m[0m Action    = "sts:AssumeRole"
+                      [32m+[0m[0m Effect    = "Allow"
+                      [32m+[0m[0m Principal = {
+                          [32m+[0m[0m Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              [32m+[0m[0m Version   = "2012-10-17"
+            }
+        )
+      [32m+[0m[0m create_date           = (known after apply)
+      [32m+[0m[0m force_detach_policies = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m managed_policy_arns   = (known after apply)
+      [32m+[0m[0m max_session_duration  = 3600
+      [32m+[0m[0m name                  = "mri-dev-bastion-ssm-role"
+      [32m+[0m[0m name_prefix           = (known after apply)
+      [32m+[0m[0m path                  = "/"
+      [32m+[0m[0m tags                  = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-bastion-ssm-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all              = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-bastion-ssm-role"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m unique_id             = (known after apply)
+
+      [32m+[0m[0m inline_policy (known after apply)
+    }
+
+[1m  # module.vpc.aws_iam_role_policy_attachment.bastion_ssm[0m will be created
+[0m  [32m+[0m[0m resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+      [32m+[0m[0m id         = (known after apply)
+      [32m+[0m[0m policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      [32m+[0m[0m role       = "mri-dev-bastion-ssm-role"
+    }
+
+[1m  # module.vpc.aws_instance.bastion[0m will be created
+[0m  [32m+[0m[0m resource "aws_instance" "bastion" {
+      [32m+[0m[0m ami                                  = "ami-0e267a9919cdf778f"
+      [32m+[0m[0m arn                                  = (known after apply)
+      [32m+[0m[0m associate_public_ip_address          = true
+      [32m+[0m[0m availability_zone                    = (known after apply)
+      [32m+[0m[0m cpu_core_count                       = (known after apply)
+      [32m+[0m[0m cpu_threads_per_core                 = (known after apply)
+      [32m+[0m[0m disable_api_stop                     = (known after apply)
+      [32m+[0m[0m disable_api_termination              = (known after apply)
+      [32m+[0m[0m ebs_optimized                        = (known after apply)
+      [32m+[0m[0m enable_primary_ipv6                  = (known after apply)
+      [32m+[0m[0m get_password_data                    = false
+      [32m+[0m[0m host_id                              = (known after apply)
+      [32m+[0m[0m host_resource_group_arn              = (known after apply)
+      [32m+[0m[0m iam_instance_profile                 = "mri-dev-bastion-profile"
+      [32m+[0m[0m id                                   = (known after apply)
+      [32m+[0m[0m instance_initiated_shutdown_behavior = (known after apply)
+      [32m+[0m[0m instance_lifecycle                   = (known after apply)
+      [32m+[0m[0m instance_state                       = (known after apply)
+      [32m+[0m[0m instance_type                        = "t3.micro"
+      [32m+[0m[0m ipv6_address_count                   = (known after apply)
+      [32m+[0m[0m ipv6_addresses                       = (known after apply)
+      [32m+[0m[0m key_name                             = (known after apply)
+      [32m+[0m[0m monitoring                           = (known after apply)
+      [32m+[0m[0m outpost_arn                          = (known after apply)
+      [32m+[0m[0m password_data                        = (known after apply)
+      [32m+[0m[0m placement_group                      = (known after apply)
+      [32m+[0m[0m placement_partition_number           = (known after apply)
+      [32m+[0m[0m primary_network_interface_id         = (known after apply)
+      [32m+[0m[0m private_dns                          = (known after apply)
+      [32m+[0m[0m private_ip                           = (known after apply)
+      [32m+[0m[0m public_dns                           = (known after apply)
+      [32m+[0m[0m public_ip                            = (known after apply)
+      [32m+[0m[0m secondary_private_ips                = (known after apply)
+      [32m+[0m[0m security_groups                      = (known after apply)
+      [32m+[0m[0m source_dest_check                    = true
+      [32m+[0m[0m spot_instance_request_id             = (known after apply)
+      [32m+[0m[0m subnet_id                            = (known after apply)
+      [32m+[0m[0m tags                                 = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-bastion"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                             = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-bastion"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tenancy                              = (known after apply)
+      [32m+[0m[0m user_data                            = (known after apply)
+      [32m+[0m[0m user_data_base64                     = (known after apply)
+      [32m+[0m[0m user_data_replace_on_change          = false
+      [32m+[0m[0m vpc_security_group_ids               = [
+          [32m+[0m[0m "sg-09c4cf94fa2f240b9",
+        ]
+
+      [32m+[0m[0m capacity_reservation_specification (known after apply)
+
+      [32m+[0m[0m cpu_options (known after apply)
+
+      [32m+[0m[0m ebs_block_device (known after apply)
+
+      [32m+[0m[0m enclave_options (known after apply)
+
+      [32m+[0m[0m ephemeral_block_device (known after apply)
+
+      [32m+[0m[0m instance_market_options (known after apply)
+
+      [32m+[0m[0m maintenance_options (known after apply)
+
+      [32m+[0m[0m metadata_options (known after apply)
+
+      [32m+[0m[0m network_interface (known after apply)
+
+      [32m+[0m[0m private_dns_name_options (known after apply)
+
+      [32m+[0m[0m root_block_device (known after apply)
+    }
+
+[1m  # module.vpc.aws_internet_gateway.main[0m will be created
+[0m  [32m+[0m[0m resource "aws_internet_gateway" "main" {
+      [32m+[0m[0m arn      = (known after apply)
+      [32m+[0m[0m id       = (known after apply)
+      [32m+[0m[0m owner_id = (known after apply)
+      [32m+[0m[0m tags     = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-igw"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-igw"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id   = "vpc-00fe799c6d993f6a3"
+    }
+
+[1m  # module.vpc.aws_route_table.private[0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table" "private" {
+      [32m+[0m[0m arn              = (known after apply)
+      [32m+[0m[0m id               = (known after apply)
+      [32m+[0m[0m owner_id         = (known after apply)
+      [32m+[0m[0m propagating_vgws = (known after apply)
+      [32m+[0m[0m route            = (known after apply)
+      [32m+[0m[0m tags             = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-private-rt"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all         = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-private-rt"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id           = "vpc-00fe799c6d993f6a3"
+    }
+
+[1m  # module.vpc.aws_route_table.public[0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table" "public" {
+      [32m+[0m[0m arn              = (known after apply)
+      [32m+[0m[0m id               = (known after apply)
+      [32m+[0m[0m owner_id         = (known after apply)
+      [32m+[0m[0m propagating_vgws = (known after apply)
+      [32m+[0m[0m route            = [
+          [32m+[0m[0m {
+              [32m+[0m[0m cidr_block                 = "0.0.0.0/0"
+              [32m+[0m[0m gateway_id                 = (known after apply)
+                [90m# (11 unchanged attributes hidden)[0m[0m
+            },
+        ]
+      [32m+[0m[0m tags             = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-rt"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all         = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-rt"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id           = "vpc-00fe799c6d993f6a3"
+    }
+
+[1m  # module.vpc.aws_route_table_association.private[0][0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table_association" "private" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = "subnet-0e3610095698903e8"
+    }
+
+[1m  # module.vpc.aws_route_table_association.private[1][0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table_association" "private" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # module.vpc.aws_route_table_association.public[0][0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table_association" "public" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # module.vpc.aws_route_table_association.public[1][0m will be created
+[0m  [32m+[0m[0m resource "aws_route_table_association" "public" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # module.vpc.aws_subnet.private[1][0m will be created
+[0m  [32m+[0m[0m resource "aws_subnet" "private" {
+      [32m+[0m[0m arn                                            = (known after apply)
+      [32m+[0m[0m assign_ipv6_address_on_creation                = false
+      [32m+[0m[0m availability_zone                              = "ap-south-1b"
+      [32m+[0m[0m availability_zone_id                           = (known after apply)
+      [32m+[0m[0m cidr_block                                     = "10.0.11.0/24"
+      [32m+[0m[0m enable_dns64                                   = false
+      [32m+[0m[0m enable_resource_name_dns_a_record_on_launch    = false
+      [32m+[0m[0m enable_resource_name_dns_aaaa_record_on_launch = false
+      [32m+[0m[0m id                                             = (known after apply)
+      [32m+[0m[0m ipv6_cidr_block_association_id                 = (known after apply)
+      [32m+[0m[0m ipv6_native                                    = false
+      [32m+[0m[0m map_public_ip_on_launch                        = false
+      [32m+[0m[0m owner_id                                       = (known after apply)
+      [32m+[0m[0m private_dns_hostname_type_on_launch            = (known after apply)
+      [32m+[0m[0m tags                                           = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-private-2"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                                       = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-private-2"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id                                         = "vpc-00fe799c6d993f6a3"
+    }
+
+[1m  # module.vpc.aws_subnet.public[0][0m will be created
+[0m  [32m+[0m[0m resource "aws_subnet" "public" {
+      [32m+[0m[0m arn                                            = (known after apply)
+      [32m+[0m[0m assign_ipv6_address_on_creation                = false
+      [32m+[0m[0m availability_zone                              = "ap-south-1a"
+      [32m+[0m[0m availability_zone_id                           = (known after apply)
+      [32m+[0m[0m cidr_block                                     = "10.0.0.0/24"
+      [32m+[0m[0m enable_dns64                                   = false
+      [32m+[0m[0m enable_resource_name_dns_a_record_on_launch    = false
+      [32m+[0m[0m enable_resource_name_dns_aaaa_record_on_launch = false
+      [32m+[0m[0m id                                             = (known after apply)
+      [32m+[0m[0m ipv6_cidr_block_association_id                 = (known after apply)
+      [32m+[0m[0m ipv6_native                                    = false
+      [32m+[0m[0m map_public_ip_on_launch                        = true
+      [32m+[0m[0m owner_id                                       = (known after apply)
+      [32m+[0m[0m private_dns_hostname_type_on_launch            = (known after apply)
+      [32m+[0m[0m tags                                           = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-1"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                                       = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-1"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id                                         = "vpc-00fe799c6d993f6a3"
+    }
+
+[1m  # module.vpc.aws_subnet.public[1][0m will be created
+[0m  [32m+[0m[0m resource "aws_subnet" "public" {
+      [32m+[0m[0m arn                                            = (known after apply)
+      [32m+[0m[0m assign_ipv6_address_on_creation                = false
+      [32m+[0m[0m availability_zone                              = "ap-south-1b"
+      [32m+[0m[0m availability_zone_id                           = (known after apply)
+      [32m+[0m[0m cidr_block                                     = "10.0.1.0/24"
+      [32m+[0m[0m enable_dns64                                   = false
+      [32m+[0m[0m enable_resource_name_dns_a_record_on_launch    = false
+      [32m+[0m[0m enable_resource_name_dns_aaaa_record_on_launch = false
+      [32m+[0m[0m id                                             = (known after apply)
+      [32m+[0m[0m ipv6_cidr_block_association_id                 = (known after apply)
+      [32m+[0m[0m ipv6_native                                    = false
+      [32m+[0m[0m map_public_ip_on_launch                        = true
+      [32m+[0m[0m owner_id                                       = (known after apply)
+      [32m+[0m[0m private_dns_hostname_type_on_launch            = (known after apply)
+      [32m+[0m[0m tags                                           = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-2"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m tags_all                                       = {
+          [32m+[0m[0m "Environment" = "dev"
+          [32m+[0m[0m "ManagedBy"   = "terraform"
+          [32m+[0m[0m "Name"        = "mri-dev-public-2"
+          [32m+[0m[0m "Owner"       = "edwardjsi"
+          [32m+[0m[0m "Project"     = "mri"
+        }
+      [32m+[0m[0m vpc_id                                         = "vpc-00fe799c6d993f6a3"
+    }
+
+[1mPlan:[0m [0m33 to add, 3 to change, 1 to destroy.
+
+Changes to Outputs:
+  [32m+[0m[0m bastion_id                 = (known after apply)
+  [32m+[0m[0m cloudfront_distribution_id = (known after apply)
+  [32m+[0m[0m cloudfront_domain          = (known after apply)
+  [32m+[0m[0m frontend_bucket_name       = (known after apply)
+  [32m+[0m[0m iam_execution_role_arn     = (known after apply)
+  [32m+[0m[0m iam_task_role_arn          = (known after apply)
+  [32m+[0m[0m s3_bucket_name             = "mri-dev-outputs-251876202726"
+[0m[1mmodule.rds.random_password.db: Destroying... [id=none][0m[0m
+[0m[1mmodule.rds.random_password.db: Destruction complete after 0s[0m
+[0m[1mmodule.rds.random_password.db: Creating...[0m[0m
+[0m[1mmodule.rds.random_password.db: Creation complete after 0s [id=none][0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Creating...[0m[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Modifying... [id=mri-dev-db-credentials][0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Creating...[0m[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Modifications complete after 0s [id=mri-dev-db-credentials][0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Creation complete after 1s [id=igw-06e7788c4fafba710][0m
+[0m[1mmodule.vpc.aws_route_table.public: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Creation complete after 1s [id=subnet-075875cad1bd04dae][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Modifying... [id=mri-dev-db-subnet-group][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Creation complete after 1s [id=EJ4T8A0QJK54X][0m
+[0m[1mmodule.vpc.aws_route_table.public: Creation complete after 1s [id=rtb-02ba9e1891754b832][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Creation complete after 2s [id=mri-dev-ecs-task-role][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Creation complete after 2s [id=mri-dev-ecs-execution-role][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Modifications complete after 1s [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Creation complete after 2s [id=mri-dev-bastion-ssm-role][0m
+[0m[1mmodule.rds.aws_db_instance.main: Modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Creation complete after 2s [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Creating...[0m[0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Creation complete after 2s [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Creation complete after 1s [id=mri-dev-ecs-execution-role-20260309125400532900000002][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Creation complete after 1s [id=mri-dev-ecs-task-role:mri-dev-cloudwatch-policy][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Creating...[0m[0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Creation complete after 1s [id=mri-dev-ecs-task-role:mri-dev-ses-policy][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Creation complete after 1s [id=mri-dev-bastion-ssm-role-20260309125400904100000003][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Creating...[0m[0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Creation complete after 1s [id=mri-dev-ecs-task-role:mri-dev-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Creation complete after 0s [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Creation complete after 1s [id=mri-dev-ecs-execution-role:mri-dev-execution-secrets-policy][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Creation complete after 0s [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Creation complete after 0s [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Creation complete after 1s [id=mri-dev-ecs-task-role:mri-dev-s3-policy][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Creation complete after 2s [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Creation complete after 8s [id=mri-dev-bastion-profile][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Creation complete after 11s [id=subnet-0b25d886295b2c171][0m
+[0m[1mmodule.vpc.aws_route_table.private: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_instance.bastion: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Creation complete after 11s [id=subnet-01d402a479d5fc968][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Creation complete after 1s [id=rtbassoc-03faf031e6b3d622b][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Creation complete after 1s [id=rtbassoc-05a51c99d9ee1e61d][0m
+[0m[1mmodule.vpc.aws_route_table.private: Creation complete after 1s [id=rtb-0e56c70842b84e77b][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Creating...[0m[0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Creating...[0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 00m10s elapsed][0m[0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Creation complete after 0s [id=rtbassoc-03e79901029a3bd01][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Creation complete after 0s [id=rtbassoc-02561bf889391df22][0m
+[0m[1mmodule.vpc.aws_instance.bastion: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [00m10s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 00m20s elapsed][0m[0m
+[0m[1mmodule.vpc.aws_instance.bastion: Creation complete after 14s [id=i-07fdabe814c478766][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [00m20s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 00m30s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [00m30s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 00m40s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [00m40s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 00m50s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [00m50s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 01m00s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m00s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 01m10s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m10s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Still modifying... [id=db-33LULZEO7RLGWFBLAVVQVQPULE, 01m20s elapsed][0m[0m
+[0m[1mmodule.rds.aws_db_instance.main: Modifications complete after 1m21s [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Creating...[0m[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Creation complete after 0s [id=mri-dev-db-credentials|terraform-20260309125520847300000007][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m20s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m30s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m40s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [01m50s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m00s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m10s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m20s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m30s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m40s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [02m50s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [03m00s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [03m10s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Still creating... [03m20s elapsed][0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Creation complete after 3m26s [id=E3C32LHJDK5NA4][0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Creating...[0m[0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Creation complete after 0s [id=mri-dev-frontend-251876202726][0m
+[33m╷[0m[0m
+[33m│[0m [0m[1m[33mWarning: [0m[0m[1mRedundant ignore_changes element[0m
+[33m│[0m [0m
+[33m│[0m [0m[0m  on ../../modules/rds/main.tf line 1, in resource "random_password" "db":
+[33m│[0m [0m   1: resource [4m"random_password"[0m "db" {[0m
+[33m│[0m [0m
+[33m│[0m [0mAdding an attribute name to ignore_changes tells Terraform to ignore future
+[33m│[0m [0mchanges to the argument in configuration after the object has been created,
+[33m│[0m [0mretaining the value originally configured.
+[33m│[0m [0m
+[33m│[0m [0mThe attribute result is decided by the provider alone and therefore there
+[33m│[0m [0mcan be no configured value to compare with. Including this attribute in
+[33m│[0m [0mignore_changes has no effect. Remove the attribute from ignore_changes to
+[33m│[0m [0mquiet this warning.
+[33m╵[0m[0m
+[0m[1m[32m
+Apply complete! Resources: 33 added, 3 changed, 1 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0mbastion_id = "i-07fdabe814c478766"
+cloudfront_distribution_id = "E3C32LHJDK5NA4"
+cloudfront_domain = "d25tdygicgbojg.cloudfront.net"
+db_secret_arn = "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS"
+frontend_bucket_name = "mri-dev-frontend-251876202726"
+iam_execution_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role"
+iam_task_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role"
+rds_endpoint = "mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
+s3_bucket_name = "mri-dev-outputs-251876202726"
+vpc_id = "vpc-00fe799c6d993f6a3"
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-07fdabe814c478766",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-anaa2sqtcj2guo3gzo9tn8ylo8
+Port 5433 opened for sessionId Auser-anaa2sqtcj2guo3gzo9tn8ylo8.
+Waiting for connections...
+2026-03-09 12:57:48,896 - INFO - === MRI Daily Pipeline — 2026-03-09 12:57 ===
+2026-03-09 12:57:48,896 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-09 12:57:50,045 - INFO - Loading index data...
+
+Connection accepted for session [Auser-anaa2sqtcj2guo3gzo9tn8ylo8]
+2026-03-09 12:57:50,352 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  password authentication failed for user "mri_admin"
+connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  no pg_hba.conf entry for host "10.0.0.26", user "mri_admin", database "mri_db", no encryption
+)
+2026-03-09 12:57:55,747 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  password authentication failed for user "mri_admin"
+connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  no pg_hba.conf entry for host "10.0.0.26", user "mri_admin", database "mri_db", no encryption
+)
+2026-03-09 12:58:01,104 - ERROR - Failed to connect to the database after multiple attempts.
+2026-03-09 12:58:01,104 - INFO -   Fetching from 2005-01-01 to 2026-03-09
+2026-03-09 12:58:02,800 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  password authentication failed for user "mri_admin"
+connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  no pg_hba.conf entry for host "10.0.0.26", user "mri_admin", database "mri_db", no encryption
+)
+2026-03-09 12:58:08,157 - WARNING - Database connection failed, retrying in 5 seconds... (connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  password authentication failed for user "mri_admin"
+connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  no pg_hba.conf entry for host "10.0.0.26", user "mri_admin", database "mri_db", no encryption
+)
+2026-03-09 12:58:13,490 - ERROR - Failed to connect to the database after multiple attempts.
+2026-03-09 12:58:13,490 - ERROR -   ❌ Data ingestion failed: connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  password authentication failed for user "mri_admin"
+connection to server at "localhost" (127.0.0.1), port 5433 failed: FATAL:  no pg_hba.conf entry for host "10.0.0.26", user "mri_admin", database "mri_db", no encryption
+
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Refreshing state... [id=mri-dev-ecs-execution-role][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Refreshing state... [id=EJ4T8A0QJK54X][0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mmodule.vpc.aws_vpc.main: Refreshing state... [id=vpc-00fe799c6d993f6a3][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Refreshing state... [id=mri-dev-ecs-task-role][0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Refreshing state... [id=igw-06e7788c4fafba710][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-075875cad1bd04dae][0m
+[0m[1mmodule.vpc.aws_security_group.app: Refreshing state... [id=sg-04c2d48049788025f][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0e3610095698903e8][0m
+[0m[1mmodule.vpc.aws_security_group.bastion: Refreshing state... [id=sg-09c4cf94fa2f240b9][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0b25d886295b2c171][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-01d402a479d5fc968][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-02ba9e1891754b832][0m
+[0m[1mmodule.vpc.aws_security_group.rds: Refreshing state... [id=sg-0f48da95ecf299941][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-0e56c70842b84e77b][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Refreshing state... [id=E3C32LHJDK5NA4][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-05a51c99d9ee1e61d][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-03faf031e6b3d622b][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-03e79901029a3bd01][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-02561bf889391df22][0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Refreshing state... [id=mri-dev-db-credentials|terraform-20260309125520847300000007][0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role-20260309125400904100000003][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Refreshing state... [id=mri-dev-bastion-profile][0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Refreshing state... [id=mri-dev-ecs-execution-role-20260309125400532900000002][0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Refreshing state... [id=mri-dev-ecs-execution-role:mri-dev-execution-secrets-policy][0m
+[0m[1mmodule.vpc.aws_instance.bastion: Refreshing state... [id=i-07fdabe814c478766][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-s3-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-ses-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-cloudwatch-policy][0m
+
+[0m[1m[32mNo changes.[0m[1m Your infrastructure matches the configuration.[0m
+
+[0mTerraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[33m╷[0m[0m
+[33m│[0m [0m[1m[33mWarning: [0m[0m[1mRedundant ignore_changes element[0m
+[33m│[0m [0m
+[33m│[0m [0m[0m  on ../../modules/rds/main.tf line 1, in resource "random_password" "db":
+[33m│[0m [0m   1: resource [4m"random_password"[0m "db" {[0m
+[33m│[0m [0m
+[33m│[0m [0mAdding an attribute name to ignore_changes tells Terraform to ignore future
+[33m│[0m [0mchanges to the argument in configuration after the object has been created,
+[33m│[0m [0mretaining the value originally configured.
+[33m│[0m [0m
+[33m│[0m [0mThe attribute result is decided by the provider alone and therefore there
+[33m│[0m [0mcan be no configured value to compare with. Including this attribute in
+[33m│[0m [0mignore_changes has no effect. Remove the attribute from ignore_changes to
+[33m│[0m [0mquiet this warning.
+[33m╵[0m[0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0mbastion_id = "i-07fdabe814c478766"
+cloudfront_distribution_id = "E3C32LHJDK5NA4"
+cloudfront_domain = "d25tdygicgbojg.cloudfront.net"
+db_secret_arn = "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS"
+frontend_bucket_name = "mri-dev-frontend-251876202726"
+iam_execution_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role"
+iam_task_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role"
+rds_endpoint = "mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
+s3_bucket_name = "mri-dev-outputs-251876202726"
+vpc_id = "vpc-00fe799c6d993f6a3"
+Fetching new password from Secrets Manager...
+Applying new password to RDS instance...
+Waiting for RDS modification to complete...
+RDS password successfully synchronized with Secrets Manager.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-07fdabe814c478766",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-lfqpgnfaqzrfujh2ts2d5428v4
+2026-03-09 13:08:32,938 - INFO - === MRI Daily Pipeline — 2026-03-09 13:08 ===
+2026-03-09 13:08:32,938 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-09 13:08:34,025 - INFO - Loading index data...
+2026-03-09 13:08:34,434 - INFO -   Fetching from 2026-02-28 to 2026-03-09
+2026-03-09 13:08:36,667 - INFO -   Loaded 4 rows for NIFTY50
+2026-03-09 13:08:37,255 - INFO -   Loaded 4 rows for NIFTYMID
+2026-03-09 13:08:37,452 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2026-02-28 -> 2026-03-09)
+2026-03-09 13:08:37,460 - ERROR - 
+1 Failed download:
+2026-03-09 13:08:37,460 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2026-02-28 -> 2026-03-09)
+2026-03-09 13:08:37,464 - WARNING - No data for index NIFTYSMALL
+2026-03-09 13:08:37,464 - INFO - Index data load complete.
+2026-03-09 13:08:38,052 - INFO -   Fetched 500 Nifty 500 symbols
+2026-03-09 13:08:38,375 - INFO - Loading stock data for 500 symbols from 2026-02-28...
+Loading stocks:   0%|          | 0/10 [00:00<?, ?it/s]Loading stocks:  10%|█         | 1/10 [00:36<05:25, 36.21s/it]Loading stocks:  20%|██        | 2/10 [01:13<04:54, 36.78s/it]Loading stocks:  30%|███       | 3/10 [01:52<04:24, 37.77s/it]Loading stocks:  40%|████      | 4/10 [02:31<03:50, 38.48s/it]Loading stocks:  50%|█████     | 5/10 [03:10<03:12, 38.54s/it]Loading stocks:  60%|██████    | 6/10 [03:47<02:32, 38.06s/it]Loading stocks:  70%|███████   | 7/10 [04:24<01:52, 37.56s/it]Loading stocks:  80%|████████  | 8/10 [05:00<01:14, 37.05s/it]Loading stocks:  90%|█████████ | 9/10 [05:36<00:36, 36.95s/it]Loading stocks: 100%|██████████| 10/10 [06:13<00:00, 36.77s/it]Loading stocks: 100%|██████████| 10/10 [06:13<00:00, 37.32s/it]
+2026-03-09 13:14:51,638 - INFO - Stock data load complete. Failed: 0 symbols.
+2026-03-09 13:14:52,271 - INFO -   ✅ Stock sectors updated (500 stocks)
+2026-03-09 13:14:52,271 - INFO -   ✅ Data ingestion complete
+2026-03-09 13:14:52,271 - INFO - [2/5] Running Indicator Engine...
+2026-03-09 13:14:53,732 - INFO - Indicator columns added/verified in daily_prices.
+2026-03-09 13:14:57,316 - INFO - Total rows: 1,794,293 | Need indicators: 500 | Already computed: 1,793,793
+2026-03-09 13:14:57,316 - INFO - Fetching daily prices for indicator computation (chunked)...
+/home/edwar/mri-int/src/indicator_engine.py:58: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  chunks = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn, chunksize=chunk_size)
+
+Command '['session-manager-plugin', 'AWS_SSM_START_SESSION_RESPONSE', 'ap-south-1', 'StartSession', '', '{"Target": "i-07fdabe814c478766", "DocumentName": "AWS-StartPortForwardingSessionToRemoteHost", "Parameters": {"host": ["mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"], "portNumber": ["5432"], "localPortNumber": ["5433"]}}', 'https://ssm.ap-south-1.amazonaws.com']' died with <Signals.SIGKILL: 9>.
+2026-03-09 14:01:19,152 - ERROR -   ❌ Indicator engine failed: Execution failed on sql: SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date
+SSL SYSCALL error: EOF detected
+
+unable to rollback
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Refreshing state... [id=EJ4T8A0QJK54X][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.vpc.aws_vpc.main: Refreshing state... [id=vpc-00fe799c6d993f6a3][0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Refreshing state... [id=mri-dev-ecs-task-role][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Refreshing state... [id=mri-dev-ecs-execution-role][0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 1s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 1s [id=ami-0e267a9919cdf778f][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_security_group.app: Refreshing state... [id=sg-04c2d48049788025f][0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Refreshing state... [id=igw-06e7788c4fafba710][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0b25d886295b2c171][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-075875cad1bd04dae][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0e3610095698903e8][0m
+[0m[1mmodule.vpc.aws_security_group.bastion: Refreshing state... [id=sg-09c4cf94fa2f240b9][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-01d402a479d5fc968][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-02ba9e1891754b832][0m
+[0m[1mmodule.vpc.aws_security_group.rds: Refreshing state... [id=sg-0f48da95ecf299941][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-03faf031e6b3d622b][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-05a51c99d9ee1e61d][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-0e56c70842b84e77b][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Refreshing state... [id=E3C32LHJDK5NA4][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-02561bf889391df22][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-03e79901029a3bd01][0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role-20260309125400904100000003][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Refreshing state... [id=mri-dev-bastion-profile][0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Refreshing state... [id=mri-dev-db-credentials|terraform-20260309125520847300000007][0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Refreshing state... [id=mri-dev-ecs-execution-role-20260309125400532900000002][0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Refreshing state... [id=mri-dev-ecs-execution-role:mri-dev-execution-secrets-policy][0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_instance.bastion: Refreshing state... [id=i-07fdabe814c478766][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-s3-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-ses-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-cloudwatch-policy][0m
+
+[0m[1m[32mNo changes.[0m[1m Your infrastructure matches the configuration.[0m
+
+[0mTerraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[33m╷[0m[0m
+[33m│[0m [0m[1m[33mWarning: [0m[0m[1mRedundant ignore_changes element[0m
+[33m│[0m [0m
+[33m│[0m [0m[0m  on ../../modules/rds/main.tf line 1, in resource "random_password" "db":
+[33m│[0m [0m   1: resource [4m"random_password"[0m "db" {[0m
+[33m│[0m [0m
+[33m│[0m [0mAdding an attribute name to ignore_changes tells Terraform to ignore future
+[33m│[0m [0mchanges to the argument in configuration after the object has been created,
+[33m│[0m [0mretaining the value originally configured.
+[33m│[0m [0m
+[33m│[0m [0mThe attribute result is decided by the provider alone and therefore there
+[33m│[0m [0mcan be no configured value to compare with. Including this attribute in
+[33m│[0m [0mignore_changes has no effect. Remove the attribute from ignore_changes to
+[33m│[0m [0mquiet this warning.
+[33m╵[0m[0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0mbastion_id = "i-07fdabe814c478766"
+cloudfront_distribution_id = "E3C32LHJDK5NA4"
+cloudfront_domain = "d25tdygicgbojg.cloudfront.net"
+db_secret_arn = "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS"
+frontend_bucket_name = "mri-dev-frontend-251876202726"
+iam_execution_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role"
+iam_task_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role"
+rds_endpoint = "mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
+s3_bucket_name = "mri-dev-outputs-251876202726"
+vpc_id = "vpc-00fe799c6d993f6a3"
+Fetching new password from Secrets Manager...
+Applying new password to RDS instance...
+Waiting for RDS modification to complete...
+RDS password successfully synchronized with Secrets Manager.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-07fdabe814c478766",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-iz8ad5vz3fvey44p7l87rne6le
+Port 5433 opened for sessionId Auser-iz8ad5vz3fvey44p7l87rne6le.
+Waiting for connections...
+2026-03-09 14:03:06,604 - INFO - === MRI Daily Pipeline — 2026-03-09 14:03 ===
+2026-03-09 14:03:06,604 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-09 14:03:07,990 - INFO - Loading index data...
+
+Connection accepted for session [Auser-iz8ad5vz3fvey44p7l87rne6le]
+2026-03-09 14:03:08,342 - INFO -   Fetching from 2026-03-01 to 2026-03-09
+2026-03-09 14:03:09,719 - INFO -   Loaded 4 rows for NIFTY50
+2026-03-09 14:03:10,292 - INFO -   Loaded 4 rows for NIFTYMID
+2026-03-09 14:03:10,481 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:03:10,488 - ERROR - 
+1 Failed download:
+2026-03-09 14:03:10,488 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:03:10,493 - WARNING - No data for index NIFTYSMALL
+2026-03-09 14:03:10,493 - INFO - Index data load complete.
+2026-03-09 14:03:11,613 - INFO -   Fetched 500 Nifty 500 symbols
+2026-03-09 14:03:11,949 - INFO - Loading stock data for 500 symbols from 2026-03-01...
+Loading stocks:   0%|          | 0/10 [00:00<?, ?it/s]Loading stocks:  10%|█         | 1/10 [00:38<05:45, 38.39s/it]Loading stocks:  20%|██        | 2/10 [01:17<05:12, 39.04s/it]Loading stocks:  30%|███       | 3/10 [02:04<04:56, 42.39s/it]Loading stocks:  40%|████      | 4/10 [02:55<04:35, 45.90s/it]Loading stocks:  50%|█████     | 5/10 [03:58<04:20, 52.17s/it]Loading stocks:  60%|██████    | 6/10 [04:40<03:14, 48.52s/it]Loading stocks:  70%|███████   | 7/10 [05:20<02:17, 45.88s/it]Loading stocks:  80%|████████  | 8/10 [06:00<01:27, 43.84s/it]Loading stocks:  90%|█████████ | 9/10 [06:43<00:43, 43.53s/it]Loading stocks: 100%|██████████| 10/10 [07:22<00:00, 42.15s/it]Loading stocks: 100%|██████████| 10/10 [07:22<00:00, 44.21s/it]
+2026-03-09 14:10:34,045 - INFO - Stock data load complete. Failed: 0 symbols.
+2026-03-09 14:10:34,704 - INFO -   ✅ Stock sectors updated (500 stocks)
+2026-03-09 14:10:34,704 - INFO -   ✅ Data ingestion complete
+2026-03-09 14:10:34,704 - INFO - [2/5] Running Indicator Engine...
+2026-03-09 14:10:36,001 - INFO - Indicator columns added/verified in daily_prices.
+2026-03-09 14:10:37,655 - INFO - Total rows: 1,794,293 | Need indicators: 500 | Already computed: 1,793,793
+2026-03-09 14:10:37,655 - INFO - Fetching daily prices for indicator computation (chunked)...
+/home/edwar/mri-int/src/indicator_engine.py:58: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  chunks = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn, chunksize=chunk_size)
+Session: Auser-lfqpgnfaqzrfujh2ts2d5428v4 timed out.
+2026-03-09 14:14:27,188 - INFO -   Fetched 100,000 rows...
+2026-03-09 14:14:27,457 - INFO -   Fetched 200,000 rows...
+2026-03-09 14:14:27,702 - INFO -   Fetched 300,000 rows...
+2026-03-09 14:14:27,938 - INFO -   Fetched 400,000 rows...
+2026-03-09 14:14:28,175 - INFO -   Fetched 500,000 rows...
+2026-03-09 14:14:28,432 - INFO -   Fetched 600,000 rows...
+2026-03-09 14:14:28,667 - INFO -   Fetched 700,000 rows...
+2026-03-09 14:14:28,904 - INFO -   Fetched 800,000 rows...
+2026-03-09 14:14:29,150 - INFO -   Fetched 900,000 rows...
+2026-03-09 14:14:29,425 - INFO -   Fetched 1,000,000 rows...
+2026-03-09 14:14:29,673 - INFO -   Fetched 1,100,000 rows...
+2026-03-09 14:14:29,933 - INFO -   Fetched 1,200,000 rows...
+2026-03-09 14:14:30,191 - INFO -   Fetched 1,300,000 rows...
+2026-03-09 14:14:30,459 - INFO -   Fetched 1,400,000 rows...
+2026-03-09 14:14:30,708 - INFO -   Fetched 1,500,000 rows...
+2026-03-09 14:14:30,951 - INFO -   Fetched 1,600,000 rows...
+2026-03-09 14:14:31,205 - INFO -   Fetched 1,700,000 rows...
+2026-03-09 14:14:31,466 - INFO -   Fetched 1,800,000 rows...
+2026-03-09 14:14:31,542 - INFO - Successfully fetched 1,794,293 total rows.
+2026-03-09 14:14:31,542 - INFO - Fetching index prices for Relative Strength...
+/home/edwar/mri-int/src/indicator_engine.py:69: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  idx_df = pd.read_sql("SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+2026-03-09 14:14:31,881 - INFO - Computing indicators...
+2026-03-09 14:14:31,885 - INFO - Rows needing update: 500
+2026-03-09 14:14:32,688 - INFO - Calculating EMAs and Rolling values per stock...
+/home/edwar/mri-int/src/indicator_engine.py:114: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['ema_200'].replace(0, np.nan, inplace=True)
+2026-03-09 14:14:32,954 - INFO - Calculating 20-day regression slope of 200 EMA...
+/home/edwar/mri-int/src/indicator_engine.py:134: UserWarning: Boolean Series key will be reindexed to match DataFrame index.
+  df_to_update = df[needs_update]
+2026-03-09 14:16:03,958 - INFO - Computed all indicators. Writing 500 new rows (skipping 1,793,793 already-computed rows).
+2026-03-09 14:16:04,104 - INFO - Updating database with indicators for 500 rows (chunked)...
+2026-03-09 14:16:04,974 - INFO -   Progress: 500/500 rows (100%)
+2026-03-09 14:16:04,975 - INFO - Database update complete!
+2026-03-09 14:16:04,975 - INFO -   ✅ Indicators computed
+2026-03-09 14:16:04,975 - INFO - [3/5] Running Regime Engine...
+2026-03-09 14:16:05,354 - INFO - Market regime and stock scores tables ready.
+2026-03-09 14:16:05,354 - INFO - Computing Market Regime based on Nifty 50...
+/home/edwar/mri-int/src/regime_engine.py:59: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+2026-03-09 14:16:06,168 - INFO - Inserting 4531 Regime states...
+2026-03-09 14:16:09,020 - INFO - Regime stats: BULL: 2916, BEAR: 788, NEUTRAL: 827
+2026-03-09 14:16:17,336 - INFO - Computing stock scores for 500 new rows (skipping already-scored rows)...
+2026-03-09 14:16:23,640 - INFO - Processing chunk 1 (500 rows)...
+2026-03-09 14:16:25,104 - INFO - Stock score computation complete. 500 new rows scored.
+2026-03-09 14:16:25,105 - INFO -   ✅ Regime and scores computed
+2026-03-09 14:16:25,105 - INFO - [4/5] Generating client signals...
+2026-03-09 14:16:25,398 - INFO - === Signal Generator — 2026-03-09 ===
+2026-03-09 14:16:25,502 - INFO - Current Regime: NEUTRAL
+2026-03-09 14:16:25,621 - INFO - Stocks scored: 464
+2026-03-09 14:16:25,692 - INFO - Prices available: 500
+2026-03-09 14:16:25,739 - INFO - Active clients: 1
+2026-03-09 14:16:25,822 - INFO - === Signal Generation Complete: 0 signals for 1 clients ===
+2026-03-09 14:16:25,822 - INFO -   ✅ Signals generated
+2026-03-09 14:16:25,822 - INFO - [5/5] Sending signal emails via SES...
+2026-03-09 14:16:26,118 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-03-09 14:16:28,815 - INFO - No unsent signals. Nothing to email.
+2026-03-09 14:16:28,815 - INFO -   ✅ 0 emails sent
+2026-03-09 14:16:28,816 - INFO - === Pipeline Complete — 2026-03-09 14:16 ===
+INFO:     Started server process [7152]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+
+> frontend@0.0.0 dev
+> vite --host
+
+
+  VITE v5.4.21  ready in 286 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.255.255.254:5173/
+  ➜  Network: http://172.22.162.191:5173/
+INFO:     127.0.0.1:37656 - "GET /api/signals/today HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37674 - "GET /api/signals/pending HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37680 - "GET /api/portfolio/daily-summary HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37696 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37662 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37710 - "GET /api/signals/today HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37726 - "GET /api/signals/pending HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37732 - "GET /api/portfolio/daily-summary HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37746 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:60146 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:60100 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:36104 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+2:22:24 PM [vite] hmr update /src/App.tsx, /src/index.css
+2:22:52 PM [vite] hmr update /src/App.tsx, /src/index.css
+2:24:44 PM [vite] hmr update /src/App.tsx, /src/index.css
+2:24:46 PM [vite] hmr update /src/App.tsx, /src/index.css
+Killed
+
+Command '['session-manager-plugin', 'AWS_SSM_START_SESSION_RESPONSE', 'ap-south-1', 'StartSession', '', '{"Target": "i-07fdabe814c478766", "DocumentName": "AWS-StartPortForwardingSessionToRemoteHost", "Parameters": {"host": ["mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"], "portNumber": ["5432"], "localPortNumber": ["5433"]}}', 'https://ssm.ap-south-1.amazonaws.com']' died with <Signals.SIGKILL: 9>.
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Refreshing state... [id=EJ4T8A0QJK54X][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Refreshing state... [id=mri-dev-ecs-execution-role][0m
+[0m[1mmodule.vpc.aws_vpc.main: Refreshing state... [id=vpc-00fe799c6d993f6a3][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Refreshing state... [id=mri-dev-ecs-task-role][0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Refreshing state... [id=igw-06e7788c4fafba710][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-01d402a479d5fc968][0m
+[0m[1mmodule.vpc.aws_security_group.bastion: Refreshing state... [id=sg-09c4cf94fa2f240b9][0m
+[0m[1mmodule.vpc.aws_security_group.app: Refreshing state... [id=sg-04c2d48049788025f][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0b25d886295b2c171][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0e3610095698903e8][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-075875cad1bd04dae][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-02ba9e1891754b832][0m
+[0m[1mmodule.vpc.aws_security_group.rds: Refreshing state... [id=sg-0f48da95ecf299941][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-0e56c70842b84e77b][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-05a51c99d9ee1e61d][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-03faf031e6b3d622b][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-02561bf889391df22][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-03e79901029a3bd01][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Refreshing state... [id=mri-dev-ecs-execution-role:mri-dev-execution-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Refreshing state... [id=mri-dev-ecs-execution-role-20260309125400532900000002][0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role-20260309125400904100000003][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Refreshing state... [id=mri-dev-bastion-profile][0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Refreshing state... [id=mri-dev-db-credentials|terraform-20260309125520847300000007][0m
+[0m[1mmodule.vpc.aws_instance.bastion: Refreshing state... [id=i-07fdabe814c478766][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-cloudwatch-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-s3-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-ses-policy][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Refreshing state... [id=E3C32LHJDK5NA4][0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+
+[0m[1m[32mNo changes.[0m[1m Your infrastructure matches the configuration.[0m
+
+[0mTerraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[33m╷[0m[0m
+[33m│[0m [0m[1m[33mWarning: [0m[0m[1mRedundant ignore_changes element[0m
+[33m│[0m [0m
+[33m│[0m [0m[0m  on ../../modules/rds/main.tf line 1, in resource "random_password" "db":
+[33m│[0m [0m   1: resource [4m"random_password"[0m "db" {[0m
+[33m│[0m [0m
+[33m│[0m [0mAdding an attribute name to ignore_changes tells Terraform to ignore future
+[33m│[0m [0mchanges to the argument in configuration after the object has been created,
+[33m│[0m [0mretaining the value originally configured.
+[33m│[0m [0m
+[33m│[0m [0mThe attribute result is decided by the provider alone and therefore there
+[33m│[0m [0mcan be no configured value to compare with. Including this attribute in
+[33m│[0m [0mignore_changes has no effect. Remove the attribute from ignore_changes to
+[33m│[0m [0mquiet this warning.
+[33m╵[0m[0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0mbastion_id = "i-07fdabe814c478766"
+cloudfront_distribution_id = "E3C32LHJDK5NA4"
+cloudfront_domain = "d25tdygicgbojg.cloudfront.net"
+db_secret_arn = "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS"
+frontend_bucket_name = "mri-dev-frontend-251876202726"
+iam_execution_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role"
+iam_task_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role"
+rds_endpoint = "mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
+s3_bucket_name = "mri-dev-outputs-251876202726"
+vpc_id = "vpc-00fe799c6d993f6a3"
+Fetching new password from Secrets Manager...
+Applying new password to RDS instance...
+Waiting for RDS modification to complete...
+RDS password successfully synchronized with Secrets Manager.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-07fdabe814c478766",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-ancxran2hf7v7jhuap5cd2fjba
+Port 5433 opened for sessionId Auser-ancxran2hf7v7jhuap5cd2fjba.
+Waiting for connections...
+2026-03-09 14:28:22,097 - INFO - === MRI Daily Pipeline — 2026-03-09 14:28 ===
+2026-03-09 14:28:22,097 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-09 14:28:23,217 - INFO - Loading index data...
+
+Connection accepted for session [Auser-ancxran2hf7v7jhuap5cd2fjba]
+2026-03-09 14:28:23,565 - INFO -   Fetching from 2026-03-01 to 2026-03-09
+2026-03-09 14:28:24,787 - INFO -   Loaded 4 rows for NIFTY50
+2026-03-09 14:28:25,412 - INFO -   Loaded 4 rows for NIFTYMID
+2026-03-09 14:28:25,586 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:28:25,588 - ERROR - 
+1 Failed download:
+2026-03-09 14:28:25,588 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:28:25,593 - WARNING - No data for index NIFTYSMALL
+2026-03-09 14:28:25,593 - INFO - Index data load complete.
+2026-03-09 14:28:25,783 - INFO -   Fetched 500 Nifty 500 symbols
+2026-03-09 14:28:26,093 - INFO - Loading stock data for 500 symbols from 2026-03-01...
+Loading stocks:   0%|          | 0/10 [00:00<?, ?it/s]Loading stocks:  10%|█         | 1/10 [00:39<05:52, 39.16s/it]Loading stocks:  20%|██        | 2/10 [01:19<05:17, 39.70s/it]Loading stocks:  30%|███       | 3/10 [02:11<05:18, 45.44s/it]Loading stocks:  40%|████      | 4/10 [03:20<05:27, 54.65s/it]Loading stocks:  50%|█████     | 5/10 [04:13<04:30, 54.17s/it]Loading stocks:  60%|██████    | 6/10 [04:54<03:18, 49.69s/it]Loading stocks:  70%|███████   | 7/10 [05:35<02:20, 46.80s/it]Loading stocks:  80%|████████  | 8/10 [06:15<01:29, 44.78s/it]Loading stocks:  90%|█████████ | 9/10 [06:59<00:44, 44.37s/it]Loading stocks: 100%|██████████| 10/10 [07:41<00:00, 43.53s/it]Loading stocks: 100%|██████████| 10/10 [07:41<00:00, 46.10s/it]
+2026-03-09 14:36:07,106 - INFO - Stock data load complete. Failed: 0 symbols.
+2026-03-09 14:36:07,747 - INFO -   ✅ Stock sectors updated (500 stocks)
+2026-03-09 14:36:07,748 - INFO -   ✅ Data ingestion complete
+2026-03-09 14:36:07,748 - INFO - [2/5] Running Indicator Engine...
+2026-03-09 14:36:09,007 - INFO - Indicator columns added/verified in daily_prices.
+2026-03-09 14:36:11,694 - INFO - Total rows: 1,794,293 | Need indicators: 0 | Already computed: 1,794,293
+2026-03-09 14:36:11,694 - INFO - All rows already have indicators. Skipping computation.
+2026-03-09 14:36:11,694 - INFO - No rows to update. Database is current.
+2026-03-09 14:36:11,695 - INFO -   ✅ Indicators computed
+2026-03-09 14:36:11,695 - INFO - [3/5] Running Regime Engine...
+2026-03-09 14:36:12,098 - INFO - Market regime and stock scores tables ready.
+2026-03-09 14:36:12,098 - INFO - Computing Market Regime based on Nifty 50...
+/home/edwar/mri-int/src/regime_engine.py:59: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+2026-03-09 14:36:13,142 - INFO - Inserting 4531 Regime states...
+2026-03-09 14:36:16,020 - INFO - Regime stats: BULL: 2916, BEAR: 788, NEUTRAL: 827
+2026-03-09 14:36:30,267 - INFO - All rows already have scores. Skipping computation.
+2026-03-09 14:36:30,267 - INFO -   ✅ Regime and scores computed
+2026-03-09 14:36:30,268 - INFO - [4/5] Generating client signals...
+2026-03-09 14:36:30,538 - INFO - === Signal Generator — 2026-03-09 ===
+2026-03-09 14:36:30,630 - INFO - Current Regime: NEUTRAL
+2026-03-09 14:36:30,760 - INFO - Stocks scored: 464
+2026-03-09 14:36:30,827 - INFO - Prices available: 500
+2026-03-09 14:36:30,864 - INFO - Active clients: 1
+2026-03-09 14:36:30,944 - INFO - === Signal Generation Complete: 0 signals for 1 clients ===
+2026-03-09 14:36:30,945 - INFO -   ✅ Signals generated
+2026-03-09 14:36:30,945 - INFO - [5/5] Sending signal emails via SES...
+2026-03-09 14:36:31,241 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-03-09 14:36:31,505 - INFO - No unsent signals. Nothing to email.
+2026-03-09 14:36:31,505 - INFO -   ✅ 0 emails sent
+2026-03-09 14:36:31,506 - INFO - === Pipeline Complete — 2026-03-09 14:36 ===
+INFO:     Started server process [11337]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+
+> frontend@0.0.0 dev
+> vite --host
+
+
+  VITE v5.4.21  ready in 254 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.255.255.254:5173/
+  ➜  Network: http://172.22.162.191:5173/
+
+Command '['session-manager-plugin', 'AWS_SSM_START_SESSION_RESPONSE', 'ap-south-1', 'StartSession', '', '{"Target": "i-07fdabe814c478766", "DocumentName": "AWS-StartPortForwardingSessionToRemoteHost", "Parameters": {"host": ["mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"], "portNumber": ["5432"], "localPortNumber": ["5433"]}}', 'https://ssm.ap-south-1.amazonaws.com']' died with <Signals.SIGKILL: 9>.
+Killed
+
+An error occurred (InvalidDBInstanceState) when calling the StartDBInstance operation: Instance mri-dev-db cannot be started as it is not in one of the following statuses: 'stopped, inaccessible-encryption-credentials-recoverable, incompatible-network (only valid for non-SqlServer instances)'.
+[0m[1mmodule.rds.random_password.db: Refreshing state... [id=none][0m
+[0m[1mmodule.frontend.aws_cloudfront_origin_access_control.frontend: Refreshing state... [id=EJ4T8A0QJK54X][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret.db: Refreshing state... [id=mri-dev-db-credentials][0m
+[0m[1mmodule.vpc.aws_vpc.main: Refreshing state... [id=vpc-00fe799c6d993f6a3][0m
+[0m[1mdata.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.vpc.aws_iam_role.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role][0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task_execution: Refreshing state... [id=mri-dev-ecs-execution-role][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Reading...[0m[0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Reading...[0m[0m
+[0m[1mmodule.iam.aws_iam_role.ecs_task: Refreshing state... [id=mri-dev-ecs-task-role][0m
+[0m[1mdata.aws_caller_identity.current: Read complete after 0s [id=251876202726][0m
+[0m[1mmodule.frontend.aws_s3_bucket.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.data.aws_availability_zones.available: Read complete after 0s [id=ap-south-1][0m
+[0m[1mmodule.vpc.data.aws_ami.amazon_linux: Read complete after 0s [id=ami-0e267a9919cdf778f][0m
+[0m[1mmodule.s3.aws_s3_bucket_public_access_block.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_versioning.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.s3.aws_s3_bucket_server_side_encryption_configuration.outputs: Refreshing state... [id=mri-dev-outputs-251876202726][0m
+[0m[1mmodule.vpc.aws_internet_gateway.main: Refreshing state... [id=igw-06e7788c4fafba710][0m
+[0m[1mmodule.vpc.aws_security_group.app: Refreshing state... [id=sg-04c2d48049788025f][0m
+[0m[1mmodule.vpc.aws_subnet.private[0]: Refreshing state... [id=subnet-0e3610095698903e8][0m
+[0m[1mmodule.vpc.aws_subnet.private[1]: Refreshing state... [id=subnet-075875cad1bd04dae][0m
+[0m[1mmodule.vpc.aws_security_group.bastion: Refreshing state... [id=sg-09c4cf94fa2f240b9][0m
+[0m[1mmodule.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0b25d886295b2c171][0m
+[0m[1mmodule.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-01d402a479d5fc968][0m
+[0m[1mmodule.frontend.aws_s3_bucket_public_access_block.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_route_table.public: Refreshing state... [id=rtb-02ba9e1891754b832][0m
+[0m[1mmodule.vpc.aws_security_group.rds: Refreshing state... [id=sg-0f48da95ecf299941][0m
+[0m[1mmodule.rds.aws_db_subnet_group.main: Refreshing state... [id=mri-dev-db-subnet-group][0m
+[0m[1mmodule.vpc.aws_route_table.private: Refreshing state... [id=rtb-0e56c70842b84e77b][0m
+[0m[1mmodule.frontend.aws_cloudfront_distribution.frontend: Refreshing state... [id=E3C32LHJDK5NA4][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-05a51c99d9ee1e61d][0m
+[0m[1mmodule.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-03faf031e6b3d622b][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-03e79901029a3bd01][0m
+[0m[1mmodule.vpc.aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-02561bf889391df22][0m
+[0m[1mmodule.rds.aws_db_instance.main: Refreshing state... [id=db-33LULZEO7RLGWFBLAVVQVQPULE][0m
+[0m[1mmodule.rds.aws_secretsmanager_secret_version.db: Refreshing state... [id=mri-dev-db-credentials|terraform-20260309125520847300000007][0m
+[0m[1mmodule.frontend.aws_s3_bucket_policy.frontend: Refreshing state... [id=mri-dev-frontend-251876202726][0m
+[0m[1mmodule.vpc.aws_iam_instance_profile.bastion: Refreshing state... [id=mri-dev-bastion-profile][0m
+[0m[1mmodule.vpc.aws_iam_role_policy_attachment.bastion_ssm: Refreshing state... [id=mri-dev-bastion-ssm-role-20260309125400904100000003][0m
+[0m[1mmodule.iam.aws_iam_role_policy_attachment.ecs_execution: Refreshing state... [id=mri-dev-ecs-execution-role-20260309125400532900000002][0m
+[0m[1mmodule.iam.aws_iam_role_policy.execution_secrets: Refreshing state... [id=mri-dev-ecs-execution-role:mri-dev-execution-secrets-policy][0m
+[0m[1mmodule.vpc.aws_instance.bastion: Refreshing state... [id=i-07fdabe814c478766][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_ses: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-ses-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_s3: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-s3-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_secrets: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-secrets-policy][0m
+[0m[1mmodule.iam.aws_iam_role_policy.ecs_task_cloudwatch: Refreshing state... [id=mri-dev-ecs-task-role:mri-dev-cloudwatch-policy][0m
+
+[0m[1m[32mNo changes.[0m[1m Your infrastructure matches the configuration.[0m
+
+[0mTerraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[33m╷[0m[0m
+[33m│[0m [0m[1m[33mWarning: [0m[0m[1mRedundant ignore_changes element[0m
+[33m│[0m [0m
+[33m│[0m [0m[0m  on ../../modules/rds/main.tf line 1, in resource "random_password" "db":
+[33m│[0m [0m   1: resource [4m"random_password"[0m "db" {[0m
+[33m│[0m [0m
+[33m│[0m [0mAdding an attribute name to ignore_changes tells Terraform to ignore future
+[33m│[0m [0mchanges to the argument in configuration after the object has been created,
+[33m│[0m [0mretaining the value originally configured.
+[33m│[0m [0m
+[33m│[0m [0mThe attribute result is decided by the provider alone and therefore there
+[33m│[0m [0mcan be no configured value to compare with. Including this attribute in
+[33m│[0m [0mignore_changes has no effect. Remove the attribute from ignore_changes to
+[33m│[0m [0mquiet this warning.
+[33m╵[0m[0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+[0mbastion_id = "i-07fdabe814c478766"
+cloudfront_distribution_id = "E3C32LHJDK5NA4"
+cloudfront_domain = "d25tdygicgbojg.cloudfront.net"
+db_secret_arn = "arn:aws:secretsmanager:ap-south-1:251876202726:secret:mri-dev-db-credentials-2MQMFS"
+frontend_bucket_name = "mri-dev-frontend-251876202726"
+iam_execution_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-execution-role"
+iam_task_role_arn = "arn:aws:iam::251876202726:role/mri-dev-ecs-task-role"
+rds_endpoint = "mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
+s3_bucket_name = "mri-dev-outputs-251876202726"
+vpc_id = "vpc-00fe799c6d993f6a3"
+Fetching new password from Secrets Manager...
+Applying new password to RDS instance...
+Waiting for RDS modification to complete...
+RDS password successfully synchronized with Secrets Manager.
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-07fdabe814c478766",
+            "CurrentState": {
+                "Code": 16,
+                "Name": "running"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Starting session with SessionId: Auser-je36aclcb24jqppbr5bnixj3re
+Port 5433 opened for sessionId Auser-je36aclcb24jqppbr5bnixj3re.
+Waiting for connections...
+2026-03-09 14:57:43,918 - INFO - === MRI Daily Pipeline — 2026-03-09 14:57 ===
+2026-03-09 14:57:43,919 - INFO - [1/5] Ingesting today's market data...
+/home/edwar/mri-int/scripts/pipeline.py:24: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+/home/edwar/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-03-09 14:57:44,766 - INFO - Loading index data...
+
+Connection accepted for session [Auser-je36aclcb24jqppbr5bnixj3re]
+2026-03-09 14:57:45,098 - INFO -   Fetching from 2026-03-01 to 2026-03-09
+2026-03-09 14:57:46,685 - INFO -   Loaded 4 rows for NIFTY50
+2026-03-09 14:57:47,203 - INFO -   Loaded 4 rows for NIFTYMID
+2026-03-09 14:57:47,409 - ERROR - $^CNXSC: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:57:47,414 - ERROR - 
+1 Failed download:
+2026-03-09 14:57:47,414 - ERROR - ['^CNXSC']: possibly delisted; no price data found  (1d 2026-03-01 -> 2026-03-09)
+2026-03-09 14:57:47,416 - WARNING - No data for index NIFTYSMALL
+2026-03-09 14:57:47,416 - INFO - Index data load complete.
+2026-03-09 14:57:48,428 - INFO -   Fetched 500 Nifty 500 symbols
+2026-03-09 14:57:48,722 - INFO - Loading stock data for 500 symbols from 2026-03-01...
+Loading stocks:   0%|          | 0/10 [00:00<?, ?it/s]Loading stocks:  10%|█         | 1/10 [01:00<09:04, 60.49s/it]Loading stocks:  20%|██        | 2/10 [01:38<06:17, 47.24s/it]Loading stocks:  30%|███       | 3/10 [02:29<05:41, 48.77s/it]Loading stocks:  40%|████      | 4/10 [03:13<04:41, 46.90s/it]Loading stocks:  50%|█████     | 5/10 [03:51<03:38, 43.68s/it]Loading stocks:  60%|██████    | 6/10 [04:30<02:49, 42.35s/it]Loading stocks:  70%|███████   | 7/10 [05:16<02:10, 43.49s/it]Loading stocks:  80%|████████  | 8/10 [06:14<01:36, 48.08s/it]Loading stocks:  90%|█████████ | 9/10 [06:52<00:44, 44.93s/it]Loading stocks: 100%|██████████| 10/10 [07:48<00:00, 48.28s/it]Loading stocks: 100%|██████████| 10/10 [07:48<00:00, 46.84s/it]
+2026-03-09 15:05:37,097 - INFO - Stock data load complete. Failed: 0 symbols.
+2026-03-09 15:05:37,695 - INFO -   ✅ Stock sectors updated (500 stocks)
+2026-03-09 15:05:37,695 - INFO -   ✅ Data ingestion complete
+2026-03-09 15:05:37,695 - INFO - [2/5] Running Indicator Engine...
+2026-03-09 15:05:38,817 - INFO - Indicator columns added/verified in daily_prices.
+2026-03-09 15:05:40,593 - INFO - Total rows: 1,794,293 | Need indicators: 0 | Already computed: 1,794,293
+2026-03-09 15:05:40,594 - INFO - All rows already have indicators. Skipping computation.
+2026-03-09 15:05:40,595 - INFO - No rows to update. Database is current.
+2026-03-09 15:05:40,595 - INFO -   ✅ Indicators computed
+2026-03-09 15:05:40,595 - INFO - [3/5] Running Regime Engine...
+2026-03-09 15:05:41,024 - INFO - Market regime and stock scores tables ready.
+2026-03-09 15:05:41,024 - INFO - Computing Market Regime based on Nifty 50...
+/home/edwar/mri-int/src/regime_engine.py:59: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+2026-03-09 15:05:42,217 - INFO - Inserting 4531 Regime states...
+2026-03-09 15:05:45,080 - INFO - Regime stats: BULL: 2916, BEAR: 788, NEUTRAL: 827
+2026-03-09 15:05:57,430 - INFO - All rows already have scores. Skipping computation.
+2026-03-09 15:05:57,430 - INFO -   ✅ Regime and scores computed
+2026-03-09 15:05:57,430 - INFO - [4/5] Generating client signals...
+2026-03-09 15:05:57,700 - INFO - === Signal Generator — 2026-03-09 ===
+2026-03-09 15:05:57,791 - INFO - Current Regime: NEUTRAL
+2026-03-09 15:05:57,913 - INFO - Stocks scored: 464
+2026-03-09 15:05:57,973 - INFO - Prices available: 500
+2026-03-09 15:05:58,007 - INFO - Active clients: 1
+2026-03-09 15:05:58,079 - INFO - === Signal Generation Complete: 0 signals for 1 clients ===
+2026-03-09 15:05:58,080 - INFO -   ✅ Signals generated
+2026-03-09 15:05:58,080 - INFO - [5/5] Sending signal emails via SES...
+2026-03-09 15:05:58,386 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-03-09 15:05:58,696 - INFO - No unsent signals. Nothing to email.
+2026-03-09 15:05:58,697 - INFO -   ✅ 0 emails sent
+2026-03-09 15:05:58,697 - INFO - === Pipeline Complete — 2026-03-09 15:05 ===
+INFO:     Started server process [13192]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+
+> frontend@0.0.0 dev
+> vite --host
+
+
+  VITE v5.4.21  ready in 188 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.255.255.254:5173/
+  ➜  Network: http://172.22.162.191:5173/
+INFO:     127.0.0.1:37636 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:46418 - "POST /api/auth/forgot-password HTTP/1.1" 404 Not Found
+2026-03-09 15:08:11,024 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-03-09 15:08:11,764 - INFO - ✅ Password reset email sent to edwardjsi@gmail.com
+INFO:     127.0.0.1:51842 - "POST /api/auth/forgot-password HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43672 - "POST /api/auth/reset-password HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58404 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58418 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58434 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58448 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58442 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58462 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58476 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58492 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58498 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58528 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58512 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60484 - "GET /api/actions/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60494 - "GET /api/actions/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /api/portfolio/performance HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43844 - "GET /api/portfolio/positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43860 - "GET /api/portfolio/performance HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43874 - "GET /api/portfolio/positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43888 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43896 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43914 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43920 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43906 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43936 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43958 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43970 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43946 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43974 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45102 - "POST /api/auth/register HTTP/1.1" 201 Created
+INFO:     127.0.0.1:45104 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45108 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45122 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45134 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45110 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45148 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45150 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45154 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45168 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45166 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60630 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60646 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60658 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60670 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60660 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60682 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60692 - "GET /api/signals/regime HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60704 - "GET /api/signals/today HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60718 - "GET /api/portfolio/daily-summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60734 - "GET /api/signals/pending HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60742 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60758 - "GET /api/actions/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60772 - "GET /api/actions/history HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [13192]

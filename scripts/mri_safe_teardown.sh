@@ -31,6 +31,7 @@ echo ""
 
 # Step 1: Kill local processes
 log "Stopping local services..."
+pkill -f "vite" 2>/dev/null && ok "Frontend server stopped" || ok "No Frontend server running"
 pkill -f "uvicorn api.main" 2>/dev/null && ok "API server stopped" || ok "No API server running"
 pkill -f "aws ssm start-session" 2>/dev/null && ok "SSM tunnel closed" || ok "No tunnels open"
 
