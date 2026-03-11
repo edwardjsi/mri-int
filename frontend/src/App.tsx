@@ -663,6 +663,17 @@ function RiskAuditPage() {
 
       {error && <div className="error-alert" style={{ marginTop: '16px' }}>{error}</div>}
 
+      {result && result.async_processing && result.missing_symbols && result.missing_symbols.length > 0 && (
+        <div className="card" style={{ marginTop: '24px', backgroundColor: '#1e3a8a', borderColor: '#3b82f6', borderLeft: '4px solid #60a5fa' }}>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#93c5fd' }}>Data Discovery in Progress 🕵️‍♂️</h3>
+          <p style={{ margin: 0, fontSize: '14px', color: '#bfdbfe', lineHeight: 1.5 }}>
+            Note: We are currently downloading deep historical data for: <strong>{result.missing_symbols.join(', ')}</strong>.<br/>
+            You will receive an updated, complete portfolio risk report via email in approx 20 minutes once the data is ingested and scored.<br/>
+            In the meantime, here is the partial diagnosis for your recognized holdings:
+          </p>
+        </div>
+      )}
+
       {result && result.holdings && (
         <div className="audit-results animate-fade-in" style={{ marginTop: '24px' }}>
           <div className="stats-row">

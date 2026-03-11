@@ -270,6 +270,7 @@ def _analyze(holdings, conn):
         "total_portfolio_value": round(total_value, 2),
         "holdings_count": n_total,
         "holdings": analyzed_holdings,
+        "missing_symbols": unrecognized,
         "summary": " ".join(summary_parts),
         "analyzed_date": str(date.today()),
     }

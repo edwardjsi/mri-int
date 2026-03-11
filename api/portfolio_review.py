@@ -5,7 +5,7 @@ POST /api/portfolio-review/analyze  — full portfolio risk analysis
 GET  /api/portfolio-review/quick/{symbol}  — single stock MRI check
 POST /api/portfolio-review/upload-csv  — import broker holdings for analysis
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import pandas as pd
@@ -13,6 +13,7 @@ import io
 
 from api.deps import get_db, get_current_client
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
+from src.on_demand_ingest import ingest_missing_symbols_async
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
 
@@ -44,6 +45,7 @@ def analyze(
 
 @router.post("/upload-csv")
 async def upload_csv(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     client=Depends(get_current_client),
     conn=Depends(get_db),
@@ -87,6 +89,21 @@ async def upload_csv(
             })
             
         result = analyze_portfolio(portfolio, conn=conn)
+        
+        missing = result.get("missing_symbols", [])
+        if missing:
+            background_tasks.add_task(
+                ingest_missing_symbols_async, 
+                missing, 
+                portfolio, 
+                str(client['id']), 
+                client['email'], 
+                client['name']
+            )
+            result["async_processing"] = True
+        else:
+            result["async_processing"] = False
+            
         return result
         
     except Exception as e:
