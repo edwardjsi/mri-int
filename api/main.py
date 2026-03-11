@@ -72,3 +72,78 @@ def db_test():
     except Exception as e:
         return {"db": "failed", "error": str(e), "password_set": bool(os.getenv("DB_PASSWORD"))}
 
+
+@app.get("/api/admin/survivorship-check")
+def survivorship_check(secret: str = ""):
+    """
+    TEST-01: Survivorship Bias Check — runs on Render against real Neon DB.
+    Usage: GET /api/admin/survivorship-check?secret=mri-admin-2024
+    TEMPORARY — remove after test is complete.
+    """
+    if secret != "mri-admin-2024":
+        return JSONResponse(status_code=403, content={"error": "Unauthorized"})
+
+    from src.db import get_connection
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT EXTRACT(YEAR FROM date)::int AS year,
+                   COUNT(DISTINCT symbol)       AS distinct_symbols,
+                   COUNT(*)                     AS total_rows,
+                   MIN(date)::text              AS first_date,
+                   MAX(date)::text              AS last_date
+            FROM daily_prices
+            GROUP BY year
+            ORDER BY year
+        """)
+        rows = cur.fetchall()
+
+        cur.execute("SELECT MIN(date)::text FROM daily_prices")
+        earliest = cur.fetchone()[0]
+
+        cur.execute("""
+            SELECT symbol, COUNT(*) AS days
+            FROM daily_prices
+            GROUP BY symbol
+            ORDER BY days DESC
+            LIMIT 10
+        """)
+        top_symbols = [{"symbol": r[0], "days": r[1]} for r in cur.fetchall()]
+
+        cur.close()
+        conn.close()
+
+        yearly = [
+            {"year": r[0], "distinct_symbols": r[1], "total_rows": r[2],
+             "first_date": r[3], "last_date": r[4]}
+            for r in rows
+        ]
+
+        counts = [r[1] for r in rows]
+        variation_pct = round((max(counts) - min(counts)) / min(counts) * 100, 1) if counts else 0
+
+        if variation_pct > 20:
+            verdict = "PASS"
+            diagnosis = "Universe varies significantly — historical constituents likely included."
+        elif variation_pct > 5:
+            verdict = "PARTIAL"
+            diagnosis = "Some variation found but verify delisted stocks are present."
+        else:
+            verdict = "FAIL"
+            diagnosis = "Symbol count is nearly flat — survivorship bias likely exists."
+
+        return {
+            "test": "TEST-01 Survivorship Bias Check",
+            "verdict": verdict,
+            "diagnosis": diagnosis,
+            "variation_pct": variation_pct,
+            "earliest_data": earliest,
+            "min_symbols_any_year": min(counts),
+            "max_symbols_any_year": max(counts),
+            "yearly_breakdown": yearly,
+            "top_10_symbols_by_history": top_symbols,
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
