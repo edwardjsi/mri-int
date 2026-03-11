@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, getClientName, clearAuth } from './api';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
@@ -611,6 +611,42 @@ function RiskAuditPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) return ' ↕️';
+    return sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
+  };
+
+  const sortedHoldings = useMemo(() => {
+    if (!result?.holdings) return [];
+    let sortableItems = [...result.holdings];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        
+        if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [result?.holdings, sortConfig]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -704,16 +740,16 @@ function RiskAuditPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Symbol</th>
-                    <th>Score (0-5)</th>
-                    <th>Alignment</th>
-                    <th>Weight</th>
-                    <th>Risk Contribution</th>
-                    <th>Below 200 EMA</th>
+                    <th onClick={() => handleSort('symbol')} style={{cursor: 'pointer', userSelect: 'none'}}>Symbol{getSortIcon('symbol')}</th>
+                    <th onClick={() => handleSort('score')} style={{cursor: 'pointer', userSelect: 'none'}}>Score (0-5){getSortIcon('score')}</th>
+                    <th onClick={() => handleSort('alignment')} style={{cursor: 'pointer', userSelect: 'none'}}>Alignment{getSortIcon('alignment')}</th>
+                    <th onClick={() => handleSort('weight_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Weight{getSortIcon('weight_pct')}</th>
+                    <th onClick={() => handleSort('risk_contribution_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Risk Contribution{getSortIcon('risk_contribution_pct')}</th>
+                    <th onClick={() => handleSort('below_200ema')} style={{cursor: 'pointer', userSelect: 'none'}}>Below 200 EMA{getSortIcon('below_200ema')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {result.holdings.map((h: any) => (
+                  {sortedHoldings.map((h: any) => (
                     <tr key={h.symbol}>
                       <td className="font-bold">{h.symbol}</td>
                       <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
