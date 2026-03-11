@@ -57,6 +57,22 @@ EOF
 
 **Fix if failed**: Ingest historical NSE bhavcopy CM master files which include delisted symbols.
 
+#### ✅ RESULT (2026-03-11)
+| Metric | Value |
+|--------|-------|
+| Verdict | **PASS** |
+| Variation | **757.6%** (59 → 506 symbols) |
+| Earliest data | 2005-01-03 |
+| Historical universe | 59 (2005) → 124 (2025) stocks/year |
+
+**Key findings:**
+1. **PASS on survivorship bias** — universe grows consistently year over year (59→115 over 2005–2024). Not a flat fixed list. ✅
+2. **⚠️ IMPORTANT: Universe is much smaller than "Nifty500"** — The DB contains 59–124 stocks/year historically, NOT 500. The backtest ran on this smaller universe, not the full Nifty 500. The "1.64M rows" comes from depth of history, not breadth of stocks.
+3. **2026 spike to 506 is artificial** — caused by our on-demand BSE ingestion (March 2026) which only has a few days of data per stock. This does NOT represent a real historical universe.
+
+**Implication for CAGR claims:** The 33.84% CAGR was generated from a ~60–120 stock universe (likely Nifty 50/100, not Nifty 500). Rerunning on the full 500-stock universe may produce different results. This should be clarified in the FINAL_REPORT.
+
+
 ---
 
 ### TEST-02: Price Adjustment Check
