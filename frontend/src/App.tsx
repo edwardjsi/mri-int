@@ -740,12 +740,12 @@ function RiskAuditPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th onClick={() => handleSort('symbol')} style={{cursor: 'pointer', userSelect: 'none'}}>Symbol{getSortIcon('symbol')}</th>
-                    <th onClick={() => handleSort('score')} style={{cursor: 'pointer', userSelect: 'none'}}>Score (0-5){getSortIcon('score')}</th>
-                    <th onClick={() => handleSort('alignment')} style={{cursor: 'pointer', userSelect: 'none'}}>Alignment{getSortIcon('alignment')}</th>
-                    <th onClick={() => handleSort('weight_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Weight{getSortIcon('weight_pct')}</th>
-                    <th onClick={() => handleSort('risk_contribution_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Risk Contribution{getSortIcon('risk_contribution_pct')}</th>
-                    <th onClick={() => handleSort('below_200ema')} style={{cursor: 'pointer', userSelect: 'none'}}>Below 200 EMA{getSortIcon('below_200ema')}</th>
+                    <th title="The stock symbol or ticker name" onClick={() => handleSort('symbol')} style={{cursor: 'pointer', userSelect: 'none'}}>Symbol{getSortIcon('symbol')}</th>
+                    <th title="The MRI trend score (0-5) combining moving averages, momentum, and volume" onClick={() => handleSort('score')} style={{cursor: 'pointer', userSelect: 'none'}}>Score (0-5){getSortIcon('score')}</th>
+                    <th title="Whether the stock's trend aligns with the overall Market Regime" onClick={() => handleSort('alignment')} style={{cursor: 'pointer', userSelect: 'none'}}>Alignment{getSortIcon('alignment')}</th>
+                    <th title="Percentage of your total portfolio value invested in this stock" onClick={() => handleSort('weight_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Weight{getSortIcon('weight_pct')}</th>
+                    <th title="How much of your portfolio's total risk comes from this specific holding" onClick={() => handleSort('risk_contribution_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Risk Contribution{getSortIcon('risk_contribution_pct')}</th>
+                    <th title="WARNING: Stocks trading below their 200-day Exponential Moving Average are in long-term downtrends" onClick={() => handleSort('below_200ema')} style={{cursor: 'pointer', userSelect: 'none'}}>Below 200 EMA{getSortIcon('below_200ema')}</th>
                   </tr>
                 </thead>
                 <tbody>
