@@ -118,22 +118,24 @@ def _analyze(holdings, conn):
 
     # 3. Latest stock scores for submitted symbols
     cur.execute("""
-        SELECT ss.symbol, ss.total_score, ss.date,
+        SELECT DISTINCT ON (ss.symbol) 
+               ss.symbol, ss.total_score, ss.date,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
                ss.condition_6m_high, ss.condition_volume, ss.condition_rs
         FROM stock_scores ss
-        WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
-          AND ss.symbol IN %s
+        WHERE ss.symbol IN %s
+        ORDER BY ss.symbol, ss.date DESC
     """, (symbol_tuple,))
     scores_by_symbol = {r["symbol"]: r for r in cur.fetchall()}
 
     # 4. Latest prices + indicators
     cur.execute("""
-        SELECT dp.symbol, dp.close, dp.ema_50, dp.ema_200, dp.rs_90d,
+        SELECT DISTINCT ON (dp.symbol) 
+               dp.symbol, dp.close, dp.ema_50, dp.ema_200, dp.rs_90d,
                dp.avg_volume_20d, dp.date
         FROM daily_prices dp
-        WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
-          AND dp.symbol IN %s
+        WHERE dp.symbol IN %s
+        ORDER BY dp.symbol, dp.date DESC
     """, (symbol_tuple,))
     prices_by_symbol = {r["symbol"]: r for r in cur.fetchall()}
 
