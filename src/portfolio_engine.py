@@ -40,9 +40,9 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
     scores_query = "SELECT date, symbol, total_score FROM stock_scores WHERE total_score IS NOT NULL"
     scores_df = pd.read_sql(scores_query, conn)
     
-    # 3. Fetch pricing
+    # 3. Fetch pricing (need both close for tracking and open for next-day execution)
     logger.info("Loading price data...")
-    prices_query = "SELECT date, symbol, close FROM daily_prices"
+    prices_query = "SELECT date, symbol, close, open FROM daily_prices"
     prices_df = pd.read_sql(prices_query, conn)
     
     conn.close()
@@ -54,7 +54,8 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
     
     logger.info("Building nested dictionaries...")
     # This acts as O(1) daily lookups
-    prices_nested = prices_df.groupby('date').apply(lambda x: dict(zip(x.symbol, x.close))).to_dict()
+    prices_close_nested = prices_df.groupby('date').apply(lambda x: dict(zip(x.symbol, x.close))).to_dict()
+    prices_open_nested = prices_df.groupby('date').apply(lambda x: dict(zip(x.symbol, x.open))).to_dict()
     scores_nested = scores_df.groupby('date').apply(lambda x: dict(zip(x.symbol, x.total_score))).to_dict()
     
     capital = INITIAL_CAPITAL
@@ -64,26 +65,30 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
     
     logger.info(f"Running day-by-day simulation over {len(dates)} days...")
     
-    for current_date in dates:
+    for i, current_date in enumerate(dates):
         regime = regime_dict.get(current_date, 'NEUTRAL')
         
-        today_prices = prices_nested.get(current_date, {})
+        today_prices_close = prices_close_nested.get(current_date, {})
         today_scores = scores_nested.get(current_date, {})
         
-        if not today_prices:
+        # Get next day's open prices for execution
+        next_date = dates[i+1] if i + 1 < len(dates) else None
+        next_prices_open = prices_open_nested.get(next_date, {}) if next_date else {}
+        
+        if not today_prices_close:
             # Market holiday or no data
             continue
             
         # 1. EVALUATE EXITS
         symbols_to_exit = []
         for sym, pos_data in positions.items():
-            current_price = today_prices.get(sym)
-            if current_price is None:
+            current_close = today_prices_close.get(sym)
+            if current_close is None:
                 continue # No price today, hold
                 
-            # Update trailing stop high water mark
-            if current_price > pos_data['highest_price']:
-                pos_data['highest_price'] = current_price
+            # Update trailing stop high water mark based on today's close
+            if current_close > pos_data['highest_price']:
+                pos_data['highest_price'] = current_close
                 
             current_score = today_scores.get(sym, 0)
             
@@ -92,11 +97,16 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
                 exit_reason = 'REGIME_BEAR'
             elif current_score <= 2:
                 exit_reason = 'SCORE_LOW'
-            elif current_price <= pos_data['highest_price'] * 0.8:
+            elif current_close <= pos_data['highest_price'] * 0.8:
                 exit_reason = 'TRAILING_STOP_20'
                 
             if exit_reason:
-                symbols_to_exit.append((sym, current_price, exit_reason))
+                # If exiting, we use tomorrow's open price to sell. 
+                # If tomorrow's open is missing (e.g., delisted overnight), fallback to today's close
+                exit_price = next_prices_open.get(sym, current_close)
+                if exit_price is None or pd.isna(exit_price):
+                    exit_price = current_close
+                symbols_to_exit.append((sym, exit_price, exit_reason))
                 
         # Process Exits
         for sym, exit_price, reason in symbols_to_exit:
@@ -126,21 +136,22 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
         if regime == 'BULL' and len(positions) < 10:
             slots_available = 10 - len(positions)
             
-            # Find eligible symbols
-            eligible_symbols = [s for s, score in today_scores.items() if score >= 4 and s not in positions and s in today_prices]
+            # Find eligible symbols that we have price data for today AND tomorrow
+            eligible_symbols = [s for s, score in today_scores.items() if score >= 4 and s not in positions and s in today_prices_close and s in next_prices_open]
             
             if eligible_symbols:
-                # Sort eligible by score descending (using relative strength as tie-breaker is too complex for this prototype step, so we just sort by score)
+                # Sort eligible by score descending
                 eligible_symbols.sort(key=lambda s: today_scores[s], reverse=True)
                 to_buy_symbols = eligible_symbols[:slots_available]
                 
-                # Calculate current equity to determine position sizing
-                current_equity = capital + sum([pos_data['shares'] * today_prices.get(s, pos_data['entry_price']) for s, pos_data in positions.items()])
+                # Calculate current equity to determine position sizing (using today's close for valuation)
+                current_equity = capital + sum([pos_data['shares'] * today_prices_close.get(s, pos_data['entry_price']) for s, pos_data in positions.items()])
                 allocation_per_slot = current_equity * 0.10
                 
                 for sym in to_buy_symbols:
-                    buy_price = today_prices.get(sym)
-                    if buy_price and buy_price > 0 and capital > 0:
+                    # Buy at tomorrow's open
+                    buy_price = next_prices_open.get(sym)
+                    if buy_price and pd.notna(buy_price) and buy_price > 0 and capital > 0:
                         invest_amount = min(allocation_per_slot, capital)
                         post_fees_amount = invest_amount / (1 + tx_cost)
                         shares = int(post_fees_amount // buy_price)
@@ -156,7 +167,8 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
                             }
                             
         # 3. RECORD EOD EQUITY
-        eod_equity = capital + sum([pos_data['shares'] * today_prices.get(s, pos_data['entry_price']) for s, pos_data in positions.items()])
+        # Equity is valued at today's close
+        eod_equity = capital + sum([pos_data['shares'] * today_prices_close.get(s, pos_data['entry_price']) for s, pos_data in positions.items()])
         equity_curve.append({
             'date': current_date, 
             'equity': eod_equity,

@@ -16,8 +16,8 @@
 
 | # | Test | Result | File |
 |---|------|--------|------|
-| 1 | **Baseline Backtest (17yr)** | CAGR 33.84%, Sharpe 1.48, MaxDD -31% | `FINAL_REPORT.md` |
-| 2 | **Next-Day Open Execution** | CAGR 25.32% (−3.7pp gap) | `Sessions.md` |
+| 1 | **Baseline Backtest (17yr)** | CAGR 29.46% (Full Nifty500) | `FINAL_REPORT.md` |
+| 2 | **Next-Day Open Execution** | CAGR 26.39% (Full Nifty500) ✅ | `FINAL_REPORT.md` |
 | 3 | **Walk-Forward Validation** | Train 31.44% → OOS 35.78% ✅ | `FINAL_REPORT.md` Scenario 5 |
 | 4 | **2008 Crisis Stress Test** | MaxDD -3.65% vs Nifty -59.86% ✅ | `FINAL_REPORT.md` Scenario 2 |
 | 5 | **2020 COVID Crash** | MaxDD -18% vs Nifty -38% ✅ | `FINAL_REPORT.md` Scenario 3 |
@@ -110,8 +110,8 @@ Before split: price ~₹2,000. After split: price ~₹1,000. Check both sides ar
 
 | Delay | Expected CAGR |
 |---|---|
-| 0 days (same-day) | ~29% |
-| 1 day (next open) | ~25% ✅ DONE |
+| 0 days (same-day) | 29.46% (baseline) |
+| 1 day (next open) | 26.39% ✅ DONE |
 | 2 days | ~21–23% |
 | 3 days | ~18–20% |
 

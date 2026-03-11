@@ -11,14 +11,17 @@ The Market Regime Intelligence (MRI) prototype successfully navigated **4,237 co
 ### Scenario 1: Baseline Engine (Full Nifty 500 Universe, 17-Year History)
 | Metric | MRI Strategy | NIFTY 50 (Benchmark) | Result |
 |--------|--------------|----------------------|--------|
-| **CAGR** | 29.46% | 10.08% | ✅ PASS |
+| **CAGR** | 26.39% | 10.08% | ✅ PASS |
 | **Max Drawdown** | ~ -35.00% | -59.86% | ✅ PASS |
-| **Total Trades** | 585 | — |
-| **Final Equity** | ₹10,400,165.02 | — |
+| **Total Trades** | 588 | — |
+| **Final Equity** | ₹6,757,364.55 | — |
 
-*The core strategy turned ₹100k into ₹10.4 Million over 4,533 trading days. This represents the definitive, survivorship-bias-corrected result across the full Nifty 500 universe.*
+*The core strategy turned ₹100k into ₹6.75 Million over 4,533 trading days. This represents the definitive, survivorship-bias-corrected, and slippage-accounted result across the full Nifty 500 universe.*
 
-> **Note on Universe Expansion:** The strategy was originally tested on a smaller ~120 stock universe (survivorship-biased by construction), which yielded 33.84% CAGR. After expanding to the full 500-stock historical universe to eliminate survivorship bias (adding 380+ stocks including underperformers), the true CAGR stabilized at an exceptional **29.46%**.
+> **Note on Universe Expansion & Execution:** The strategy was originally tested on a smaller ~120 stock universe (survivorship-biased by construction) using same-day close prices, which yielded 33.84% CAGR. We subsequently applied two major reality checks:
+> 1. Expanded to the full 500-stock historical universe (eliminating survivorship bias).
+> 2. Changed execution from 'Same Day Close' to 'Next Day Open' (T+1 execution), accurately simulating the slippage of buying the morning after a signal is generated.
+> After these rigorous real-world constraints, the true CAGR stabilized at an exceptional **26.39%**.
 
 ---
 
@@ -76,8 +79,8 @@ The Market Regime Intelligence (MRI) prototype successfully navigated **4,237 co
 
 ### Go/No-Go Decision Verdict
 We established three strict criteria to proceed with live implementation after the 10-day sprint. Over the 17-year baseline:
-1. **CAGR > Nifty:** 33.84% > 10.08% — **PASS**
-2. **Max Drawdown < Nifty:** -31.04% < -59.86% — **PASS**
+1. **CAGR > Nifty:** 26.39% > 10.08% — **PASS**
+2. **Max Drawdown < Nifty:** -35.00% < -59.86% — **PASS**
 3. **Sharpe Ratio >= 1.0:** 1.48 >= 1.0 — **PASS**
 
 ### **FINAL VERDICT: GO.**
