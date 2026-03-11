@@ -66,8 +66,13 @@ async def ingest_missing_symbols_async(missing_symbols: list[str], original_hold
             if col not in df.columns:
                 df[col] = 0.0 if col != "volume" else 0
                 
+        if "adj_close" in df.columns:
+            df["adjusted_close"] = df["adj_close"]
+        else:
+            df["adjusted_close"] = df["close"]
+                
         df = df.rename(columns={"date": "date"})
-        df = df[["symbol", "date", "open", "high", "low", "close", "volume"]]
+        df = df[["symbol", "date", "open", "high", "low", "close", "adjusted_close", "volume"]]
         df = df.dropna(subset=["close"])
         
         if not df.empty:
