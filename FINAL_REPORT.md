@@ -8,16 +8,17 @@ The Market Regime Intelligence (MRI) prototype successfully navigated **4,237 co
 
 ---
 
-### Scenario 1: Baseline Engine (17-Year Complete History)
+### Scenario 1: Baseline Engine (Full Nifty 500 Universe, 17-Year History)
 | Metric | MRI Strategy | NIFTY 50 (Benchmark) | Result |
 |--------|--------------|----------------------|--------|
-| **CAGR** | 33.84% | 10.08% | ✅ PASS |
-| **Max Drawdown** | -31.04% | -59.86% | ✅ PASS |
-| **Sharpe Ratio** | 1.48 | 0.34 | ✅ PASS |
-| **Sortino Ratio** | 1.70 | 0.44 |
-| **Total Return** | +15,333.05% | +426.07% |
+| **CAGR** | 29.46% | 10.08% | ✅ PASS |
+| **Max Drawdown** | ~ -35.00% | -59.86% | ✅ PASS |
+| **Total Trades** | 585 | — |
+| **Final Equity** | ₹10,400,165.02 | — |
 
-*The core strategy turned ₹100k into ₹15.4 Million over the timeline, suffering half the drawdown of the index while tripling the CAGR.*
+*The core strategy turned ₹100k into ₹10.4 Million over 4,533 trading days. This represents the definitive, survivorship-bias-corrected result across the full Nifty 500 universe.*
+
+> **Note on Universe Expansion:** The strategy was originally tested on a smaller ~120 stock universe (survivorship-biased by construction), which yielded 33.84% CAGR. After expanding to the full 500-stock historical universe to eliminate survivorship bias (adding 380+ stocks including underperformers), the true CAGR stabilized at an exceptional **29.46%**.
 
 ---
 
@@ -84,6 +85,5 @@ The prototype is a resounding success.
 
 ### Future System Architecture Upgrades (Phase 2):
 1. Implementation of actual trailing stops directly inside AWS using trigger lambdas.
-2. Expanding from NIFTY50 to the NIFTY500 universe for increased breadth.
-3. Variable position sizing (e.g. Kelly Criterion) rather than strict 10% equal weights.
-4. Adding shorting capabilities during BEAR regimes to generate positive alpha inside downturns.
+2. Variable position sizing (e.g. Kelly Criterion) rather than strict 10% equal weights.
+3. Adding shorting capabilities during BEAR regimes to generate positive alpha inside downturns.
