@@ -241,4 +241,10 @@ Decision: Migrate from full AWS stack (~$80/mo) to a free-tier hybrid deployment
 Reason: $0/month vs $80/month for a testing phase with <10 users. Infrastructure-as-code portfolio value retained. Pragmatic, cost-aware engineering decision.
 Status: FINAL.
 
+## Decision 034 — Portfolio Review Engine (No New Tables)
+Date: 2026-03-11
+Decision: Add `portfolio_review_engine.py` that evaluates any user-submitted portfolio against MRI's existing intelligence. Computes per-holding risk factors based on stock trend scores (0–5), EMA-200 position, and market regime alignment. Aggregates into weighted risk score and classifies as Low/Moderate/High/Extreme. **No new database tables** — reads from existing `stock_scores`, `market_regime`, and `daily_prices`. API endpoints: `POST /api/portfolio-review/analyze` and `GET /api/portfolio-review/quick/{symbol}`.
+Reason: Implements SaaS Blueprint Journey 3 (Portfolio Risk Audit). Keeping it read-only against existing tables avoids schema migration complexity and keeps the engine stateless/deterministic.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->
