@@ -605,10 +605,133 @@ function PerformancePage() {
   );
 }
 
+/* ─── Risk Audit Page ────────────────────────────────────── */
+function RiskAuditPage() {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError('');
+    setResult(null);
+    try {
+      const data = await api.uploadPortfolioCsv(file);
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to analyze portfolio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="risk-audit">
+      <h2 className="section-title">Portfolio Risk Audit</h2>
+      <p className="section-subtitle">
+        Upload your broker holdings CSV (e.g., Zerodha) to instantly analyze your portfolio's risk against our MRI framework.
+      </p>
+
+      <div className="upload-container card">
+        <input 
+          type="file" 
+          accept=".csv" 
+          onChange={handleFileChange} 
+          className="file-input"
+          id="csv-upload"
+        />
+        <label htmlFor="csv-upload" className="file-label">
+          {file ? file.name : 'Choose a CSV file...'}
+        </label>
+        <button 
+          className="btn-primary" 
+          onClick={handleUpload} 
+          disabled={!file || loading}
+          style={{ marginLeft: '16px' }}
+        >
+          {loading ? 'Analyzing...' : 'Analyze Portfolio'}
+        </button>
+      </div>
+
+      {error && <div className="error-alert" style={{ marginTop: '16px' }}>{error}</div>}
+
+      {result && result.holdings && (
+        <div className="audit-results animate-fade-in" style={{ marginTop: '24px' }}>
+          <div className="stats-row">
+            <div className="stat-card" style={{ borderLeft: `4px solid ${result.risk_level === 'EXTREME' || result.risk_level === 'HIGH' ? '#ef4444' : result.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>
+              <div className="stat-label">Overall Risk</div>
+              <div className="stat-value">{result.risk_level}</div>
+              <div className="card-meta">Score: {result.risk_score_pct}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Market Regime</div>
+              <div className="stat-value">{result.regime}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Total Value analyzed</div>
+              <div className="stat-value">₹{result.total_portfolio_value?.toLocaleString()}</div>
+            </div>
+          </div>
+
+          <div className="card summary-card" style={{ marginTop: '16px', backgroundColor: '#1e293bcc', padding: '16px', borderRadius: '8px' }}>
+            <h3 style={{ fontSize: '16px', marginBottom: '8px', color: '#e2e8f0' }}>Diagnosis</h3>
+            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>{result.risk_level_description}</p>
+            <p style={{ color: '#cbd5e1', fontSize: '15px', marginTop: '12px' }}>{result.summary}</p>
+          </div>
+
+          <section className="section" style={{ marginTop: '24px' }}>
+            <h3 className="section-title">Holding Breakdown</h3>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Score (0-5)</th>
+                    <th>Alignment</th>
+                    <th>Weight</th>
+                    <th>Risk Contribution</th>
+                    <th>Below 200 EMA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.holdings.map((h: any) => (
+                    <tr key={h.symbol}>
+                      <td className="font-bold">{h.symbol}</td>
+                      <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
+                      <td>
+                        <span className={`action-badge ${h.alignment === 'Aligned' ? 'badge-executed' : h.alignment === 'Misaligned' ? 'badge-skipped' : ''}`}>
+                          {h.alignment}
+                        </span>
+                      </td>
+                      <td>{h.weight_pct}%</td>
+                      <td>{h.risk_contribution_pct}%</td>
+                      <td>
+                        {h.score === null ? 'N/A' : (h.below_200ema ? <span style={{color: '#ef4444'}}>⚠️ YES</span> : 'NO')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main App ────────────────────────────────────────────── */
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit'>('dashboard');
 
   // Custom simple routing for password reset link
   const urlParams = new URLSearchParams(window.location.search);
@@ -644,6 +767,9 @@ function App() {
           <button className={`nav-link ${page === 'performance' ? 'active' : ''}`} onClick={() => setPage('performance')}>
             <span className="nav-icon">📈</span> Performance
           </button>
+          <button className={`nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
+            <span className="nav-icon">🛡️</span> Risk Audit
+          </button>
         </div>
         <div className="sidebar-footer">
           <div className="user-info">{getClientName()}</div>
@@ -653,13 +779,14 @@ function App() {
       <main className="main-content">
         <header className="content-header">
           <h1 className="page-title">
-            {page === 'dashboard' ? 'Signal Dashboard' : page === 'history' ? 'Trade History' : 'My Performance'}
+            {page === 'dashboard' ? 'Signal Dashboard' : page === 'history' ? 'Trade History' : page === 'riskaudit' ? 'Portfolio Risk Audit' : 'My Performance'}
           </h1>
         </header>
         <div className="content-body">
           {page === 'dashboard' && <DashboardPage />}
           {page === 'history' && <HistoryPage />}
           {page === 'performance' && <PerformancePage />}
+          {page === 'riskaudit' && <RiskAuditPage />}
         </div>
       </main>
     </div>

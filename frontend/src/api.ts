@@ -108,6 +108,31 @@ export const api = {
     getPerformance: () => apiFetch('/portfolio/performance'),
     getDailySummary: () => apiFetch('/portfolio/daily-summary'),
 
+    // Portfolio Review
+    uploadPortfolioCsv: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const token = getToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_BASE}/portfolio-review/upload-csv`, {
+            method: 'POST',
+            body: formData,
+            headers,
+        });
+        if (res.status === 401) {
+            clearAuth();
+            window.location.reload();
+            throw new Error('Session expired');
+        }
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({ detail: 'Request failed' }));
+            throw new Error(error.detail || 'Request failed');
+        }
+        return res.json();
+    },
+
     // Capital
     addCapital: (amount: number) =>
         apiFetch('/auth/capital', {
