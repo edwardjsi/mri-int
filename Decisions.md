@@ -247,4 +247,10 @@ Decision: Add `portfolio_review_engine.py` that evaluates any user-submitted por
 Reason: Implements SaaS Blueprint Journey 3 (Portfolio Risk Audit). Keeping it read-only against existing tables avoids schema migration complexity and keeps the engine stateless/deterministic.
 Status: FINAL.
 
+## Decision 035 — Asynchronous On-Demand Data Ingestion
+Date: 2026-03-11
+Decision: Add asynchronous on-demand asset ingestion capabilities using FastAPI `BackgroundTasks` to automatically download historical data via Yahoo Finance (`.NS` then `.BO`) for any user-uploaded symbols not currently in the Nifty 500 MRI database. The system returns an immediate partial report for known stocks, natively backfills the DB, triggers incremental engine scoring, and then emails the final complete HTML report via AWS SES.
+Reason: Prevents database bloat from storing the entire illiquid NSE/BSE universe daily. Scales data ingestion organically based exactly on what users actually own. Gracefully handles 20-minute latency for missing data by returning partial frontend results immediately and finalizing via email.
+Status: FINAL.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->
