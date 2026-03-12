@@ -83,48 +83,53 @@ def db_test():
 
 @app.get("/api/db-debug")
 def db_debug():
-    """List all tables the app actually sees in the connected database."""
+    """Diagnostic endpoint to see what the app sees."""
     import os, psycopg2
+    from psycopg2.extras import RealDictCursor
     try:
-        database_url = os.getenv("DATABASE_URL", "")
-        if not database_url:
-             return {"status": "error", "message": "DATABASE_URL is missing from environment"}
-             
-        conn = psycopg2.connect(database_url, sslmode="require")
+        db_url = os.getenv("DATABASE_URL")
+        if not db_url:
+            return {"status": "error", "message": "DATABASE_URL is not set in Render environment!"}
+        
+        # Log basic info about the URL (masked)
+        url_info = {
+            "length": len(db_url),
+            "starts_with": db_url[:10],
+            "contains_neondb": "neondb" in db_url.lower(),
+            "contains_sslmode": "sslmode" in db_url.lower()
+        }
+
+        # Try to connect
+        conn = psycopg2.connect(db_url, sslmode="require", cursor_factory=RealDictCursor)
         cur = conn.cursor()
         
-        # 1. Get Tables
-        cur.execute("""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public'
-            ORDER BY table_name;
-        """)
-        tables = [r[0] for r in cur.fetchall()]
-        
-        # 2. Get DB Name
         cur.execute("SELECT current_database();")
-        db_name = cur.fetchone()[0]
+        db_name = cur.fetchone()["current_database"]
 
-        # 3. Get Schema Search Path
-        cur.execute("SHOW search_path;")
-        search_path = cur.fetchone()[0]
+        # 4. Check holdings count
+        holdings_count = 0
+        if "client_external_holdings" in tables:
+            cur.execute("SELECT COUNT(*) as cnt FROM client_external_holdings;")
+            holdings_count = cur.fetchone()["cnt"]
         
         cur.close()
         conn.close()
         
-        masked_url = database_url.split("@")[-1] if "@" in database_url else "hidden"
-        
         return {
-            "status": "connected",
-            "database": db_name,
-            "search_path": search_path,
-            "tables_found": tables,
-            "external_host_from_url": masked_url.split("/")[0]
+            "status": "success",
+            "db_name": db_name,
+            "tables": tables,
+            "total_saved_holdings": holdings_count,
+            "url_diagnostics": url_info
         }
     except Exception as e:
         import traceback
-        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+        return {
+            "status": "error", 
+            "message": str(e), 
+            "traceback": traceback.format_exc(),
+            "env_keys": list(os.environ.keys())
+        }
 
 
 @app.get("/api/admin/survivorship-check")
