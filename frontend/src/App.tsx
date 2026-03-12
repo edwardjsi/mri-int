@@ -663,9 +663,28 @@ function RiskAuditPage() {
     return sortableItems;
   }, [result?.holdings, sortConfig]);
 
+  const [dragging, setDragging] = useState(false);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
     }
   };
 
@@ -678,7 +697,9 @@ function RiskAuditPage() {
       const data = await api.uploadPortfolioCsv(file);
       setResult(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to analyze portfolio');
+      setError(err.message === 'Failed to fetch' 
+        ? '⚠️ Connection Failed: Please ensure you have "Clear Cache & Re-deployed" on Render and your VITE_API_URL is correct.'
+        : (err.message || 'Failed to analyze portfolio'));
     } finally {
       setLoading(false);
     }
@@ -717,25 +738,47 @@ function RiskAuditPage() {
         Upload your broker holdings CSV (e.g., Zerodha) to instantly analyze your portfolio's risk against our MRI framework.
       </p>
 
-      <div className="upload-container card">
-        <input 
-          type="file" 
-          accept=".csv" 
-          onChange={handleFileChange} 
-          className="file-input"
-          id="csv-upload"
-        />
-        <label htmlFor="csv-upload" className="file-label">
-          {file ? file.name : 'Choose a CSV file...'}
-        </label>
-        <button 
-          className="btn-primary" 
-          onClick={handleUpload} 
-          disabled={!file || loading}
-          style={{ marginLeft: '16px' }}
+      <div className="upload-section animate-fade-in">
+        <div 
+          className={`upload-zone ${dragging ? 'dragging' : ''}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById('csv-upload')?.click()}
         >
-          {loading ? 'Analyzing...' : 'Analyze Portfolio'}
-        </button>
+          <div className="upload-icon">📂</div>
+          <div className="upload-text">
+            <span className="upload-main-text">
+              {file ? file.name : 'Click or Drag CSV here'}
+            </span>
+            <span className="upload-sub-text">
+              Supports Zerodha, Groww, and standard portfolio CSVs
+            </span>
+          </div>
+          <input 
+            type="file" 
+            accept=".csv" 
+            onChange={handleFileChange} 
+            className="file-input"
+            id="csv-upload"
+          />
+        </div>
+
+        <div className="upload-actions">
+          <button 
+            className="btn-upload-submit" 
+            onClick={handleUpload} 
+            disabled={!file || loading}
+          >
+            {loading ? '🔬 Analyzing Portfolio...' : 'Analyze Risk Now'}
+          </button>
+          
+          {file && !loading && (
+            <button className="link-btn" onClick={() => setFile(null)}>
+              Clear selection
+            </button>
+          )}
+        </div>
       </div>
 
       {result && (
