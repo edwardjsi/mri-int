@@ -73,6 +73,38 @@ def db_test():
         return {"db": "failed", "error": str(e), "password_set": bool(os.getenv("DB_PASSWORD"))}
 
 
+@app.get("/api/db-debug")
+def db_debug():
+    """List all tables the app actually sees in the connected database."""
+    from api.deps import get_db
+    try:
+        # Get one connection from the generator
+        conn = next(get_db())
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            ORDER BY table_name;
+        """)
+        tables = [r["table_name"] if isinstance(r, dict) else r[0] for r in cur.fetchall()]
+        
+        cur.execute("SELECT current_database();")
+        db_name = cur.fetchone()
+        db_name = db_name["current_database"] if isinstance(db_name, dict) else db_name[0]
+        
+        cur.close()
+        conn.close()
+        return {
+            "status": "connected",
+            "database": db_name,
+            "tables_found": tables,
+            "url_host": os.getenv("DATABASE_URL", "").split("@")[-1].split("/")[0] if "@" in os.getenv("DATABASE_URL", "") else "hidden"
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.get("/api/admin/survivorship-check")
 def survivorship_check(secret: str = ""):
     """
