@@ -13,7 +13,7 @@ import io
 
 from api.deps import get_db, get_current_client
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
-from src.on_demand_ingest import ingest_missing_symbols_async
+from src.on_demand_ingest import ingest_missing_symbols_sync
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
 
@@ -99,7 +99,7 @@ async def upload_csv(
         missing = result.get("missing_symbols", [])
         if missing:
             background_tasks.add_task(
-                ingest_missing_symbols_async, 
+                ingest_missing_symbols_sync, 
                 missing, 
                 portfolio, 
                 str(client['id']), 

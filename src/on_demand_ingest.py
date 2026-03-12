@@ -32,7 +32,7 @@ def _flatten_yfinance_columns(df: pd.DataFrame, symbol: str) -> pd.DataFrame:
     return df
 
 
-async def ingest_missing_symbols_async(
+def ingest_missing_symbols_sync(
     missing_symbols: list,
     original_holdings: list,
     client_id: str,
