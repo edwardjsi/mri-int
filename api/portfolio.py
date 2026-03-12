@@ -81,7 +81,7 @@ def get_equity_curve(
     conn=Depends(get_db),
 ):
     """Client's daily equity curve."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("""
         SELECT date, equity, cash, open_positions
         FROM client_equity
@@ -107,7 +107,7 @@ def get_performance(
     conn=Depends(get_db),
 ):
     """Client equity vs Nifty 50 benchmark comparison."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     # Client equity
     cur.execute("""

@@ -98,7 +98,7 @@ async def upload_csv(
         result = analyze_portfolio(portfolio, conn=conn)
         
         # Automatic local persistence for authenticated users:
-        # We only save symbols that were recognized (score is not None)
+        # Save ALL holdings from CSV (even if score is unknown)
         holdings_to_save = [
             {
                 "symbol": h["symbol"],
@@ -106,7 +106,6 @@ async def upload_csv(
                 "avg_cost": h["avg_cost"]
             }
             for h in result.get("holdings", [])
-            if h.get("score") is not None
         ]
         
         if holdings_to_save:
@@ -259,7 +258,7 @@ def delete_holding(
     conn=Depends(get_db),
 ):
     """Remove a holding from the persistent layer."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cur.execute("""
             DELETE FROM client_external_holdings
