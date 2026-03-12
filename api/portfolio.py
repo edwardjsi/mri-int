@@ -198,7 +198,7 @@ def get_daily_summary(
     today_cash = float(core_today["cash"]) if core_today else initial_cap
     
     # Combined Metrics
-    total_equity = today_equity + float(ext_market_value)
+    total_wealth = today_equity + float(ext_market_value)
     
     # Crude approx for daily change:
     if core_yesterday:
@@ -207,17 +207,17 @@ def get_daily_summary(
         prev_equity = today_equity + float(ext_market_value)
 
     total_invested = initial_cap + float(ext_cost_basis)
-    total_return = total_equity - total_invested
-    total_pct = (total_return / total_invested * 100) if total_invested else 0
+    total_return = total_wealth - total_invested
+    total_pct = (total_return / total_invested * 100) if total_invested else 0.0
 
     return {
         "has_data": True,
         "date": str(core_today["date"]) if core_today else str(date.today()),
-        "equity": float(round(total_equity, 2)),
+        "equity": float(round(total_wealth, 2)),
         "cash": float(round(today_cash, 2)),
-        "open_positions": int((core_today["open_positions"] if core_today else 0) + ext_count),
-        "daily_change": float(round(total_equity - prev_equity, 2)),
-        "daily_pct": float(round(((total_equity - prev_equity)/prev_equity*100), 2)) if prev_equity else 0.0,
+        "open_positions": int((core_today["open_positions"] if core_today and core_today.get("open_positions") is not None else 0) + ext_count),
+        "daily_change": float(round(total_wealth - prev_equity, 2)),
+        "daily_pct": float(round(((total_wealth - prev_equity)/prev_equity*100), 2)) if prev_equity else 0.0,
         "total_return": float(round(total_return, 2)),
         "total_pct": float(round(total_pct, 2)),
         "initial_capital": float(initial_cap),
