@@ -81,6 +81,7 @@ def db_test():
         return {"db": "failed", "error": str(e), "password_set": bool(os.getenv("DB_PASSWORD"))}
 
 
+# Diagnostic Update - TIMESTAMP: 2026-03-12-12:15
 @app.get("/api/db-debug")
 def db_debug():
     """Diagnostic endpoint to see what the app sees."""
@@ -99,24 +100,27 @@ def db_debug():
             "contains_sslmode": "sslmode" in db_url.lower()
         }
 
+        # Try to connect
         conn = psycopg2.connect(db_url, sslmode="require", cursor_factory=RealDictCursor)
         cur = conn.cursor()
         
+        # 1. Get Tables - DEFINED HERE
         cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
-        tables = [r["table_name"] for r in cur.fetchall()]
+        tables_list = [r["table_name"] for r in cur.fetchall()]
         
+        # 2. Get DB Name
         cur.execute("SELECT current_database();")
         db_name = cur.fetchone()["current_database"]
 
-        # 4. Check holdings count
+        # 3. Check holdings count
         holdings_count = 0
-        if "client_external_holdings" in tables:
+        if "client_external_holdings" in tables_list:
             cur.execute("SELECT COUNT(*) as cnt FROM client_external_holdings;")
             holdings_count = cur.fetchone()["cnt"]
         
-        # 5. Check clients count
+        # 4. Check clients count
         clients_count = 0
-        if "clients" in tables:
+        if "clients" in tables_list:
             cur.execute("SELECT COUNT(*) as cnt FROM clients;")
             clients_count = cur.fetchone()["cnt"]
 
@@ -126,7 +130,7 @@ def db_debug():
         return {
             "status": "success",
             "db_name": db_name,
-            "tables": tables,
+            "tables": tables_list,
             "total_saved_holdings_global": holdings_count,
             "total_clients_global": clients_count,
             "url_diagnostics": url_info
