@@ -38,10 +38,12 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # CORS — allow React frontend (configurable via env)
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins + ["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,7 +83,7 @@ def db_test():
         return {"db": "failed", "error": str(e), "password_set": bool(os.getenv("DB_PASSWORD"))}
 
 
-# Diagnostic Update - TIMESTAMP: 2026-03-12-12:15
+# Diagnostic Update - TIMESTAMP: 2026-03-12-12:20
 @app.get("/api/db-debug")
 def db_debug():
     """Diagnostic endpoint to see what the app sees."""
@@ -90,67 +92,44 @@ def db_debug():
     try:
         db_url = os.getenv("DATABASE_URL")
         if not db_url:
-            return {"status": "error", "message": "DATABASE_URL is not set in Render environment!"}
+            return {"status": "error", "message": "DATABASE_URL is not set!"}
         
-        # Log basic info about the URL (masked)
-        url_info = {
-            "length": len(db_url),
-            "starts_with": db_url[:10],
-            "contains_neondb": "neondb" in db_url.lower(),
-            "contains_sslmode": "sslmode" in db_url.lower()
-        }
-
-        # Try to connect
         conn = psycopg2.connect(db_url, sslmode="require", cursor_factory=RealDictCursor)
         cur = conn.cursor()
         
-        # 1. Get Tables - DEFINED HERE
+        # 1. Get Tables
         cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
-        tables_list = [r["table_name"] for r in cur.fetchall()]
+        tables = [r["table_name"] for r in cur.fetchall()]
         
-        # 2. Get DB Name
+        # 2. Get Holdings Breakdown by Email
+        holdings_audit = []
+        if "client_external_holdings" in tables and "clients" in tables:
+            cur.execute("""
+                SELECT c.email, COUNT(h.id) as count
+                FROM clients c
+                LEFT JOIN client_external_holdings h ON c.id = h.client_id
+                GROUP BY c.email
+                ORDER BY count DESC;
+            """)
+            holdings_audit = [dict(r) for r in cur.fetchall()]
+        
+        # 3. DB Name
         cur.execute("SELECT current_database();")
         db_name = cur.fetchone()["current_database"]
-
-        # 3. Check holdings count and breakdown
-        holdings_count = 0
-        client_breakdown = []
-        if "client_external_holdings" in tables_list:
-            cur.execute("SELECT COUNT(*) as cnt FROM client_external_holdings;")
-            holdings_count = cur.fetchone()["cnt"]
-            
-            cur.execute("SELECT client_id, COUNT(*) as cnt FROM client_external_holdings GROUP BY client_id;")
-            client_breakdown = [{"id": str(r["client_id"]), "count": r["cnt"]} for r in cur.fetchall()]
-        
-        # 4. Check clients count
-        clients_count = 0
-        if "clients" in tables_list:
-            cur.execute("SELECT id, email FROM clients;")
-            clients = [{"id": str(r["id"]), "email": r["email"]} for r in cur.fetchall()]
-            clients_count = len(clients)
-        else:
-            clients = []
 
         cur.close()
         conn.close()
         
         return {
             "status": "success",
-            "db_name": db_name,
-            "total_saved_holdings_global": holdings_count,
-            "holdings_by_client": client_breakdown,
-            "total_clients": clients_count,
-            "clients": clients,
-            "url_diagnostics": url_info
+            "database": db_name,
+            "account_holdings_breakdown": holdings_audit,
+            "total_tables": len(tables),
+            "info": "If your email shows 0 holdings, you need to log in with the other email or upload the CSV again."
         }
     except Exception as e:
         import traceback
-        return {
-            "status": "error", 
-            "message": str(e), 
-            "traceback": traceback.format_exc(),
-            "env_keys": list(os.environ.keys())
-        }
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
 
 
 @app.get("/api/admin/survivorship-check")
