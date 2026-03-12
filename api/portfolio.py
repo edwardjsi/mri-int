@@ -1,9 +1,8 @@
 """
 Portfolio endpoints: open positions, equity curve, performance vs benchmark.
 """
-from fastapi import APIRouter, Depends
-
 from api.deps import get_db, get_current_client
+from src.portfolio_review_engine import analyze_portfolio
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 
@@ -13,8 +12,11 @@ def get_open_positions(
     client=Depends(get_current_client),
     conn=Depends(get_db),
 ):
-    """Client's currently open positions with latest prices."""
+    """Client's currently open positions (Core + External)."""
     cur = conn.cursor()
+    client_id = str(client["id"])
+    
+    # 1. Fetch Core Positions (from MRI signals)
     cur.execute("""
         SELECT cp.symbol, cp.entry_date, cp.entry_price, cp.quantity, cp.highest_price,
                dp.close AS current_price,
@@ -27,23 +29,49 @@ def get_open_positions(
         ) dp ON true
         WHERE cp.client_id = %s AND cp.is_open = true
         ORDER BY cp.entry_date DESC
-    """, (str(client["id"]),))
-    positions = cur.fetchall()
+    """, (client_id,))
+    core_rows = cur.fetchall()
+    
+    # 2. Fetch External Positions (Digital Twin)
+    cur.execute("""
+        SELECT symbol, quantity, avg_cost
+        FROM client_external_holdings
+        WHERE client_id = %s
+    """, (client_id,))
+    external_rows = cur.fetchall()
+    
+    positions = []
+    
+    # Process Core
+    for p in core_rows:
+        positions.append({
+            "source": "Core",
+            "symbol": p["symbol"],
+            "entry_date": str(p["entry_date"]),
+            "entry_price": float(p["entry_price"]) if p["entry_price"] else None,
+            "quantity": p["quantity"],
+            "current_price": float(p["current_price"]) if p["current_price"] else None,
+            "pnl_pct": float(p["pnl_pct"]) if p["pnl_pct"] else None,
+        })
+        
+    # Process External via Review Engine for valuation
+    if external_rows:
+        external_holdings = [dict(r) for r in external_rows]
+        analysis = analyze_portfolio(external_holdings, conn=conn)
+        for h in analysis.get("holdings", []):
+            positions.append({
+                "source": "External",
+                "symbol": h["symbol"],
+                "entry_date": "N/A",
+                "entry_price": float(h["avg_cost"]) if h["avg_cost"] else None,
+                "quantity": h["quantity"],
+                "current_price": float(h["current_price"]) if h["current_price"] else None,
+                "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
+            })
 
     return {
         "count": len(positions),
-        "positions": [
-            {
-                "symbol": p["symbol"],
-                "entry_date": str(p["entry_date"]),
-                "entry_price": float(p["entry_price"]) if p["entry_price"] else None,
-                "quantity": p["quantity"],
-                "current_price": float(p["current_price"]) if p["current_price"] else None,
-                "pnl_pct": float(p["pnl_pct"]) if p["pnl_pct"] else None,
-                "highest_price": float(p["highest_price"]) if p["highest_price"] else None,
-            }
-            for p in positions
-        ],
+        "positions": positions
     }
 
 
@@ -123,47 +151,69 @@ def get_daily_summary(
     client=Depends(get_current_client),
     conn=Depends(get_db),
 ):
-    """Today's portfolio P&L summary."""
+    """Today's unified portfolio P&L summary."""
     cur = conn.cursor()
+    client_id = str(client["id"])
 
-    # Get last 2 equity entries to calculate daily change
+    # 1. Fetch Core Data
     cur.execute("""
         SELECT date, equity, cash, open_positions
         FROM client_equity
         WHERE client_id = %s
         ORDER BY date DESC LIMIT 2
-    """, (str(client["id"]),))
-    rows = cur.fetchall()
+    """, (client_id,))
+    core_rows = cur.fetchall()
 
-    if not rows:
+    # 2. Fetch External Data
+    cur.execute("""
+        SELECT symbol, quantity, avg_cost
+        FROM client_external_holdings
+        WHERE client_id = %s
+    """, (client_id,))
+    external_rows = cur.fetchall()
+    
+    ext_market_value = 0
+    ext_cost_basis = 0
+    ext_count = 0
+    
+    if external_rows:
+        ext_holdings = [dict(r) for r in external_rows]
+        analysis = analyze_portfolio(ext_holdings, conn=conn)
+        ext_market_value = analysis.get("total_portfolio_value", 0)
+        ext_cost_basis = sum(h["quantity"] * h["avg_cost"] for h in ext_holdings)
+        ext_count = len(ext_holdings)
+
+    if not core_rows and not external_rows:
         return {
             "has_data": False,
-            "message": "No portfolio data yet. Execute some signals to start tracking.",
+            "message": "No portfolio data yet. Execute signals or upload a CSV.",
         }
 
-    today = rows[0]
-    yesterday = rows[1] if len(rows) > 1 else None
-
-    today_equity = float(today["equity"])
-    prev_equity = float(yesterday["equity"]) if yesterday else today_equity
-    daily_change = today_equity - prev_equity
-    daily_pct = (daily_change / prev_equity * 100) if prev_equity else 0
-
-    # Overall return
-    cur.execute("SELECT initial_capital FROM clients WHERE id = %s", (str(client["id"]),))
-    capital = float(cur.fetchone()["initial_capital"])
-    total_return = today_equity - capital
-    total_pct = (total_return / capital * 100) if capital else 0
+    # Base values (if no core rows, we start from initial capital)
+    core_today = core_rows[0] if core_rows else None
+    core_yesterday = core_rows[1] if len(core_rows) > 1 else None
+    
+    initial_cap = float(client["initial_capital"])
+    
+    # Combined Metrics
+    total_equity = (float(core_today["equity"]) if core_today else initial_cap) + ext_market_value
+    prev_equity = (float(core_yesterday["equity"]) if core_yesterday else (float(core_today["equity"]) if core_today else initial_cap)) + ext_market_value # Crude approx for daily change
+    
+    total_invested = initial_cap + ext_cost_basis
+    total_return = total_equity - total_invested
+    total_pct = (total_return / total_invested * 100) if total_invested else 0
 
     return {
         "has_data": True,
-        "date": str(today["date"]),
-        "equity": today_equity,
-        "cash": float(today["cash"]),
-        "open_positions": today["open_positions"],
-        "daily_change": round(daily_change, 2),
-        "daily_pct": round(daily_pct, 2),
+        "date": str(core_today["date"]) if core_today else str(date.today()),
+        "equity": round(total_equity, 2),
+        "cash": float(core_today["cash"]) if core_today else initial_cap,
+        "open_positions": (core_today["open_positions"] if core_today else 0) + ext_count,
+        "daily_change": round(total_equity - prev_equity, 2),
+        "daily_pct": round(((total_equity - prev_equity)/prev_equity*100), 2) if prev_equity else 0,
         "total_return": round(total_return, 2),
         "total_pct": round(total_pct, 2),
-        "initial_capital": capital,
+        "initial_capital": initial_cap,
+        "external_cost": round(ext_cost_basis, 2),
+        "total_invested": round(total_invested, 2)
     }

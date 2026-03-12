@@ -176,6 +176,10 @@ function DailySummaryCard({ summary }: { summary: any }) {
       <div className="card-label">Portfolio Summary · {summary.date}</div>
       <div className="summary-stats">
         <div className="summary-stat">
+          <span className="summary-label">Total Invested</span>
+          <span className="summary-value">₹{summary.total_invested?.toLocaleString()}</span>
+        </div>
+        <div className="summary-stat">
           <span className="summary-label">Equity</span>
           <span className="summary-value">₹{summary.equity?.toLocaleString()}</span>
         </div>
@@ -186,18 +190,14 @@ function DailySummaryCard({ summary }: { summary: any }) {
           </span>
         </div>
         <div className="summary-stat">
-          <span className="summary-label">Overall</span>
+          <span className="summary-label">Total Return</span>
           <span className="summary-value" style={{ color: summary.total_return >= 0 ? '#22c55e' : '#ef4444' }}>
             {summary.total_return >= 0 ? '+' : ''}₹{summary.total_return?.toLocaleString()} ({summary.total_pct}%)
           </span>
         </div>
         <div className="summary-stat">
-          <span className="summary-label">Cash</span>
-          <span className="summary-value">₹{summary.cash?.toLocaleString()}</span>
-        </div>
-        <div className="summary-stat">
           <span className="summary-label">Positions</span>
-          <span className="summary-value">{summary.open_positions}/10</span>
+          <span className="summary-value">{summary.open_positions}</span>
         </div>
       </div>
     </div>
@@ -579,16 +579,21 @@ function PerformancePage() {
 
       {positions?.positions?.length > 0 && (
         <section className="section">
-          <h3 className="section-title">Open Positions</h3>
+          <h3 className="section-title">Current Positions (Core + External)</h3>
           <div className="table-container">
             <table className="data-table">
               <thead>
-                <tr><th>Symbol</th><th>Entry Date</th><th>Entry Price</th><th>Current Price</th><th>Qty</th><th>P&L %</th></tr>
+                <tr><th>Symbol</th><th>Source</th><th>Entry Date</th><th>Entry Price</th><th>Current Price</th><th>Qty</th><th>P&L %</th></tr>
               </thead>
               <tbody>
                 {positions.positions.map((p: any) => (
-                  <tr key={p.symbol}>
+                  <tr key={`${p.source}-${p.symbol}`}>
                     <td className="font-bold">{p.symbol}</td>
+                    <td>
+                      <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
+                        {p.source}
+                      </span>
+                    </td>
                     <td>{p.entry_date}</td>
                     <td>₹{p.entry_price?.toLocaleString()}</td>
                     <td>₹{p.current_price?.toLocaleString()}</td>
@@ -697,10 +702,12 @@ function RiskAuditPage() {
     if (!file) return;
     setLoading(true);
     setError('');
-    setResult(null);
     try {
       const data = await api.uploadPortfolioCsv(file);
       setResult(data);
+      // Auto-reload saved holdings since backend auto-persists now
+      loadSavedHoldings();
+      alert('Portfolio uploaded and analyzed! Valid holdings have been saved to your Digital Twin automatically.');
     } catch (err: any) {
       setError(err.message === 'Failed to fetch' 
         ? '⚠️ Connection Failed: Please ensure you have "Clear Cache & Re-deployed" on Render and your VITE_API_URL is correct.'

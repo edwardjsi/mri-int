@@ -96,6 +96,38 @@ async def upload_csv(
             
         result = analyze_portfolio(portfolio, conn=conn)
         
+        # Automatic local persistence for authenticated users:
+        # We only save symbols that were recognized (score is not None)
+        holdings_to_save = [
+            {
+                "symbol": h["symbol"],
+                "quantity": h["quantity"],
+                "avg_cost": h["avg_cost"]
+            }
+            for h in result.get("holdings", [])
+            if h.get("score") is not None
+        ]
+        
+        if holdings_to_save:
+            print(f"DEBUG: Auto-saving {len(holdings_to_save)} holdings for {client['email']}")
+            cur = conn.cursor()
+            try:
+                for h in holdings_to_save:
+                    cur.execute("""
+                        INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
+                        VALUES (%s, %s, %s, %s, NOW())
+                        ON CONFLICT (client_id, symbol) DO UPDATE
+                        SET quantity = EXCLUDED.quantity,
+                            avg_cost = EXCLUDED.avg_cost,
+                            updated_at = NOW()
+                    """, (str(client["id"]), h["symbol"], h["quantity"], h["avg_cost"]))
+                conn.commit()
+            except Exception as e:
+                print(f"DEBUG: Auto-save failed during upload: {e}")
+                conn.rollback()
+            finally:
+                cur.close()
+
         missing = result.get("missing_symbols", [])
         if missing:
             background_tasks.add_task(
