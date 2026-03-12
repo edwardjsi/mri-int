@@ -99,9 +99,11 @@ def db_debug():
             "contains_sslmode": "sslmode" in db_url.lower()
         }
 
-        # Try to connect
         conn = psycopg2.connect(db_url, sslmode="require", cursor_factory=RealDictCursor)
         cur = conn.cursor()
+        
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
+        tables = [r["table_name"] for r in cur.fetchall()]
         
         cur.execute("SELECT current_database();")
         db_name = cur.fetchone()["current_database"]
@@ -112,6 +114,12 @@ def db_debug():
             cur.execute("SELECT COUNT(*) as cnt FROM client_external_holdings;")
             holdings_count = cur.fetchone()["cnt"]
         
+        # 5. Check clients count
+        clients_count = 0
+        if "clients" in tables:
+            cur.execute("SELECT COUNT(*) as cnt FROM clients;")
+            clients_count = cur.fetchone()["cnt"]
+
         cur.close()
         conn.close()
         
@@ -119,7 +127,8 @@ def db_debug():
             "status": "success",
             "db_name": db_name,
             "tables": tables,
-            "total_saved_holdings": holdings_count,
+            "total_saved_holdings_global": holdings_count,
+            "total_clients_global": clients_count,
             "url_diagnostics": url_info
         }
     except Exception as e:
