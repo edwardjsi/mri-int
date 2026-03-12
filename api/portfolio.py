@@ -1,6 +1,6 @@
-"""
-Portfolio endpoints: open positions, equity curve, performance vs benchmark.
-"""
+from datetime import date
+from fastapi import APIRouter, Depends
+from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
 from src.portfolio_review_engine import analyze_portfolio
 
@@ -13,7 +13,7 @@ def get_open_positions(
     conn=Depends(get_db),
 ):
     """Client's currently open positions (Core + External)."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     client_id = str(client["id"])
     
     # 1. Fetch Core Positions (from MRI signals)
@@ -152,7 +152,7 @@ def get_daily_summary(
     conn=Depends(get_db),
 ):
     """Today's unified portfolio P&L summary."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     client_id = str(client["id"])
 
     # 1. Fetch Core Data

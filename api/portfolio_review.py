@@ -11,6 +11,7 @@ from typing import List, Optional
 import pandas as pd
 import io
 
+from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
 from src.on_demand_ingest import ingest_missing_symbols_sync
@@ -110,7 +111,7 @@ async def upload_csv(
         
         if holdings_to_save:
             print(f"DEBUG: Auto-saving {len(holdings_to_save)} holdings for {client['email']}")
-            cur = conn.cursor()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             try:
                 for h in holdings_to_save:
                     cur.execute("""
