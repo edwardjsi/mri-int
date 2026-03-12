@@ -135,10 +135,10 @@ export const api = {
 
     getSavedHoldings: () => apiFetch('/portfolio-review/holdings'),
 
-    saveHolding: (symbol: string, quantity: number, avg_cost: number) =>
-        apiFetch('/portfolio-review/save', {
+    saveHoldingsBulk: (holdings: { symbol: string, quantity: number, avg_cost: number }[]) =>
+        apiFetch('/portfolio-review/save-bulk', {
             method: 'POST',
-            body: JSON.stringify({ symbol, quantity, avg_cost }),
+            body: JSON.stringify(holdings),
         }),
 
     deleteHolding: (symbol: string) =>

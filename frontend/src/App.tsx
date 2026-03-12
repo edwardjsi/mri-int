@@ -714,13 +714,19 @@ function RiskAuditPage() {
     if (!result?.holdings) return;
     setSaveLoading(true);
     try {
-      for (const h of result.holdings) {
-        await api.saveHolding(h.symbol, h.quantity, h.avg_cost);
-      }
-      alert('All holdings saved successfully!');
+      const holdingsToSave = result.holdings.map((h: any) => ({
+        symbol: h.symbol,
+        quantity: h.quantity,
+        avg_cost: h.avg_cost
+      }));
+      
+      await api.saveHoldingsBulk(holdingsToSave);
+      
+      alert(`Success: ${holdingsToSave.length} holdings saved to your Digital Twin!`);
       loadSavedHoldings();
     } catch (err: any) {
-      alert(err.message || 'Failed to save holdings');
+      console.error('Save failed:', err);
+      alert(err.message || 'Failed to save holdings to database');
     } finally {
       setSaveLoading(false);
     }

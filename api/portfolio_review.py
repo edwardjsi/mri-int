@@ -152,13 +152,49 @@ def get_holdings(
     return result
 
 
+@router.post("/save-bulk")
+def save_holdings_bulk(
+    body: List[PortfolioSaveInput],
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Bulk save or update holdings in the persistent Digital Twin layer."""
+    client_id = str(client["id"])
+    print(f"DEBUG: Bulk saving {len(body)} holdings for client_id: {client_id}")
+    
+    cur = conn.cursor()
+    try:
+        # Use execute_values or a manual loop for best performance/reliability
+        # For simplicity and clear debugging, we'll use a transaction loop
+        for holding in body:
+            cur.execute("""
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (client_id, symbol) DO UPDATE
+                SET quantity = EXCLUDED.quantity,
+                    avg_cost = EXCLUDED.avg_cost,
+                    updated_at = NOW()
+            """, (client_id, holding.symbol.upper().strip(), holding.quantity, holding.avg_cost))
+        
+        conn.commit()
+        print(f"DEBUG: Successfully bulk saved {len(body)} symbols")
+        return {"status": "success", "count": len(body)}
+    except Exception as e:
+        print(f"DEBUG: Bulk save error: {e}")
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+
+
 @router.post("/save")
 def save_holding(
     body: PortfolioSaveInput,
     client=Depends(get_current_client),
     conn=Depends(get_db),
 ):
-    """Save or update a holding in the persistent Digital Twin layer."""
+    """Save or update a single holding."""
+    # (Existing implementation kept for compatibility)
     client_id = str(client["id"])
     print(f"DEBUG: Saving holding {body.symbol} for client_id: {client_id}")
     
