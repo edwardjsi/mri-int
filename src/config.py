@@ -2,6 +2,10 @@ import boto3
 import json
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load local .env file if it exists
+load_dotenv()
 
 def get_db_credentials():
     """
@@ -61,7 +65,7 @@ S3_BUCKET = os.environ.get("S3_BUCKET", "mri-dev-outputs-251876202726")
 AWS_REGION = "ap-south-1"
 
 # Backtest config
-START_DATE = "2005-01-01"
+START_DATE = "2022-01-01"
 from datetime import timedelta
 END_DATE   = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 

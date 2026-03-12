@@ -128,8 +128,34 @@
 - [x] Cron pipeline: `run_daily_pipeline.sh` — 5-step automated pipeline (ingest → indicators → regime → signals → emails)
 - [x] First client registered and dashboard verified (regime: NEUTRAL, screener: working)
 - [x] Forgot Password flow: Backend endpoints, React UI, AWS SES integration, explicit 404 feedback.
-- [ ] AWS SES sandbox verification for email delivery
+- [x] AWS SES sandbox verification for individual friend testing
+- [ ] **TODO: Request AWS SES Production Access** to allow public user sign-ups to receive daily signal emails
 - [ ] Cron entry on production server
+=-=-=-=-
+Because your AWS SES account is currently in the Sandbox, it means AWS will only send emails to addresses that you have explicitly verified in the AWS Console.
+
+If a random user registers with john@example.com on your new live website, the pipeline will generate their signals perfectly in the database, but when 
+
+email_service.py
+ tries to send them their email, AWS SES will throw an error and block it.
+
+Your Options:
+Option 1: Request Production Access (Recommended for the public) You can easily move out of the sandbox so you can email anyone:
+
+Go to AWS Console → Amazon SES → Account dashboard
+Click "Request production access"
+Fill out the short form (tell them you send daily stock alerts to registered users of your SaaS, and you have explicit opt-in).
+They usually approve it within 24 hours. Free tier still covers 62,000 emails/month!
+Option 2: Manually Verify Users (Good for private testing with friends) If you just want a few friends to test it right now without waiting for AWS approval:
+
+They register on your site.
+You go to AWS Console → Amazon SES → Verified identities.
+Click "Create identity", choose "Email address", and type your friend's email.
+AWS sends them an automated email with a verification link.
+Once they click that link, your pipeline can successfully send them daily signals.
+But yes, if you plan to share that mri-frontend.onrender.com link publicly on Twitter or with a wider group, you must do Option 1 first, or nobody will get their daily digests!
+
+=-=-=-=-
 
 ### Step 4: Nifty 500 Expansion
 - [x] Run `run_bridge_load.sh` for remaining 450 stocks

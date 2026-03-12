@@ -610,8 +610,23 @@ function RiskAuditPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [savedResult, setSavedResult] = useState<any>(null);
   const [error, setError] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const loadSavedHoldings = async () => {
+    try {
+      const data = await api.getSavedHoldings();
+      setSavedResult(data);
+    } catch (err) {
+      console.error('Failed to load saved holdings', err);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedHoldings();
+  }, []);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -669,6 +684,32 @@ function RiskAuditPage() {
     }
   };
 
+  const handleSaveToHoldings = async () => {
+    if (!result?.holdings) return;
+    setSaveLoading(true);
+    try {
+      for (const h of result.holdings) {
+        await api.saveHolding(h.symbol, h.quantity, h.avg_cost);
+      }
+      alert('All holdings saved successfully!');
+      loadSavedHoldings();
+    } catch (err: any) {
+      alert(err.message || 'Failed to save holdings');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleDeleteHolding = async (symbol: string) => {
+    if (!confirm(`Remove ${symbol} from your holdings?`)) return;
+    try {
+      await api.deleteHolding(symbol);
+      loadSavedHoldings();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete holding');
+    }
+  };
+
   return (
     <div className="risk-audit">
       <h2 className="section-title">Portfolio Risk Audit</h2>
@@ -697,6 +738,25 @@ function RiskAuditPage() {
         </button>
       </div>
 
+      {result && (
+        <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+          <button 
+            className="btn-secondary" 
+            onClick={handleSaveToHoldings}
+            disabled={saveLoading}
+            style={{ backgroundColor: '#059669', color: 'white' }}
+          >
+            {saveLoading ? 'Saving...' : '💾 Save to My Holdings'}
+          </button>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setResult(null)}
+          >
+            ❌ Clear Result
+          </button>
+        </div>
+      )}
+
       {error && <div className="error-alert" style={{ marginTop: '16px' }}>{error}</div>}
 
       {result && result.async_processing && result.missing_symbols && result.missing_symbols.length > 0 && (
@@ -714,7 +774,7 @@ function RiskAuditPage() {
         <div className="audit-results animate-fade-in" style={{ marginTop: '24px' }}>
           <div className="stats-row">
             <div className="stat-card" style={{ borderLeft: `4px solid ${result.risk_level === 'EXTREME' || result.risk_level === 'HIGH' ? '#ef4444' : result.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>
-              <div className="stat-label">Overall Risk</div>
+              <div className="stat-label">Result Risk</div>
               <div className="stat-value">{result.risk_level}</div>
               <div className="card-meta">Score: {result.risk_score_pct}</div>
             </div>
@@ -754,7 +814,7 @@ function RiskAuditPage() {
                       <td className="font-bold">{h.symbol}</td>
                       <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
                       <td>
-                        <span className={`action-badge ${h.alignment === 'Aligned' ? 'badge-executed' : h.alignment === 'Misaligned' ? 'badge-skipped' : ''}`}>
+                        <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
                           {h.alignment}
                         </span>
                       </td>
@@ -771,6 +831,79 @@ function RiskAuditPage() {
           </section>
         </div>
       )}
+
+      {/* ── SECTION: My Saved Holdings ("The Layer") ── */}
+      <section className="section" style={{ marginTop: '40px' }}>
+        <h2 className="section-title">🛡️ My Holdings (Digital Twin)</h2>
+        <p className="section-subtitle">
+          Your persistent portfolio layer. These assets are tracked in real-time against MRI intelligence.
+        </p>
+
+        {savedResult && savedResult.holdings && savedResult.holdings.length > 0 ? (
+          <>
+            <div className="stats-row">
+              <div className="stat-card" style={{ borderLeft: `4px solid ${savedResult.risk_level === 'EXTREME' || savedResult.risk_level === 'HIGH' ? '#ef4444' : savedResult.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>
+                <div className="stat-label">Portfolio Risk</div>
+                <div className="stat-value">{savedResult.risk_level}</div>
+                <div className="card-meta">Score: {savedResult.risk_score_pct || '0%'}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Total Value</div>
+                <div className="stat-value">₹{savedResult.total_portfolio_value?.toLocaleString()}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Holdings</div>
+                <div className="stat-value">{savedResult.holdings_count}</div>
+              </div>
+            </div>
+
+            <div className="table-container" style={{ marginTop: '24px' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Score</th>
+                    <th>Alignment</th>
+                    <th>Qty</th>
+                    <th>Avg Cost</th>
+                    <th>Current</th>
+                    <th>P&L %</th>
+                    <th>Risk Contrib</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {savedResult.holdings.map((h: any) => (
+                    <tr key={h.symbol}>
+                      <td className="font-bold">{h.symbol}</td>
+                      <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
+                      <td>
+                        <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
+                          {h.alignment}
+                        </span>
+                      </td>
+                      <td>{h.quantity}</td>
+                      <td>₹{h.avg_cost?.toLocaleString()}</td>
+                      <td>₹{h.current_price?.toLocaleString()}</td>
+                      <td style={{ color: (h.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                        {h.pnl_pct >= 0 ? '+' : ''}{h.pnl_pct}%
+                      </td>
+                      <td>{h.risk_contribution_pct}%</td>
+                      <td>
+                        <button className="btn-skip" onClick={() => handleDeleteHolding(h.symbol)} style={{ padding: '4px 8px', fontSize: '12px' }}>
+                          🗑️ Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">No holdings saved yet. Upload a CSV above to start your Digital Twin layer.</div>
+        )}
+      </section>
     </div>
   );
 }

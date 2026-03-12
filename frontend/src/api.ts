@@ -133,6 +133,19 @@ export const api = {
         return res.json();
     },
 
+    getSavedHoldings: () => apiFetch('/portfolio-review/holdings'),
+
+    saveHolding: (symbol: string, quantity: number, avg_cost: number) =>
+        apiFetch('/portfolio-review/save', {
+            method: 'POST',
+            body: JSON.stringify({ symbol, quantity, avg_cost }),
+        }),
+
+    deleteHolding: (symbol: string) =>
+        apiFetch(`/portfolio-review/holdings/${symbol}`, {
+            method: 'DELETE',
+        }),
+
     // Capital
     addCapital: (amount: number) =>
         apiFetch('/auth/capital', {

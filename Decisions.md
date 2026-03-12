@@ -253,4 +253,10 @@ Decision: Add asynchronous on-demand asset ingestion capabilities using FastAPI 
 Reason: Prevents database bloat from storing the entire illiquid NSE/BSE universe daily. Scales data ingestion organically based exactly on what users actually own. Gracefully handles 20-minute latency for missing data by returning partial frontend results immediately and finalizing via email.
 Status: FINAL.
 
+## Decision 036 — Persistent User Holdings (Digital Twin Layer)
+Date: 2026-03-12
+Decision: Implement a persistent `client_external_holdings` table to store user-uploaded assets (symbol, quantity, avg_cost). This "Digital Twin" layer exists alongside the internal strategy-generated `client_portfolio` and receives real-time MRI risk evaluation (scores, alignment, 200 EMA status) and P&L tracking based on latest `daily_prices`.
+Reason: Evolution from one-off CSV uploads to a persistent monitoring tool. Enables users to track their actual holdings against MRI intelligence permanently, fulfilling the "another layer" requirement.
+Status: IMPLEMENTING.
+
 <!-- Append new decisions below. Never delete or modify old ones. -->

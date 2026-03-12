@@ -20,8 +20,14 @@ router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
 
 class HoldingInput(BaseModel):
     symbol: str
-    quantity: float = Field(ge=0, description="Number of shares held")
+    quantity: float = Field(default=0.0, ge=0, description="Number of shares held")
     avg_cost: Optional[float] = Field(default=None, ge=0, description="Average purchase price")
+
+
+class PortfolioSaveInput(BaseModel):
+    symbol: str
+    quantity: float = Field(ge=0)
+    avg_cost: float = Field(ge=0)
 
 
 class PortfolioInput(BaseModel):
@@ -108,6 +114,85 @@ async def upload_csv(
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing CSV: {str(e)}")
+
+
+@router.get("/holdings")
+def get_holdings(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Retrieve saved external holdings with MRI analysis."""
+    from psycopg2.extras import RealDictCursor
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("""
+        SELECT symbol, quantity, avg_cost
+        FROM client_external_holdings
+        WHERE client_id = %s
+        ORDER BY symbol
+    """, (str(client["id"]),))
+    rows = cur.fetchall()
+    cur.close()
+
+    if not rows:
+        return {
+            "regime": None,
+            "risk_level": "LOW",
+            "risk_score": 0,
+            "holdings": [],
+            "summary": "No saved holdings yet.",
+        }
+
+    holdings = [dict(r) for r in rows]
+    result = analyze_portfolio(holdings, conn=conn)
+    return result
+
+
+@router.post("/save")
+def save_holding(
+    body: PortfolioSaveInput,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Save or update a holding in the persistent Digital Twin layer."""
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
+            VALUES (%s, %s, %s, %s, NOW())
+            ON CONFLICT (client_id, symbol) DO UPDATE
+            SET quantity = EXCLUDED.quantity,
+                avg_cost = EXCLUDED.avg_cost,
+                updated_at = NOW()
+        """, (str(client["id"]), body.symbol.upper().strip(), body.quantity, body.avg_cost))
+        conn.commit()
+        return {"status": "success", "message": f"Saved {body.symbol}"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+
+
+@router.delete("/holdings/{symbol}")
+def delete_holding(
+    symbol: str,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Remove a holding from the persistent layer."""
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            DELETE FROM client_external_holdings
+            WHERE client_id = %s AND symbol = %s
+        """, (str(client["id"]), symbol.upper().strip()))
+        conn.commit()
+        return {"status": "success", "message": f"Deleted {symbol}"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
 
 
 @router.get("/quick/{symbol}")
