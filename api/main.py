@@ -40,6 +40,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # CORS — allow React frontend (configurable via env)
 cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+print(f"DEBUG: Allowed CORS Origins: {cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
