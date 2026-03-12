@@ -197,8 +197,14 @@ def get_daily_summary(
     
     # Combined Metrics
     total_equity = (float(core_today["equity"]) if core_today else initial_cap) + ext_market_value
-    prev_equity = (float(core_yesterday["equity"]) if core_yesterday else (float(core_today["equity"]) if core_today else initial_cap)) + ext_market_value # Crude approx for daily change
-    
+    # Crude approx for daily change:
+    if core_yesterday:
+        prev_equity = float(core_yesterday["equity"]) + ext_market_value
+    elif core_today:
+        prev_equity = float(core_today["equity"]) + ext_market_value
+    else:
+        prev_equity = initial_cap + ext_market_value
+
     total_invested = initial_cap + ext_cost_basis
     total_return = total_equity - total_invested
     total_pct = (total_return / total_invested * 100) if total_invested else 0
