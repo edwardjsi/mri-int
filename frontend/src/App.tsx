@@ -345,24 +345,27 @@ function DashboardPage() {
   const [signals, setSignals] = useState<any>(null);
   const [pending, setPending] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [positions, setPositions] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
-      const [r, s, p, sum, prof] = await Promise.all([
+      const [r, s, p, sum, prof, pos] = await Promise.all([
         api.getRegime(),
         api.getTodaySignals().catch(() => ({ signals: [] })),
         api.getPendingSignals().catch(() => []),
         api.getDailySummary().catch(() => null),
         api.getProfile().catch(() => null),
+        api.getPositions().catch(() => ({ positions: [] })),
       ]);
       setRegime(r);
       setSignals(s);
       setPending(p);
       setSummary(sum);
       setProfile(prof);
+      setPositions(pos);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -400,16 +403,47 @@ function DashboardPage() {
       <div className="dashboard-top-row">
         <RegimeCard regime={regime} />
         <div className="card capital-card">
-          <div className="card-label">My Capital</div>
-          <div className="capital-value">₹{totalCapital.toLocaleString()}</div>
+          <div className="card-label">Total Portfolio Value</div>
+          <div className="capital-value">₹{(summary?.equity || totalCapital).toLocaleString()}</div>
           <div className="card-meta">
-            Per stock: ₹{(totalCapital * 0.1).toLocaleString()} (10%)
+            Invested Amount: ₹{(summary?.total_invested || totalCapital).toLocaleString()}
           </div>
           <button className="btn-add-capital" onClick={() => setShowAddCapital(true)}>+ Add Capital</button>
         </div>
       </div>
 
       <DailySummaryCard summary={summary} />
+
+      {/* ── SECTION 0: My Positions (Core + External) ── */}
+      {positions?.positions?.length > 0 && (
+        <section className="section">
+          <h2 className="section-title">📦 My Holdings</h2>
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr><th>Symbol</th><th>Source</th><th>Price</th><th>Qty</th><th>P&L %</th></tr>
+              </thead>
+              <tbody>
+                {positions.positions.map((p: any) => (
+                  <tr key={`${p.source}-${p.symbol}`}>
+                    <td className="font-bold">{p.symbol}</td>
+                    <td>
+                      <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
+                        {p.source}
+                      </span>
+                    </td>
+                    <td>₹{p.current_price?.toLocaleString()}</td>
+                    <td>{p.quantity}</td>
+                    <td style={{ color: (p.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
+                      {p.pnl_pct}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* ── SECTION 1: Pending Trades (from previous days) ── */}
       {pendingOlder.length > 0 && (
