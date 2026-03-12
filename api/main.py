@@ -126,7 +126,9 @@ def db_debug():
             "database": db_name,
             "account_holdings_breakdown": holdings_audit,
             "total_tables": len(tables),
-            "info": "If your email shows 0 holdings, you need to log in with the other email or upload the CSV again."
+            "cors_origins_allowed": cors_origins,
+            "timestamp": "2026-03-12-12:50",
+            "info": "If your email shows 0 holdings, you need to log in with that email. If fetch fails, check VITE_API_URL and ensure you REBUILD the frontend on Render."
         }
     except Exception as e:
         import traceback
