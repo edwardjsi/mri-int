@@ -112,17 +112,24 @@ def db_debug():
         cur.execute("SELECT current_database();")
         db_name = cur.fetchone()["current_database"]
 
-        # 3. Check holdings count
+        # 3. Check holdings count and breakdown
         holdings_count = 0
+        client_breakdown = []
         if "client_external_holdings" in tables_list:
             cur.execute("SELECT COUNT(*) as cnt FROM client_external_holdings;")
             holdings_count = cur.fetchone()["cnt"]
+            
+            cur.execute("SELECT client_id, COUNT(*) as cnt FROM client_external_holdings GROUP BY client_id;")
+            client_breakdown = [{"id": str(r["client_id"]), "count": r["cnt"]} for r in cur.fetchall()]
         
         # 4. Check clients count
         clients_count = 0
         if "clients" in tables_list:
-            cur.execute("SELECT COUNT(*) as cnt FROM clients;")
-            clients_count = cur.fetchone()["cnt"]
+            cur.execute("SELECT id, email FROM clients;")
+            clients = [{"id": str(r["id"]), "email": r["email"]} for r in cur.fetchall()]
+            clients_count = len(clients)
+        else:
+            clients = []
 
         cur.close()
         conn.close()
@@ -130,9 +137,10 @@ def db_debug():
         return {
             "status": "success",
             "db_name": db_name,
-            "tables": tables_list,
             "total_saved_holdings_global": holdings_count,
-            "total_clients_global": clients_count,
+            "holdings_by_client": client_breakdown,
+            "total_clients": clients_count,
+            "clients": clients,
             "url_diagnostics": url_info
         }
     except Exception as e:
