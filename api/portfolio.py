@@ -2,6 +2,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
+from api.schema import ensure_client_external_holdings_table
 from src.portfolio_review_engine import analyze_portfolio
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
@@ -15,9 +16,10 @@ def get_open_positions(
     """Client's currently open positions (Core + External)."""
     cur = conn.cursor(cursor_factory=RealDictCursor)
     client_id = str(client["id"])
-    
+
     # 1. Fetch Core Positions (from MRI signals)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT cp.symbol, cp.entry_date, cp.entry_price, cp.quantity, cp.highest_price,
                dp.close AS current_price,
                ROUND(((dp.close - cp.entry_price) / cp.entry_price) * 100, 2) AS pnl_pct
@@ -29,50 +31,61 @@ def get_open_positions(
         ) dp ON true
         WHERE cp.client_id = %s AND cp.is_open = true
         ORDER BY cp.entry_date DESC
-    """, (client_id,))
+        """,
+        (client_id,),
+    )
     core_rows = cur.fetchall()
-    
+
     # 2. Fetch External Positions (Digital Twin)
-    cur.execute("""
-        SELECT symbol, quantity, avg_cost
-        FROM client_external_holdings
-        WHERE client_id = %s
-    """, (client_id,))
-    external_rows = cur.fetchall()
-    
+    external_rows = []
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            """,
+            (client_id,),
+        )
+        external_rows = cur.fetchall()
+    except Exception:
+        conn.rollback()
+
     positions = []
-    
+
     # Process Core
     for p in core_rows:
-        positions.append({
-            "source": "Core",
-            "symbol": p["symbol"],
-            "entry_date": str(p["entry_date"]),
-            "entry_price": float(p["entry_price"]) if p["entry_price"] else None,
-            "quantity": p["quantity"],
-            "current_price": float(p["current_price"]) if p["current_price"] else None,
-            "pnl_pct": float(p["pnl_pct"]) if p["pnl_pct"] else None,
-        })
-        
+        positions.append(
+            {
+                "source": "Core",
+                "symbol": p["symbol"],
+                "entry_date": str(p["entry_date"]),
+                "entry_price": float(p["entry_price"]) if p["entry_price"] else None,
+                "quantity": p["quantity"],
+                "current_price": float(p["current_price"]) if p["current_price"] else None,
+                "pnl_pct": float(p["pnl_pct"]) if p["pnl_pct"] else None,
+            }
+        )
+
     # Process External via Review Engine for valuation
     if external_rows:
         external_holdings = [dict(r) for r in external_rows]
         analysis = analyze_portfolio(external_holdings, conn=conn)
         for h in analysis.get("holdings", []):
-            positions.append({
-                "source": "External",
-                "symbol": h["symbol"],
-                "entry_date": "N/A",
-                "entry_price": float(h["avg_cost"]) if h["avg_cost"] else None,
-                "quantity": h["quantity"],
-                "current_price": float(h["current_price"]) if h["current_price"] else None,
-                "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
-            })
+            positions.append(
+                {
+                    "source": "External",
+                    "symbol": h["symbol"],
+                    "entry_date": "N/A",
+                    "entry_price": float(h["avg_cost"]) if h["avg_cost"] else None,
+                    "quantity": h["quantity"],
+                    "current_price": float(h["current_price"]) if h["current_price"] else None,
+                    "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
+                }
+            )
 
-    return {
-        "count": len(positions),
-        "positions": positions
-    }
+    return {"count": len(positions), "positions": positions}
 
 
 @router.get("/equity")
@@ -82,12 +95,15 @@ def get_equity_curve(
 ):
     """Client's daily equity curve."""
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT date, equity, cash, open_positions
         FROM client_equity
         WHERE client_id = %s
         ORDER BY date
-    """, (str(client["id"]),))
+        """,
+        (str(client["id"]),),
+    )
     rows = cur.fetchall()
 
     return [
@@ -110,10 +126,13 @@ def get_performance(
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     # Client equity
-    cur.execute("""
+    cur.execute(
+        """
         SELECT date, equity FROM client_equity
         WHERE client_id = %s ORDER BY date
-    """, (str(client["id"]),))
+        """,
+        (str(client["id"]),),
+    )
     client_eq = cur.fetchall()
 
     if not client_eq:
@@ -121,11 +140,14 @@ def get_performance(
 
     # Nifty benchmark for same period
     start_date = client_eq[0]["date"]
-    cur.execute("""
+    cur.execute(
+        """
         SELECT date, close FROM index_prices
         WHERE symbol = 'NIFTY50' AND date >= %s
         ORDER BY date
-    """, (start_date,))
+        """,
+        (start_date,),
+    )
     nifty = cur.fetchall()
 
     # Normalize to base 100
@@ -156,26 +178,37 @@ def get_daily_summary(
     client_id = str(client["id"])
 
     # 1. Fetch Core Data
-    cur.execute("""
+    cur.execute(
+        """
         SELECT date, equity, cash, open_positions
         FROM client_equity
         WHERE client_id = %s
         ORDER BY date DESC LIMIT 2
-    """, (client_id,))
+        """,
+        (client_id,),
+    )
     core_rows = cur.fetchall()
 
     # 2. Fetch External Data
-    cur.execute("""
-        SELECT symbol, quantity, avg_cost
-        FROM client_external_holdings
-        WHERE client_id = %s
-    """, (client_id,))
-    external_rows = cur.fetchall()
-    
+    external_rows = []
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            """,
+            (client_id,),
+        )
+        external_rows = cur.fetchall()
+    except Exception:
+        conn.rollback()
+
     ext_market_value = 0
     ext_cost_basis = 0
     ext_count = 0
-    
+
     if external_rows:
         ext_holdings = [dict(r) for r in external_rows]
         analysis = analyze_portfolio(ext_holdings, conn=conn)
@@ -196,10 +229,10 @@ def get_daily_summary(
 
     today_equity = float(core_today["equity"]) if core_today else initial_cap
     today_cash = float(core_today["cash"]) if core_today else initial_cap
-    
+
     # Combined Metrics
     total_wealth = today_equity + float(ext_market_value)
-    
+
     # Crude approx for daily change:
     if core_yesterday:
         prev_equity = float(core_yesterday["equity"]) + float(ext_market_value)
@@ -215,12 +248,15 @@ def get_daily_summary(
         "date": str(core_today["date"]) if core_today else str(date.today()),
         "equity": float(round(total_wealth, 2)),
         "cash": float(round(today_cash, 2)),
-        "open_positions": int((core_today["open_positions"] if core_today and core_today.get("open_positions") is not None else 0) + ext_count),
+        "open_positions": int(
+            (core_today["open_positions"] if core_today and core_today.get("open_positions") is not None else 0)
+            + ext_count
+        ),
         "daily_change": float(round(total_wealth - prev_equity, 2)),
-        "daily_pct": float(round(((total_wealth - prev_equity)/prev_equity*100), 2)) if prev_equity else 0.0,
+        "daily_pct": float(round(((total_wealth - prev_equity) / prev_equity * 100), 2)) if prev_equity else 0.0,
         "total_return": float(round(total_return, 2)),
         "total_pct": float(round(total_pct, 2)),
         "initial_capital": float(initial_cap),
         "external_cost": float(round(ext_cost_basis, 2)),
-        "total_invested": float(round(total_invested, 2))
+        "total_invested": float(round(total_invested, 2)),
     }

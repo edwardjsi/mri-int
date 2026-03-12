@@ -755,9 +755,13 @@ function RiskAuditPage() {
     try {
       const data = await api.uploadPortfolioCsv(file);
       setResult(data);
-      // Auto-reload saved holdings since backend auto-persists now
-      loadSavedHoldings();
-      alert('Portfolio uploaded and analyzed! Valid holdings have been saved to your Digital Twin automatically.');
+      await loadSavedHoldings();
+      if (data?.digital_twin_saved) {
+        alert('Portfolio uploaded and analyzed! Holdings have been saved to your Digital Twin.');
+      } else {
+        const extra = data?.digital_twin_error ? `\n\nSave failed: ${data.digital_twin_error}` : '';
+        alert(`Portfolio uploaded and analyzed, but could not save holdings to your Digital Twin.${extra}`);
+      }
     } catch (err: any) {
       setError(err.message === 'Failed to fetch' 
         ? '⚠️ Connection Failed: Please ensure you have "Clear Cache & Re-deployed" on Render and your VITE_API_URL is correct.'

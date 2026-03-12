@@ -10,9 +10,11 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import pandas as pd
 import io
+import uuid
 
 from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
+from api.schema import ensure_client_external_holdings_table
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
 from src.on_demand_ingest import ingest_missing_symbols_sync
 
@@ -59,22 +61,31 @@ async def upload_csv(
 ):
     """
     Upload a CSV file (e.g., Zerodha holdings) for portfolio risk audit.
+
+    Behavior:
+    - Returns immediate analysis for all rows.
+    - Persists uploaded holdings into `client_external_holdings` (Digital Twin layer)
+      so they always display later with delete controls.
+    - If some symbols are missing from MRI universe, kicks off async ingestion.
     """
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-    
+
     try:
+        digital_twin_saved = False
+        digital_twin_error: str | None = None
+
         content = await file.read()
         df = pd.read_csv(io.BytesIO(content))
-        
+
         portfolio = []
         orig_cols = list(df.columns)
         cols = [str(c).strip().lower() for c in orig_cols]
-        
+
         sym_col = None
         qty_col = None
         cost_col = None
-        
+
         for i, c in enumerate(cols):
             if not sym_col and c in ('symbol', 'ticker', 'instrument'):
                 sym_col = orig_cols[i]
@@ -82,10 +93,10 @@ async def upload_csv(
                 qty_col = orig_cols[i]
             if not cost_col and c in ('avg_cost', 'cost', 'price', 'buy_price', 'avg. cost'):
                 cost_col = orig_cols[i]
-        
+
         if not sym_col:
             raise HTTPException(status_code=400, detail="CSV must contain a 'symbol' or 'instrument' column.")
-            
+
         for _, row in df.iterrows():
             if pd.isna(row[sym_col]):
                 continue
@@ -94,56 +105,65 @@ async def upload_csv(
                 "quantity": float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0,
                 "avg_cost": float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0,
             })
-            
+
         result = analyze_portfolio(portfolio, conn=conn)
-        
+
         # Automatic local persistence for authenticated users:
         # Save ALL holdings from CSV (even if score is unknown)
         holdings_to_save = [
             {
                 "symbol": h["symbol"],
                 "quantity": h["quantity"],
-                "avg_cost": h["avg_cost"]
+                "avg_cost": h["avg_cost"],
             }
             for h in result.get("holdings", [])
         ]
-        
+
         if holdings_to_save:
             print(f"DEBUG: Auto-saving {len(holdings_to_save)} holdings for {client['email']}")
             cur = conn.cursor(cursor_factory=RealDictCursor)
             try:
+                ensure_client_external_holdings_table(conn)
                 for h in holdings_to_save:
-                    cur.execute("""
-                        INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
-                        VALUES (%s, %s, %s, %s, NOW())
+                    cur.execute(
+                        """
+                        INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, NOW())
                         ON CONFLICT (client_id, symbol) DO UPDATE
                         SET quantity = EXCLUDED.quantity,
                             avg_cost = EXCLUDED.avg_cost,
                             updated_at = NOW()
-                    """, (str(client["id"]), h["symbol"], h["quantity"], h["avg_cost"]))
+                        """,
+                        (str(uuid.uuid4()), str(client["id"]), str(h["symbol"]).upper().strip(), h["quantity"], h["avg_cost"]),
+                    )
                 conn.commit()
+                digital_twin_saved = True
             except Exception as e:
                 print(f"DEBUG: Auto-save failed during upload: {e}")
                 conn.rollback()
+                digital_twin_error = str(e)
             finally:
                 cur.close()
 
         missing = result.get("missing_symbols", [])
         if missing:
             background_tasks.add_task(
-                ingest_missing_symbols_sync, 
-                missing, 
-                portfolio, 
-                str(client['id']), 
-                client['email'], 
-                client['name']
+                ingest_missing_symbols_sync,
+                missing,
+                portfolio,
+                str(client["id"]),
+                client["email"],
+                client["name"],
             )
             result["async_processing"] = True
         else:
             result["async_processing"] = False
-            
+
+        result["digital_twin_saved"] = digital_twin_saved
+        result["digital_twin_error"] = digital_twin_error
+
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing CSV: {str(e)}")
 
@@ -154,19 +174,36 @@ def get_holdings(
     conn=Depends(get_db),
 ):
     """Retrieve saved external holdings with MRI analysis."""
-    from psycopg2.extras import RealDictCursor
     client_id = str(client["id"])
     print(f"DEBUG: Fetching holdings for client_id: {client_id}")
-    
+
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("""
-        SELECT symbol, quantity, avg_cost
-        FROM client_external_holdings
-        WHERE client_id = %s
-        ORDER BY symbol
-    """, (client_id,))
-    rows = cur.fetchall()
-    cur.close()
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            ORDER BY symbol
+            """,
+            (client_id,),
+        )
+        rows = cur.fetchall()
+    except Exception as e:
+        conn.rollback()
+        return {
+            "regime": None,
+            "risk_level": "LOW",
+            "risk_score": 0,
+            "holdings_count": 0,
+            "holdings": [],
+            "missing_symbols": [],
+            "summary": f"Holdings storage is not available yet: {str(e)}",
+            "storage_ready": False,
+        }
+    finally:
+        cur.close()
 
     print(f"DEBUG: Found {len(rows)} rows for client_id: {client_id}")
 
@@ -175,12 +212,16 @@ def get_holdings(
             "regime": None,
             "risk_level": "LOW",
             "risk_score": 0,
+            "holdings_count": 0,
             "holdings": [],
+            "missing_symbols": [],
             "summary": "No saved holdings yet.",
+            "storage_ready": True,
         }
 
     holdings = [dict(r) for r in rows]
     result = analyze_portfolio(holdings, conn=conn)
+    result["storage_ready"] = True
     return result
 
 
@@ -193,21 +234,23 @@ def save_holdings_bulk(
     """Bulk save or update holdings in the persistent Digital Twin layer."""
     client_id = str(client["id"])
     print(f"DEBUG: Bulk saving {len(body)} holdings for client_id: {client_id}")
-    
+
     cur = conn.cursor()
     try:
-        # Use execute_values or a manual loop for best performance/reliability
-        # For simplicity and clear debugging, we'll use a transaction loop
+        ensure_client_external_holdings_table(conn)
         for holding in body:
-            cur.execute("""
-                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
-                VALUES (%s, %s, %s, %s, NOW())
+            cur.execute(
+                """
+                INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost, updated_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (client_id, symbol) DO UPDATE
                 SET quantity = EXCLUDED.quantity,
                     avg_cost = EXCLUDED.avg_cost,
                     updated_at = NOW()
-            """, (client_id, holding.symbol.upper().strip(), holding.quantity, holding.avg_cost))
-        
+                """,
+                (str(uuid.uuid4()), client_id, holding.symbol.upper().strip(), holding.quantity, holding.avg_cost),
+            )
+
         conn.commit()
         print(f"DEBUG: Successfully bulk saved {len(body)} symbols")
         return {"status": "success", "count": len(body)}
@@ -226,20 +269,23 @@ def save_holding(
     conn=Depends(get_db),
 ):
     """Save or update a single holding."""
-    # (Existing implementation kept for compatibility)
     client_id = str(client["id"])
     print(f"DEBUG: Saving holding {body.symbol} for client_id: {client_id}")
-    
+
     cur = conn.cursor()
     try:
-        cur.execute("""
-            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, updated_at)
-            VALUES (%s, %s, %s, %s, NOW())
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost, updated_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
             ON CONFLICT (client_id, symbol) DO UPDATE
             SET quantity = EXCLUDED.quantity,
                 avg_cost = EXCLUDED.avg_cost,
                 updated_at = NOW()
-        """, (client_id, body.symbol.upper().strip(), body.quantity, body.avg_cost))
+            """,
+            (str(uuid.uuid4()), client_id, body.symbol.upper().strip(), body.quantity, body.avg_cost),
+        )
         conn.commit()
         print(f"DEBUG: Successfully saved {body.symbol}")
         return {"status": "success", "message": f"Saved {body.symbol}"}
@@ -260,10 +306,14 @@ def delete_holding(
     """Remove a holding from the persistent layer."""
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cur.execute("""
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
             DELETE FROM client_external_holdings
             WHERE client_id = %s AND symbol = %s
-        """, (str(client["id"]), symbol.upper().strip()))
+            """,
+            (str(client["id"]), symbol.upper().strip()),
+        )
         conn.commit()
         return {"status": "success", "message": f"Deleted {symbol}"}
     except Exception as e:
