@@ -615,12 +615,17 @@ function RiskAuditPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
+  const [savedLoading, setSavedLoading] = useState(false);
+
   const loadSavedHoldings = async () => {
+    setSavedLoading(true);
     try {
       const data = await api.getSavedHoldings();
       setSavedResult(data);
     } catch (err) {
       console.error('Failed to load saved holdings', err);
+    } finally {
+      setSavedLoading(false);
     }
   };
 
@@ -882,7 +887,9 @@ function RiskAuditPage() {
           Your persistent portfolio layer. These assets are tracked in real-time against MRI intelligence.
         </p>
 
-        {savedResult && savedResult.holdings && savedResult.holdings.length > 0 ? (
+        {savedLoading ? (
+          <div className="loading">📡 Loading your Digital Twin...</div>
+        ) : savedResult && savedResult.holdings && savedResult.holdings.length > 0 ? (
           <>
             <div className="stats-row">
               <div className="stat-card" style={{ borderLeft: `4px solid ${savedResult.risk_level === 'EXTREME' || savedResult.risk_level === 'HIGH' ? '#ef4444' : savedResult.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>

@@ -123,15 +123,20 @@ def get_holdings(
 ):
     """Retrieve saved external holdings with MRI analysis."""
     from psycopg2.extras import RealDictCursor
+    client_id = str(client["id"])
+    print(f"DEBUG: Fetching holdings for client_id: {client_id}")
+    
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("""
         SELECT symbol, quantity, avg_cost
         FROM client_external_holdings
         WHERE client_id = %s
         ORDER BY symbol
-    """, (str(client["id"]),))
+    """, (client_id,))
     rows = cur.fetchall()
     cur.close()
+
+    print(f"DEBUG: Found {len(rows)} rows for client_id: {client_id}")
 
     if not rows:
         return {
@@ -154,6 +159,9 @@ def save_holding(
     conn=Depends(get_db),
 ):
     """Save or update a holding in the persistent Digital Twin layer."""
+    client_id = str(client["id"])
+    print(f"DEBUG: Saving holding {body.symbol} for client_id: {client_id}")
+    
     cur = conn.cursor()
     try:
         cur.execute("""
@@ -163,10 +171,12 @@ def save_holding(
             SET quantity = EXCLUDED.quantity,
                 avg_cost = EXCLUDED.avg_cost,
                 updated_at = NOW()
-        """, (str(client["id"]), body.symbol.upper().strip(), body.quantity, body.avg_cost))
+        """, (client_id, body.symbol.upper().strip(), body.quantity, body.avg_cost))
         conn.commit()
+        print(f"DEBUG: Successfully saved {body.symbol}")
         return {"status": "success", "message": f"Saved {body.symbol}"}
     except Exception as e:
+        print(f"DEBUG: Error saving {body.symbol}: {e}")
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
