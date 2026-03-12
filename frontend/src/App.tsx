@@ -415,13 +415,22 @@ function DashboardPage() {
       <DailySummaryCard summary={summary} />
 
       {/* ── SECTION 0: My Positions (Core + External) ── */}
-      {positions?.positions?.length > 0 && (
+      {positions?.positions?.length > 0 ? (
         <section className="section">
-          <h2 className="section-title">📦 My Holdings</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>📦 My Holdings</h2>
+            <button 
+              className="btn-secondary" 
+              onClick={() => { setLoading(true); loadData(); }}
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+            >
+              🔄 Refresh
+            </button>
+          </div>
           <div className="table-container">
             <table className="data-table">
               <thead>
-                <tr><th>Symbol</th><th>Source</th><th>Price</th><th>Qty</th><th>P&L %</th></tr>
+                <tr><th>Symbol</th><th>Source</th><th>Price</th><th>Qty</th><th>Value</th><th>P&L %</th></tr>
               </thead>
               <tbody>
                 {positions.positions.map((p: any) => (
@@ -434,6 +443,7 @@ function DashboardPage() {
                     </td>
                     <td>₹{p.current_price?.toLocaleString()}</td>
                     <td>{p.quantity}</td>
+                    <td className="font-medium">₹{((p.current_price || 0) * (p.quantity || 0)).toLocaleString()}</td>
                     <td style={{ color: (p.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
                       {p.pnl_pct}%
                     </td>
@@ -441,6 +451,12 @@ function DashboardPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+      ) : (
+        <section className="section">
+          <div className="empty-state">
+            No active holdings detected. Upload your portfolio in <strong>Risk Audit</strong> to see your unified wealth here.
           </div>
         </section>
       )}

@@ -148,9 +148,9 @@ def _analyze(holdings, conn):
     # First pass: compute total portfolio value
     for h in holdings:
         sym = h["symbol"].upper().strip()
-        qty = h.get("quantity", 0)
+        qty = float(h.get("quantity", 0))
         price_data = prices_by_symbol.get(sym)
-        current_price = float(price_data["close"]) if price_data and price_data["close"] else h.get("avg_cost", 0)
+        current_price = float(price_data["close"]) if price_data and price_data["close"] else float(h.get("avg_cost", 0))
         total_value += qty * current_price
 
     if total_value == 0:
@@ -213,20 +213,20 @@ def _analyze(holdings, conn):
 
         holding_result = {
             "symbol": sym,
-            "quantity": qty,
-            "avg_cost": avg_cost,
-            "current_price": current_price,
-            "pnl_pct": pnl_pct,
-            "weight_pct": round(weight * 100, 2),
+            "quantity": float(qty),
+            "avg_cost": float(avg_cost),
+            "current_price": float(current_price) if current_price else None,
+            "pnl_pct": float(pnl_pct) if pnl_pct is not None else None,
+            "weight_pct": float(round(weight * 100, 2)),
             "score": score,
             "conditions": None,
             "below_200ema": below_ema200,
-            "ema_50": ema_50,
-            "ema_200": ema_200,
-            "rs_90d": rs_90d,
+            "ema_50": float(ema_50) if ema_50 else None,
+            "ema_200": float(ema_200) if ema_200 else None,
+            "rs_90d": float(rs_90d) if rs_90d else None,
             "alignment": alignment,
-            "risk_factor": round(risk_factor, 2),
-            "risk_contribution_pct": round(risk_contribution * 100, 2),
+            "risk_factor": float(round(risk_factor, 2)),
+            "risk_contribution_pct": float(round(risk_contribution * 100, 2)),
         }
 
         # Add score condition breakdown if available
@@ -267,9 +267,9 @@ def _analyze(holdings, conn):
         "regime_date": regime_date,
         "risk_level": risk_level,
         "risk_level_description": RISK_DESCRIPTIONS[risk_level],
-        "risk_score": risk_score,
-        "risk_score_pct": f"{risk_score:.0%}",
-        "total_portfolio_value": round(total_value, 2),
+        "risk_score": float(risk_score),
+        "risk_score_pct": f"{float(risk_score):.0%}",
+        "total_portfolio_value": float(round(total_value, 2)),
         "holdings_count": n_total,
         "holdings": analyzed_holdings,
         "missing_symbols": unrecognized,

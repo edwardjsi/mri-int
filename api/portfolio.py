@@ -192,34 +192,35 @@ def get_daily_summary(
     # Base values (if no core rows, we start from initial capital)
     core_today = core_rows[0] if core_rows else None
     core_yesterday = core_rows[1] if len(core_rows) > 1 else None
-    
     initial_cap = float(client["initial_capital"])
+
+    today_equity = float(core_today["equity"]) if core_today else initial_cap
+    today_cash = float(core_today["cash"]) if core_today else initial_cap
     
     # Combined Metrics
-    total_equity = (float(core_today["equity"]) if core_today else initial_cap) + ext_market_value
+    total_equity = today_equity + float(ext_market_value)
+    
     # Crude approx for daily change:
     if core_yesterday:
-        prev_equity = float(core_yesterday["equity"]) + ext_market_value
-    elif core_today:
-        prev_equity = float(core_today["equity"]) + ext_market_value
+        prev_equity = float(core_yesterday["equity"]) + float(ext_market_value)
     else:
-        prev_equity = initial_cap + ext_market_value
+        prev_equity = today_equity + float(ext_market_value)
 
-    total_invested = initial_cap + ext_cost_basis
+    total_invested = initial_cap + float(ext_cost_basis)
     total_return = total_equity - total_invested
     total_pct = (total_return / total_invested * 100) if total_invested else 0
 
     return {
         "has_data": True,
         "date": str(core_today["date"]) if core_today else str(date.today()),
-        "equity": round(total_equity, 2),
-        "cash": float(core_today["cash"]) if core_today else initial_cap,
-        "open_positions": (core_today["open_positions"] if core_today else 0) + ext_count,
-        "daily_change": round(total_equity - prev_equity, 2),
-        "daily_pct": round(((total_equity - prev_equity)/prev_equity*100), 2) if prev_equity else 0,
-        "total_return": round(total_return, 2),
-        "total_pct": round(total_pct, 2),
-        "initial_capital": initial_cap,
-        "external_cost": round(ext_cost_basis, 2),
-        "total_invested": round(total_invested, 2)
+        "equity": float(round(total_equity, 2)),
+        "cash": float(round(today_cash, 2)),
+        "open_positions": int((core_today["open_positions"] if core_today else 0) + ext_count),
+        "daily_change": float(round(total_equity - prev_equity, 2)),
+        "daily_pct": float(round(((total_equity - prev_equity)/prev_equity*100), 2)) if prev_equity else 0.0,
+        "total_return": float(round(total_return, 2)),
+        "total_pct": float(round(total_pct, 2)),
+        "initial_capital": float(initial_cap),
+        "external_cost": float(round(ext_cost_basis, 2)),
+        "total_invested": float(round(total_invested, 2))
     }
