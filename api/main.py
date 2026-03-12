@@ -19,6 +19,14 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.on_event("startup")
+async def startup_event():
+    print("=== Registered Routes ===")
+    for route in app.routes:
+        if hasattr(route, "path"):
+            print(f"  {route.path} -> {route.name}")
+    print("=========================")
+
 # Global exception handler — surface actual errors
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -76,33 +84,47 @@ def db_test():
 @app.get("/api/db-debug")
 def db_debug():
     """List all tables the app actually sees in the connected database."""
-    from api.deps import get_db
+    import os, psycopg2
     try:
-        # Get one connection from the generator
-        conn = next(get_db())
+        database_url = os.getenv("DATABASE_URL", "")
+        if not database_url:
+             return {"status": "error", "message": "DATABASE_URL is missing from environment"}
+             
+        conn = psycopg2.connect(database_url, sslmode="require")
         cur = conn.cursor()
+        
+        # 1. Get Tables
         cur.execute("""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public'
             ORDER BY table_name;
         """)
-        tables = [r["table_name"] if isinstance(r, dict) else r[0] for r in cur.fetchall()]
+        tables = [r[0] for r in cur.fetchall()]
         
+        # 2. Get DB Name
         cur.execute("SELECT current_database();")
-        db_name = cur.fetchone()
-        db_name = db_name["current_database"] if isinstance(db_name, dict) else db_name[0]
+        db_name = cur.fetchone()[0]
+
+        # 3. Get Schema Search Path
+        cur.execute("SHOW search_path;")
+        search_path = cur.fetchone()[0]
         
         cur.close()
         conn.close()
+        
+        masked_url = database_url.split("@")[-1] if "@" in database_url else "hidden"
+        
         return {
             "status": "connected",
             "database": db_name,
+            "search_path": search_path,
             "tables_found": tables,
-            "url_host": os.getenv("DATABASE_URL", "").split("@")[-1].split("/")[0] if "@" in os.getenv("DATABASE_URL", "") else "hidden"
+            "external_host_from_url": masked_url.split("/")[0]
         }
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        import traceback
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
 
 
 @app.get("/api/admin/survivorship-check")
