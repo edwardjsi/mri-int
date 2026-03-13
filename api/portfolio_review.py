@@ -22,14 +22,17 @@ router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
 
 
 def _get_external_holdings_count(conn, client_id: str) -> int:
-    cur = conn.cursor()
+    # Note: our DB connections are created with RealDictCursor by default (see api/deps.py),
+    # so fetchone() returns dict-like rows. Avoid numeric indexing (KeyError: 0).
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
         ensure_client_external_holdings_table(conn)
         cur.execute(
-            "SELECT COUNT(*) FROM client_external_holdings WHERE client_id = %s",
+            "SELECT COUNT(*) AS holdings_count FROM client_external_holdings WHERE client_id = %s",
             (client_id,),
         )
-        return int(cur.fetchone()[0])
+        row = cur.fetchone()
+        return int(row["holdings_count"]) if row and row.get("holdings_count") is not None else 0
     finally:
         cur.close()
 
@@ -46,7 +49,8 @@ def holdings_status(
         cur = conn.cursor(cursor_factory=RealDictCursor)
         try:
             cur.execute("SELECT current_database() AS db")
-            db = cur.fetchone().get("db")
+            row = cur.fetchone()
+            db = row.get("db") if row else None
         finally:
             cur.close()
         return {"storage_ready": True, "client_id": client_id, "holdings_count": count, "database": db}
