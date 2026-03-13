@@ -472,6 +472,18 @@ def delete_all_holdings(
         cur.close()
 
 
+@router.post("/holdings/delete-all")
+def delete_all_holdings_post(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """
+    Delete-all alternative to support environments that block/strip DELETE.
+    Frontend should prefer this endpoint.
+    """
+    return delete_all_holdings(client=client, conn=conn)
+
+
 @router.get("/quick/{symbol}")
 def quick_check(
     symbol: str,

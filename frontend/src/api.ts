@@ -148,8 +148,8 @@ export const api = {
         }),
 
     deleteAllHoldings: () =>
-        apiFetch('/portfolio-review/holdings', {
-            method: 'DELETE',
+        apiFetch('/portfolio-review/holdings/delete-all', {
+            method: 'POST',
         }),
 
     // Capital

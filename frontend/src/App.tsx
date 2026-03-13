@@ -673,6 +673,7 @@ function RiskAuditPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [savedSortConfig, setSavedSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [deleteAllArmed, setDeleteAllArmed] = useState(false);
 
   const [savedLoading, setSavedLoading] = useState(false);
 
@@ -882,15 +883,21 @@ function RiskAuditPage() {
     }
   };
 
-	const handleDeleteAllHoldings = async () => {
-	    if (!confirm('Delete ALL saved Digital Twin holdings? This cannot be undone.')) return;
+	  const handleDeleteAllHoldings = async () => {
+	    if (!deleteAllArmed) {
+	      setDeleteAllArmed(true);
+	      window.setTimeout(() => setDeleteAllArmed(false), 8000);
+	      return;
+	    }
 	    try {
 	      const resp = await api.deleteAllHoldings();
 	      const persisted = resp?.persisted_holdings_count !== undefined ? `Remaining: ${resp.persisted_holdings_count}` : '';
 	      alert(`Holdings deleted. ${persisted}`.trim());
 	      loadSavedHoldings();
 	      loadHoldingsStatus();
+	      setDeleteAllArmed(false);
 	    } catch (err: any) {
+	      setDeleteAllArmed(false);
 	      alert(err.message || 'Failed to delete holdings');
 	    }
 	  };
@@ -948,9 +955,21 @@ function RiskAuditPage() {
 	      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
 	        <h2 className="section-title" style={{ margin: 0 }}>🛡️ My Holdings (Digital Twin)</h2>
 	        {canDeleteSavedHoldings && (
-	          <button className="btn-danger" onClick={handleDeleteAllHoldings} style={{ padding: '8px 12px' }}>
-	            🗑️ Delete Saved Portfolio
-	          </button>
+	          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+	            {deleteAllArmed && (
+	              <div style={{ color: '#fecaca', fontSize: '12px', fontWeight: 700 }}>
+	                Click again to permanently delete all holdings
+	              </div>
+	            )}
+	            <button className="btn-danger" onClick={handleDeleteAllHoldings} style={{ padding: '8px 12px' }}>
+	              {deleteAllArmed ? '⚠️ Confirm Delete All' : '🗑️ Delete Saved Portfolio'}
+	            </button>
+	            {deleteAllArmed && (
+	              <button className="link-btn" onClick={() => setDeleteAllArmed(false)}>
+	                Cancel
+	              </button>
+	            )}
+	          </div>
 	        )}
 	      </div>
 	      <p className="section-subtitle">

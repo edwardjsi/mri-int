@@ -489,3 +489,15 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### Next Session Must Start With
 > - Ask a tester to confirm the delete button + upload-below-portfolio behavior on production (Render) after a hard refresh.
+
+
+---
+
+## Session 016 — 2026-03-13
+
+### What Was Done
+- Fixed “Method Not Allowed” on delete-all holdings by adding a POST alternative endpoint: `POST /api/portfolio-review/holdings/delete-all` (frontend now uses this).
+- Improved delete-all UX to a safer 2-step flow: first click arms deletion with a warning; second click confirms; includes Cancel.
+
+### Current State
+- Per-stock delete remains the primary workflow; delete-all works as an explicit “nuke” option with a deliberate confirmation.
