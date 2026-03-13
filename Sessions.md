@@ -398,3 +398,72 @@ Designed the full architecture for a client-facing testing platform (Decision 02
 > - Deploy API + frontend to AWS (ECS or EC2)
 > - Set up cron entry for daily pipeline
 > - Expand data to Nifty 500
+
+---
+
+## Session 011 — 2026-03-12
+
+### What Was Done
+- Hardened the Digital Twin holdings persistence: API now ensures client_external_holdings exists before save/load/delete (auto-create if missing).
+- Updated CSV upload endpoint to report digital_twin_saved / digital_twin_error for debugging when persistence fails.
+- Made dashboard portfolio endpoints tolerant of missing holdings table (external holdings treated as empty instead of 500).
+
+### Current State
+- After a CSV upload, holdings should persist and show up in the app with per-row delete support.
+
+### Next Session Must Start With
+> - Request AWS SES Production Access
+> - Add cron entry on production server for daily pipeline
+
+
+---
+
+## Session 012 — 2026-03-12
+
+### What Was Done
+- Updated Render blueprint to run the full stack on Render: API (Docker), Frontend (Static Site), and a daily Cron pipeline job.
+- Fixed API container to bind to Render’s $PORT (was hardcoded to 8000).
+- Made price-table initialization non-destructive: removed DROP TABLE from src/db.py:create_tables() and added nsure_price_tables() used by incremental ingestion.
+
+### Current State
+- Render can host frontend + API, and run the daily pipeline as a cron job against Neon.
+
+### Next Session Must Start With
+> - Set Render env vars (DATABASE_URL, CORS_ORIGINS, AWS creds, SES_SENDER_EMAIL, VITE_API_URL)
+> - Verify cron runs successfully and sends a test email
+
+
+---
+
+## Session 013 — 2026-03-12
+
+### What Was Done
+- Switched daily scheduling to GitHub Actions (avoids Render Cron billing requirement).
+- Updated .github/workflows/daily_pipeline.yml to run at 11:00 UTC (4:30 PM IST) on weekdays and execute scripts/pipeline_cloud.sh.
+- Removed the 	ype: cron resource from 
+ender.yaml so the Render blueprint deploy no longer asks for a credit card.
+
+### Next Session Must Start With
+> - Add GitHub repo secrets: DATABASE_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+> - Manually run the workflow once and check logs
+
+
+
+---
+
+## Session 014 — 2026-03-13
+
+### What Was Done
+- Fixed Digital Twin persistence observability: writes now return a verified post-commit holdings count (persisted_holdings_count / digital_twin_row_count).
+- Added a holdings storage status endpoint: `GET /api/portfolio-review/holdings-status` returns storage_ready + holdings_count + database.
+- Added a "Storage Status" diagnostics box in the Risk Audit UI so database + client_id mismatches are visible immediately.
+- Frontend now surfaces Digital Twin load failures instead of silently showing an empty state, and shows persisted counts after save/upload when available.
+
+### Current State
+- If holdings are truly persisting, both the save response and `holdings-status` will show a non-zero holdings_count for the logged-in client.
+- If they are not persisting, the UI will now show the concrete error (or storage_ready=false) rather than hiding it.
+
+### Next Session Must Start With
+> - Hit `GET /api/portfolio-review/holdings-status` in production (after a save) and confirm holdings_count increments for the same client_id.
+> - If holdings_count increments but UI is empty, verify `VITE_API_URL` and CORS.
+> - If holdings_count stays 0, confirm `DATABASE_URL` on the API service points to the intended Neon project/branch.

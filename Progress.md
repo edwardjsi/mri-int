@@ -161,3 +161,22 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Run `run_bridge_load.sh` for remaining 450 stocks
 - [x] Rerun engines on full 500-stock universe
 - [x] Verify performance metrics hold
+
+---
+
+### Phase 2 Addendum - Digital Twin Persistence (2026-03-12)
+- [x] API ensures client_external_holdings exists before save/load/delete (prevents "upload succeeded but holdings not visible" issues on Neon/Render).
+
+- [x] API + frontend now report verified persisted holdings counts and expose `GET /api/portfolio-review/holdings-status` for diagnostics (2026-03-13).
+- [x] Risk Audit UI shows a "Storage Status" box (database + client_id + holdings_count) for fast environment mismatch debugging (2026-03-13).
+---
+
+### Phase 2 Addendum - Render Full Stack (2026-03-12)
+- [x] Render blueprint includes API + frontend + daily cron pipeline job.
+- [x] API Dockerfile binds to Render $PORT.
+- [x] Price table creation is non-destructive; incremental loaders ensure tables exist.
+
+---
+
+### Phase 2 Addendum - Scheduling Without Render Cron (2026-03-12)
+- [x] Daily pipeline runs via GitHub Actions schedule (no Render billing/credit card required).

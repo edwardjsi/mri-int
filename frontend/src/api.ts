@@ -134,6 +134,7 @@ export const api = {
     },
 
     getSavedHoldings: () => apiFetch('/portfolio-review/holdings'),
+    getHoldingsStatus: () => apiFetch('/portfolio-review/holdings-status'),
 
     saveHoldingsBulk: (holdings: { symbol: string, quantity: number, avg_cost: number }[]) =>
         apiFetch('/portfolio-review/save-bulk', {

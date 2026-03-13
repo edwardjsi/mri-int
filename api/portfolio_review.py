@@ -21,6 +21,40 @@ from src.on_demand_ingest import ingest_missing_symbols_sync
 router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
 
 
+def _get_external_holdings_count(conn, client_id: str) -> int:
+    cur = conn.cursor()
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            "SELECT COUNT(*) FROM client_external_holdings WHERE client_id = %s",
+            (client_id,),
+        )
+        return int(cur.fetchone()[0])
+    finally:
+        cur.close()
+
+
+@router.get("/holdings-status")
+def holdings_status(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Return storage readiness + persisted holdings count for the authenticated client."""
+    client_id = str(client["id"])
+    try:
+        count = _get_external_holdings_count(conn, client_id)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cur.execute("SELECT current_database() AS db")
+            db = cur.fetchone().get("db")
+        finally:
+            cur.close()
+        return {"storage_ready": True, "client_id": client_id, "holdings_count": count, "database": db}
+    except Exception as e:
+        conn.rollback()
+        return {"storage_ready": False, "client_id": client_id, "error": str(e)}
+
+
 class HoldingInput(BaseModel):
     symbol: str
     quantity: float = Field(default=0.0, ge=0, description="Number of shares held")
@@ -138,6 +172,7 @@ async def upload_csv(
                     )
                 conn.commit()
                 digital_twin_saved = True
+                result["digital_twin_row_count"] = _get_external_holdings_count(conn, str(client["id"]))
             except Exception as e:
                 print(f"DEBUG: Auto-save failed during upload: {e}")
                 conn.rollback()
@@ -253,7 +288,8 @@ def save_holdings_bulk(
 
         conn.commit()
         print(f"DEBUG: Successfully bulk saved {len(body)} symbols")
-        return {"status": "success", "count": len(body)}
+        persisted = _get_external_holdings_count(conn, client_id)
+        return {"status": "success", "count": len(body), "persisted_holdings_count": persisted}
     except Exception as e:
         print(f"DEBUG: Bulk save error: {e}")
         conn.rollback()
@@ -288,7 +324,8 @@ def save_holding(
         )
         conn.commit()
         print(f"DEBUG: Successfully saved {body.symbol}")
-        return {"status": "success", "message": f"Saved {body.symbol}"}
+        persisted = _get_external_holdings_count(conn, client_id)
+        return {"status": "success", "message": f"Saved {body.symbol}", "persisted_holdings_count": persisted}
     except Exception as e:
         print(f"DEBUG: Error saving {body.symbol}: {e}")
         conn.rollback()
@@ -315,7 +352,8 @@ def delete_holding(
             (str(client["id"]), symbol.upper().strip()),
         )
         conn.commit()
-        return {"status": "success", "message": f"Deleted {symbol}"}
+        persisted = _get_external_holdings_count(conn, str(client["id"]))
+        return {"status": "success", "message": f"Deleted {symbol}", "persisted_holdings_count": persisted}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))

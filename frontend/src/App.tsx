@@ -666,19 +666,37 @@ function RiskAuditPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [savedResult, setSavedResult] = useState<any>(null);
+  const [savedError, setSavedError] = useState('');
+  const [holdingsStatus, setHoldingsStatus] = useState<any>(null);
+  const [holdingsStatusLoading, setHoldingsStatusLoading] = useState(false);
   const [error, setError] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const [savedLoading, setSavedLoading] = useState(false);
 
+  const loadHoldingsStatus = async () => {
+    setHoldingsStatusLoading(true);
+    try {
+      const data = await api.getHoldingsStatus();
+      setHoldingsStatus(data);
+    } catch (err: any) {
+      setHoldingsStatus({ storage_ready: false, error: err?.message || 'Failed to load holdings status' });
+    } finally {
+      setHoldingsStatusLoading(false);
+    }
+  };
+
   const loadSavedHoldings = async () => {
     setSavedLoading(true);
     try {
+      setSavedError('');
       const data = await api.getSavedHoldings();
       setSavedResult(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load saved holdings', err);
+      setSavedResult(null);
+      setSavedError(err?.message || 'Failed to load saved holdings');
     } finally {
       setSavedLoading(false);
     }
@@ -686,6 +704,7 @@ function RiskAuditPage() {
 
   useEffect(() => {
     loadSavedHoldings();
+    loadHoldingsStatus();
   }, []);
 
   const handleSort = (key: string) => {
@@ -756,8 +775,10 @@ function RiskAuditPage() {
       const data = await api.uploadPortfolioCsv(file);
       setResult(data);
       await loadSavedHoldings();
+      await loadHoldingsStatus();
       if (data?.digital_twin_saved) {
-        alert('Portfolio uploaded and analyzed! Holdings have been saved to your Digital Twin.');
+        const persisted = (data?.digital_twin_row_count !== undefined && data?.digital_twin_row_count !== null) ? ` (Persisted: ${data.digital_twin_row_count})` : '';
+        alert(`Portfolio uploaded and analyzed! Holdings have been saved to your Digital Twin.${persisted}`);
       } else {
         const extra = data?.digital_twin_error ? `\n\nSave failed: ${data.digital_twin_error}` : '';
         alert(`Portfolio uploaded and analyzed, but could not save holdings to your Digital Twin.${extra}`);
@@ -781,10 +802,12 @@ function RiskAuditPage() {
         avg_cost: h.avg_cost
       }));
       
-      await api.saveHoldingsBulk(holdingsToSave);
+      const resp = await api.saveHoldingsBulk(holdingsToSave);
+      const persisted = resp?.persisted_holdings_count !== undefined ? ` (Persisted: ${resp.persisted_holdings_count})` : '';
       
-      alert(`Success: ${holdingsToSave.length} holdings saved to your Digital Twin!`);
+      alert(`Success: ${holdingsToSave.length} holdings saved to your Digital Twin!${persisted}`);
       loadSavedHoldings();
+      loadHoldingsStatus();
     } catch (err: any) {
       console.error('Save failed:', err);
       alert(err.message || 'Failed to save holdings to database');
@@ -798,6 +821,7 @@ function RiskAuditPage() {
     try {
       await api.deleteHolding(symbol);
       loadSavedHoldings();
+      loadHoldingsStatus();
     } catch (err: any) {
       alert(err.message || 'Failed to delete holding');
     }
@@ -954,8 +978,37 @@ function RiskAuditPage() {
           Your persistent portfolio layer. These assets are tracked in real-time against MRI intelligence.
         </p>
 
+        <div className="stats-row" style={{ marginTop: '12px' }}>
+          <div className="stat-card" style={{ flex: 1 }}>
+            <div className="stat-label">Storage Status</div>
+            <div className="card-meta" style={{ marginTop: '8px', lineHeight: 1.5 }}>
+              {holdingsStatusLoading ? (
+                <span>Checking…</span>
+              ) : holdingsStatus ? (
+                <>
+                  <div><b>storage_ready</b>: {String(!!holdingsStatus.storage_ready)}</div>
+                  {holdingsStatus.client_id && <div><b>client_id</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.client_id}</span></div>}
+                  {holdingsStatus.database && <div><b>database</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.database}</span></div>}
+                  {holdingsStatus.holdings_count !== undefined && holdingsStatus.holdings_count !== null && (
+                    <div><b>holdings_count</b>: {holdingsStatus.holdings_count}</div>
+                  )}
+                  {holdingsStatus.error && (
+                    <div style={{ color: '#ef4444', marginTop: '6px' }}><b>error</b>: {String(holdingsStatus.error)}</div>
+                  )}
+                </>
+              ) : (
+                <span>Not available</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {savedLoading ? (
           <div className="loading">📡 Loading your Digital Twin...</div>
+        ) : savedError ? (
+          <div className="empty-state">⚠️ Could not load your Digital Twin: {savedError}</div>
+        ) : savedResult && savedResult.storage_ready === false ? (
+          <div className="empty-state">⚠️ Holdings storage not ready yet: {savedResult.summary || savedResult.error || 'Unknown error'}</div>
         ) : savedResult && savedResult.holdings && savedResult.holdings.length > 0 ? (
           <>
             <div className="stats-row">
