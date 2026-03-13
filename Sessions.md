@@ -546,3 +546,12 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### Current State
 - Dashboard should always show saved Digital Twin holdings in “My Holdings”, even if regime/score tables are temporarily unavailable.
+
+
+---
+
+## Session 021 — 2026-03-13
+
+### What Was Done
+- Fixed “scores never show up” by adding a targeted scoring path: `compute_stock_scores_for_symbols()` computes `stock_scores` only for portfolio symbols (fast), instead of scanning/scoring the entire database.
+- Updated both async ingestion and manual regrade to use targeted scoring.

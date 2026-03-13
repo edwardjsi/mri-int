@@ -198,6 +198,95 @@ def compute_stock_scores():
     logger.info(f"Stock score computation complete. {total_inserted:,} new rows scored.")
 
 
+def compute_stock_scores_for_symbols(symbols: list[str]):
+    """
+    Compute scores only for the provided symbols (fast path for on-demand portfolio grading).
+    """
+    symbols_clean = [str(s).upper().strip() for s in (symbols or []) if str(s).strip()]
+    if not symbols_clean:
+        logger.info("No symbols provided. Skipping targeted scoring.")
+        return
+
+    create_market_regime_and_scores_tables()
+
+    conn = get_connection()
+    try:
+        pending_cur = conn.cursor()
+        pending_cur.execute(
+            """
+            SELECT COUNT(*)
+            FROM daily_prices dp
+            LEFT JOIN stock_scores ss ON dp.symbol = ss.symbol AND dp.date = ss.date
+            WHERE dp.symbol = ANY(%s)
+              AND (dp.ema_50 IS NOT NULL OR dp.rolling_high_6m IS NOT NULL)
+              AND ss.date IS NULL
+            """,
+            (symbols_clean,),
+        )
+        pending_count = pending_cur.fetchone()[0]
+        pending_cur.close()
+
+        if pending_count == 0:
+            logger.info("All rows already have scores for provided symbols. Skipping targeted scoring.")
+            return
+
+        logger.info(f"Targeted scoring: {pending_count:,} row(s) pending for {len(symbols_clean)} symbol(s).")
+
+        df = pd.read_sql(
+            """
+            SELECT dp.symbol, dp.date, dp.close, dp.volume, dp.ema_50, dp.ema_200,
+                   dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d
+            FROM daily_prices dp
+            LEFT JOIN stock_scores ss ON dp.symbol = ss.symbol AND dp.date = ss.date
+            WHERE dp.symbol = ANY(%s)
+              AND (dp.ema_50 IS NOT NULL OR dp.rolling_high_6m IS NOT NULL)
+              AND ss.date IS NULL
+            ORDER BY dp.symbol, dp.date
+            """,
+            conn,
+            params=(symbols_clean,),
+        )
+
+        if df is None or df.empty:
+            logger.info("Targeted scoring query returned 0 rows. Nothing to do.")
+            return
+
+        df['condition_ema_50_200'] = (df['ema_50'] > df['ema_200']).fillna(False).astype(bool)
+        df['condition_ema_200_slope'] = (df['ema_200_slope_20'] > 0).fillna(False).astype(bool)
+        df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m']).fillna(False).astype(bool)
+        df['condition_volume'] = (df['volume'] > (1.5 * df['avg_volume_20d'])).fillna(False).astype(bool)
+        df['condition_rs'] = (df['rs_90d'] > 0).fillna(False).astype(bool)
+
+        bool_cols = [
+            'condition_ema_50_200', 'condition_ema_200_slope',
+            'condition_6m_high', 'condition_volume', 'condition_rs'
+        ]
+        df['total_score'] = df[bool_cols].sum(axis=1)
+
+        df.replace({np.nan: None}, inplace=True)
+        update_data = df[['date', 'symbol', 'total_score', 'condition_ema_50_200',
+                          'condition_ema_200_slope', 'condition_6m_high',
+                          'condition_volume', 'condition_rs']].to_dict('records')
+
+        insert_cur = conn.cursor()
+        insert_sql = """
+            INSERT INTO stock_scores (
+                date, symbol, total_score, condition_ema_50_200,
+                condition_ema_200_slope, condition_6m_high, condition_volume, condition_rs
+            ) VALUES (
+                %(date)s, %(symbol)s, %(total_score)s, %(condition_ema_50_200)s,
+                %(condition_ema_200_slope)s, %(condition_6m_high)s, %(condition_volume)s, %(condition_rs)s
+            ) ON CONFLICT (date, symbol) DO NOTHING;
+        """
+        execute_batch(insert_cur, insert_sql, update_data, page_size=5000)
+        conn.commit()
+        insert_cur.close()
+
+        logger.info(f"Targeted scoring complete. {len(update_data):,} row(s) scored.")
+    finally:
+        conn.close()
+
+
 if __name__ == "__main__":
     create_market_regime_and_scores_tables()
     compute_market_regime()
