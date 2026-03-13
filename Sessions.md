@@ -501,3 +501,29 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### Current State
 - Per-stock delete remains the primary workflow; delete-all works as an explicit “nuke” option with a deliberate confirmation.
+
+
+---
+
+## Session 017 — 2026-03-13
+
+### What Was Done
+- Fixed “holdings never get graded” after persistence uploads by making on-demand ingestion compute indicators for *only the missing/ungraded symbols* (instead of loading the full `daily_prices` table).
+- `src/indicator_engine.py` now supports `fetch_data_for_symbols()` for targeted indicator computation.
+- `src/on_demand_ingest.py` now uses targeted indicator computation + ensures `stock_scores` tables exist before scoring.
+- `GET /api/portfolio-review/holdings-status` now includes `ungraded_symbols_count` to make grading progress visible in the UI.
+
+### Current State
+- After an upload that triggers async ingestion, symbols should become scoreable once the targeted indicator + score pass completes (minutes, not hours), and `ungraded_symbols_count` should trend toward 0.
+
+
+---
+
+## Session 018 — 2026-03-13
+
+### What Was Done
+- Added a manual recovery path for grading: `POST /api/portfolio-review/holdings/regrade` triggers targeted indicator + score computation for the client’s saved holdings (no re-upload needed).
+- Added a “🔄 Regrade Holdings” button in the Digital Twin header to invoke the endpoint.
+
+### Current State
+- If a user’s portfolio persists but scores remain `UNKNOWN`, they can trigger regrading and then refresh to see scores populate; `ungraded_symbols_count` should drop.

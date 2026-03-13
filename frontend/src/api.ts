@@ -152,6 +152,11 @@ export const api = {
             method: 'POST',
         }),
 
+    regradeHoldings: () =>
+        apiFetch('/portfolio-review/holdings/regrade', {
+            method: 'POST',
+        }),
+
     // Capital
     addCapital: (amount: number) =>
         apiFetch('/auth/capital', {

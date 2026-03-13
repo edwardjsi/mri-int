@@ -70,6 +70,40 @@ def fetch_data():
     conn.close()
     return df, idx_df
 
+def fetch_data_for_symbols(symbols: list[str]):
+    """
+    Fetch daily prices for a specific set of symbols (for on-demand ingestion/grading).
+    This avoids loading the entire daily_prices table when only a few symbols were added.
+    """
+    if not symbols:
+        return None, None
+
+    symbols_clean = [str(s).upper().strip() for s in symbols if str(s).strip()]
+    if not symbols_clean:
+        return None, None
+
+    conn = get_connection()
+    logger.info(f"Fetching daily prices for {len(symbols_clean)} symbol(s) for indicator computation...")
+
+    df = pd.read_sql(
+        """
+        SELECT id, symbol, date, high, close, volume, ema_50
+        FROM daily_prices
+        WHERE symbol = ANY(%s)
+        ORDER BY symbol, date
+        """,
+        conn,
+        params=(symbols_clean,),
+    )
+
+    logger.info("Fetching index prices for Relative Strength...")
+    idx_df = pd.read_sql(
+        "SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date",
+        conn,
+    )
+    conn.close()
+    return df, idx_df
+
 def calc_slope(s):
     """Calculate 20-day linear regression slope."""
     result = np.full(len(s), np.nan)

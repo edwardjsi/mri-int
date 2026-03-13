@@ -902,6 +902,16 @@ function RiskAuditPage() {
 	    }
 	  };
 
+	  const handleRegradeHoldings = async () => {
+	    try {
+	      const resp = await api.regradeHoldings();
+	      const n = resp?.symbols_count !== undefined ? ` (${resp.symbols_count} symbols)` : '';
+	      alert(`Regrade started${n}. Refresh in a minute to see updated scores.`);
+	    } catch (err: any) {
+	      alert(err.message || 'Failed to start regrade');
+	    }
+	  };
+
 	  const hasSavedHoldings = !!(savedResult && savedResult.holdings && savedResult.holdings.length > 0);
 	  const canDeleteSavedHoldings = (holdingsStatus?.holdings_count ?? 0) > 0 || hasSavedHoldings;
 
@@ -956,6 +966,9 @@ function RiskAuditPage() {
 	        <h2 className="section-title" style={{ margin: 0 }}>🛡️ My Holdings (Digital Twin)</h2>
 	        {canDeleteSavedHoldings && (
 	          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+	            <button className="btn-secondary" onClick={handleRegradeHoldings} style={{ padding: '8px 12px' }}>
+	              🔄 Regrade Holdings
+	            </button>
 	            {deleteAllArmed && (
 	              <div style={{ color: '#fecaca', fontSize: '12px', fontWeight: 700 }}>
 	                Click again to permanently delete all holdings
@@ -987,14 +1000,17 @@ function RiskAuditPage() {
 	                <div><b>storage_ready</b>: {String(!!holdingsStatus.storage_ready)}</div>
 	                {holdingsStatus.client_id && <div><b>client_id</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.client_id}</span></div>}
 	                {holdingsStatus.database && <div><b>database</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.database}</span></div>}
-	                {holdingsStatus.holdings_count !== undefined && holdingsStatus.holdings_count !== null && (
-	                  <div><b>holdings_count</b>: {holdingsStatus.holdings_count}</div>
-	                )}
-	                {holdingsStatus.error && (
-	                  <div style={{ color: '#ef4444', marginTop: '6px' }}><b>error</b>: {String(holdingsStatus.error)}</div>
-	                )}
-	              </>
-	            ) : (
+	                  {holdingsStatus.holdings_count !== undefined && holdingsStatus.holdings_count !== null && (
+	                    <div><b>holdings_count</b>: {holdingsStatus.holdings_count}</div>
+	                  )}
+	                  {holdingsStatus.ungraded_symbols_count !== undefined && holdingsStatus.ungraded_symbols_count !== null && (
+	                    <div><b>ungraded_symbols_count</b>: {holdingsStatus.ungraded_symbols_count}</div>
+	                  )}
+	                  {holdingsStatus.error && (
+	                    <div style={{ color: '#ef4444', marginTop: '6px' }}><b>error</b>: {String(holdingsStatus.error)}</div>
+	                  )}
+	                </>
+	              ) : (
 	              <span>Not available</span>
 	            )}
 	          </div>

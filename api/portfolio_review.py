@@ -16,7 +16,7 @@ from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
 from api.schema import ensure_client_external_holdings_table
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
-from src.on_demand_ingest import ingest_missing_symbols_sync
+from src.on_demand_ingest import ingest_missing_symbols_sync, grade_symbols_sync
 from src.yahoo_quotes import fetch_quotes
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
@@ -66,6 +66,33 @@ def _get_external_holdings_count(conn, client_id: str) -> int:
         cur.close()
 
 
+def _get_ungraded_symbols_count(conn, client_id: str) -> int | None:
+    """
+    Count how many persisted external-holding symbols have no entry in stock_scores at all.
+    If stock_scores doesn't exist yet, return None (unknown).
+    """
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT COUNT(*) AS ungraded_count
+            FROM client_external_holdings h
+            LEFT JOIN (SELECT DISTINCT symbol FROM stock_scores) s
+              ON s.symbol = h.symbol
+            WHERE h.client_id = %s
+              AND s.symbol IS NULL
+            """,
+            (client_id,),
+        )
+        row = cur.fetchone()
+        return int(row["ungraded_count"]) if row and row.get("ungraded_count") is not None else 0
+    except Exception:
+        return None
+    finally:
+        cur.close()
+
+
 @router.get("/holdings-status")
 def holdings_status(
     client=Depends(get_current_client),
@@ -75,6 +102,7 @@ def holdings_status(
     client_id = str(client["id"])
     try:
         count = _get_external_holdings_count(conn, client_id)
+        ungraded = _get_ungraded_symbols_count(conn, client_id)
         cur = conn.cursor(cursor_factory=RealDictCursor)
         try:
             cur.execute("SELECT current_database() AS db")
@@ -82,7 +110,13 @@ def holdings_status(
             db = row.get("db") if row else None
         finally:
             cur.close()
-        return {"storage_ready": True, "client_id": client_id, "holdings_count": count, "database": db}
+        return {
+            "storage_ready": True,
+            "client_id": client_id,
+            "holdings_count": count,
+            "ungraded_symbols_count": ungraded,
+            "database": db,
+        }
     except Exception as e:
         conn.rollback()
         return {"storage_ready": False, "client_id": client_id, "error": str(e)}
@@ -344,6 +378,42 @@ def get_holdings(
             "analysis_error": str(e),
         }
         return _attach_quotes(fallback, quotes_by_symbol, quotes_error)
+
+
+@router.post("/holdings/regrade")
+def regrade_holdings(
+    background_tasks: BackgroundTasks,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """
+    Kick off a targeted regrade of the client's persisted holdings.
+    Useful if the portfolio was persisted but scores/indicators were not computed yet.
+    """
+    client_id = str(client["id"])
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            ORDER BY symbol
+            """,
+            (client_id,),
+        )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+
+    holdings = [dict(r) for r in (rows or [])]
+    symbols = [str(h.get("symbol", "")).upper().strip() for h in holdings if h.get("symbol")]
+    if not symbols:
+        return {"status": "noop", "message": "No saved holdings to regrade."}
+
+    background_tasks.add_task(grade_symbols_sync, symbols, holdings)
+    return {"status": "started", "symbols_count": len(symbols)}
 
 
 @router.post("/save-bulk")

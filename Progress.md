@@ -174,6 +174,8 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Added delete-all Digital Twin holdings endpoint + UI control to reset a saved portfolio (2026-03-13).
 - [x] Risk Audit UX: show saved portfolio first and render upload/replace panel below it when holdings exist; delete button is now prominent (2026-03-13).
 - [x] Delete-all holdings uses `POST /api/portfolio-review/holdings/delete-all` + 2-step confirm to avoid “Method Not Allowed” environments (2026-03-13).
+- [x] On-demand ingestion now grades missing/ungraded symbols using targeted indicator computation (avoids full-table indicator runs that could stall for hours) and exposes `ungraded_symbols_count` in holdings-status (2026-03-13).
+- [x] Added `POST /api/portfolio-review/holdings/regrade` + UI button to manually trigger grading for persisted portfolios that are stuck ungraded (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 - [x] Risk Audit now attempts live Yahoo Finance pricing and clearly labels fallback to EOD DB prices (2026-03-13).
 - [x] Risk Audit tables support full asc/desc sorting (including Current) and always display a price with LIVE/EOD/COST labeling (2026-03-13).

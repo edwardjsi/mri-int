@@ -3,12 +3,54 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from src.db import get_connection, insert_daily_prices
-from src.indicator_engine import fetch_data, compute_indicators, update_db_with_indicators, add_indicator_columns_if_missing
-from src.regime_engine import compute_stock_scores
+from src.indicator_engine import fetch_data_for_symbols, compute_indicators, update_db_with_indicators, add_indicator_columns_if_missing
+from src.regime_engine import create_market_regime_and_scores_tables, compute_stock_scores
 from src.portfolio_review_engine import analyze_portfolio
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def grade_symbols_sync(symbols: list[str], original_holdings: list | None = None):
+    """
+    Background task: compute indicators + stock scores for the given symbols only.
+    This is used to (re)grade persisted Digital Twin holdings without re-uploading CSVs.
+    """
+    symbols_clean = [str(s).upper().strip() for s in (symbols or []) if str(s).strip()]
+    if not symbols_clean:
+        logger.info("[GRADE] No symbols provided; skipping.")
+        return
+
+    logger.info(f"[GRADE] Starting grading for {len(symbols_clean)} symbol(s): {symbols_clean}")
+
+    try:
+        add_indicator_columns_if_missing()
+        data_df, idx_df = fetch_data_for_symbols(symbols_clean)
+        if data_df is not None and not data_df.empty:
+            updates = compute_indicators(data_df, idx_df)
+            if updates:
+                update_db_with_indicators(updates)
+                logger.info(f"[GRADE] Indicator engine: {len(updates)} row(s) updated.")
+
+        create_market_regime_and_scores_tables()
+        compute_stock_scores()
+        logger.info("[GRADE] Stock score engine complete.")
+
+        if original_holdings:
+            conn = None
+            try:
+                conn = get_connection()
+                report = analyze_portfolio(original_holdings, conn=conn)
+                logger.info(f"[GRADE] Re-analysis complete: {report.get('risk_level')} risk.")
+            except Exception as e:
+                logger.warning(f"[GRADE] Re-analysis failed: {e}")
+            finally:
+                if conn:
+                    conn.close()
+
+    except Exception as e:
+        logger.error(f"[GRADE] Grading failed: {e}")
+    finally:
+        logger.info("[GRADE] Grading pipeline finished.")
 
 
 def _flatten_yfinance_columns(df: pd.DataFrame, symbol: str) -> pd.DataFrame:
@@ -138,7 +180,7 @@ def ingest_missing_symbols_sync(
         logger.info("[INGEST] Running incremental indicator engine...")
         try:
             add_indicator_columns_if_missing()
-            data_df, idx_df = fetch_data()
+            data_df, idx_df = fetch_data_for_symbols(missing_symbols)
             if data_df is not None and not data_df.empty:
                 updates = compute_indicators(data_df, idx_df)
                 if updates:
@@ -149,6 +191,7 @@ def ingest_missing_symbols_sync(
 
         logger.info("[INGEST] Running incremental stock score engine...")
         try:
+            create_market_regime_and_scores_tables()
             compute_stock_scores()
             logger.info("[INGEST] Stock score engine complete.")
         except Exception as e:
