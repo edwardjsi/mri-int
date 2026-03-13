@@ -588,3 +588,11 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### What Was Done
 - Added a synchronous regrade endpoint `POST /api/portfolio-review/holdings/regrade-sync` and wired the UI to use it, because background tasks can be unreliable on some hosts. Clicking Regrade now returns updated holdings/scores immediately.
+
+
+---
+
+## Session 026 — 2026-03-13
+
+### What Was Done
+- Fixed password reset email robustness: reset links now point to the deployed frontend (not localhost), and SES sending logs clearly indicate missing AWS credentials / SES config issues.

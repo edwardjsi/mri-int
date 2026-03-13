@@ -15,6 +15,17 @@ logger = logging.getLogger(__name__)
 
 SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
+FRONTEND_URL = os.getenv("FRONTEND_URL", os.getenv("PUBLIC_FRONTEND_URL", "https://mri-frontend.onrender.com")).rstrip("/")
+
+
+def _aws_credentials_present() -> bool:
+    try:
+        sess = boto3.Session()
+        creds = sess.get_credentials()
+        frozen = creds.get_frozen_credentials() if creds else None
+        return bool(frozen and frozen.access_key and frozen.secret_key)
+    except Exception:
+        return False
 
 
 def get_connection():
@@ -110,9 +121,13 @@ def build_signal_email_html(client_name, signals, regime):
 
 def send_password_reset_email(email: str, name: str, token: str):
     """Send a password reset link to the user."""
+    if not _aws_credentials_present():
+        logger.error("❌ AWS credentials missing: cannot send SES reset email. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY on the API service.")
+        return False
+
     ses = boto3.client("ses", region_name=AWS_REGION)
-    
-    reset_link = f"http://localhost:5173/?reset_token={token}"
+
+    reset_link = f"{FRONTEND_URL}/?reset_token={token}"
     
     subject = "MRI - Password Reset Request"
     
@@ -148,7 +163,7 @@ def send_password_reset_email(email: str, name: str, token: str):
         logger.info(f"✅ Password reset email sent to {email}")
         return True
     except Exception as e:
-        logger.error(f"❌ Failed to send reset email to {email}: {e}")
+        logger.error(f"❌ Failed to send reset email to {email} via SES (region={AWS_REGION}, sender={SENDER_EMAIL}): {e}")
         return False
 
 

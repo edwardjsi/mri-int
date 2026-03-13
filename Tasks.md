@@ -48,3 +48,11 @@
 - [x] Calculate the above metrics retrospectively for the entire Nifty 500 dataset (~1.6M rows).
 - [x] Persist all calculated indicators to the RDS database.
 - [x] Verify there are no null values for the newly added columns (excluding necessary historical look-back nulls).
+
+---
+
+## 🔜 TODO — 2026-03-15
+- [ ] Fix SES region mismatch on production: set `AWS_REGION` to the SES region where `SES_SENDER_EMAIL` is verified (region codes look like `ap-south-1` or `ap-southeast-1` — **not** `asia-pacific-1`).
+- [ ] Confirm Render API env vars for email: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `SES_SENDER_EMAIL`, `FRONTEND_URL`.
+- [ ] Verify password reset email end-to-end (forgot → receive email → reset).
+- [ ] Verify daily signal emails end-to-end (pipeline writes `client_signals` + email sender runs without SES sandbox/identity errors).
