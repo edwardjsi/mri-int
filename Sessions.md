@@ -457,6 +457,7 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - Fixed Digital Twin persistence observability: writes now return a verified post-commit holdings count (persisted_holdings_count / digital_twin_row_count).
 - Added a holdings storage status endpoint: `GET /api/portfolio-review/holdings-status` returns storage_ready + holdings_count + database.
 - Added a "Storage Status" diagnostics box in the Risk Audit UI so database + client_id mismatches are visible immediately.
+- Fixed `holdings-status` returning `error: "0"` due to RealDictCursor default connection (KeyError on numeric indexing).
 - Frontend now surfaces Digital Twin load failures instead of silently showing an empty state, and shows persisted counts after save/upload when available.
 
 ### Current State
