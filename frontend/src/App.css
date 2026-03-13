@@ -444,6 +444,22 @@
   background: #64748b30;
 }
 
+.btn-danger {
+  padding: 8px;
+  background: #ef444420;
+  border: 1px solid #ef444440;
+  border-radius: 6px;
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-danger:hover {
+  background: #ef444430;
+}
+
 .action-status {
   padding: 6px 10px;
   border-radius: 6px;

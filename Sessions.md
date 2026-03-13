@@ -463,6 +463,7 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - Added "Delete Saved Portfolio" (delete-all external holdings) for Digital Twin reset.
 - Frontend now surfaces Digital Twin load failures instead of silently showing an empty state, and shows persisted counts after save/upload when available.
 - Added best-effort live price display via Yahoo Finance with explicit fallback note to end-of-day (yesterday) DB prices when live quotes are unavailable.
+- Fixed Risk Audit holdings tables: prices now always render with clear LIVE/EOD/COST labeling, pricing notes no longer hide holdings, and saved holdings columns are sortable asc/desc.
 
 ### Current State
 - If holdings are truly persisting, both the save response and `holdings-status` will show a non-zero holdings_count for the logged-in client.
@@ -472,3 +473,19 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 > - Hit `GET /api/portfolio-review/holdings-status` in production (after a save) and confirm holdings_count increments for the same client_id.
 > - If holdings_count increments but UI is empty, verify `VITE_API_URL` and CORS.
 > - If holdings_count stays 0, confirm `DATABASE_URL` on the API service points to the intended Neon project/branch.
+
+
+---
+
+## Session 015 — 2026-03-13
+
+### What Was Done
+- Risk Audit UX: when a user already has saved Digital Twin holdings, the Digital Twin table is shown first and the upload/replace CSV panel is rendered *below* it.
+- Made the delete-portfolio control hard to miss: promoted it into the Digital Twin section header and styled it as a red “danger” button.
+- Renamed saved Digital Twin summary “Total Value” → “Invested Value” for clarity.
+
+### Current State
+- Users can clearly delete their saved portfolio, and the upload/replace workflow is positioned under the displayed portfolio when one exists.
+
+### Next Session Must Start With
+> - Ask a tester to confirm the delete button + upload-below-portfolio behavior on production (Render) after a hard refresh.

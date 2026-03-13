@@ -172,8 +172,10 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Fixed `holdings-status` error `"0"` by using dict-safe cursor access for COUNT(*) on RealDictCursor connections (2026-03-13).
 - [x] `GET /api/portfolio-review/holdings` no longer throws 500 if analysis tables are missing; it returns saved holdings with `analysis_error` (2026-03-13).
 - [x] Added delete-all Digital Twin holdings endpoint + UI control to reset a saved portfolio (2026-03-13).
+- [x] Risk Audit UX: show saved portfolio first and render upload/replace panel below it when holdings exist; delete button is now prominent (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 - [x] Risk Audit now attempts live Yahoo Finance pricing and clearly labels fallback to EOD DB prices (2026-03-13).
+- [x] Risk Audit tables support full asc/desc sorting (including Current) and always display a price with LIVE/EOD/COST labeling (2026-03-13).
 ---
 
 ### Phase 2 Addendum - Render Full Stack (2026-03-12)
