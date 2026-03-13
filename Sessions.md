@@ -459,6 +459,8 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - Added a "Storage Status" diagnostics box in the Risk Audit UI so database + client_id mismatches are visible immediately.
 - Fixed `holdings-status` returning `error: "0"` due to RealDictCursor default connection (KeyError on numeric indexing).
 - Made `GET /api/portfolio-review/holdings` resilient: if MRI analysis fails, it still returns persisted holdings with a clear `analysis_error` instead of throwing 500.
+- Shrunk the Risk Audit CSV upload panel for better fit on laptops.
+- Added "Delete Saved Portfolio" (delete-all external holdings) for Digital Twin reset.
 - Frontend now surfaces Digital Twin load failures instead of silently showing an empty state, and shows persisted counts after save/upload when available.
 
 ### Current State

@@ -147,6 +147,11 @@ export const api = {
             method: 'DELETE',
         }),
 
+    deleteAllHoldings: () =>
+        apiFetch('/portfolio-review/holdings', {
+            method: 'DELETE',
+        }),
+
     // Capital
     addCapital: (amount: number) =>
         apiFetch('/auth/capital', {

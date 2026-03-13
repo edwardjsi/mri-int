@@ -813,7 +813,7 @@
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 2.5rem;
+  padding: 1.5rem;
   margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -825,7 +825,8 @@
 
 .upload-zone {
   width: 100%;
-  padding: 3rem 2rem;
+  padding: 1.5rem 1.25rem;
+  min-height: 140px;
   border: 2px dashed rgba(148, 163, 184, 0.3);
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.4);
@@ -845,7 +846,7 @@
 }
 
 .upload-icon {
-  font-size: 3rem;
+  font-size: 2.25rem;
   filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
 }
 
@@ -855,7 +856,7 @@
 
 .upload-main-text {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #f1f5f9;
   margin-bottom: 4px;

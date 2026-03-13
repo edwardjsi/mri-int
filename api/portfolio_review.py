@@ -412,6 +412,31 @@ def delete_holding(
         cur.close()
 
 
+@router.delete("/holdings")
+def delete_all_holdings(
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Remove all persisted external holdings for the authenticated client."""
+    client_id = str(client["id"])
+    cur = conn.cursor()
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            "DELETE FROM client_external_holdings WHERE client_id = %s",
+            (client_id,),
+        )
+        deleted = int(cur.rowcount or 0)
+        conn.commit()
+        persisted = _get_external_holdings_count(conn, client_id)
+        return {"status": "success", "deleted": deleted, "persisted_holdings_count": persisted}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+
+
 @router.get("/quick/{symbol}")
 def quick_check(
     symbol: str,

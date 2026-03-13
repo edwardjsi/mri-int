@@ -171,6 +171,8 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Risk Audit UI shows a "Storage Status" box (database + client_id + holdings_count) for fast environment mismatch debugging (2026-03-13).
 - [x] Fixed `holdings-status` error `"0"` by using dict-safe cursor access for COUNT(*) on RealDictCursor connections (2026-03-13).
 - [x] `GET /api/portfolio-review/holdings` no longer throws 500 if analysis tables are missing; it returns saved holdings with `analysis_error` (2026-03-13).
+- [x] Added delete-all Digital Twin holdings endpoint + UI control to reset a saved portfolio (2026-03-13).
+- [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 ---
 
 ### Phase 2 Addendum - Render Full Stack (2026-03-12)

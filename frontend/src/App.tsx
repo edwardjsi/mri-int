@@ -827,6 +827,19 @@ function RiskAuditPage() {
     }
   };
 
+  const handleDeleteAllHoldings = async () => {
+    if (!confirm('Delete ALL saved Digital Twin holdings? This cannot be undone.')) return;
+    try {
+      const resp = await api.deleteAllHoldings();
+      const persisted = resp?.persisted_holdings_count !== undefined ? `Remaining: ${resp.persisted_holdings_count}` : '';
+      alert(`Holdings deleted. ${persisted}`.trim());
+      loadSavedHoldings();
+      loadHoldingsStatus();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete holdings');
+    }
+  };
+
   return (
     <div className="risk-audit">
       <h2 className="section-title">Portfolio Risk Audit</h2>
@@ -1001,6 +1014,12 @@ function RiskAuditPage() {
               )}
             </div>
           </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+          <button className="btn-skip" onClick={handleDeleteAllHoldings} style={{ padding: '8px 12px' }}>
+            🗑️ Delete Saved Portfolio
+          </button>
         </div>
 
         {savedLoading ? (
