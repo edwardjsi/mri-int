@@ -535,3 +535,14 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### What Was Done
 - Fixed on-demand ingestion runtime: missing-symbol downloads are now bounded to ~3 years of history (enough for EMA-200) instead of attempting multi-decade pulls, so grading can complete reliably on Render.
+
+
+---
+
+## Session 020 — 2026-03-13
+
+### What Was Done
+- Fixed Dashboard “My Holdings” disappearing even when Digital Twin holdings exist: `GET /api/portfolio/positions` now gracefully falls back to showing External holdings using latest EOD close (or avg_cost) if the full MRI analysis fails.
+
+### Current State
+- Dashboard should always show saved Digital Twin holdings in “My Holdings”, even if regime/score tables are temporarily unavailable.

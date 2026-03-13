@@ -71,19 +71,58 @@ def get_open_positions(
     # Process External via Review Engine for valuation
     if external_rows:
         external_holdings = [dict(r) for r in external_rows]
-        analysis = analyze_portfolio(external_holdings, conn=conn)
-        for h in analysis.get("holdings", []):
-            positions.append(
-                {
-                    "source": "External",
-                    "symbol": h["symbol"],
-                    "entry_date": "N/A",
-                    "entry_price": float(h["avg_cost"]) if h["avg_cost"] else None,
-                    "quantity": h["quantity"],
-                    "current_price": float(h["current_price"]) if h["current_price"] else None,
-                    "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
-                }
-            )
+        try:
+            analysis = analyze_portfolio(external_holdings, conn=conn)
+            for h in analysis.get("holdings", []):
+                positions.append(
+                    {
+                        "source": "External",
+                        "symbol": h["symbol"],
+                        "entry_date": "N/A",
+                        "entry_price": float(h["avg_cost"]) if h.get("avg_cost") else None,
+                        "quantity": h["quantity"],
+                        "current_price": float(h["current_price"]) if h.get("current_price") else None,
+                        "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
+                    }
+                )
+        except Exception:
+            # If analysis tables are missing (fresh DB) or scoring isn't ready yet, still show holdings.
+            conn.rollback()
+            syms = [str(h.get("symbol", "")).upper().strip() for h in external_holdings if h.get("symbol")]
+            prices_by_symbol = {}
+            if syms:
+                cur.execute(
+                    """
+                    SELECT DISTINCT ON (dp.symbol) dp.symbol, dp.close
+                    FROM daily_prices dp
+                    WHERE dp.symbol = ANY(%s)
+                    ORDER BY dp.symbol, dp.date DESC
+                    """,
+                    (syms,),
+                )
+                prices_by_symbol = {r["symbol"]: r["close"] for r in cur.fetchall() if r.get("symbol")}
+
+            for h in external_holdings:
+                sym = str(h.get("symbol", "")).upper().strip()
+                qty = float(h.get("quantity", 0) or 0)
+                avg_cost = float(h.get("avg_cost", 0) or 0)
+                current = prices_by_symbol.get(sym)
+                current_price = float(current) if current is not None else None
+                pnl_pct = None
+                if current_price is not None and avg_cost > 0:
+                    pnl_pct = round(((current_price - avg_cost) / avg_cost) * 100, 2)
+
+                positions.append(
+                    {
+                        "source": "External",
+                        "symbol": sym,
+                        "entry_date": "N/A",
+                        "entry_price": avg_cost if avg_cost > 0 else None,
+                        "quantity": qty,
+                        "current_price": current_price,
+                        "pnl_pct": pnl_pct,
+                    }
+                )
 
     return {"count": len(positions), "positions": positions}
 
