@@ -1028,6 +1028,8 @@ function RiskAuditPage() {
           <div className="empty-state">⚠️ Could not load your Digital Twin: {savedError}</div>
         ) : savedResult && savedResult.storage_ready === false ? (
           <div className="empty-state">⚠️ Holdings storage not ready yet: {savedResult.summary || savedResult.error || 'Unknown error'}</div>
+        ) : savedResult && savedResult.pricing_note ? (
+          <div className="empty-state" style={{ marginBottom: '12px' }}>{savedResult.pricing_note}</div>
         ) : savedResult && savedResult.holdings && savedResult.holdings.length > 0 ? (
           <>
             <div className="stats-row">
@@ -1073,7 +1075,12 @@ function RiskAuditPage() {
                       </td>
                       <td>{h.quantity}</td>
                       <td>₹{h.avg_cost?.toLocaleString()}</td>
-                      <td>₹{h.current_price?.toLocaleString()}</td>
+                      <td>
+                        ₹{(h.live_price ?? h.current_price)?.toLocaleString()}
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                          {h.live_price ? 'LIVE (Yahoo)' : 'EOD (DB)'}
+                        </div>
+                      </td>
                       <td style={{ color: (h.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
                         {h.pnl_pct >= 0 ? '+' : ''}{h.pnl_pct}%
                       </td>

@@ -17,8 +17,37 @@ from api.deps import get_db, get_current_client
 from api.schema import ensure_client_external_holdings_table
 from src.portfolio_review_engine import analyze_portfolio, analyze_single_stock
 from src.on_demand_ingest import ingest_missing_symbols_sync
+from src.yahoo_quotes import fetch_quotes
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["portfolio-review"])
+
+def _pricing_note(quotes_error: str | None) -> str:
+    if quotes_error:
+        return (
+            "Prices shown are the latest end-of-day close from our database (typically yesterday). "
+            f"Live Yahoo quotes were unavailable: {quotes_error}"
+        )
+    return "Prices shown use live Yahoo quotes when available; otherwise we show the latest end-of-day close (typically yesterday)."
+
+
+def _attach_quotes(result: dict, quotes_by_symbol: dict, quotes_error: str | None) -> dict:
+    # Attach a top-level note and per-holding quote fields for the UI.
+    result["pricing_note"] = _pricing_note(quotes_error)
+    result["pricing_live_available"] = bool(quotes_by_symbol) and not bool(quotes_error)
+
+    holdings = result.get("holdings") or []
+    for h in holdings:
+        sym = str(h.get("symbol", "")).upper().strip()
+        q = quotes_by_symbol.get(sym)
+        if q:
+            h["live_price"] = q.price
+            h["live_ticker"] = q.source_ticker
+            h["live_fetched_at_unix"] = q.fetched_at_unix
+        else:
+            h["live_price"] = None
+            h["live_ticker"] = None
+            h["live_fetched_at_unix"] = None
+    return result
 
 
 def _get_external_holdings_count(conn, client_id: str) -> int:
@@ -87,6 +116,8 @@ def analyze(
     """
     holdings = [h.model_dump() for h in body.holdings]
     result = analyze_portfolio(holdings, conn=conn)
+    quotes_by_symbol, quotes_error = fetch_quotes([h.get("symbol") for h in holdings])
+    result = _attach_quotes(result, quotes_by_symbol, quotes_error)
     return result
 
 
@@ -145,6 +176,8 @@ async def upload_csv(
             })
 
         result = analyze_portfolio(portfolio, conn=conn)
+        quotes_by_symbol, quotes_error = fetch_quotes([h.get("symbol") for h in portfolio])
+        result = _attach_quotes(result, quotes_by_symbol, quotes_error)
 
         # Automatic local persistence for authenticated users:
         # Save ALL holdings from CSV (even if score is unknown)
@@ -259,10 +292,11 @@ def get_holdings(
         }
 
     holdings = [dict(r) for r in rows]
+    quotes_by_symbol, quotes_error = fetch_quotes([h.get("symbol") for h in holdings])
     try:
         result = analyze_portfolio(holdings, conn=conn)
         result["storage_ready"] = True
-        return result
+        return _attach_quotes(result, quotes_by_symbol, quotes_error)
     except Exception as e:
         # If analysis fails (e.g., missing score/regime tables on a fresh DB),
         # still return the persisted holdings so the "Digital Twin" remains usable.
@@ -294,7 +328,7 @@ def get_holdings(
                 }
             )
 
-        return {
+        fallback = {
             "regime": None,
             "regime_date": None,
             "risk_level": "LOW",
@@ -309,6 +343,7 @@ def get_holdings(
             "storage_ready": True,
             "analysis_error": str(e),
         }
+        return _attach_quotes(fallback, quotes_by_symbol, quotes_error)
 
 
 @router.post("/save-bulk")

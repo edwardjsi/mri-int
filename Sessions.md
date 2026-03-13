@@ -462,6 +462,7 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - Shrunk the Risk Audit CSV upload panel for better fit on laptops.
 - Added "Delete Saved Portfolio" (delete-all external holdings) for Digital Twin reset.
 - Frontend now surfaces Digital Twin load failures instead of silently showing an empty state, and shows persisted counts after save/upload when available.
+- Added best-effort live price display via Yahoo Finance with explicit fallback note to end-of-day (yesterday) DB prices when live quotes are unavailable.
 
 ### Current State
 - If holdings are truly persisting, both the save response and `holdings-status` will show a non-zero holdings_count for the logged-in client.
