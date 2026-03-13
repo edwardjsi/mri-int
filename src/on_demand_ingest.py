@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from src.db import get_connection, insert_daily_prices
 from src.indicator_engine import fetch_data_for_symbols, compute_indicators, update_db_with_indicators, add_indicator_columns_if_missing
-from src.regime_engine import create_market_regime_and_scores_tables, compute_stock_scores_for_symbols
+from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores_for_symbols
 from src.portfolio_review_engine import analyze_portfolio
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,6 +32,7 @@ def grade_symbols_sync(symbols: list[str], original_holdings: list | None = None
                 logger.info(f"[GRADE] Indicator engine: {len(updates)} row(s) updated.")
 
         create_market_regime_and_scores_tables()
+        compute_market_regime()
         compute_stock_scores_for_symbols(symbols_clean)
         logger.info("[GRADE] Targeted stock scoring complete.")
 
@@ -193,6 +194,7 @@ def ingest_missing_symbols_sync(
         logger.info("[INGEST] Running incremental stock score engine...")
         try:
             create_market_regime_and_scores_tables()
+            compute_market_regime()
             compute_stock_scores_for_symbols(missing_symbols)
             logger.info("[INGEST] Targeted stock scoring complete.")
         except Exception as e:

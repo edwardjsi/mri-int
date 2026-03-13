@@ -179,6 +179,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Bounded on-demand missing-symbol downloads to ~3 years (prevents grading jobs from stalling for hours on Render) (2026-03-13).
 - [x] Dashboard `GET /api/portfolio/positions` now falls back to showing Digital Twin holdings even if full MRI analysis fails (prevents holdings from “disappearing”) (2026-03-13).
 - [x] Targeted stock scoring for on-demand grading: compute `stock_scores` only for portfolio symbols (avoids long full-DB scoring runs) (2026-03-13).
+- [x] On-demand grading now refreshes `market_regime` and the UI surfaces `analysis_error` when analysis falls back (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 - [x] Risk Audit now attempts live Yahoo Finance pricing and clearly labels fallback to EOD DB prices (2026-03-13).
 - [x] Risk Audit tables support full asc/desc sorting (including Current) and always display a price with LIVE/EOD/COST labeling (2026-03-13).

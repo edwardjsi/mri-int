@@ -555,3 +555,12 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 ### What Was Done
 - Fixed “scores never show up” by adding a targeted scoring path: `compute_stock_scores_for_symbols()` computes `stock_scores` only for portfolio symbols (fast), instead of scanning/scoring the entire database.
 - Updated both async ingestion and manual regrade to use targeted scoring.
+
+
+---
+
+## Session 022 — 2026-03-13
+
+### What Was Done
+- Ensured on-demand grading also computes/refreshes `market_regime` so portfolio analysis can consistently return scores (not fallback).
+- UI now surfaces `analysis_error` on the Digital Twin table when the API is falling back, to make diagnosis immediate.

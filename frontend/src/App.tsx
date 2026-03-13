@@ -1025,6 +1025,11 @@ function RiskAuditPage() {
 	        <div className="empty-state">⚠️ Holdings storage not ready yet: {savedResult.summary || savedResult.error || 'Unknown error'}</div>
 	      ) : hasSavedHoldings ? (
 	        <>
+	          {savedResult.analysis_error && (
+	            <div className="empty-state" style={{ marginBottom: '12px' }}>
+	              ⚠️ MRI analysis is falling back (scores may be missing): {String(savedResult.analysis_error)}
+	            </div>
+	          )}
 	          {savedResult.pricing_note && (
 	            <div className="empty-state" style={{ marginBottom: '12px' }}>{savedResult.pricing_note}</div>
 	          )}
