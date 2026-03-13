@@ -181,6 +181,8 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Targeted stock scoring for on-demand grading: compute `stock_scores` only for portfolio symbols (avoids long full-DB scoring runs) (2026-03-13).
 - [x] On-demand grading now refreshes `market_regime` and the UI surfaces `analysis_error` when analysis falls back (2026-03-13).
 - [x] Fixed `Decimal * float` crash in `analyze_portfolio()` by coercing DB NUMERIC values to float (2026-03-13).
+- [x] Regrade now optionally emails updated Risk Audit report and UI messaging no longer mentions “signals” (2026-03-13).
+- [x] Added synchronous regrade endpoint and UI wiring so regrade returns updated scores immediately (avoids BackgroundTasks reliability issues) (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 - [x] Risk Audit now attempts live Yahoo Finance pricing and clearly labels fallback to EOD DB prices (2026-03-13).
 - [x] Risk Audit tables support full asc/desc sorting (including Current) and always display a price with LIVE/EOD/COST labeling (2026-03-13).

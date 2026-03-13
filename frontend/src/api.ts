@@ -152,8 +152,13 @@ export const api = {
             method: 'POST',
         }),
 
-    regradeHoldings: () =>
-        apiFetch('/portfolio-review/holdings/regrade', {
+    regradeHoldings: (sendEmail: boolean = false) =>
+        apiFetch(`/portfolio-review/holdings/regrade?send_email=${sendEmail ? 'true' : 'false'}`, {
+            method: 'POST',
+        }),
+
+    regradeHoldingsSync: (sendEmail: boolean = false) =>
+        apiFetch(`/portfolio-review/holdings/regrade-sync?send_email=${sendEmail ? 'true' : 'false'}`, {
             method: 'POST',
         }),
 

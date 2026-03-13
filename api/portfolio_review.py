@@ -383,6 +383,7 @@ def get_holdings(
 @router.post("/holdings/regrade")
 def regrade_holdings(
     background_tasks: BackgroundTasks,
+    send_email: bool = False,
     client=Depends(get_current_client),
     conn=Depends(get_db),
 ):
@@ -412,8 +413,57 @@ def regrade_holdings(
     if not symbols:
         return {"status": "noop", "message": "No saved holdings to regrade."}
 
-    background_tasks.add_task(grade_symbols_sync, symbols, holdings)
-    return {"status": "started", "symbols_count": len(symbols)}
+    # Optionally email an updated report (best effort; requires SES configured).
+    background_tasks.add_task(
+        grade_symbols_sync,
+        symbols,
+        holdings,
+        client.get("email"),
+        client.get("name"),
+        bool(send_email),
+    )
+    return {"status": "started", "symbols_count": len(symbols), "email_queued": bool(send_email)}
+
+
+@router.post("/holdings/regrade-sync")
+def regrade_holdings_sync(
+    send_email: bool = False,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """
+    Synchronous regrade: runs indicator+score computation and returns the refreshed analysis.
+    Use this when background tasks are unreliable in the hosting environment.
+    """
+    client_id = str(client["id"])
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        ensure_client_external_holdings_table(conn)
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            ORDER BY symbol
+            """,
+            (client_id,),
+        )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+
+    holdings = [dict(r) for r in (rows or [])]
+    symbols = [str(h.get("symbol", "")).upper().strip() for h in holdings if h.get("symbol")]
+    if not symbols:
+        return {"status": "noop", "message": "No saved holdings to regrade.", "storage_ready": True, "holdings": []}
+
+    # Run grading inline, then re-analyze and return.
+    grade_symbols_sync(symbols, holdings, client.get("email"), client.get("name"), bool(send_email))
+
+    quotes_by_symbol, quotes_error = fetch_quotes([h.get("symbol") for h in holdings])
+    result = analyze_portfolio(holdings, conn=conn)
+    result["storage_ready"] = True
+    return _attach_quotes(result, quotes_by_symbol, quotes_error)
 
 
 @router.post("/save-bulk")

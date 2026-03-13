@@ -572,3 +572,19 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### What Was Done
 - Fixed a production-only crash in portfolio analysis: psycopg returns `Decimal` for NUMERIC columns, which caused `Decimal * float` errors during valuation/weight calculations. `src/portfolio_review_engine.py` now normalizes numeric inputs to float before arithmetic.
+
+
+---
+
+## Session 024 — 2026-03-13
+
+### What Was Done
+- Clarified and fixed “Regrade Holdings” behavior: it now explicitly regrades *scores* (not “signals”), and can optionally email the updated Risk Audit report (`send_email=true`) if SES is configured; email failures won’t break grading.
+
+
+---
+
+## Session 025 — 2026-03-13
+
+### What Was Done
+- Added a synchronous regrade endpoint `POST /api/portfolio-review/holdings/regrade-sync` and wired the UI to use it, because background tasks can be unreliable on some hosts. Clicking Regrade now returns updated holdings/scores immediately.

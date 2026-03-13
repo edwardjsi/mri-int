@@ -10,7 +10,13 @@ from src.portfolio_review_engine import analyze_portfolio
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def grade_symbols_sync(symbols: list[str], original_holdings: list | None = None):
+def grade_symbols_sync(
+    symbols: list[str],
+    original_holdings: list | None = None,
+    email: str | None = None,
+    name: str | None = None,
+    send_email: bool = False,
+):
     """
     Background task: compute indicators + stock scores for the given symbols only.
     This is used to (re)grade persisted Digital Twin holdings without re-uploading CSVs.
@@ -32,10 +38,14 @@ def grade_symbols_sync(symbols: list[str], original_holdings: list | None = None
                 logger.info(f"[GRADE] Indicator engine: {len(updates)} row(s) updated.")
 
         create_market_regime_and_scores_tables()
-        compute_market_regime()
+        try:
+            compute_market_regime()
+        except Exception as e:
+            logger.warning(f"[GRADE] Market regime computation failed (continuing): {e}")
         compute_stock_scores_for_symbols(symbols_clean)
         logger.info("[GRADE] Targeted stock scoring complete.")
 
+        report = None
         if original_holdings:
             conn = None
             try:
@@ -47,6 +57,13 @@ def grade_symbols_sync(symbols: list[str], original_holdings: list | None = None
             finally:
                 if conn:
                     conn.close()
+
+        if send_email and email and report:
+            try:
+                send_portfolio_review_email(email, name or "", report)
+                logger.info(f"[GRADE] Email sent to {email}.")
+            except Exception as e:
+                logger.warning(f"[GRADE] Email send failed: {e}")
 
     except Exception as e:
         logger.error(f"[GRADE] Grading failed: {e}")
@@ -194,7 +211,10 @@ def ingest_missing_symbols_sync(
         logger.info("[INGEST] Running incremental stock score engine...")
         try:
             create_market_regime_and_scores_tables()
-            compute_market_regime()
+            try:
+                compute_market_regime()
+            except Exception as e:
+                logger.warning(f"[INGEST] Market regime computation failed (continuing): {e}")
             compute_stock_scores_for_symbols(missing_symbols)
             logger.info("[INGEST] Targeted stock scoring complete.")
         except Exception as e:

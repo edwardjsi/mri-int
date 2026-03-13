@@ -904,11 +904,17 @@ function RiskAuditPage() {
 
 	  const handleRegradeHoldings = async () => {
 	    try {
-	      const resp = await api.regradeHoldings();
-	      const n = resp?.symbols_count !== undefined ? ` (${resp.symbols_count} symbols)` : '';
-	      alert(`Regrade started${n}. Refresh in a minute to see updated scores.`);
+	      const sendEmail = confirm('Email you the updated Risk Audit report after regrading?');
+	      setSavedLoading(true);
+	      const data = await api.regradeHoldingsSync(sendEmail);
+	      setSavedResult(data);
+	      await loadHoldingsStatus();
+	      alert(`Regrade complete. ${sendEmail ? 'If SES is configured, you should also receive an email.' : ''}`.trim());
 	    } catch (err: any) {
 	      alert(err.message || 'Failed to start regrade');
+	    }
+	    finally {
+	      setSavedLoading(false);
 	    }
 	  };
 
