@@ -564,3 +564,11 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 ### What Was Done
 - Ensured on-demand grading also computes/refreshes `market_regime` so portfolio analysis can consistently return scores (not fallback).
 - UI now surfaces `analysis_error` on the Digital Twin table when the API is falling back, to make diagnosis immediate.
+
+
+---
+
+## Session 023 — 2026-03-13
+
+### What Was Done
+- Fixed a production-only crash in portfolio analysis: psycopg returns `Decimal` for NUMERIC columns, which caused `Decimal * float` errors during valuation/weight calculations. `src/portfolio_review_engine.py` now normalizes numeric inputs to float before arithmetic.

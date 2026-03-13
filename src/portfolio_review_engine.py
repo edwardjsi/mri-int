@@ -91,7 +91,18 @@ def analyze_portfolio(holdings, conn=None):
 def _analyze(holdings, conn):
     """Core analysis logic."""
     from psycopg2.extras import RealDictCursor
+    from decimal import Decimal
     cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    def _to_float(v, default: float = 0.0) -> float:
+        if v is None:
+            return default
+        try:
+            if isinstance(v, Decimal):
+                return float(v)
+            return float(v)
+        except Exception:
+            return default
 
     if not holdings:
         return {
@@ -148,9 +159,9 @@ def _analyze(holdings, conn):
     # First pass: compute total portfolio value
     for h in holdings:
         sym = h["symbol"].upper().strip()
-        qty = float(h.get("quantity", 0))
+        qty = _to_float(h.get("quantity", 0), 0.0)
         price_data = prices_by_symbol.get(sym)
-        current_price = float(price_data["close"]) if price_data and price_data["close"] else float(h.get("avg_cost", 0))
+        current_price = float(price_data["close"]) if price_data and price_data["close"] else _to_float(h.get("avg_cost", 0), 0.0)
         total_value += qty * current_price
 
     if total_value == 0:
@@ -162,8 +173,8 @@ def _analyze(holdings, conn):
 
     for h in holdings:
         sym = h["symbol"].upper().strip()
-        qty = h.get("quantity", 0)
-        avg_cost = h.get("avg_cost", 0)
+        qty = _to_float(h.get("quantity", 0), 0.0)
+        avg_cost = _to_float(h.get("avg_cost", 0), 0.0)
 
         price_data = prices_by_symbol.get(sym)
         score_data = scores_by_symbol.get(sym)
@@ -177,7 +188,7 @@ def _analyze(holdings, conn):
         below_ema200 = (current_price < ema_200) if (current_price and ema_200) else None
 
         # Portfolio weight
-        holding_value = qty * (current_price or avg_cost or 0)
+        holding_value = qty * (current_price or avg_cost or 0.0)
         weight = holding_value / total_value
 
         # Risk factor
