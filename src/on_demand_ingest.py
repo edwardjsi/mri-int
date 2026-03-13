@@ -90,10 +90,11 @@ def ingest_missing_symbols_sync(
     """
     logger.info(f"[INGEST] Starting background ingestion for {len(missing_symbols)} symbol(s): {missing_symbols}")
 
-    # Fetch from earliest available date — yfinance will cap at the listing date automatically.
-    # This gives us the full history needed for robust EMA-200, RS, and score computation.
-    end_date = datetime.today().strftime('%Y-%m-%d')
-    start_date = "1990-01-01"  # yfinance will truncate to actual listing date
+    # Keep this bounded so the job can complete reliably on Render.
+    # ~3 years is enough for EMA-200, 6m high, 90d RS, and avoids multi-decade downloads.
+    end_dt = datetime.today()
+    end_date = end_dt.strftime('%Y-%m-%d')
+    start_date = (end_dt - timedelta(days=365 * 3)).strftime('%Y-%m-%d')
 
     inserted_any = False
 

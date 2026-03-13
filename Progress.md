@@ -176,6 +176,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Delete-all holdings uses `POST /api/portfolio-review/holdings/delete-all` + 2-step confirm to avoid “Method Not Allowed” environments (2026-03-13).
 - [x] On-demand ingestion now grades missing/ungraded symbols using targeted indicator computation (avoids full-table indicator runs that could stall for hours) and exposes `ungraded_symbols_count` in holdings-status (2026-03-13).
 - [x] Added `POST /api/portfolio-review/holdings/regrade` + UI button to manually trigger grading for persisted portfolios that are stuck ungraded (2026-03-13).
+- [x] Bounded on-demand missing-symbol downloads to ~3 years (prevents grading jobs from stalling for hours on Render) (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).
 - [x] Risk Audit now attempts live Yahoo Finance pricing and clearly labels fallback to EOD DB prices (2026-03-13).
 - [x] Risk Audit tables support full asc/desc sorting (including Current) and always display a price with LIVE/EOD/COST labeling (2026-03-13).

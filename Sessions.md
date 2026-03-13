@@ -527,3 +527,11 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### Current State
 - If a user’s portfolio persists but scores remain `UNKNOWN`, they can trigger regrading and then refresh to see scores populate; `ungraded_symbols_count` should drop.
+
+
+---
+
+## Session 019 — 2026-03-13
+
+### What Was Done
+- Fixed on-demand ingestion runtime: missing-symbol downloads are now bounded to ~3 years of history (enough for EMA-200) instead of attempting multi-decade pulls, so grading can complete reliably on Render.
