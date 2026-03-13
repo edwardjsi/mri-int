@@ -38,7 +38,10 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # CORS — allow React frontend (configurable via env)
-cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+cors_origins_str = os.getenv(
+    "CORS_ORIGINS",
+    "https://mri-frontend.onrender.com,http://localhost:5173,http://localhost:3000",
+)
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
 print(f"DEBUG: Allowed CORS Origins: {cors_origins}")
 
@@ -61,6 +64,21 @@ app.include_router(portfolio_review_router)
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "mri-signal-platform"}
+
+
+@app.get("/api/cors-debug")
+def cors_debug(request: Request):
+    """Debug endpoint to validate CORS config in the running container.
+
+    Safe to expose: returns only CORS-related configuration and request metadata.
+    """
+    return {
+        "request_origin": request.headers.get("origin"),
+        "request_host": request.headers.get("host"),
+        "request_url": str(request.url),
+        "cors_env": os.getenv("CORS_ORIGINS"),
+        "cors_allowed_origins": cors_origins,
+    }
 
 
 @app.get("/api/db-test")
