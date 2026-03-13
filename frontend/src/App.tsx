@@ -935,7 +935,7 @@ function RiskAuditPage() {
               <div className="stat-value">{result.regime}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Total Value analyzed</div>
+              <div className="stat-label">Invested Value</div>
               <div className="stat-value">₹{result.total_portfolio_value?.toLocaleString()}</div>
             </div>
           </div>
