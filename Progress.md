@@ -170,6 +170,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] API + frontend now report verified persisted holdings counts and expose `GET /api/portfolio-review/holdings-status` for diagnostics (2026-03-13).
 - [x] Risk Audit UI shows a "Storage Status" box (database + client_id + holdings_count) for fast environment mismatch debugging (2026-03-13).
 - [x] Fixed `holdings-status` error `"0"` by using dict-safe cursor access for COUNT(*) on RealDictCursor connections (2026-03-13).
+- [x] `GET /api/portfolio-review/holdings` no longer throws 500 if analysis tables are missing; it returns saved holdings with `analysis_error` (2026-03-13).
 ---
 
 ### Phase 2 Addendum - Render Full Stack (2026-03-12)

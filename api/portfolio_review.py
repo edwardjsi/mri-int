@@ -259,9 +259,56 @@ def get_holdings(
         }
 
     holdings = [dict(r) for r in rows]
-    result = analyze_portfolio(holdings, conn=conn)
-    result["storage_ready"] = True
-    return result
+    try:
+        result = analyze_portfolio(holdings, conn=conn)
+        result["storage_ready"] = True
+        return result
+    except Exception as e:
+        # If analysis fails (e.g., missing score/regime tables on a fresh DB),
+        # still return the persisted holdings so the "Digital Twin" remains usable.
+        conn.rollback()
+        safe_holdings = []
+        total_value = 0.0
+        for h in holdings:
+            symbol = str(h.get("symbol", "")).upper().strip()
+            quantity = float(h.get("quantity", 0) or 0)
+            avg_cost = float(h.get("avg_cost", 0) or 0)
+            total_value += quantity * avg_cost
+            safe_holdings.append(
+                {
+                    "symbol": symbol,
+                    "quantity": quantity,
+                    "avg_cost": avg_cost,
+                    "current_price": None,
+                    "pnl_pct": None,
+                    "weight_pct": None,
+                    "score": None,
+                    "conditions": None,
+                    "below_200ema": None,
+                    "ema_50": None,
+                    "ema_200": None,
+                    "rs_90d": None,
+                    "alignment": "UNKNOWN",
+                    "risk_factor": None,
+                    "risk_contribution_pct": 0.0,
+                }
+            )
+
+        return {
+            "regime": None,
+            "regime_date": None,
+            "risk_level": "LOW",
+            "risk_level_description": "Analysis temporarily unavailable.",
+            "risk_score": 0.0,
+            "risk_score_pct": "0%",
+            "total_portfolio_value": float(round(total_value, 2)),
+            "holdings_count": len(safe_holdings),
+            "holdings": safe_holdings,
+            "missing_symbols": [],
+            "summary": f"Saved holdings loaded, but MRI analysis is unavailable right now: {str(e)}",
+            "storage_ready": True,
+            "analysis_error": str(e),
+        }
 
 
 @router.post("/save-bulk")
