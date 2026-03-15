@@ -2,30 +2,19 @@
 Email Service — AWS SES for transactional signal emails.
 Sends daily digest to each client with their BUY/SELL signals.
 """
-import boto3
 import psycopg2
 from psycopg2.extras import RealDictCursor, execute_batch
 import logging
 import os
 from datetime import date
 from src.db import get_connection as _get_raw_connection
+from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
-AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 FRONTEND_URL = os.getenv("FRONTEND_URL", os.getenv("PUBLIC_FRONTEND_URL", "https://mri-frontend.onrender.com")).rstrip("/")
-
-
-def _aws_credentials_present() -> bool:
-    try:
-        sess = boto3.Session()
-        creds = sess.get_credentials()
-        frozen = creds.get_frozen_credentials() if creds else None
-        return bool(frozen and frozen.access_key and frozen.secret_key)
-    except Exception:
-        return False
 
 
 def get_connection():
@@ -121,11 +110,17 @@ def build_signal_email_html(client_name, signals, regime):
 
 def send_password_reset_email(email: str, name: str, token: str):
     """Send a password reset link to the user."""
-    if not _aws_credentials_present():
+    if not aws_credentials_present():
         logger.error("❌ AWS credentials missing: cannot send SES reset email. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY on the API service.")
         return False
 
-    ses = boto3.client("ses", region_name=AWS_REGION)
+    try:
+        ses_region = resolve_ses_region()
+    except Exception as e:
+        logger.error(f"❌ SES region misconfigured: {e}")
+        return False
+
+    ses = get_ses_client(ses_region)
 
     reset_link = f"{FRONTEND_URL}/?reset_token={token}"
     
@@ -163,7 +158,7 @@ def send_password_reset_email(email: str, name: str, token: str):
         logger.info(f"✅ Password reset email sent to {email}")
         return True
     except Exception as e:
-        logger.error(f"❌ Failed to send reset email to {email} via SES (region={AWS_REGION}, sender={SENDER_EMAIL}): {e}")
+        logger.error(f"❌ Failed to send reset email to {email} via SES (region={ses_region}, sender={SENDER_EMAIL}): {e}")
         return False
 
 
@@ -172,7 +167,21 @@ def send_signal_emails():
     conn = get_connection()
     cur = conn.cursor()
 
-    ses = boto3.client("ses", region_name=AWS_REGION)
+    if not aws_credentials_present():
+        logger.error("❌ AWS credentials missing: cannot send SES signal emails. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY on the pipeline runner.")
+        cur.close()
+        conn.close()
+        return 0
+
+    try:
+        ses_region = resolve_ses_region()
+    except Exception as e:
+        logger.error(f"❌ SES region misconfigured: {e}")
+        cur.close()
+        conn.close()
+        return 0
+
+    ses = get_ses_client(ses_region)
 
     # Get today's unsent signals grouped by client
     cur.execute("""

@@ -52,7 +52,7 @@
 ---
 
 ## 🔜 TODO — 2026-03-15
-- [ ] Fix SES region mismatch on production: set `AWS_REGION` to the SES region where `SES_SENDER_EMAIL` is verified (region codes look like `ap-south-1` or `ap-southeast-1` — **not** `asia-pacific-1`).
-- [ ] Confirm Render API env vars for email: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `SES_SENDER_EMAIL`, `FRONTEND_URL`.
+- [ ] Fix SES region mismatch on production: set `SES_REGION` (preferred) or `AWS_REGION` to the SES region where `SES_SENDER_EMAIL` is verified (region codes look like `ap-south-1` or `ap-southeast-1` — **not** `asia-pacific-1`). Use `GET /api/email/debug?check_identity=true` to confirm verification/quota in the running container.
+- [ ] Confirm Render API env vars for email: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SES_REGION` (or `AWS_REGION`), `SES_SENDER_EMAIL`, `FRONTEND_URL`.
 - [ ] Verify password reset email end-to-end (forgot → receive email → reset).
 - [ ] Verify daily signal emails end-to-end (pipeline writes `client_signals` + email sender runs without SES sandbox/identity errors).

@@ -12,6 +12,7 @@ from api.signals import router as signals_router
 from api.actions import router as actions_router
 from api.portfolio import router as portfolio_router
 from api.portfolio_review import router as portfolio_review_router
+from api.email_debug import router as email_debug_router
 
 app = FastAPI(
     title="MRI Signal Platform",
@@ -59,6 +60,7 @@ app.include_router(signals_router)
 app.include_router(actions_router)
 app.include_router(portfolio_router)
 app.include_router(portfolio_review_router)
+app.include_router(email_debug_router)
 
 
 @app.get("/api/health")

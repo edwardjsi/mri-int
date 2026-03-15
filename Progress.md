@@ -198,3 +198,10 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 
 ### Phase 2 Addendum - Scheduling Without Render Cron (2026-03-12)
 - [x] Daily pipeline runs via GitHub Actions schedule (no Render billing/credit card required).
+
+---
+
+### Phase 2 Addendum - SES Region + Diagnostics (2026-03-15)
+- [x] Added `SES_REGION` override (preferred) with validation for SES clients; falls back to `AWS_REGION`/`AWS_DEFAULT_REGION`.
+- [x] All SES send paths now log clear actionable errors on misconfigured region/credentials.
+- [x] Added `GET /api/email/debug` (optional `check_identity=true`) to validate sender verification + quota in production.

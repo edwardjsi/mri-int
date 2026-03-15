@@ -596,3 +596,14 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### What Was Done
 - Fixed password reset email robustness: reset links now point to the deployed frontend (not localhost), and SES sending logs clearly indicate missing AWS credentials / SES config issues.
+
+
+---
+
+## Session 027 — 2026-03-15
+
+### What Was Done
+- Fixed SES region mismatch failure mode by introducing `SES_REGION` (preferred) with validation/fallback to `AWS_REGION`/`AWS_DEFAULT_REGION`.
+- Updated all SES send paths (password reset, daily signals, risk-audit emails) to fail fast with clear logs when region/credentials are misconfigured.
+- Added `GET /api/email/debug` (optional `check_identity=true`) to confirm sender verification + SES quota inside the running container.
+- Updated `render.yaml` to include `SES_REGION` and `FRONTEND_URL` env vars for production clarity.

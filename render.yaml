@@ -24,8 +24,12 @@ services:
         sync: false  # Set to your frontend URL, e.g. https://mri-frontend.onrender.com
       - key: SES_SENDER_EMAIL
         value: edwardjsi@gmail.com
+      - key: SES_REGION
+        value: ap-south-1
       - key: AWS_REGION
         value: ap-south-1
+      - key: FRONTEND_URL
+        value: https://mri-frontend.onrender.com
       - key: AWS_ACCESS_KEY_ID
         sync: false
       - key: AWS_SECRET_ACCESS_KEY

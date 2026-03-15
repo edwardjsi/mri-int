@@ -251,12 +251,23 @@ def ingest_missing_symbols_sync(
 
 def send_portfolio_review_email(email: str, name: str, report: dict):
     """Formats and sends the final Risk Audit report via AWS SES."""
-    import boto3
     import os
 
+    from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
+
     SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
-    AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
-    ses = boto3.client("ses", region_name=AWS_REGION)
+
+    if not aws_credentials_present():
+        logger.error("[INGEST] ❌ AWS credentials missing: cannot send SES email. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.")
+        return False
+
+    try:
+        ses_region = resolve_ses_region()
+    except Exception as e:
+        logger.error(f"[INGEST] ❌ SES region misconfigured: {e}")
+        return False
+
+    ses = get_ses_client(ses_region)
 
     subject = f"Your Portfolio Risk Audit is Ready: {report.get('risk_level', 'N/A')} Risk"
 
@@ -335,5 +346,5 @@ def send_portfolio_review_email(email: str, name: str, report: dict):
         logger.info(f"[INGEST] ✅ Risk Audit email sent to {email}")
         return True
     except Exception as e:
-        logger.error(f"[INGEST] ❌ Email send failed to {email}: {e}")
+        logger.error(f"[INGEST] ❌ Email send failed to {email} via SES (region={ses_region}, sender={SENDER_EMAIL}): {e}")
         return False
