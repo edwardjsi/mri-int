@@ -15,6 +15,12 @@ def _cred_meta() -> dict:
     def has_ws(s: str) -> bool:
         return bool(s) and (s != s.strip() or any(ch.isspace() for ch in s))
 
+    warnings = []
+    if access_key.startswith("AKIA") and secret_key and len(secret_key) != 40:
+        warnings.append(
+            f"AWS_SECRET_ACCESS_KEY length is {len(secret_key)} but expected 40 for long-term IAM keys. Re-copy/rotate the key."
+        )
+
     return {
         "aws_access_key_id_present": bool(access_key),
         "aws_access_key_id_prefix4": access_key[:4] if access_key else "",
@@ -24,6 +30,7 @@ def _cred_meta() -> dict:
         "aws_secret_access_key_length": len(secret_key) if secret_key else 0,
         "aws_secret_access_key_has_whitespace": has_ws(secret_key),
         "aws_session_token_present": bool(session_token),
+        "warnings": warnings,
     }
 
 
@@ -68,6 +75,21 @@ def email_debug(check_identity: bool = False):
         "aws_default_region_env": os.getenv("AWS_DEFAULT_REGION"),
         "frontend_url_env": frontend_url,
     }
+
+    # Show what boto3 actually resolved (without leaking secrets).
+    try:
+        import boto3 as _boto3
+        sess = _boto3.Session()
+        creds = sess.get_credentials()
+        frozen = creds.get_frozen_credentials() if creds else None
+        result["boto3_resolved_credentials"] = {
+            "present": bool(frozen and frozen.access_key),
+            "access_key_prefix4": (frozen.access_key[:4] if (frozen and frozen.access_key) else ""),
+            "access_key_last4": (frozen.access_key[-4:] if (frozen and frozen.access_key and len(frozen.access_key) >= 4) else ""),
+            "method": getattr(creds, "method", None) if creds else None,
+        }
+    except Exception as e:
+        result["boto3_resolved_credentials"] = {"present": False, "error": str(e)}
 
     try:
         region = resolve_ses_region()
