@@ -20,7 +20,7 @@ def verify_password(password: str, hashed: str) -> bool:
 
 import secrets
 from datetime import datetime, timedelta
-from src.email_service import send_password_reset_email
+from src.email_service import send_password_reset_email_detailed
 
 # ── Schemas ─────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
@@ -155,19 +155,32 @@ def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
         )"""
     )
     
-    # Insert token (expires in 1 hour)
+    # Insert token (expires in 1 hour), send email, then commit only if email send succeeds.
     expires_at = datetime.now() + timedelta(hours=1)
-    cur.execute(
-        """INSERT INTO password_reset_tokens (client_id, token, expires_at)
-           VALUES (%s, %s, %s)""",
-        (client_id, token, expires_at)
-    )
-    conn.commit()
-    
-    # Send email
-    success = send_password_reset_email(req.email, client["name"], token)
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to send reset email. Please try again later.")
+    try:
+        cur.execute(
+            """INSERT INTO password_reset_tokens (client_id, token, expires_at)
+               VALUES (%s, %s, %s)""",
+            (client_id, token, expires_at),
+        )
+
+        success, err = send_password_reset_email_detailed(req.email, client["name"], token)
+        if not success:
+            conn.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    f"Failed to send reset email: {err}. "
+                    "Check /api/email/debug?check_identity=true on the API service."
+                ),
+            )
+
+        conn.commit()
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to generate reset email: {e}")
         
     return {"message": "Password reset link sent! Please check your email."}
 

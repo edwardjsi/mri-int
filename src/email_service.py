@@ -9,6 +9,7 @@ import os
 from datetime import date
 from src.db import get_connection as _get_raw_connection
 from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
+from botocore.exceptions import ClientError
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -109,23 +110,31 @@ def build_signal_email_html(client_name, signals, regime):
 
 
 def send_password_reset_email(email: str, name: str, token: str):
-    """Send a password reset link to the user."""
+    ok, err = send_password_reset_email_detailed(email=email, name=name, token=token)
+    if not ok:
+        logger.error(f"❌ Password reset email failed: {err}")
+    return ok
+
+
+def send_password_reset_email_detailed(email: str, name: str, token: str) -> tuple[bool, str | None]:
+    """Send a password reset link to the user, returning (ok, error_message)."""
     if not aws_credentials_present():
-        logger.error("❌ AWS credentials missing: cannot send SES reset email. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY on the API service.")
-        return False
+        return (
+            False,
+            "AWS credentials missing. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY on the API service.",
+        )
 
     try:
         ses_region = resolve_ses_region()
     except Exception as e:
-        logger.error(f"❌ SES region misconfigured: {e}")
-        return False
+        return (False, f"SES region misconfigured: {e}")
 
     ses = get_ses_client(ses_region)
 
     reset_link = f"{FRONTEND_URL}/?reset_token={token}"
-    
+
     subject = "MRI - Password Reset Request"
-    
+
     html_body = f"""
     <html>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb">
@@ -156,10 +165,25 @@ def send_password_reset_email(email: str, name: str, token: str):
             },
         )
         logger.info(f"✅ Password reset email sent to {email}")
-        return True
+        return (True, None)
+    except ClientError as e:
+        code = (e.response or {}).get("Error", {}).get("Code", "ClientError")
+        msg = (e.response or {}).get("Error", {}).get("Message", str(e))
+        hint = ""
+        if code == "MessageRejected" and "not verified" in str(msg).lower():
+            hint = (
+                f" Verify SES_SENDER_EMAIL and recipient in SES sandbox for region '{ses_region}', "
+                "or request SES production access in that region."
+            )
+        return (
+            False,
+            f"SES send_email failed ({code}) (region={ses_region}, sender={SENDER_EMAIL}): {msg}.{hint}".strip(),
+        )
     except Exception as e:
-        logger.error(f"❌ Failed to send reset email to {email} via SES (region={ses_region}, sender={SENDER_EMAIL}): {e}")
-        return False
+        return (
+            False,
+            f"SES send_email failed (region={ses_region}, sender={SENDER_EMAIL}): {e}",
+        )
 
 
 def send_signal_emails():

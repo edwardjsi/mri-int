@@ -607,3 +607,11 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - Updated all SES send paths (password reset, daily signals, risk-audit emails) to fail fast with clear logs when region/credentials are misconfigured.
 - Added `GET /api/email/debug` (optional `check_identity=true`) to confirm sender verification + SES quota inside the running container.
 - Updated `render.yaml` to include `SES_REGION` and `FRONTEND_URL` env vars for production clarity.
+
+
+---
+
+## Session 028 — 2026-03-15
+
+### What Was Done
+- Improved password reset reliability and debuggability: forgot-password now rolls back the reset token if SES send fails, and returns a safe actionable error message (with a pointer to `/api/email/debug?check_identity=true`).

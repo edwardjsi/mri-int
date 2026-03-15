@@ -205,3 +205,4 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Added `SES_REGION` override (preferred) with validation for SES clients; falls back to `AWS_REGION`/`AWS_DEFAULT_REGION`.
 - [x] All SES send paths now log clear actionable errors on misconfigured region/credentials.
 - [x] Added `GET /api/email/debug` (optional `check_identity=true`) to validate sender verification + quota in production.
+- [x] Forgot-password now rolls back reset tokens on SES failure and returns a safe actionable error message for faster triage.
