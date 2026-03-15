@@ -10,7 +10,7 @@ set -e
 # DATABASE_URL=postgresql://user:pass@host/dbname
 # DB_SSL=true
 # SES_SENDER_EMAIL=edwardjsi@gmail.com
-# AWS_REGION=ap-south-1
+# SES_REGION=ap-southeast-1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

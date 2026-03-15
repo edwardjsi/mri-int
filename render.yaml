@@ -25,7 +25,7 @@ services:
       - key: SES_SENDER_EMAIL
         value: edwardjsi@gmail.com
       - key: SES_REGION
-        value: ap-south-1
+        value: ap-southeast-1
       - key: AWS_REGION
         value: ap-south-1
       - key: FRONTEND_URL

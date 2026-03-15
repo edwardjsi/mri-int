@@ -113,6 +113,7 @@ export DB_PASSWORD=$(aws secretsmanager get-secret-value \
 export PYTHONPATH="$PROJECT_DIR"
 export SES_SENDER_EMAIL="edwardjsi@gmail.com"
 export AWS_REGION="$REGION"
+export SES_REGION="${SES_REGION:-$AWS_REGION}"
 
 # ── Phase 5: Run Pipeline ─────────────────────────────────
 
