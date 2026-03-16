@@ -315,3 +315,8 @@ Status: FINAL.
 **Status**: APPROVED  
 **Decision**: Emails will only be dispatched if (A) a stock in the monitored universe hits a 'Perfect 5' score, or (B) the overall Market Regime changes classification.  
 **Reasoning**: To maintain a high "Signal-to-Noise" ratio for clients and avoid Gmail/SES rate-limiting on redundant data.
+
+## Decision 048: Portfolio API Simplification
+**Date**: 2026-03-16
+**Decision**: Replaced the multi-step "Fetch then Grade" API flow with a single "Sync" call.
+**Reasoning**: Simplifying the dependency chain reduces deployment failures and ensures that the client-facing scores are always calculated using the latest available price data in a single database transaction.

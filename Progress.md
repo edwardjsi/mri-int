@@ -246,3 +246,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **SIGNAL-ONLY LOGIC**: Configured notification engine to suppress "No Change" updates.
 - [x] **REGIME TRIGGER**: Added logic to alert when Market moves between BULL/BEAR/NEUTRAL.
 - [ ] **CLIENT MAPPING**: Ensure specific alerts only go to clients holding those specific tickers.
+
+### Phase 4: API Integrity (Updated 2026-03-16)
+- [x] **Portfolio Router Fix**: Synchronized `portfolio_review.py` with refactored core engine.
+- [x] **Redundancy Removal**: Eliminated `grade_symbols_sync` to favor unified ingestion.
