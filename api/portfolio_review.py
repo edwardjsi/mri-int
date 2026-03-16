@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Background_tasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
 import logging
 from datetime import datetime
 
-# Unified import - removed the missing grade_symbols_sync
+# Corrected Unified import
 from src.on_demand_ingest import ingest_missing_symbols_sync
 from src.db import get_connection
 
@@ -17,20 +17,21 @@ class ReviewRequest(BaseModel):
     symbols: List[str]
 
 @router.post("/request")
-async def request_portfolio_review(request: ReviewRequest):
+async def request_portfolio_review(request: ReviewRequest, background_tasks: BackgroundTasks):
     """
     Triggers a synchronized ingestion and scoring for a specific client portfolio.
-    This replaces the old two-step fetch and grade process.
+    Using BackgroundTasks allows the API to respond immediately while the 
+    data fetching runs in the background.
     """
     if not request.symbols:
         raise HTTPException(status_code=400, detail="No symbols provided for review.")
 
     try:
-        logger.info(f"Starting on-demand review for {request.name} ({request.email})")
+        logger.info(f"Queueing on-demand review for {request.name} ({request.email})")
         
-        # This function now handles Fetch -> Indicators -> Scoring in one transaction
-        # It is the hardened version we verified in the terminal earlier
-        ingest_missing_symbols_sync(
+        # We pass the heavy work to the background so the request doesn't timeout
+        background_tasks.add_task(
+            ingest_missing_symbols_sync,
             symbols=request.symbols,
             user_id="admin",
             user_email=request.email,
@@ -38,13 +39,13 @@ async def request_portfolio_review(request: ReviewRequest):
         )
 
         return {
-            "status": "success",
-            "message": f"Portfolio review completed for {len(request.symbols)} symbols.",
+            "status": "accepted",
+            "message": f"Review for {len(request.symbols)} symbols is processing in the background.",
             "timestamp": datetime.now().isoformat()
         }
 
     except Exception as e:
-        logger.error(f"Portfolio review failed for {request.email}: {str(e)}")
+        logger.error(f"Failed to queue review for {request.email}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Review failed: {str(e)}")
 
 @router.get("/status/{email}")
@@ -56,8 +57,6 @@ async def get_review_results(email: str):
     cur = conn.cursor()
     
     try:
-        # Fetching the absolute latest scores for this client's symbols
-        # Note: In a production environment, you would join this with a 'holdings' table
         cur.execute("""
             SELECT s.symbol, s.total_score, s.date,
                    s.condition_ema_50_200, s.condition_ema_200_slope,
@@ -72,7 +71,7 @@ async def get_review_results(email: str):
             {
                 "symbol": r[0],
                 "score": r[1],
-                "date": r[2],
+                "date": r[2].isoformat() if r[2] else None,
                 "details": {
                     "ema_trend": r[3],
                     "slope_up": r[4],
