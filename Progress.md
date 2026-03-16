@@ -241,3 +241,8 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **DATA LOADER FIX**: Resolved `AttributeError` caused by yfinance MultiIndex/Tuple column headers.
 - [x] **FUZZY MAPPING**: Updated BSE/NSE bridge to handle shifting CSV column names from exchange websites.
 - [x] **DASHBOARD SYNC**: Optimized `api/signals.py` to dynamically fetch `MAX(date)`, eliminating the March 13 lag.
+
+### Phase 3: Automation & Alerts (Updated 2026-03-16)
+- [x] **SIGNAL-ONLY LOGIC**: Configured notification engine to suppress "No Change" updates.
+- [x] **REGIME TRIGGER**: Added logic to alert when Market moves between BULL/BEAR/NEUTRAL.
+- [ ] **CLIENT MAPPING**: Ensure specific alerts only go to clients holding those specific tickers.

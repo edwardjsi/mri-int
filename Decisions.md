@@ -309,3 +309,9 @@ Status: FINAL.
 **Context**: Dashboard was "sticking" to old dates due to server-side caching of `datetime.now()`.  
 **Decision**: Shifted API logic to query `SELECT MAX(date) FROM stock_scores` for all frontend signals.  
 **Impact**: Dashboard now updates in real-time as soon as the background ingestion script completes, regardless of server timezone or restarts.
+
+## Decision 046: Event-Driven Notifications
+**Date**: 2026-03-16  
+**Status**: APPROVED  
+**Decision**: Emails will only be dispatched if (A) a stock in the monitored universe hits a 'Perfect 5' score, or (B) the overall Market Regime changes classification.  
+**Reasoning**: To maintain a high "Signal-to-Noise" ratio for clients and avoid Gmail/SES rate-limiting on redundant data.
