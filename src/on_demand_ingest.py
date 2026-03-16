@@ -2,6 +2,8 @@
 import logging
 import yfinance as yf
 import pandas as pd
+import requests
+import io
 from datetime import datetime, timedelta
 from src.db import get_connection, insert_daily_prices
 from src.indicator_engine import fetch_data_for_symbols, compute_indicators, update_db_with_indicators, add_indicator_columns_if_missing
@@ -11,6 +13,28 @@ from src.portfolio_review_engine import analyze_portfolio
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def build_symbol_translator() -> dict:
+    """Builds an in-memory dictionary mapping NSE Symbols to BSE Numeric Codes via ISIN."""
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        nse_url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+        nse_res = requests.get(nse_url, headers=headers, timeout=15)
+        nse_df = pd.read_csv(io.StringIO(nse_res.text))
+        nse_df.columns = nse_df.columns.str.strip()
+        nse_map = nse_df[['SYMBOL', 'ISIN NUMBER']].rename(columns={'ISIN NUMBER': 'ISIN'})
+
+        bse_url = "https://www.bseindia.com/downloads1/List_of_companies.csv"
+        bse_res = requests.get(bse_url, headers=headers, timeout=15)
+        bse_df = pd.read_csv(io.StringIO(bse_res.text))
+        bse_df.columns = bse_df.columns.str.strip()
+        bse_map = bse_df[['Security Code', 'ISIN No']].rename(columns={'ISIN No': 'ISIN'})
+
+        merged = pd.merge(nse_map, bse_map, on='ISIN', how='inner')
+        return dict(zip(merged['SYMBOL'].str.strip(), merged['Security Code'].astype(str).str.strip()))
+    except Exception as e:
+        logger.warning(f"[INGEST] Failed to build ISIN bridge: {e}")
+        return {}
+
 def grade_symbols_sync(
     symbols: list[str],
     original_holdings: list | None = None,
@@ -18,33 +42,21 @@ def grade_symbols_sync(
     name: str | None = None,
     send_email: bool = False,
 ):
-    """
-    Background task: compute indicators + stock scores for the given symbols only.
-    This is used to (re)grade persisted Digital Twin holdings without re-uploading CSVs.
-    """
+    """Background task: compute indicators + stock scores for already-downloaded symbols."""
     symbols_clean = [str(s).upper().strip() for s in (symbols or []) if str(s).strip()]
-    if not symbols_clean:
-        logger.info("[GRADE] No symbols provided; skipping.")
-        return
-
-    logger.info(f"[GRADE] Starting grading for {len(symbols_clean)} symbol(s): {symbols_clean}")
+    if not symbols_clean: return
 
     try:
         add_indicator_columns_if_missing()
         data_df, idx_df = fetch_data_for_symbols(symbols_clean)
         if data_df is not None and not data_df.empty:
             updates = compute_indicators(data_df, idx_df)
-            if updates:
-                update_db_with_indicators(updates)
-                logger.info(f"[GRADE] Indicator engine: {len(updates)} row(s) updated.")
+            if updates: update_db_with_indicators(updates)
 
         create_market_regime_and_scores_tables()
-        try:
-            compute_market_regime()
-        except Exception as e:
-            logger.warning(f"[GRADE] Market regime computation failed (continuing): {e}")
+        try: compute_market_regime()
+        except Exception: pass
         compute_stock_scores_for_symbols(symbols_clean)
-        logger.info("[GRADE] Targeted stock scoring complete.")
 
         report = None
         if original_holdings:
@@ -52,65 +64,33 @@ def grade_symbols_sync(
             try:
                 conn = get_connection()
                 report = analyze_portfolio(original_holdings, conn=conn)
-                logger.info(f"[GRADE] Re-analysis complete: {report.get('risk_level')} risk.")
-            except Exception as e:
-                logger.warning(f"[GRADE] Re-analysis failed: {e}")
+            except Exception: pass
             finally:
-                if conn:
-                    conn.close()
+                if conn: conn.close()
 
         if send_email and email and report:
-            try:
-                send_portfolio_review_email(email, name or "", report)
-                logger.info(f"[GRADE] Email sent to {email}.")
-            except Exception as e:
-                logger.warning(f"[GRADE] Email send failed: {e}")
+            try: send_portfolio_review_email(email, name or "", report)
+            except Exception: pass
 
     except Exception as e:
         logger.error(f"[GRADE] Grading failed: {e}")
-    finally:
-        logger.info("[GRADE] Grading pipeline finished.")
-
 
 def _flatten_yfinance_columns(df: pd.DataFrame, symbol: str) -> pd.DataFrame:
-    """
-    yfinance returns a MultiIndex dataframe like ('Close', 'RELIANCE.NS').
-    This flattens it to simple lowercase column names: 'close', 'open', etc.
-    Also handles the rare flat-column case for a single ticker.
-    """
     df = df.reset_index()
-
     if isinstance(df.columns, pd.MultiIndex):
-        # For multi-ticker downloads, drop the ticker level and keep the stat level
         df.columns = [col[0].lower().replace(" ", "_") if col[1] == "" or col[1] == symbol
-                      else col[0].lower().replace(" ", "_")
-                      for col in df.columns]
+                      else col[0].lower().replace(" ", "_") for col in df.columns]
     else:
         df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
-
-    # De-duplicate columns that may have collapsed (yfinance quirk)
     df = df.loc[:, ~df.columns.duplicated()]
     return df
 
+def ingest_missing_symbols_sync(missing_symbols: list, original_holdings: list, client_id: str, email: str, name: str):
+    """Background task: downloads historical data for missing symbols, processes, and emails report."""
+    logger.info(f"[INGEST] Starting background ingestion for {len(missing_symbols)} missing symbols.")
+    
+    translator = build_symbol_translator()
 
-def ingest_missing_symbols_sync(
-    missing_symbols: list,
-    original_holdings: list,
-    client_id: str,
-    email: str,
-    name: str
-):
-    """
-    Background task: downloads historical data for missing symbols via yfinance,
-    computes their indicators + stock scores, then emails the completed Risk Audit.
-
-    Tries NSE (.NS) first, falls back to BSE (.BO).
-    Fetches 2 years of data to ensure EMA-200 can be computed reliably.
-    """
-    logger.info(f"[INGEST] Starting background ingestion for {len(missing_symbols)} symbol(s): {missing_symbols}")
-
-    # Keep this bounded so the job can complete reliably on Render.
-    # ~3 years is enough for EMA-200, 6m high, 90d RS, and avoids multi-decade downloads.
     end_dt = datetime.today()
     end_date = end_dt.strftime('%Y-%m-%d')
     start_date = (end_dt - timedelta(days=365 * 3)).strftime('%Y-%m-%d')
@@ -119,168 +99,103 @@ def ingest_missing_symbols_sync(
 
     for symbol in missing_symbols:
         df = pd.DataFrame()
-        symbol_upper = symbol.upper().strip()
+        user_symbol = symbol.upper().strip()
 
-        # --- Clean Suffixes & Prefixes ---
-        # If user uploaded "TCS.NS" or "532500.BO", strip it so we don't query "TCS.NS.NS"
-        if symbol_upper.endswith(".NS") or symbol_upper.endswith(".BO"):
-            symbol_upper = symbol_upper[:-3]
+        if user_symbol.endswith(".NS") or user_symbol.endswith(".BO"): user_symbol = user_symbol[:-3]
+        if user_symbol.startswith("BOM") and user_symbol[3:].isdigit(): user_symbol = user_symbol[3:]
+
+        # Bridge translation
+        safe_search_term = translator.get(user_symbol, user_symbol)
         
-        # If user uploaded "BOM532500", strip "BOM" so it becomes "532500" for Yahoo Finance
-        if symbol_upper.startswith("BOM") and symbol_upper[3:].isdigit():
-            symbol_upper = symbol_upper[3:]
+        if safe_search_term.isdigit():
+            primary, secondary = f"{safe_search_term}.BO", f"{safe_search_term}.NS"
+        else:
+            primary, secondary = f"{safe_search_term}.NS", f"{safe_search_term}.BO"
 
-        # --- Try NSE first ---
-        ticker_ns = f"{symbol_upper}.NS"
-        logger.info(f"[INGEST] Trying NSE: {ticker_ns}")
         try:
-            raw = yf.download(ticker_ns, start=start_date, end=end_date, progress=False, auto_adjust=True)
-            if raw is not None and not raw.empty:
-                df = _flatten_yfinance_columns(raw, ticker_ns)
-                logger.info(f"[INGEST] {ticker_ns} → {len(df)} rows downloaded.")
-        except Exception as e:
-            logger.warning(f"[INGEST] {ticker_ns} download failed: {e}")
+            raw = yf.download(primary, start=start_date, end=end_date, progress=False, auto_adjust=True)
+            if raw is not None and not raw.empty: df = _flatten_yfinance_columns(raw, primary)
+        except Exception: pass
 
-        # --- Fallback to BSE ---
         if df.empty:
-            ticker_bo = f"{symbol_upper}.BO"
-            logger.info(f"[INGEST] NSE empty. Trying BSE: {ticker_bo}")
             try:
-                raw = yf.download(ticker_bo, start=start_date, end=end_date, progress=False, auto_adjust=True)
-                if raw is not None and not raw.empty:
-                    df = _flatten_yfinance_columns(raw, ticker_bo)
-                    logger.info(f"[INGEST] {ticker_bo} → {len(df)} rows downloaded.")
-            except Exception as e:
-                logger.warning(f"[INGEST] {ticker_bo} download failed: {e}")
+                raw = yf.download(secondary, start=start_date, end=end_date, progress=False, auto_adjust=True)
+                if raw is not None and not raw.empty: df = _flatten_yfinance_columns(raw, secondary)
+            except Exception: pass
 
         if df.empty:
-            logger.error(f"[INGEST] FAILED: No data found for {symbol_upper} on NSE or BSE.")
+            logger.error(f"[INGEST] No data found for {user_symbol}.")
             continue
 
-        # --- Validate columns ---
-        logger.info(f"[INGEST] Columns available for {symbol_upper}: {list(df.columns)}")
+        if "close" not in df.columns and "adj_close" in df.columns:
+            df["close"] = df["adj_close"]
+            
+        if "close" not in df.columns: continue
 
-        if "close" not in df.columns:
-            # yfinance sometimes returns 'adj_close' only
-            if "adj_close" in df.columns:
-                df["close"] = df["adj_close"]
-            else:
-                logger.error(f"[INGEST] No 'close' column for {symbol_upper}. Skipping.")
-                continue
-
-        # Fill missing OHLCV columns
         for col in ["open", "high", "low"]:
-            if col not in df.columns:
-                df[col] = df["close"]
-        if "volume" not in df.columns:
-            df["volume"] = 0
+            if col not in df.columns: df[col] = df["close"]
+        if "volume" not in df.columns: df["volume"] = 0
 
-        # Map adjusted_close
-        if "adj_close" in df.columns:
-            df["adjusted_close"] = df["adj_close"]
-        else:
-            df["adjusted_close"] = df["close"]
+        df["adjusted_close"] = df.get("adj_close", df["close"])
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+        
+        # Save explicitly as the user's requested string
+        df["symbol"] = user_symbol 
+        df = df[["symbol", "date", "open", "high", "low", "close", "adjusted_close", "volume"]].dropna(subset=["close"])
 
-        # Ensure date column is datetime
-        if "date" in df.columns:
-            df["date"] = pd.to_datetime(df["date"]).dt.date
-        else:
-            logger.error(f"[INGEST] No 'date' column for {symbol_upper}. Skipping.")
-            continue
+        if not df.empty:
+            try:
+                records = df.to_dict("records")
+                insert_daily_prices(records)
+                inserted_any = True
+                logger.info(f"[INGEST] ✅ Inserted {len(records)} rows for {user_symbol}.")
+            except Exception as e:
+                logger.error(f"[INGEST] DB insert failed for {user_symbol}: {e}")
 
-        df["symbol"] = symbol_upper
-        df = df[["symbol", "date", "open", "high", "low", "close", "adjusted_close", "volume"]]
-        df = df.dropna(subset=["close"])
-
-        if df.empty:
-            logger.error(f"[INGEST] After cleanup, DataFrame for {symbol_upper} is empty. Skipping.")
-            continue
-
-        try:
-            records = df.to_dict("records")
-            insert_daily_prices(records)
-            inserted_any = True
-            logger.info(f"[INGEST] ✅ Inserted {len(records)} rows for {symbol_upper} into daily_prices.")
-        except Exception as e:
-            logger.error(f"[INGEST] DB insert failed for {symbol_upper}: {e}")
-
-    # --- Trigger incremental indicator + score engines ---
     if inserted_any:
-        logger.info("[INGEST] Running incremental indicator engine...")
         try:
             add_indicator_columns_if_missing()
             data_df, idx_df = fetch_data_for_symbols(missing_symbols)
             if data_df is not None and not data_df.empty:
                 updates = compute_indicators(data_df, idx_df)
-                if updates:
-                    update_db_with_indicators(updates)
-                    logger.info(f"[INGEST] Indicator engine: {len(updates)} row(s) updated.")
-        except Exception as e:
-            logger.error(f"[INGEST] Indicator engine failed: {e}")
-
-        logger.info("[INGEST] Running incremental stock score engine...")
-        try:
+                if updates: update_db_with_indicators(updates)
+            
             create_market_regime_and_scores_tables()
-            try:
-                compute_market_regime()
-            except Exception as e:
-                logger.warning(f"[INGEST] Market regime computation failed (continuing): {e}")
+            try: compute_market_regime()
+            except Exception: pass
             compute_stock_scores_for_symbols(missing_symbols)
-            logger.info("[INGEST] Targeted stock scoring complete.")
         except Exception as e:
-            logger.error(f"[INGEST] Stock score engine failed: {e}")
-    else:
-        logger.warning("[INGEST] No new data inserted. Skipping engine triggers.")
+            logger.error(f"[INGEST] Engine triggers failed: {e}")
 
-    # --- Re-run the full portfolio analysis with new data ---
-    logger.info("[INGEST] Generating final portfolio Risk Audit report...")
     final_report = None
     conn = None
     try:
         conn = get_connection()
-        # NOTE: analyze_portfolio signature is (holdings, conn=None)
         final_report = analyze_portfolio(original_holdings, conn=conn)
-        logger.info(f"[INGEST] Final report generated: {final_report.get('risk_level')} risk.")
     except Exception as e:
         logger.error(f"[INGEST] Final report generation failed: {e}")
     finally:
-        if conn:
-            conn.close()
+        if conn: conn.close()
 
     if final_report:
-        logger.info(f"[INGEST] Sending Risk Audit email to {email}...")
-        try:
-            send_portfolio_review_email(email, name, final_report)
-        except Exception as e:
-            logger.error(f"[INGEST] Email send failed: {e}")
-    else:
-        logger.error("[INGEST] No final report to send. Email skipped.")
-
-    logger.info("[INGEST] Async ingestion pipeline finished.")
-
+        try: send_portfolio_review_email(email, name, final_report)
+        except Exception as e: logger.error(f"[INGEST] Email send failed: {e}")
 
 def send_portfolio_review_email(email: str, name: str, report: dict):
     """Formats and sends the final Risk Audit report via AWS SES."""
     import os
-
     from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
 
     SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
 
-    if not aws_credentials_present():
-        logger.error("[INGEST] ❌ AWS credentials missing: cannot send SES email. Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.")
-        return False
+    if not aws_credentials_present(): return False
 
-    try:
-        ses_region = resolve_ses_region()
-    except Exception as e:
-        logger.error(f"[INGEST] ❌ SES region misconfigured: {e}")
-        return False
+    try: ses_region = resolve_ses_region()
+    except Exception: return False
 
     ses = get_ses_client(ses_region)
 
     subject = f"Your Portfolio Risk Audit is Ready: {report.get('risk_level', 'N/A')} Risk"
-
     regime_color = {"BULL": "#22c55e", "BEAR": "#ef4444", "NEUTRAL": "#f59e0b"}.get(report.get('regime', ''), "#6b7280")
     risk_color = {"LOW": "#22c55e", "MODERATE": "#eab308", "HIGH": "#ef4444", "EXTREME": "#ef4444"}.get(report.get('risk_level', ''), "#6b7280")
 
@@ -317,12 +232,6 @@ def send_portfolio_review_email(email: str, name: str, report: dict):
                 </div>
             </div>
 
-            <div style="background:#f1f5f9;padding:16px;border-radius:8px;margin-bottom:24px">
-                <p style="margin:0 0 8px;font-weight:600;color:#1e293b;font-size:14px">Diagnosis</p>
-                <p style="margin:0 0 12px;color:#475569;font-size:14px;line-height:1.5">{report.get('risk_level_description','')}</p>
-                <p style="margin:0;color:#475569;font-size:14px;line-height:1.5;font-weight:500">{report.get('summary','')}</p>
-            </div>
-
             <h2 style="color:#1e293b;font-size:16px;margin:20px 0 8px">Holding Breakdown</h2>
             <table style="width:100%;border-collapse:collapse;font-size:13px">
                 <tr style="background:#f8fafc">
@@ -334,12 +243,6 @@ def send_portfolio_review_email(email: str, name: str, report: dict):
                 </tr>
                 {holding_rows}
             </table>
-
-            <hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0 20px">
-            <p style="font-size:12px;color:#9ca3af;text-align:center">
-                This is not financial advice.<br>
-                Market Regime Intelligence — Quantitative Signal Platform
-            </p>
         </div>
     </body>
     </html>"""
@@ -353,8 +256,5 @@ def send_portfolio_review_email(email: str, name: str, report: dict):
                 "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
             },
         )
-        logger.info(f"[INGEST] ✅ Risk Audit email sent to {email}")
         return True
-    except Exception as e:
-        logger.error(f"[INGEST] ❌ Email send failed to {email} via SES (region={ses_region}, sender={SENDER_EMAIL}): {e}")
-        return False
+    except Exception: return False

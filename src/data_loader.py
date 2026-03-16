@@ -12,11 +12,15 @@ from src.config import START_DATE, END_DATE
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# NSE indices to track
+INDICES = {
+    "NIFTY50":    "^NSEI",
+    "NIFTYMID":   "^NSEMDCP50",
+    "NIFTYSMALL": "^CNXSC",
+}
 
 def get_last_date(table, fallback=START_DATE):
-    """Get the latest date in a table. Returns a start date for incremental fetch.
-    Goes back 5 days from last known date to catch any gaps/corrections.
-    """
+    """Get the latest date in a table. Returns a start date for incremental fetch."""
     try:
         conn = get_connection()
         cur = conn.cursor()
@@ -25,261 +29,238 @@ def get_last_date(table, fallback=START_DATE):
         cur.close()
         conn.close()
         if row and row[0]:
-            # Go back 5 days to catch any gaps or corrections
             start = row[0] - timedelta(days=5)
             return start.strftime("%Y-%m-%d")
     except Exception:
         pass
     return fallback
 
-# NSE indices to track
-INDICES = {
-    "NIFTY50":    "^NSEI",
-    "NIFTYMID":   "^NSEMDCP50",
-    "NIFTYSMALL": "^CNXSC",
-}
+def build_symbol_translator() -> dict:
+    """
+    Builds an in-memory dictionary mapping NSE Symbols to BSE Numeric Codes
+    using the ISIN as the bridge. e.g., {'M&M': '500520', 'TCS': '532540'}
+    """
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        # 1. Fetch NSE Master List
+        nse_url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+        nse_res = requests.get(nse_url, headers=headers, timeout=15)
+        nse_df = pd.read_csv(io.StringIO(nse_res.text))
+        nse_df.columns = nse_df.columns.str.strip()
+        nse_map = nse_df[['SYMBOL', 'ISIN NUMBER']].rename(columns={'ISIN NUMBER': 'ISIN'})
+
+        # 2. Fetch BSE Master List
+        bse_url = "https://www.bseindia.com/downloads1/List_of_companies.csv"
+        bse_res = requests.get(bse_url, headers=headers, timeout=15)
+        bse_df = pd.read_csv(io.StringIO(bse_res.text))
+        bse_df.columns = bse_df.columns.str.strip()
+        bse_map = bse_df[['Security Code', 'ISIN No']].rename(columns={'ISIN No': 'ISIN'})
+
+        # 3. Zip them together on ISIN
+        merged = pd.merge(nse_map, bse_map, on='ISIN', how='inner')
+        
+        # 4. Create the translation dictionary
+        translator = dict(zip(merged['SYMBOL'].str.strip(), merged['Security Code'].astype(str).str.strip()))
+        logger.info(f"Built ISIN Bridge: Successfully mapped {len(translator)} NSE symbols to BSE codes.")
+        return translator
+    except Exception as e:
+        logger.warning(f"Failed to build ISIN bridge: {e}")
+        return {}
 
 def fetch_nifty500_stock_list():
-    """Fetch current Nifty 500 list from NSE."""
+    """Fallback function: Fetch current Nifty 500 list from NSE."""
     url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
-    headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept":     "text/html,application/xhtml+xml"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
     try:
         response = requests.get(url, headers=headers, timeout=30)
-        # If the above fails, fallback to niftyindices.com
-        if response.status_code != 200:
-            url = "https://niftyindices.com/IndexConstituent/ind_nifty500list.csv"
-            response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
         df = pd.read_csv(io.StringIO(response.text))
-        symbols = df["Symbol"].dropna().unique().tolist()
-        logger.info(f"Fetched {len(symbols)} Nifty 500 symbols.")
+        return df["Symbol"].dropna().unique().tolist()
+    except Exception as e:
+        logger.error(f"Failed to fetch Nifty 500 fallback: {e}")
+        return []
+
+def fetch_bse_active_universe():
+    """Fetches the official BSE master list of active, liquid stocks (Groups A & B)."""
+    logger.info("Fetching official BSE Master List...")
+    url = "https://www.bseindia.com/downloads1/List_of_companies.csv"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+        if response.status_code != 200:
+            return fetch_nifty500_stock_list()
+            
+        df = pd.read_csv(io.StringIO(response.text))
+        df.columns = df.columns.str.strip()
+        
+        if 'Status' in df.columns:
+            df = df[df['Status'].str.strip() == 'Active']
+        if 'Instrument' in df.columns:
+            df = df[df['Instrument'].str.strip() == 'Equity']
+        if 'Group' in df.columns:
+            df = df[df['Group'].str.strip().isin(['A', 'B'])]
+            
+        code_col = 'Scrip code' if 'Scrip code' in df.columns else 'Security Code'
+        symbols = df[code_col].dropna().astype(int).astype(str).tolist()
+        
+        logger.info(f"Successfully fetched {len(symbols)} liquid BSE numeric codes.")
         return symbols
     except Exception as e:
-        logger.error(f"Failed to fetch Nifty 500 stock list: {e}")
-        return []
+        logger.error(f"Failed to fetch BSE universe: {e}")
+        return fetch_nifty500_stock_list()
 
 def get_client_holdings_symbols() -> list:
     """Fetch all unique symbols that clients have uploaded for Risk Audit monitoring."""
-    logger.info("Fetching custom symbols from client_external_holdings...")
     try:
         conn = get_connection()
         cur = conn.cursor()
-        # Ensure the table exists before querying to prevent crashes on fresh DBs
-        cur.execute("""
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'client_external_holdings'
-            );
-        """)
-        exists = cur.fetchone()[0]
-        
-        if not exists:
-            logger.info("client_external_holdings table does not exist yet. Returning empty list.")
+        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'client_external_holdings');")
+        if not cur.fetchone()[0]:
             return []
 
         cur.execute("SELECT DISTINCT symbol FROM client_external_holdings")
         symbols = [r[0] for r in cur.fetchall() if r[0]]
         cur.close()
         conn.close()
-        logger.info(f"Found {len(symbols)} custom symbols in client holdings.")
         return symbols
-    except Exception as e:
-        logger.warning(f"Could not fetch custom symbols: {e}")
+    except Exception:
         return []
 
-
-def fetch_stock_history_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
-    """
-    Fetch historical EOD data for a single NSE/BSE stock using yfinance.
-    Tries .NS suffix first, falls back to .BO.
-    """
+def fetch_stock_history_yfinance(user_symbol: str, start: str, end: str, translator: dict) -> pd.DataFrame:
+    """Fetches data using the ISIN bridge, but saves under the original user symbol."""
     import yfinance as yf
-    import pandas as pd
     
-    symbol_upper = symbol.upper().strip()
-    
-    # Clean any existing suffixes/prefixes so Yahoo queries don't double up (e.g. TCS.NS.NS)
+    symbol_upper = user_symbol.upper().strip()
     if symbol_upper.endswith(".NS") or symbol_upper.endswith(".BO"):
         symbol_upper = symbol_upper[:-3]
     if symbol_upper.startswith("BOM") and symbol_upper[3:].isdigit():
         symbol_upper = symbol_upper[3:]
         
+    # Translate using ISIN Bridge
+    safe_search_term = translator.get(symbol_upper, symbol_upper)
     df = pd.DataFrame()
     
-    # Try NSE first
-    ticker_ns = f"{symbol_upper}.NS"
+    if safe_search_term.isdigit():
+        primary_suffix, fallback_suffix = ".BO", ".NS"
+    else:
+        primary_suffix, fallback_suffix = ".NS", ".BO"
+        
     try:
-        raw = yf.download(ticker_ns, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
+        ticker_primary = f"{safe_search_term}{primary_suffix}"
+        raw = yf.download(ticker_primary, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
         if raw is not None and not raw.empty:
             df = raw
     except Exception:
         pass
         
-    # Fallback to BSE if NSE fails
     if df.empty:
-        ticker_bo = f"{symbol_upper}.BO"
         try:
-            raw = yf.download(ticker_bo, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
+            ticker_fallback = f"{safe_search_term}{fallback_suffix}"
+            raw = yf.download(ticker_fallback, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
             if raw is not None and not raw.empty:
                 df = raw
         except Exception:
             pass
             
     if df.empty:
-        logger.warning(f"Failed to fetch {symbol_upper} from both NSE and BSE.")
         return pd.DataFrame()
 
     try:
         df = df.reset_index()
-        
-        # Flatten MultiIndex columns if present (yfinance 0.2.x behavior)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = [col[0] for col in df.columns]
             
         df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+        
+        # CRITICAL: Save using the original user symbol so the UI matches
         df["symbol"] = symbol_upper
         
-        # Depending on yfinance version, 'close' might be named differently if auto_adjust is True
         if "adj_close" in df.columns and "close" not in df.columns:
              df["close"] = df["adj_close"]
              
         if "close" not in df.columns:
-             logger.warning(f"No 'close' column found for {symbol_upper}. Columns: {df.columns.tolist()}")
              return pd.DataFrame()
 
         df["adjusted_close"] = df["close"]
         df = df.rename(columns={"date": "date"})
         
-        # Ensure all required columns exist, fill missing with 0 for safety
         for col in ["open", "high", "low", "volume"]:
             if col not in df.columns:
                 df[col] = 0.0 if col != "volume" else 0
                 
-        df = df[["symbol", "date", "open", "high",
-                 "low", "close", "adjusted_close", "volume"]]
+        df = df[["symbol", "date", "open", "high", "low", "close", "adjusted_close", "volume"]]
         df = df.dropna(subset=["close"])
         return df
-    except Exception as e:
-        logger.warning(f"Error processing data for {symbol_upper}: {e}")
+    except Exception:
         return pd.DataFrame()
 
-
-def fetch_index_history_yfinance(symbol: str,
-                                  yahoo_ticker: str,
-                                  start: str,
-                                  end: str) -> pd.DataFrame:
+def fetch_index_history_yfinance(symbol: str, yahoo_ticker: str, start: str, end: str) -> pd.DataFrame:
     """Fetch index historical data from Yahoo Finance."""
     import yfinance as yf
-    import pandas as pd
     try:
-        df = yf.download(yahoo_ticker, start=start, end=end,
-                         auto_adjust=True, progress=False, multi_level_index=False)
-        if df.empty:
-            return pd.DataFrame()
+        df = yf.download(yahoo_ticker, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
+        if df.empty: return pd.DataFrame()
         df = df.reset_index()
-        
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = [col[0] for col in df.columns]
-            
+        if isinstance(df.columns, pd.MultiIndex): df.columns = [col[0] for col in df.columns]
         df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
         df["symbol"] = symbol
         df = df.rename(columns={"date": "date"})
-        
-        if "adj_close" in df.columns and "close" not in df.columns:
-             df["close"] = df["adj_close"]
-             
+        if "adj_close" in df.columns and "close" not in df.columns: df["close"] = df["adj_close"]
         for col in ["open", "high", "low", "volume"]:
-            if col not in df.columns:
-                df[col] = 0.0 if col != "volume" else 0
-                
+            if col not in df.columns: df[col] = 0.0 if col != "volume" else 0
         df = df[["symbol", "date", "open", "high", "low", "close", "volume"]]
-        df = df.dropna(subset=["close"])
-        return df
-    except Exception as e:
-        logger.warning(f"Failed to fetch index {symbol}: {e}")
-        return pd.DataFrame()
-
+        return df.dropna(subset=["close"])
+    except Exception: return pd.DataFrame()
 
 def load_indices():
-    """Load index data incrementally — only fetches from last known date."""
     logger.info("Loading index data...")
     incremental_start = get_last_date("index_prices")
-    logger.info(f"  Fetching from {incremental_start} to {END_DATE}")
     for name, ticker in INDICES.items():
         df = fetch_index_history_yfinance(name, ticker, incremental_start, END_DATE)
-        if df.empty:
-            logger.warning(f"No data for index {name}")
-            continue
-        records = df.to_dict("records")
-        insert_index_prices(records)
-        logger.info(f"  Loaded {len(records)} rows for {name}")
-    logger.info("Index data load complete.")
+        if not df.empty:
+            insert_index_prices(df.to_dict("records"))
 
-
-def load_stocks(symbols: list, batch_size: int = 50):
-    """
-    Load historical EOD data incrementally.
-    Fetches only from the last known date in the database.
-    """
+def load_stocks(symbols: list, translator: dict, batch_size: int = 50):
     incremental_start = get_last_date("daily_prices")
     logger.info(f"Loading stock data for {len(symbols)} symbols from {incremental_start}...")
     failed = []
 
-    for i in tqdm(range(0, len(symbols), batch_size),
-                  desc="Loading stocks"):
+    for i in tqdm(range(0, len(symbols), batch_size), desc="Loading stocks"):
         batch = symbols[i:i + batch_size]
         for symbol in batch:
-            df = fetch_stock_history_yfinance(symbol, incremental_start, END_DATE)
+            df = fetch_stock_history_yfinance(symbol, incremental_start, END_DATE, translator)
             if df.empty:
                 failed.append(symbol)
                 continue
-            records = df.to_dict("records")
-            insert_daily_prices(records)
-            time.sleep(0.1)  # gentle rate limiting
+            insert_daily_prices(df.to_dict("records"))
+            time.sleep(0.1)
 
     logger.info(f"Stock data load complete. Failed: {len(failed)} symbols.")
-    if failed:
-        logger.warning(f"Failed symbols: {failed[:20]}...")
     return failed
 
-
 def run():
-    """Main entry point for data ingestion."""
     logger.info("=== MRI Data Loader Starting ===")
-    logger.info(f"Period: {START_DATE} to {END_DATE}")
-
-    # Step 1 — Create tables
-    logger.info("Step 1: Creating database tables...")
     create_tables()
-
-    # Step 2 — Load indices first (fast)
-    logger.info("Step 2: Loading index data...")
     load_indices()
 
-    # Step 3 — Load stocks (Nifty 500 + Client Uploaded)
-    logger.info("Step 3: Fetching stock lists...")
-    nifty500_symbols = fetch_nifty500_stock_list()
+    logger.info("Building ISIN Translator Bridge...")
+    translator = build_symbol_translator()
+
+    logger.info("Fetching BSE Universe & Client Custom Lists...")
+    bse_symbols = fetch_bse_active_universe()
     client_custom_symbols = get_client_holdings_symbols()
 
-    # Merge and deduplicate the symbols list
-    symbols = list(set(nifty500_symbols + client_custom_symbols))
-
+    symbols = list(set(bse_symbols + client_custom_symbols))
     if not symbols:
-        logger.error("No symbols fetched. Check NSE connectivity and DB.")
+        logger.error("No symbols fetched. Check connectivity.")
         return
 
-    logger.info(f"Step 4: Loading {len(symbols)} stocks (Nifty 500 + Client Custom)...")
-    failed = load_stocks(symbols)
+    logger.info(f"Loading {len(symbols)} robust symbols...")
+    load_stocks(symbols, translator)
 
-    # Step 5 — Quality checks
-    logger.info("Step 5: Running data quality checks...")
+    logger.info("Running data quality checks...")
     run_quality_checks()
-
     logger.info("=== Data Load Complete ===")
-
 
 if __name__ == "__main__":
     run()
