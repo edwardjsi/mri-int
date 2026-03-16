@@ -1,3 +1,4 @@
+# src/data_loader.py
 import pandas as pd
 import requests
 import io
@@ -60,20 +61,78 @@ def fetch_nifty500_stock_list():
         logger.error(f"Failed to fetch Nifty 500 stock list: {e}")
         return []
 
+def get_client_holdings_symbols() -> list:
+    """Fetch all unique symbols that clients have uploaded for Risk Audit monitoring."""
+    logger.info("Fetching custom symbols from client_external_holdings...")
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        # Ensure the table exists before querying to prevent crashes on fresh DBs
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'client_external_holdings'
+            );
+        """)
+        exists = cur.fetchone()[0]
+        
+        if not exists:
+            logger.info("client_external_holdings table does not exist yet. Returning empty list.")
+            return []
+
+        cur.execute("SELECT DISTINCT symbol FROM client_external_holdings")
+        symbols = [r[0] for r in cur.fetchall() if r[0]]
+        cur.close()
+        conn.close()
+        logger.info(f"Found {len(symbols)} custom symbols in client holdings.")
+        return symbols
+    except Exception as e:
+        logger.warning(f"Could not fetch custom symbols: {e}")
+        return []
+
 
 def fetch_stock_history_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
     """
-    Fetch historical EOD data for a single NSE stock using yfinance.
-    NSE symbols need .NS suffix on Yahoo Finance.
+    Fetch historical EOD data for a single NSE/BSE stock using yfinance.
+    Tries .NS suffix first, falls back to .BO.
     """
     import yfinance as yf
     import pandas as pd
-    ticker = f"{symbol}.NS"
+    
+    symbol_upper = symbol.upper().strip()
+    
+    # Clean any existing suffixes/prefixes so Yahoo queries don't double up (e.g. TCS.NS.NS)
+    if symbol_upper.endswith(".NS") or symbol_upper.endswith(".BO"):
+        symbol_upper = symbol_upper[:-3]
+    if symbol_upper.startswith("BOM") and symbol_upper[3:].isdigit():
+        symbol_upper = symbol_upper[3:]
+        
+    df = pd.DataFrame()
+    
+    # Try NSE first
+    ticker_ns = f"{symbol_upper}.NS"
     try:
-        df = yf.download(ticker, start=start, end=end,
-                         auto_adjust=True, progress=False, multi_level_index=False)
-        if df.empty:
-            return pd.DataFrame()
+        raw = yf.download(ticker_ns, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
+        if raw is not None and not raw.empty:
+            df = raw
+    except Exception:
+        pass
+        
+    # Fallback to BSE if NSE fails
+    if df.empty:
+        ticker_bo = f"{symbol_upper}.BO"
+        try:
+            raw = yf.download(ticker_bo, start=start, end=end, auto_adjust=True, progress=False, multi_level_index=False)
+            if raw is not None and not raw.empty:
+                df = raw
+        except Exception:
+            pass
+            
+    if df.empty:
+        logger.warning(f"Failed to fetch {symbol_upper} from both NSE and BSE.")
+        return pd.DataFrame()
+
+    try:
         df = df.reset_index()
         
         # Flatten MultiIndex columns if present (yfinance 0.2.x behavior)
@@ -81,15 +140,14 @@ def fetch_stock_history_yfinance(symbol: str, start: str, end: str) -> pd.DataFr
             df.columns = [col[0] for col in df.columns]
             
         df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
-        df["symbol"]         = symbol
+        df["symbol"] = symbol_upper
         
         # Depending on yfinance version, 'close' might be named differently if auto_adjust is True
-        # Often it comes back as just 'close' or 'adj close'
         if "adj_close" in df.columns and "close" not in df.columns:
              df["close"] = df["adj_close"]
              
         if "close" not in df.columns:
-             logger.warning(f"No 'close' column found for {symbol}. Columns: {df.columns.tolist()}")
+             logger.warning(f"No 'close' column found for {symbol_upper}. Columns: {df.columns.tolist()}")
              return pd.DataFrame()
 
         df["adjusted_close"] = df["close"]
@@ -105,7 +163,7 @@ def fetch_stock_history_yfinance(symbol: str, start: str, end: str) -> pd.DataFr
         df = df.dropna(subset=["close"])
         return df
     except Exception as e:
-        logger.warning(f"Failed to fetch {symbol}: {e}")
+        logger.warning(f"Error processing data for {symbol_upper}: {e}")
         return pd.DataFrame()
 
 
@@ -201,15 +259,19 @@ def run():
     logger.info("Step 2: Loading index data...")
     load_indices()
 
-    # Step 3 — Load stocks (slow — 2000+ symbols, be patient)
-    logger.info("Step 3: Fetching Nifty 500 stock list...")
-    symbols = fetch_nifty500_stock_list()
+    # Step 3 — Load stocks (Nifty 500 + Client Uploaded)
+    logger.info("Step 3: Fetching stock lists...")
+    nifty500_symbols = fetch_nifty500_stock_list()
+    client_custom_symbols = get_client_holdings_symbols()
+
+    # Merge and deduplicate the symbols list
+    symbols = list(set(nifty500_symbols + client_custom_symbols))
 
     if not symbols:
-        logger.error("No symbols fetched. Check NSE connectivity.")
+        logger.error("No symbols fetched. Check NSE connectivity and DB.")
         return
 
-    logger.info(f"Step 4: Loading {len(symbols)} stocks (this takes 2-4 hours)...")
+    logger.info(f"Step 4: Loading {len(symbols)} stocks (Nifty 500 + Client Custom)...")
     failed = load_stocks(symbols)
 
     # Step 5 — Quality checks

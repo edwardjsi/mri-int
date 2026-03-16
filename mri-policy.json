@@ -1,0 +1,17 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "SESVerificationAndSending",
+            "Effect": "Allow",
+            "Action": [
+                "ses:GetIdentityVerificationAttributes",
+                "ses:GetAccountSendingEnabled",
+                "ses:GetSendQuota",
+                "ses:SendEmail",
+                "ses:SendRawEmail"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

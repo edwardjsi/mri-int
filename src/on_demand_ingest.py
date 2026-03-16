@@ -1,3 +1,4 @@
+# src/on_demand_ingest.py
 import logging
 import yfinance as yf
 import pandas as pd
@@ -119,6 +120,15 @@ def ingest_missing_symbols_sync(
     for symbol in missing_symbols:
         df = pd.DataFrame()
         symbol_upper = symbol.upper().strip()
+
+        # --- Clean Suffixes & Prefixes ---
+        # If user uploaded "TCS.NS" or "532500.BO", strip it so we don't query "TCS.NS.NS"
+        if symbol_upper.endswith(".NS") or symbol_upper.endswith(".BO"):
+            symbol_upper = symbol_upper[:-3]
+        
+        # If user uploaded "BOM532500", strip "BOM" so it becomes "532500" for Yahoo Finance
+        if symbol_upper.startswith("BOM") and symbol_upper[3:].isdigit():
+            symbol_upper = symbol_upper[3:]
 
         # --- Try NSE first ---
         ticker_ns = f"{symbol_upper}.NS"
