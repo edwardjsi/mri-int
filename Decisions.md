@@ -289,3 +289,9 @@ Date: 2026-03-16
 Decision: Implemented a manual override dictionary for specific broker-exported symbols that diverge from official NSE/BSE ISIN master lists.
 Reason: To ensure a friction-less "Drop and Grade" experience for users coming from Zerodha/Upstox/Groww, the system must bridge naming discrepancies (e.g., CIGNITITEC to BSE:534758) instantly.
 Status: FINAL.
+
+## Decision 043 — Safe Indicator Fallbacks for Recent Listings
+Date: 2026-03-16
+Decision: Implemented `.fillna(df['close'])` for the `rolling_high_6m` calculation in the scoring engine.
+Reason: Stocks with less than 6 months of history return a `None` value for rolling highs, which causes Python's comparison operators to crash the entire thread. Filling with the current price effectively treats the "all-time high" as today's price for new stocks, allowing the scoring logic to complete without losing data for other symbols in the batch.
+Status: FINAL.

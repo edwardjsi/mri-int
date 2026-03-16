@@ -228,3 +228,9 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Resolved "None/5" score visibility issue by adding a 2-second DB synchronization cooldown.
 - [x] Hardcoded definitive BSE Scrip overrides for broker-specific tickers (CIGNITITEC: 534758, SKFINDIAN: 500472, etc.).
 - [x] Verified 100% portfolio coverage across all 32 test holdings.
+
+### Phase 2 Addendum - Computation Hardening (2026-03-16)
+- [x] Fixed `TypeError: '>=' not supported between 'float' and 'NoneType'` in `regime_engine.py`.
+- [x] Implemented "Safe Comparison" logic using `.fillna()` for rolling highs and indicators.
+- [x] Resolved "Silent Transaction Rollback" in `data_loader.py` by adding `ON CONFLICT DO NOTHING`.
+- [x] Verified full ingestion and scoring for "Young Stocks" (ONEGLOBAL, SHILCTECH) using 50-day fallbacks.
