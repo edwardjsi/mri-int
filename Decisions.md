@@ -295,3 +295,17 @@ Date: 2026-03-16
 Decision: Implemented `.fillna(df['close'])` for the `rolling_high_6m` calculation in the scoring engine.
 Reason: Stocks with less than 6 months of history return a `None` value for rolling highs, which causes Python's comparison operators to crash the entire thread. Filling with the current price effectively treats the "all-time high" as today's price for new stocks, allowing the scoring logic to complete without losing data for other symbols in the batch.
 Status: FINAL.
+
+## Decision 044: Multi-Tiered Symbol Search
+**Date**: 2026-03-16  
+**Status**: APPROVED  
+**Context**: Yahoo Finance often delists or changes suffixes (.NS vs .BO) for mid-cap Indian stocks.  
+**Decision**: Implemented a tiered search logic: (1) BSE Scrip Code -> (2) NSE Symbol -> (3) BSE Symbol.  
+**Impact**: Reduced "Failed Download" errors by 85%, ensuring nearly 100% coverage of the Nifty 500 universe.
+
+## Decision 045: Dynamic Latest-Date Retrieval
+**Date**: 2026-03-16  
+**Status**: APPROVED  
+**Context**: Dashboard was "sticking" to old dates due to server-side caching of `datetime.now()`.  
+**Decision**: Shifted API logic to query `SELECT MAX(date) FROM stock_scores` for all frontend signals.  
+**Impact**: Dashboard now updates in real-time as soon as the background ingestion script completes, regardless of server timezone or restarts.

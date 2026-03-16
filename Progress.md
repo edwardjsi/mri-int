@@ -234,3 +234,10 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Implemented "Safe Comparison" logic using `.fillna()` for rolling highs and indicators.
 - [x] Resolved "Silent Transaction Rollback" in `data_loader.py` by adding `ON CONFLICT DO NOTHING`.
 - [x] Verified full ingestion and scoring for "Young Stocks" (ONEGLOBAL, SHILCTECH) using 50-day fallbacks.
+
+### Phase 2: Scoring & Reliability (Updated 2026-03-16)
+- [x] **DATABASE RECOVERY**: Successfully re-populated `daily_prices` with 740+ records per stock (3-year history).
+- [x] **ENGINE HARDENING**: Fixed `TypeError` in `regime_engine.py` using `.fillna()` for young stocks/IPOs.
+- [x] **DATA LOADER FIX**: Resolved `AttributeError` caused by yfinance MultiIndex/Tuple column headers.
+- [x] **FUZZY MAPPING**: Updated BSE/NSE bridge to handle shifting CSV column names from exchange websites.
+- [x] **DASHBOARD SYNC**: Optimized `api/signals.py` to dynamically fetch `MAX(date)`, eliminating the March 13 lag.
