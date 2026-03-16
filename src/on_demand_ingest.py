@@ -4,13 +4,14 @@ import yfinance as yf
 import pandas as pd
 import requests
 import io
+import time
 from datetime import datetime, timedelta
 from src.db import get_connection, insert_daily_prices
 from src.indicator_engine import fetch_data_for_symbols, compute_indicators, update_db_with_indicators, add_indicator_columns_if_missing
 from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores_for_symbols
 from src.portfolio_review_engine import analyze_portfolio
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def build_symbol_translator() -> dict:
@@ -31,16 +32,15 @@ def build_symbol_translator() -> dict:
     except Exception: return {}
 
 def ingest_missing_symbols_sync(missing_symbols: list, original_holdings: list, client_id: str, email: str, name: str):
-    logger.info(f"[INGEST] Running wholesome tiered search for {len(missing_symbols)} symbols.")
+    logger.info(f"[INGEST] Starting sync for {missing_symbols}")
     translator = build_symbol_translator()
     start_date = (datetime.today() - timedelta(days=365 * 3)).strftime('%Y-%m-%d')
     end_date = datetime.today().strftime('%Y-%m-%d')
+    
     inserted_any = False
-
     for symbol in missing_symbols:
         sym = symbol.upper().strip().split('.')[0]
         safe_term = translator.get(sym, sym)
-        
         search_list = [f"{safe_term}.BO", f"{sym}.NS", f"{sym}.BO"] if safe_term.isdigit() else [f"{sym}.NS", f"{sym}.BO"]
         
         df = pd.DataFrame()
@@ -66,19 +66,29 @@ def ingest_missing_symbols_sync(missing_symbols: list, original_holdings: list, 
             except Exception: continue
 
     if inserted_any:
+        # 1. Update Indicators
         add_indicator_columns_if_missing()
         data_df, idx_df = fetch_data_for_symbols(missing_symbols)
         if data_df is not None and not data_df.empty:
             updates = compute_indicators(data_df, idx_df)
             if updates: update_db_with_indicators(updates)
+        
+        # 2. Update Scores
         create_market_regime_and_scores_tables()
         compute_market_regime()
         compute_stock_scores_for_symbols(missing_symbols)
         
+        # 3. CRITICAL: Wait 2 seconds for Neon DB to commit the transaction
+        logger.info("[INGEST] Cooling down for DB commit...")
+        time.sleep(2)
+
+    # 4. Final Data Fetch
     conn = get_connection()
-    report = analyze_portfolio(original_holdings, conn=conn)
-    send_portfolio_review_email(email, name, report)
-    conn.close()
+    try:
+        report = analyze_portfolio(original_holdings, conn=conn)
+        send_portfolio_review_email(email, name, report)
+    finally:
+        conn.close()
 
 def send_portfolio_review_email(email: str, name: str, report: dict):
     import os
@@ -86,8 +96,15 @@ def send_portfolio_review_email(email: str, name: str, report: dict):
     sender = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
     ses = get_ses_client(resolve_ses_region())
     subject = f"MRI Risk Audit: {report.get('risk_level')} Risk"
-    rows = "".join([f"<tr><td style='padding:8px;border-bottom:1px solid #eee;'>{h['symbol']}</td><td style='padding:8px;border-bottom:1px solid #eee;'>{h['score'] if h['score'] is not None else 'N/A'}/5</td><td style='padding:8px;border-bottom:1px solid #eee;'>{h['alignment']}</td></tr>" for h in report.get('holdings', [])])
-    html = f"<html><body><h3>Hi {name}, your Risk Audit is ready.</h3><table style='width:100%;'>{rows}</table></body></html>"
+    
+    # Check for None scores in the email generator itself
+    rows = ""
+    for h in report.get('holdings', []):
+        score_val = h.get('score')
+        score_display = f"{score_val}/5" if score_val is not None else "PENDING/5"
+        rows += f"<tr><td style='padding:8px;border-bottom:1px solid #eee;'>{h['symbol']}</td><td style='padding:8px;border-bottom:1px solid #eee;'>{score_display}</td><td style='padding:8px;border-bottom:1px solid #eee;'>{h.get('alignment', 'UNKNOWN')}</td></tr>"
+
+    html = f"<html><body><h3>Hi {name},</h3><table style='width:100%;'>{rows}</table></body></html>"
     try:
         ses.send_email(Source=sender, Destination={"ToAddresses": [email]}, Message={"Subject": {"Data": subject}, "Body": {"Html": {"Data": html}}})
     except Exception: pass
