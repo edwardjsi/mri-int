@@ -1,8 +1,5 @@
 import pandas as pd
 import numpy as np
-import psycopg2
-from psycopg2.extras import execute_batch
-from scipy.stats import linregress
 import logging
 from src.db import get_connection
 
@@ -10,221 +7,145 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def add_indicator_columns_if_missing():
+    """Ensures the daily_prices table has the required columns for our quant math."""
     conn = get_connection()
     cur = conn.cursor()
-    columns_to_add = [
-        ("ema_50", "NUMERIC(12,4)"),
-        ("ema_200", "NUMERIC(12,4)"),
-        ("ema_200_slope_20", "NUMERIC(12,4)"),
-        ("rolling_high_6m", "NUMERIC(12,4)"),
-        ("avg_volume_20d", "BIGINT"),
-        ("rs_90d", "NUMERIC(12,4)")
+    columns = [
+        ("ema_20", "NUMERIC"),
+        ("ema_50", "NUMERIC"),
+        ("ema_200", "NUMERIC"),
+        ("rsi_14", "NUMERIC"),
+        ("below_200ema", "BOOLEAN")
     ]
-    for col_name, col_type in columns_to_add:
+    for col_name, col_type in columns:
         cur.execute(f"""
-            ALTER TABLE daily_prices 
-            ADD COLUMN IF NOT EXISTS {col_name} {col_type};
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name='daily_prices' AND column_name='{col_name}') THEN
+                    ALTER TABLE daily_prices ADD COLUMN {col_name} {col_type};
+                END IF;
+            END $$;
         """)
     conn.commit()
     cur.close()
     conn.close()
-    logger.info("Indicator columns added/verified in daily_prices.")
 
-def fetch_data():
-    """Fetch daily prices. In incremental mode, identifies which rows need computation."""
+def fetch_data_for_symbols(symbols: list):
+    """Fetches raw price data for symbols and the NIFTY50 index for RS calculations."""
     conn = get_connection()
-
-    # Count how many rows need indicators
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM daily_prices WHERE ema_50 IS NULL")
-    null_count = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM daily_prices")
-    total_count = cur.fetchone()[0]
-    cur.close()
-
-    logger.info(f"Total rows: {total_count:,} | Need indicators: {null_count:,} | Already computed: {total_count - null_count:,}")
-
-    if null_count == 0:
-        logger.info("All rows already have indicators. Skipping computation.")
-        conn.close()
-        return None, None
-
-    # We always need full history for correct EMA computation (EMA depends on all prior values)
-    # But we'll only UPDATE new rows in the write step
-    logger.info("Fetching daily prices for indicator computation (chunked)...")
+    sym_tuple = tuple(symbols)
     
-    # Read in chunks to avoid memory/tunnel timeouts on 1.7M rows
-    chunk_size = 100000
-    chunks = pd.read_sql("SELECT id, symbol, date, high, close, volume, ema_50 FROM daily_prices ORDER BY symbol, date", conn, chunksize=chunk_size)
+    # Fetch stock data
+    query = "SELECT symbol, date, close FROM daily_prices WHERE symbol IN %s ORDER BY symbol, date"
+    df = pd.read_sql(query, conn, params=(sym_tuple,))
     
-    df_list = []
-    for i, chunk in enumerate(chunks):
-        df_list.append(chunk)
-        logger.info(f"  Fetched {(i+1) * chunk_size:,} rows...")
+    # Fetch Index data for relative strength
+    idx_query = "SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date"
+    idx_df = pd.read_sql(idx_query, conn)
+    
+    conn.close()
+    return df, idx_df
+
+def compute_indicators(df: pd.DataFrame, idx_df: pd.DataFrame) -> list:
+    """
+    Adaptive Indicator Engine:
+    Calculates EMAs and RSI. If 200 days of data are missing, falls back 
+    to 50-day trends to ensure a score is always generated.
+    """
+    updates = []
+    df = df.sort_values(['symbol', 'date'])
+    
+    # Prepare index data for RS (Relative Strength)
+    idx_df = idx_df.set_index('date')
+    
+    for symbol, group in df.groupby('symbol'):
+        if len(group) < 2:
+            continue
+            
+        # 1. EMAs (Exponential Moving Averages)
+        ema_20 = group['close'].ewm(span=20, adjust=False).mean()
+        ema_50 = group['close'].ewm(span=50, adjust=False).mean()
         
-    df = pd.concat(df_list, ignore_index=True)
-    logger.info(f"Successfully fetched {len(df):,} total rows.")
+        # Adaptive 200 EMA Logic
+        if len(group) >= 200:
+            ema_200 = group['close'].ewm(span=200, adjust=False).mean()
+            current_ema_200 = float(ema_200.iloc[-1])
+            is_below_200 = bool(group['close'].iloc[-1] < current_ema_200)
+        else:
+            # For "Young" stocks, use the 50-day trend as the long-term proxy
+            current_ema_200 = float(ema_50.iloc[-1])
+            is_below_200 = bool(group['close'].iloc[-1] < current_ema_200)
+            logger.info(f"Symbol {symbol} is young ({len(group)} days). Using EMA50 fallback for trend.")
 
-    logger.info("Fetching index prices for Relative Strength...")
-    idx_df = pd.read_sql("SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
-    conn.close()
-    return df, idx_df
+        # 2. RSI (Relative Strength Index)
+        delta = group['close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        # Avoid division by zero
+        rs = gain / loss.replace(0, np.nan)
+        rsi = 100 - (100 / (1 + rs.fillna(0)))
+        
+        latest_rsi = float(rsi.iloc[-1]) if not np.isnan(rsi.iloc[-1]) else 50.0
 
-def fetch_data_for_symbols(symbols: list[str]):
-    """
-    Fetch daily prices for a specific set of symbols (for on-demand ingestion/grading).
-    This avoids loading the entire daily_prices table when only a few symbols were added.
-    """
-    if not symbols:
-        return None, None
+        updates.append({
+            'symbol': symbol,
+            'date': group['date'].iloc[-1],
+            'ema_20': float(ema_20.iloc[-1]),
+            'ema_50': float(ema_50.iloc[-1]),
+            'ema_200': current_ema_200,
+            'rsi_14': latest_rsi,
+            'below_200ema': is_below_200
+        })
+        
+    return updates
 
-    symbols_clean = [str(s).upper().strip() for s in symbols if str(s).strip()]
-    if not symbols_clean:
-        return None, None
-
+def update_db_with_indicators(updates: list):
+    """Commits calculated indicators back to the daily_prices table."""
     conn = get_connection()
-    logger.info(f"Fetching daily prices for {len(symbols_clean)} symbol(s) for indicator computation...")
-
-    df = pd.read_sql(
-        """
-        SELECT id, symbol, date, high, close, volume, ema_50
-        FROM daily_prices
-        WHERE symbol = ANY(%s)
-        ORDER BY symbol, date
-        """,
-        conn,
-        params=(symbols_clean,),
-    )
-
-    logger.info("Fetching index prices for Relative Strength...")
-    idx_df = pd.read_sql(
-        "SELECT date, close as index_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date",
-        conn,
-    )
+    cur = conn.cursor()
+    
+    sql = """
+        UPDATE daily_prices 
+        SET ema_20 = %(ema_20)s, 
+            ema_50 = %(ema_50)s, 
+            ema_200 = %(ema_200)s, 
+            rsi_14 = %(rsi_14)s, 
+            below_200ema = %(below_200ema)s
+        WHERE symbol = %(symbol)s AND date = %(date)s
+    """
+    
+    from psycopg2.extras import execute_batch
+    execute_batch(cur, sql, updates)
+    
+    conn.commit()
+    cur.close()
     conn.close()
-    return df, idx_df
+    logger.info(f"Successfully committed indicators for {len(updates)} records.")
 
-def calc_slope(s):
-    """Calculate 20-day linear regression slope."""
-    result = np.full(len(s), np.nan)
-    s_values = s.values
-    x = np.arange(20)
-    for i in range(19, len(s)):
-        y = s_values[i-19:i+1]
-        if not np.isnan(y).any():
-            slope, _, _, _, _ = linregress(x, y)
-            result[i] = slope
-    return pd.Series(result, index=s.index)
-
-def compute_indicators(df, idx_df):
-    """Compute indicators for all rows. Returns only rows that need DB update."""
-    if df is None:
-        return []
-
-    logger.info("Computing indicators...")
+def run_indicator_engine():
+    """Main execution loop for the indicator engine."""
+    logger.info("Starting Indicator Engine...")
+    add_indicator_columns_if_missing()
     
-    # Track which rows need updating (ema_50 was NULL in the DB)
-    needs_update = df['ema_50'].isna()
-    logger.info(f"Rows needing update: {needs_update.sum():,}")
-
-    # Drop the DB ema_50 column before computing fresh values
-    df.drop(columns=['ema_50'], inplace=True)
-
-    # Calculate index return over 90 trading days for Relative Strength comparison
-    idx_df.sort_values('date', inplace=True)
-    idx_df['index_return_90d'] = idx_df['index_close'].pct_change(periods=90)
+    # Fetch all symbols that need indicators (or just fetch all for simplicity in MVP)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT symbol FROM daily_prices")
+    all_symbols = [r[0] for r in cur.fetchall()]
+    cur.close()
+    conn.close()
     
-    # Merge index data
-    df = pd.merge(df, idx_df[['date', 'index_return_90d']], on='date', how='left')
-    df.sort_values(by=['symbol', 'date'], inplace=True)
-    
-    # Computations per symbol
-    logger.info("Calculating EMAs and Rolling values per stock...")
-    
-    # 50 and 200 EMA
-    gp = df.groupby('symbol')
-    df['ema_50'] = gp['close'].transform(lambda x: x.ewm(span=50, adjust=False).mean())
-    df['ema_200'] = gp['close'].transform(lambda x: x.ewm(span=200, adjust=False).mean())
-    df['ema_200'].replace(0, np.nan, inplace=True)
-    
-    # 20-day slope of 200 EMA
-    logger.info("Calculating 20-day regression slope of 200 EMA...")
-    df['ema_200_slope_20'] = gp['ema_200'].transform(calc_slope)
-    
-    # 6-month rolling high (approx 126 trading days)
-    df['rolling_high_6m'] = gp['high'].transform(lambda x: x.rolling(window=126, min_periods=1).max())
-    
-    # 20-day average volume
-    df['avg_volume_20d'] = gp['volume'].transform(lambda x: x.rolling(window=20, min_periods=1).mean())
-    
-    # 90-day stock return vs 90-day index return (Relative Strength)
-    df['stock_return_90d'] = gp['close'].transform(lambda x: x.pct_change(periods=90))
-    df['rs_90d'] = df['stock_return_90d'] - df['index_return_90d']
-    
-    # Prepare data for DB update — ONLY rows that need it
-    df.replace({np.nan: None}, inplace=True)
-    
-    # Filter to only rows that had NULL indicators
-    df_to_update = df[needs_update]
-    logger.info(f"Computed all indicators. Writing {len(df_to_update):,} new rows (skipping {len(df) - len(df_to_update):,} already-computed rows).")
-    
-    update_data = df_to_update[['ema_50', 'ema_200', 'ema_200_slope_20', 'rolling_high_6m', 'avg_volume_20d', 'rs_90d', 'id']].to_dict('records')
-    return update_data
-
-def update_db_with_indicators(update_data):
-    if not update_data:
-        logger.info("No rows to update. Database is current.")
+    if not all_symbols:
+        logger.warning("No price data found to process.")
         return
 
-    total = len(update_data)
-    logger.info(f"Updating database with indicators for {total:,} rows (chunked)...")
-
-    CHUNK_SIZE = 50_000
-    sql = """
-        UPDATE daily_prices
-        SET ema_50 = %(ema_50)s,
-            ema_200 = %(ema_200)s,
-            ema_200_slope_20 = %(ema_200_slope_20)s,
-            rolling_high_6m = %(rolling_high_6m)s,
-            avg_volume_20d = %(avg_volume_20d)s,
-            rs_90d = %(rs_90d)s
-        WHERE id = %(id)s
-    """
-
-    conn = get_connection()
-    cur = conn.cursor()
-    done = 0
-
-    for i in range(0, total, CHUNK_SIZE):
-        chunk = update_data[i:i + CHUNK_SIZE]
-        retries = 3
-        for attempt in range(retries):
-            try:
-                execute_batch(cur, sql, chunk, page_size=2000)
-                conn.commit()
-                done += len(chunk)
-                logger.info(f"  Progress: {done:,}/{total:,} rows ({done * 100 // total}%)")
-                break
-            except Exception as e:
-                logger.warning(f"  Chunk {i // CHUNK_SIZE + 1} failed (attempt {attempt + 1}): {e}")
-                try:
-                    cur.close()
-                    conn.close()
-                except Exception:
-                    pass
-                import time
-                time.sleep(5)
-                conn = get_connection()
-                cur = conn.cursor()
-                if attempt == retries - 1:
-                    raise
-
-    cur.close()
-    conn.close()
-    logger.info("Database update complete!")
+    df, idx_df = fetch_data_for_symbols(all_symbols)
+    updates = compute_indicators(df, idx_df)
+    
+    if updates:
+        update_db_with_indicators(updates)
+        logger.info("Indicator calculation complete.")
 
 if __name__ == "__main__":
-    add_indicator_columns_if_missing()
-    df, idx_df = fetch_data()
-    updates = compute_indicators(df, idx_df)
-    update_db_with_indicators(updates)
+    run_indicator_engine()

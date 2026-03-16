@@ -11,100 +11,73 @@ from src.indicator_engine import fetch_data_for_symbols, compute_indicators, upd
 from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores_for_symbols
 from src.portfolio_review_engine import analyze_portfolio
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def build_symbol_translator() -> dict:
+    """Builds exhaustive mapping of NSE symbols to BSE codes with hard-coded overrides."""
     headers = {"User-Agent": "Mozilla/5.0"}
     try:
+        # 1. Fetch NSE Master
         nse_res = requests.get("https://archives.nseindia.com/content/equities/EQUITY_L.csv", headers=headers, timeout=15)
         nse_df = pd.read_csv(io.StringIO(nse_res.text))
+        nse_df.columns = nse_df.columns.str.strip()
+
+        # 2. Fetch BSE Master
         bse_res = requests.get("https://www.bseindia.com/downloads1/List_of_companies.csv", headers=headers, timeout=15)
         bse_df = pd.read_csv(io.StringIO(bse_res.text))
+        bse_df.columns = bse_df.columns.str.strip()
+
+        # 3. Zip via ISIN
         merged = pd.merge(
             nse_df[['SYMBOL', 'ISIN NUMBER']].rename(columns={'ISIN NUMBER': 'ISIN'}),
             bse_df[['Security Code', 'ISIN No']].rename(columns={'ISIN No': 'ISIN'}),
             on='ISIN', how='inner'
         )
-        d = dict(zip(merged['SYMBOL'].str.strip(), merged['Security Code'].astype(str).str.strip()))
-        d.update({"CIGNITITEC": "534756", "LUMAXTECH": "532796", "ONEGLOBAL": "512527", "SHILCTECH": "532888", "AGI": "500187", "SKFINDIA": "500474"})
-        return d
-    except Exception: return {}
+        translator = dict(zip(merged['SYMBOL'].str.strip(), merged['Security Code'].astype(str).str.strip()))
+        
+        # 4. Mandatory Overrides for broker-specific export strings
+        overrides = {
+            "CIGNITITEC": "534758", 
+            "LUMAXTECH": "532796",  
+            "SKFINDIAN": "500472",  
+            "AGI": "500187",        
+            "ONEGLOBAL": "514330",  
+            "SHILCTECH": "531201"   
+        }
+        translator.update(overrides)
+        logger.info(f"[INGEST] Translator ready with {len(translator)} mappings.")
+        return translator
+    except Exception as e:
+        logger.error(f"[INGEST] Bridge build failed: {e}")
+        return {}
 
 def ingest_missing_symbols_sync(missing_symbols: list, original_holdings: list, client_id: str, email: str, name: str):
-    logger.info(f"[INGEST] Starting sync for {missing_symbols}")
+    """Background task: downloads, calculates, and verifies scores before emailing."""
+    logger.info(f"[INGEST] Starting sync ingestion for: {missing_symbols}")
+    
     translator = build_symbol_translator()
-    start_date = (datetime.today() - timedelta(days=365 * 3)).strftime('%Y-%m-%d')
     end_date = datetime.today().strftime('%Y-%m-%d')
+    start_date = (datetime.today() - timedelta(days=365 * 3)).strftime('%Y-%m-%d')
     
     inserted_any = False
+
     for symbol in missing_symbols:
-        sym = symbol.upper().strip().split('.')[0]
-        safe_term = translator.get(sym, sym)
-        search_list = [f"{safe_term}.BO", f"{sym}.NS", f"{sym}.BO"] if safe_term.isdigit() else [f"{sym}.NS", f"{sym}.BO"]
+        user_sym = symbol.upper().strip().split('.')[0]
+        safe_term = translator.get(user_sym, user_sym)
+        
+        # Tiered Search Order
+        search_list = [f"{safe_term}.BO", f"{user_sym}.NS", f"{user_sym}.BO"] if safe_term.isdigit() else [f"{user_sym}.NS", f"{user_sym}.BO"]
         
         df = pd.DataFrame()
-        for t in search_list:
+        for ticker in search_list:
             try:
-                raw = yf.download(t, start=start_date, end=end_date, progress=False, auto_adjust=True)
-                if not raw.empty:
+                logger.info(f"[INGEST] Trying ticker: {ticker}")
+                raw = yf.download(ticker, start=start_date, end=end_date, progress=False, auto_adjust=True)
+                if raw is not None and not raw.empty:
+                    # Flatten multi-index if present
                     df = raw.reset_index()
-                    if isinstance(df.columns, pd.MultiIndex): df.columns = [c[0] for c in df.columns]
-                    df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
-                    break
-            except Exception: continue
-
-        if not df.empty:
-            df["symbol"] = symbol
-            df["adjusted_close"] = df.get("adj_close", df.get("close"))
-            df["date"] = pd.to_datetime(df["date"]).dt.date
-            for col in ["open", "high", "low"]:
-                if col not in df.columns: df[col] = df["close"]
-            try:
-                insert_daily_prices(df[["symbol", "date", "open", "high", "low", "close", "adjusted_close", "volume"]].to_dict("records"))
-                inserted_any = True
-            except Exception: continue
-
-    if inserted_any:
-        # 1. Update Indicators
-        add_indicator_columns_if_missing()
-        data_df, idx_df = fetch_data_for_symbols(missing_symbols)
-        if data_df is not None and not data_df.empty:
-            updates = compute_indicators(data_df, idx_df)
-            if updates: update_db_with_indicators(updates)
-        
-        # 2. Update Scores
-        create_market_regime_and_scores_tables()
-        compute_market_regime()
-        compute_stock_scores_for_symbols(missing_symbols)
-        
-        # 3. CRITICAL: Wait 2 seconds for Neon DB to commit the transaction
-        logger.info("[INGEST] Cooling down for DB commit...")
-        time.sleep(2)
-
-    # 4. Final Data Fetch
-    conn = get_connection()
-    try:
-        report = analyze_portfolio(original_holdings, conn=conn)
-        send_portfolio_review_email(email, name, report)
-    finally:
-        conn.close()
-
-def send_portfolio_review_email(email: str, name: str, report: dict):
-    import os
-    from src.aws_ses import get_ses_client, resolve_ses_region
-    sender = os.getenv("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
-    ses = get_ses_client(resolve_ses_region())
-    subject = f"MRI Risk Audit: {report.get('risk_level')} Risk"
-    
-    # Check for None scores in the email generator itself
-    rows = ""
-    for h in report.get('holdings', []):
-        score_val = h.get('score')
-        score_display = f"{score_val}/5" if score_val is not None else "PENDING/5"
-        rows += f"<tr><td style='padding:8px;border-bottom:1px solid #eee;'>{h['symbol']}</td><td style='padding:8px;border-bottom:1px solid #eee;'>{score_display}</td><td style='padding:8px;border-bottom:1px solid #eee;'>{h.get('alignment', 'UNKNOWN')}</td></tr>"
-
-    html = f"<html><body><h3>Hi {name},</h3><table style='width:100%;'>{rows}</table></body></html>"
-    try:
-        ses.send_email(Source=sender, Destination={"ToAddresses": [email]}, Message={"Subject": {"Data": subject}, "Body": {"Html": {"Data": html}}})
-    except Exception: pass
+                    if isinstance(df.columns, pd.MultiIndex):
+                        df.columns = [c[0].lower().replace(" ", "_") for c in df.columns]
+                    else:
+                        df.columns = [str(c).lower().replace(" ", "_") for c in df.

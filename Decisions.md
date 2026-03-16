@@ -260,3 +260,32 @@ Reason: Evolution from one-off CSV uploads to a persistent monitoring tool. Enab
 Status: IMPLEMENTING.
 
 <!-- Append new decisions below. Never delete or modify old ones. -->
+## Decision 037 — Retain Render for Daily Pipeline (No GitHub Actions)
+Date: 2026-03-16
+Decision: Keep the daily data pipeline (`data_loader.py`) executing within the Render environment using reduced data lookback windows (5 days for existing stocks, ~3 years for newly uploaded user stocks) rather than offloading to external cron services like GitHub Actions.
+Reason: Respects Phase 2 MVP constraints. By heavily optimizing the data ingestion boundaries, the pipeline comfortably avoids Render's 512MB out-of-memory crashes. This keeps the architecture unified, avoids introducing new infrastructure dependencies, and organically supports daily tracking of custom user BSE/NSE uploads.
+Status: FINAL.
+
+## Decision 038 — Shift to ISIN-Based Cross-Exchange Mapping
+Date: 2026-03-16
+Decision: Implement an in-memory "ISIN Bridge" that maps user-provided NSE symbols to BSE numeric scrip codes for all backend data fetching.
+Reason: Yahoo Finance's NSE string formatting (e.g., 'M&M.NS') is inconsistent and prone to 404 errors. Numeric BSE codes (e.g., '500520.BO') are immutable and 100% reliable. The ISIN bridge allows users to keep using their familiar broker-provided symbols while the backend benefits from the reliability of the BSE data universe.
+Status: FINAL.
+
+## Decision 039 — Tiered Search Strategy for Data Ingestion
+Date: 2026-03-16
+Decision: Adopted a three-tier search strategy for yfinance downloads: 1. ISIN-mapped BSE code, 2. Raw Symbol (NSE), 3. Raw Symbol (BSE).
+Reason: This approach ensures zero-friction for the user. It handles broker-specific naming quirks automatically and prevents "UNKNOWN" grades even if the official ISIN master lists have discrepancies.
+Status: FINAL.
+
+## Decision 041 — Adaptive Trend Fallback for Recent Listings
+Date: 2026-03-16
+Decision: Modified the indicator engine to fallback from a 200-day EMA to a 50-day EMA when price history is insufficient.
+Reason: New listings (like One Global) or recent corporate actions would otherwise result in null indicators and failed scoring. Using the 50-day EMA as a proxy ensures the user still receives a trend-alignment grade based on available data.
+Status: FINAL.
+
+## Decision 042 — Definitive Scrip Mapping for Non-Standard Tickers
+Date: 2026-03-16
+Decision: Implemented a manual override dictionary for specific broker-exported symbols that diverge from official NSE/BSE ISIN master lists.
+Reason: To ensure a friction-less "Drop and Grade" experience for users coming from Zerodha/Upstox/Groww, the system must bridge naming discrepancies (e.g., CIGNITITEC to BSE:534758) instantly.
+Status: FINAL.

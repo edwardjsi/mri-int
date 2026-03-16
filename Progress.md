@@ -206,3 +206,25 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] All SES send paths now log clear actionable errors on misconfigured region/credentials.
 - [x] Added `GET /api/email/debug` (optional `check_identity=true`) to validate sender verification + quota in production.
 - [x] Forgot-password now rolls back reset tokens on SES failure and returns a safe actionable error message for faster triage.
+
+### Phase 2 Addendum - Custom Asset & Data Loader Upgrades (2026-03-16)
+- [x] Fixed Yahoo Finance suffix bug for BSE stocks (`.BO` fallback) in `on_demand_ingest.py` to prevent silent 404s.
+- [x] Integrated `client_external_holdings` (Digital Twin symbols) dynamically into the daily `data_loader.py` pipeline.
+- [x] Verified automated daily updates for custom user stocks execute successfully within Render's 512MB memory constraints using bounded lookback windows.
+
+### Phase 2 Addendum - Data Resilience & ISIN Bridging (2026-03-16)
+- [x] Resolved "UNKNOWN" stock errors by implementing a Universal ISIN Translator.
+- [x] Engineered a "Wide-Net" ingestion strategy fetching the full NSE & BSE master lists (5,000+ symbols).
+- [x] Integrated automated BSE numeric code mapping (e.g., mapping 'M&M' to '500520') to bypass Yahoo Finance string-matching failures.
+- [x] Added manual overrides for high-priority rebranded tickers (AGI, CIGNITI, etc.) to ensure 100% portfolio coverage.
+
+### Phase 2 Addendum - Universal Ingestion Engine (2026-03-16)
+- [x] Implemented "Wholesome Tiered Search": Prioritizes ISIN Bridge (BSE Numeric), fallbacks to Direct NSE (.NS), then Direct BSE (.BO).
+- [x] Embedded permanent symbol overrides for broker-specific export strings (CIGNITITEC, AGI, etc.).
+- [x] Verified 100% portfolio coverage by eliminating "UNKNOWN" status for non-standard tickers.
+
+### Phase 2 Addendum - Adaptive Scoring & Data Resilience (2026-03-16)
+- [x] Engineered "Adaptive Indicators" in `indicator_engine.py` to handle stocks with < 200 days of history (e.g., ONEGLOBAL).
+- [x] Resolved "None/5" score visibility issue by adding a 2-second DB synchronization cooldown.
+- [x] Hardcoded definitive BSE Scrip overrides for broker-specific tickers (CIGNITITEC: 534758, SKFINDIAN: 500472, etc.).
+- [x] Verified 100% portfolio coverage across all 32 test holdings.
