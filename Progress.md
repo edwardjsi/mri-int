@@ -254,3 +254,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 ### Phase 4: API & Deployment (Updated 2026-03-17)
 - [x] **Syntax Fix**: Corrected `BackgroundTasks` import case-sensitivity in `portfolio_review.py`.
 - [x] **Async Optimization**: Implemented FastAPI BackgroundTasks for on-demand ingestion to prevent request timeouts.
+
+### Phase 4: Code Integrity (Updated 2026-03-17)
+- [x] **Syntax Hotfix**: Corrected truncated `df.columns` assignment in `on_demand_ingest.py`.
+- [x] **Import Chain Verified**: Confirmed `portfolio_review.py` -> `on_demand_ingest.py` path is clear.

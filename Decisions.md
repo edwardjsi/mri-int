@@ -325,3 +325,8 @@ Status: FINAL.
 **Date**: 2026-03-17
 **Decision**: Switched `/api/portfolio-review/request` to use `BackgroundTasks`.
 **Reasoning**: Data ingestion from Yahoo Finance and subsequent indicator calculations are I/O bound and slow. Moving this to a background task ensures the UI remains responsive and doesn't trigger client-side timeout errors.
+
+## Decision 050: Robust Column Handling
+**Date**: 2026-03-17
+**Decision**: Standardized the use of `df.columns` list comprehensions across all ingestion modules.
+**Reasoning**: Prevents `AttributeError` and `SyntaxError` when switching between different `yfinance` versions or multi-exchange dataframes.
