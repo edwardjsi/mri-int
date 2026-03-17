@@ -5,7 +5,7 @@ import requests
 import io
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.db import get_connection, create_tables, insert_daily_prices
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +21,7 @@ def get_last_date(table_name="daily_prices") -> str:
         last_date = cur.fetchone()[0]
         if last_date:
             # Shift back 3 days to catch any weekend/holiday gaps or data corrections
-            start_date = (last_date - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
+            start_date = (last_date - timedelta(days=3)).strftime("%Y-%m-%d")
             return start_date
     except Exception:
         pass
