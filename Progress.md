@@ -348,3 +348,15 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
     - **Fix**: Upgraded `/api/portfolio-review/holdings` to return a full, enriched list with pricing and P&L analysis.
 - [x] **Mistake**: CSV uploads were failing with "Connection Error" because the authenticated user's email was missing from the form data.
     - **Fix**: Updated `api.ts` to persist user email and enforced token-based identity resolution in the backend.
+
+### Phase 8: Regrade Optimization & BSE Robustness (2026-03-17)
+- [x] **Mistake**: Sequential `yfinance` downloads for 33+ stocks took ~40s, triggering Render's 30s timeout and "Failed to fetch" errors.
+    - **Fix**: Implemented a bulk `yf.download` strategy in `on_demand_ingest.py` that handles entire portfolios in a single request (~5-8s).
+- [x] **Mistake**: Newly listed and mid-cap BSE stocks were failing to resolve via standard NSE suffixes.
+    - **Fix**: Engineered a 3-tier search chain: (1) Bulk NSE -> (2) Bulk BSE -> (3) Explicit Numeric Scrip mappings (e.g. ONEGLOBAL: 544136).
+
+### Phase 9: Pipeline Restoration & Bulk Porting (2026-03-17)
+- [x] **Mistake**: The "Regrade" refactor removed legacy entry points (`load_indices`, `fetch_data`, `compute_indicators`) required by the daily `pipeline.py`.
+    - **Fix**: Re-implemented all required functions in `data_loader.py`, `indicator_engine.py`, and `regime_engine.py`.
+- [x] **Optimization**: Ported the high-performance bulk patterns from the "Regrade" feature into the legacy pipeline paths.
+    - **Result**: Daily runs will now be significantly more efficient while maintaining 100% backward compatibility with existing cron jobs.
