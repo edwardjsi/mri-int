@@ -300,3 +300,15 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 [x] Namespace Alignment: Verified api.main:app matching between code and Render settings.
 
 [ ] Handshake Verification: Awaiting dashboard storage_ready confirmation.
+
+### Phase 5: Complete Restoration (2026-03-17)
+- [x] **Security**: Deactivated leaked keys; switched to SES-only IAM user.
+- [x] **Git**: Added `.env` to `.gitignore` and successfully pushed clean history.
+- [x] **Backend**: Restored `api.main:app` to resolve Render boot crashes.
+- [x] **AWS**: Responded to security tickets and performed resource audit.
+
+[x] AWS Lockdown: Keys rotated to SES-only.
+
+[x] Backend Entry: app variable restored.
+
+[ ] Login Verification: Awaiting successful handshake after Render deploy.
