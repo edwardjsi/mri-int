@@ -18,7 +18,7 @@ function getClientName(): string {
 function setAuth(data: LoginResponse) {
     localStorage.setItem('mri_token', data.access_token);
     localStorage.setItem('mri_client_id', data.client_id);
-    localStorage.setItem('mri_name', data.name);
+    localStorage.setItem('mri_name', data.name || 'User');
 }
 
 function clearAuth() {
@@ -31,7 +31,7 @@ function isAuthenticated(): boolean {
     return !!getToken();
 }
 
-async function apiFetch(path: string, options: RequestInit = {}) {
+async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolean = false) {
     const token = getToken();
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -41,19 +41,33 @@ async function apiFetch(path: string, options: RequestInit = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers }).catch(err => {
+        // Network errors (e.g. server down)
+        console.error("Network Error:", err);
+        throw new Error(`Cloud Connection Error: ${err.message || 'Server unreachable'}`);
+    });
 
-    if (res.status === 401) {
+    // Handle 401 Session Expired (except during login itself)
+    if (res.status === 401 && !isLogin) {
         clearAuth();
         window.location.reload();
         throw new Error('Session expired');
     }
 
     if (!res.ok) {
-        const error = await res.json().catch(() => ({ detail: 'Request failed' }));
-        const detail = error.detail || 'Request failed';
-        // If detail is an object/array (like FastAPI validation errors), stringify it so we don't get [object Object]
+        let errorData: any;
+        try {
+            errorData = await res.json();
+        } catch (e) {
+            // Not JSON (e.g. 500 HTML error page)
+            const text = await res.text().catch(() => 'No response body');
+            console.error("Server Error (Non-JSON):", text);
+            throw new Error(`Server Error (${res.status}): ${text.substring(0, 100)}`);
+        }
+
+        const detail = errorData.detail || 'Request failed';
         const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
+        console.error("API Error Response:", errorData);
         throw new Error(message);
     }
 
@@ -66,13 +80,13 @@ export const api = {
         apiFetch('/auth/register', {
             method: 'POST',
             body: JSON.stringify({ email, name, password, initial_capital: capital }),
-        }).then((data: LoginResponse) => { setAuth(data); return data; }),
+        }, true).then((data: LoginResponse) => { setAuth(data); return data; }),
 
     login: (email: string, password: string) =>
         apiFetch('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
-        }).then((data: LoginResponse) => { setAuth(data); return data; }),
+        }, true).then((data: LoginResponse) => { setAuth(data); return data; }),
 
     forgotPassword: (email: string) =>
         apiFetch('/auth/forgot-password', {

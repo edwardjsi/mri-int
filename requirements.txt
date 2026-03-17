@@ -10,3 +10,9 @@ reportlab==4.1.0
 python-dotenv==1.0.0
 sqlalchemy==2.0.25
 tqdm==4.66.1
+fastapi==0.109.0
+uvicorn==0.27.0
+python-jose[cryptography]==3.3.0
+bcrypt==4.1.2
+pydantic[email]==2.5.3
+python-multipart==0.0.6

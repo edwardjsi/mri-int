@@ -15,10 +15,11 @@ load_dotenv()
 
 app = FastAPI(title="MRI-Int API")
 
-# Wide open CORS to stop the browser from blocking you
+# Wide open CORS for dev; you should restrict this in production via CORS_ORIGINS env var
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,6 +1,7 @@
 """
 Authentication endpoints: register, login, profile.
 """
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 import bcrypt
@@ -39,7 +40,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     client_id: str
-    name: str | None = "User"
+    name: Optional[str] = "User"
 
 
 # ── Endpoints ───────────────────────────────────────────────
