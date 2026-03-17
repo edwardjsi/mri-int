@@ -11,10 +11,36 @@ from src.db import get_connection, create_tables, insert_daily_prices
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def load_indices():
+def get_last_date(table_name="daily_prices") -> str:
+    """Queries the DB for the latest record date to allow incremental top-up."""
+    from src.db import get_connection
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(f"SELECT MAX(date) FROM {table_name}")
+        last_date = cur.fetchone()[0]
+        if last_date:
+            # Shift back 3 days to catch any weekend/holiday gaps or data corrections
+            start_date = (last_date - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
+            return start_date
+    except Exception:
+        pass
+    finally:
+        cur.close()
+        conn.close()
+    return "2023-01-01" # Default fallback
+
+def load_indices(period: str = None):
     """Daily pipeline entry point for index data."""
-    logger.info("Fetching NIFTY 50 Index data...")
-    idx_raw = yf.download("^NSEI", period="3y", progress=False, auto_adjust=True)
+    create_tables()
+    if period:
+        logger.info(f"Forcing {period} index download...")
+        idx_raw = yf.download("^NSEI", period=period, progress=False, auto_adjust=True)
+    else:
+        start_date = get_last_date("index_prices")
+        logger.info(f"Fetching NIFTY 50 Index data from {start_date}...")
+        idx_raw = yf.download("^NSEI", start=start_date, progress=False, auto_adjust=True)
+    
     if not idx_raw.empty:
         idx_df = idx_raw.reset_index()
         idx_df.columns = [c[0].lower().replace(" ", "_") if isinstance(idx_df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in idx_df.columns]
@@ -54,28 +80,55 @@ def build_symbol_translator() -> dict:
     })
     return translator
 
-def load_stocks(symbols: list):
-    """Daily pipeline entry point for bulk stock data."""
+def load_stocks(symbols: list, period: str = None):
+    """Daily pipeline entry point for stock data, now with batching for stability."""
     if not symbols: return
     create_tables()
     translator = build_symbol_translator()
     
-    for sym in symbols:
-        time.sleep(1.2)
-        bse_code = translator.get(sym, sym)
-        search_list = [f"{bse_code}.BO", f"{sym}.NS", f"{sym}.BO"] if bse_code.isdigit() else [f"{sym}.NS", f"{sym}.BO"]
+    # Process in batches of 50 to avoid timeouts and show progress
+    batch_size = 50
+    for i in range(0, len(symbols), batch_size):
+        batch = symbols[i:i+batch_size]
+        logger.info(f"--- Processing Batch {i//batch_size + 1}/{ (len(symbols)-1)//batch_size + 1 } ({len(batch)} symbols) ---")
         
-        df = pd.DataFrame()
-        for ticker in search_list:
+        if period:
+            logger.info(f"  Forcing {period} bulk download...")
+            tickers = [f"{s}.NS" for s in batch]
             try:
-                raw = yf.download(ticker, period="3y", progress=False, auto_adjust=True)
-                if not raw.empty:
-                    df = raw.reset_index()
-                    df.columns = [c[0].lower().replace(" ", "_") if isinstance(df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in df.columns]
-                    break
-            except Exception: continue
+                raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+            except Exception as e:
+                logger.error(f"  Batch download failed: {e}")
+                continue
+        else:
+            start_date = get_last_date("daily_prices")
+            logger.info(f"  Incremental download from {start_date}...")
+            tickers = [f"{s}.NS" for s in batch]
+            try:
+                raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+            except Exception as e:
+                logger.error(f"  Batch download failed: {e}")
+                continue
+        
+        all_records = []
+        failed_symbols = []
 
-        if not df.empty:
+        for sym in batch:
+            ticker = f"{sym}.NS"
+            # Handle single ticker edge case
+            if len(batch) == 1:
+                df = raw_data.reset_index()
+            elif ticker not in raw_data.columns.levels[0]:
+                failed_symbols.append(sym)
+                continue
+            else:
+                df = raw_data[ticker].dropna(how='all').reset_index()
+            
+            if df.empty:
+                failed_symbols.append(sym)
+                continue
+            
+            df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
             df['symbol'] = sym
             df['date'] = pd.to_datetime(df['date']).dt.date
             df['adjusted_close'] = df.get('adj_close', df.get('close'))
@@ -83,11 +136,43 @@ def load_stocks(symbols: list):
                 if col not in df.columns: df[col] = df['close']
             
             clean_df = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'adjusted_close', 'volume']].dropna(subset=['close'])
-            try:
-                insert_daily_prices(clean_df.to_dict('records'))
-                logger.info(f"✅ Stored {len(clean_df)} records for {sym}")
-            except Exception as e:
-                logger.error(f"DB Error for {sym}: {e}")
+            all_records.extend(clean_df.to_dict('records'))
+
+        if all_records:
+            from src.db import insert_daily_prices
+            insert_daily_prices(all_records)
+            logger.info(f"  ✅ Batch: Stored {len(all_records)} records")
+
+        # Fallback for failed/BSE symbols in this batch
+        if failed_symbols:
+            logger.info(f"  Processing fallback for {len(failed_symbols)} symbols...")
+            for sym in failed_symbols:
+                time.sleep(0.5)
+                bse_code = translator.get(sym, sym)
+                search_list = [f"{bse_code}.BO", f"{sym}.BO"] if bse_code.isdigit() else [f"{sym}.BO"]
+                
+                for ticker in search_list:
+                    try:
+                        if period:
+                            raw = yf.download(ticker, period=period, progress=False, auto_adjust=True)
+                        else:
+                            start_date = get_last_date("daily_prices")
+                            raw = yf.download(ticker, start=start_date, progress=False, auto_adjust=True)
+                            
+                        if not raw.empty:
+                            df = raw.reset_index()
+                            df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+                            df['symbol'] = sym
+                            df['date'] = pd.to_datetime(df['date']).dt.date
+                            df['adjusted_close'] = df.get('adj_close', df.get('close'))
+                            for col in ['open', 'high', 'low']: 
+                                if col not in df.columns: df[col] = df['close']
+                            
+                            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'adjusted_close', 'volume']].dropna(subset=['close']).to_dict('records')
+                            insert_daily_prices(records)
+                            logger.info(f"  ✅ Fallback: {sym} ({len(records)} days)")
+                            break
+                    except Exception: continue
 
 def run():
     create_tables()

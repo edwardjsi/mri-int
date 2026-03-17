@@ -39,8 +39,6 @@ def create_tables():
     cur = conn.cursor()
 
     cur.execute("""
-        DROP TABLE IF EXISTS daily_prices CASCADE;
-        
         CREATE TABLE IF NOT EXISTS daily_prices (
             id              SERIAL PRIMARY KEY,
             symbol          VARCHAR(20)  NOT NULL,
@@ -78,10 +76,41 @@ def create_tables():
             ON index_prices(symbol, date);
     """)
 
+    # Ensure index_prices has the missing OHLCV columns if it already existed
+    cols_to_add = [
+        ("open", "NUMERIC(12,4)"), 
+        ("high", "NUMERIC(12,4)"), 
+        ("low", "NUMERIC(12,4)"),
+        ("volume", "BIGINT")
+    ]
+    for col_name, col_type in cols_to_add:
+        cur.execute(f"""
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name='index_prices' AND column_name='{col_name}') THEN 
+                    ALTER TABLE index_prices ADD COLUMN {col_name} {col_type}; 
+                END IF; 
+            END $$;
+        """)
+
+    # Ensure unique constraint on (symbol, date) if it was missing
+    cur.execute("""
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint 
+                WHERE conname = 'index_prices_symbol_date_key'
+            ) THEN 
+                ALTER TABLE index_prices ADD CONSTRAINT index_prices_symbol_date_key UNIQUE (symbol, date);
+            END IF; 
+        END $$;
+    """)
+
     conn.commit()
     cur.close()
     conn.close()
-    logger.info("Tables created successfully.")
+    logger.info("Tables checked/created successfully.")
 
 
 def insert_daily_prices(records):
