@@ -6,7 +6,7 @@ from typing import Optional
 from src.db import get_connection
 from src.on_demand_ingest import ingest_missing_symbols_sync
 
-# Prefix matches what the frontend is calling
+# Prefix matches what the frontend is calling in your logs
 router = APIRouter(prefix="/api/portfolio-review", tags=["Portfolio Review"])
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 @router.get("/")
 async def holdings_status(email: Optional[str] = None):
     """
-    Checks if the user has holdings in the database.
+    Handshake endpoint: Checks if the user has a 'Digital Twin' (holdings) in the DB.
     """
     if not email or email == "undefined" or email == "":
         return {
             "storage_ready": False, 
-            "message": "Email parameter is missing or undefined.",
+            "message": "Email parameter is missing.",
             "status": "missing_email"
         }
 
@@ -38,8 +38,8 @@ async def holdings_status(email: Optional[str] = None):
             "status": "active"
         }
     except Exception as e:
-        logger.error(f"Database error for {email}: {e}")
-        return {"storage_ready": False, "error": str(e)}
+        logger.error(f"Database query failed: {e}")
+        return {"storage_ready": False, "error": "Database connection issue"}
     finally:
         cur.close()
         conn.close()
@@ -54,7 +54,7 @@ async def upload_csv(
     file: UploadFile = File(...)
 ):
     """
-    Handles CSV upload and triggers MRI analysis.
+    Processes CSV upload, saves symbols, and triggers the MRI analysis engine.
     """
     try:
         contents = await file.read()
@@ -64,22 +64,19 @@ async def upload_csv(
             decoded = contents.decode('latin1')
             
         df = pd.read_csv(io.StringIO(decoded))
-        
-        # Normalize column names
         df.columns = [c.lower().strip() for c in df.columns]
         symbol_col = next((c for c in df.columns if 'symbol' in c or 'ticker' in c), None)
         
         if not symbol_col:
-            raise HTTPException(status_code=400, detail="No symbol/ticker column found.")
+            raise HTTPException(status_code=400, detail="No symbol column found.")
 
         symbols = [str(s).upper().strip() for s in df[symbol_col].dropna().unique() if len(str(s)) > 0]
 
         if not symbols:
-            raise HTTPException(status_code=400, detail="CSV is empty or invalid.")
+            raise HTTPException(status_code=400, detail="The CSV file is empty.")
 
         conn = get_connection()
         cur = conn.cursor()
-        
         cur.execute("INSERT INTO users (email, name) VALUES (%s, %s) ON CONFLICT (email) DO NOTHING", (email, name))
         for sym in symbols:
             cur.execute("INSERT INTO holdings (email, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING", (email, sym))
@@ -88,7 +85,6 @@ async def upload_csv(
         cur.close()
         conn.close()
 
-        # Trigger background analysis
         background_tasks.add_task(ingest_missing_symbols_sync, symbols, 'admin', email)
         
         return {"status": "success", "message": f"Synced {len(symbols)} assets."}
