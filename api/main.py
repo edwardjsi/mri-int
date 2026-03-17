@@ -3,8 +3,13 @@ from fastapi import FastAPI, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# Import the portfolio router
+# Import routers
+from api.auth import router as auth_router
+from api.signals import router as signals_router
+from api.actions import router as actions_router
+from api.portfolio import router as portfolio_router
 from api.portfolio_review import router as portfolio_review_router
+from api.email_debug import router as email_debug_router
 
 load_dotenv()
 
@@ -19,22 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- MISSING AUTH ROUTE START ---
-auth_router = APIRouter(prefix="/api/auth", tags=["Auth"])
-
-@auth_router.post("/login")
-async def login(email: str = Form(...), name: str = Form("User")):
-    # This is a simple pass-through to let you into the dashboard
-    return {
-        "status": "success",
-        "user": {"email": email, "name": name},
-        "message": "Login successful"
-    }
-
+# Include all routers
 app.include_router(auth_router)
-# --- MISSING AUTH ROUTE END ---
-
+app.include_router(signals_router)
+app.include_router(actions_router)
+app.include_router(portfolio_router)
 app.include_router(portfolio_review_router)
+app.include_router(email_debug_router)
 
 @app.get("/")
 async def root():

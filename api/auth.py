@@ -39,7 +39,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     client_id: str
-    name: str
+    name: str | None = "User"
 
 
 # ── Endpoints ───────────────────────────────────────────────

@@ -51,7 +51,10 @@ async function apiFetch(path: string, options: RequestInit = {}) {
 
     if (!res.ok) {
         const error = await res.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || 'Request failed');
+        const detail = error.detail || 'Request failed';
+        // If detail is an object/array (like FastAPI validation errors), stringify it so we don't get [object Object]
+        const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
+        throw new Error(message);
     }
 
     return res.json();
@@ -128,7 +131,9 @@ export const api = {
         }
         if (!res.ok) {
             const error = await res.json().catch(() => ({ detail: 'Request failed' }));
-            throw new Error(error.detail || 'Request failed');
+            const detail = error.detail || 'Request failed';
+            const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
+            throw new Error(message);
         }
         return res.json();
     },
