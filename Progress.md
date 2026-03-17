@@ -318,3 +318,15 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **Route Aliases**: Added `/holdings` to satisfy frontend requirements.
 - [x] **Parameter Safety**: Handled missing email strings to prevent 422 errors.
 - [ ] **Verification**: Final dashboard login test.
+
+### Phase 6: Handshake & Security Finalized (2026-03-17)
+- [x] **API Compatibility**: Implemented `/holdings` alias to match frontend.
+- [x] **Validation**: Defaulted `email` to None to handle initial state 422s.
+- [x] **Security**: Confirmed .env is scrubbed and keys are moved to Render Env Vars.
+- [x] **Deployment**: Aligned Docker port 8000 with internal FastAPI defaults.
+
+[x] Backend: Confirmed live on Port 8000.
+
+[x] Security: AWS keys moved to environment variables.
+
+[ ] Frontend Handshake: Awaiting the aliases to catch the login request.
