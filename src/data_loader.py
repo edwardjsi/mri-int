@@ -42,11 +42,9 @@ def build_symbol_translator() -> dict:
     })
     return translator
 
-def run():
-    create_tables()
-    translator = build_symbol_translator()
-    
-    # 1. Fetch Nifty 50 Index Benchmark
+def load_indices():
+    """Daily pipeline entry point for index data."""
+    # This reuse the existing logic in run() but encapsulated
     logger.info("Fetching NIFTY 50 Index data...")
     idx_raw = yf.download("^NSEI", period="3y", progress=False, auto_adjust=True)
     if not idx_raw.empty:
@@ -55,26 +53,19 @@ def run():
         idx_df['symbol'] = 'NIFTY50'
         idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
         idx_df['adjusted_close'] = idx_df.get('adj_close', idx_df.get('close'))
-        insert_daily_prices(idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'adjusted_close', 'volume']].dropna().to_dict('records'))
+        from src.db import insert_index_prices
+        insert_index_prices(idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records'))
+    logger.info("✅ Index data loaded")
 
-    # 2. Dynamic Nifty 500 List Retrieval
-    logger.info("Fetching Nifty 500 list from NSE...")
-    try:
-        url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-        nifty500_df = pd.read_csv(io.StringIO(res.text))
-        symbols = nifty500_df['Symbol'].tolist()
-    except Exception:
-        symbols = ["RELIANCE", "TCS", "INFY"] # Emergency Fallback
-
-    # Merge with overrides to ensure 100% coverage
-    overrides = ["CIGNITITEC", "ONEGLOBAL", "SHILCTECH", "AGI", "LUMAXTECH", "SKFINDIAN"]
-    symbols = list(set(symbols + overrides))
-    logger.info(f"Preparing to ingest {len(symbols)} symbols...")
-
-    # 3. Bulk Ingestion
+def load_stocks(symbols: list):
+    """Daily pipeline entry point for bulk stock data."""
+    if not symbols: return
+    create_tables()
+    translator = build_symbol_translator()
+    
+    # Using the existing per-stock logic but optimized for the pipeline call
     for sym in symbols:
-        time.sleep(1.2) # Essential Anti-Throttle
+        time.sleep(1.2) # Anti-Throttle
         bse_code = translator.get(sym, sym)
         search_list = [f"{bse_code}.BO", f"{sym}.NS", f"{sym}.BO"] if bse_code.isdigit() else [f"{sym}.NS", f"{sym}.BO"]
         
@@ -102,5 +93,24 @@ def run():
             except Exception as e:
                 logger.error(f"DB Error for {sym}: {e}")
 
+def run():
+    create_tables()
+    load_indices()
+    
+    # 2. Dynamic Nifty 500 List Retrieval
+    logger.info("Fetching Nifty 500 list from NSE...")
+    try:
+        url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
+        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        nifty500_df = pd.read_csv(io.StringIO(res.text))
+        symbols = nifty500_df['Symbol'].tolist()
+    except Exception:
+        symbols = ["RELIANCE", "TCS", "INFY"] # Emergency Fallback
+    
+    # Merge with overrides
+    overrides = ["CIGNITITEC", "ONEGLOBAL", "SHILCTECH", "AGI", "LUMAXTECH", "SKFINDIAN"]
+    symbols = list(set(symbols + overrides))
+    load_stocks(symbols)
+
 if __name__ == "__main__":
-    run()
+    run()

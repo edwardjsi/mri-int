@@ -169,14 +169,21 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
 
 # Keep your original background bulk processing function
 def compute_stock_scores():
-    """Bulk processing remains unchanged except for safety fixes."""
+    """Bulk processing for the entire universe, following safety patterns."""
+    create_market_regime_and_scores_tables()
     conn = get_connection()
-    # (The bulk logic follows the same safety pattern as the targeted function above)
-    # Since we are using targeted sync grading now, I recommend running compute_stock_scores_for_symbols
-    # for your on-demand audits.
-    conn.close()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT symbol FROM daily_prices")
+        symbols = [r[0] for r in cur.fetchall()]
+        cur.close()
+        
+        if symbols:
+            compute_stock_scores_for_symbols(symbols)
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     create_market_regime_and_scores_tables()
     compute_market_regime()
-    # For a full run, pass a list of all symbols
+    compute_stock_scores()

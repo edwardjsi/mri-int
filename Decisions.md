@@ -347,4 +347,11 @@ Status: FINAL.
 **Date**: 2026-03-17
 **Status**: APPROVED
 **Decision**: Implemented explicit loading states and "Regrading..." feedback in the Digital Twin UI.
-**Reasoning**: Even with bulk optimizations, ingestion can take 5-10 seconds. Providing visual feedback prevents users from re-clicking or assuming the application has hung, improving overall UX.
+**Reasoning**: Even with bulk optimizations, ingestion can take 5-10 seconds. Providing visual feedback prevents users from re-clicking or assuming the application has hung, improving overall UX.
+
+## Decision 054: Daily Pipeline Entry Point Restoration
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Restored legacy function signatures in `indicator_engine.py`, `regime_engine.py`, and `data_loader.py`.
+**Reasoning**: Recent refactors for on-demand performance inadvertently removed entry points required by the daily `scripts/pipeline.py`. Restoring these while utilizing new bulk patterns ensures both compatibility and improved efficiency for scheduled cron jobs.
+
