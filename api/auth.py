@@ -25,14 +25,14 @@ from src.email_service import send_password_reset_email_detailed
 
 # ── Schemas ─────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str
     name: str
     password: str
     initial_capital: float = 100000.0
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 

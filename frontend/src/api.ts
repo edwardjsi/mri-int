@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = API_BASE_RAW.endsWith('/') ? API_BASE_RAW.slice(0, -1) : API_BASE_RAW;
 
 interface LoginResponse {
     access_token: string;
@@ -33,21 +34,32 @@ function isAuthenticated(): boolean {
 
 async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolean = false) {
     const token = getToken();
+    
+    // Normalize path to ensure it starts with /
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const url = `${API_BASE}${normalizedPath}`;
+
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...(options.headers as Record<string, string> || {}),
     };
+    
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers }).catch(err => {
-        // Network errors (e.g. server down)
+    console.log(`📡 Fetching: ${options.method || 'GET'} ${url}`, options.body ? "(with body)" : "(no body)");
+
+    const res = await fetch(url, { 
+        ...options, 
+        headers,
+        mode: 'cors' 
+    }).catch(err => {
         console.error("Network Error:", err);
-        throw new Error(`Cloud Connection Error: ${err.message || 'Server unreachable'}`);
+        throw new Error(`Connection Error: ${err.message || 'Server unreachable'}`);
     });
 
-    // Handle 401 Session Expired (except during login itself)
     if (res.status === 401 && !isLogin) {
         clearAuth();
         window.location.reload();
@@ -59,15 +71,15 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
         try {
             errorData = await res.json();
         } catch (e) {
-            // Not JSON (e.g. 500 HTML error page)
             const text = await res.text().catch(() => 'No response body');
             console.error("Server Error (Non-JSON):", text);
             throw new Error(`Server Error (${res.status}): ${text.substring(0, 100)}`);
         }
 
+        console.error("API Error Response:", errorData);
+        // Include the raw error data in the Error object so App.tsx can show it
         const detail = errorData.detail || 'Request failed';
         const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
-        console.error("API Error Response:", errorData);
         throw new Error(message);
     }
 
@@ -130,13 +142,18 @@ export const api = {
         const formData = new FormData();
         formData.append('file', file);
         const token = getToken();
+        // Since this is Multipart, we don't set Content-Type JSON
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch(`${API_BASE}/portfolio-review/upload-csv`, {
+        const normalizedPath = '/portfolio-review/upload-csv';
+        const url = `${API_BASE}${normalizedPath}`;
+
+        const res = await fetch(url, {
             method: 'POST',
             body: formData,
             headers,
+            mode: 'cors'
         });
         if (res.status === 401) {
             clearAuth();
@@ -145,9 +162,7 @@ export const api = {
         }
         if (!res.ok) {
             const error = await res.json().catch(() => ({ detail: 'Request failed' }));
-            const detail = error.detail || 'Request failed';
-            const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
-            throw new Error(message);
+            throw new Error(typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail));
         }
         return res.json();
     },

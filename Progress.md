@@ -329,4 +329,18 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 
 [x] Security: AWS keys moved to environment variables.
 
-[ ] Frontend Handshake: Awaiting the aliases to catch the login request.
+- [x] Frontend Handshake: Resolved 422 errors via URL normalization and relaxed schema validation.
+
+### Phase 7: Auth & Handshake Stabilization (2026-03-17)
+- [x] **Mistake**: `api/main.py` was missing all production routers (Signals, Portfolio, etc.) and using a "fake" auth router.
+    - **Fix**: Wired real production routers and the authentic `auth` handler into the main app.
+- [x] **Mistake**: `TokenResponse` enforced a mandatory `name` field, which crashed the validator for legacy users with NULL names.
+    - **Fix**: Made `name` optional and added a default fallback to "User".
+- [x] **Mistake**: `requirements.txt` was missing core infrastructure libraries (fastapi, bcrypt, jose), preventing server startup in fresh environments.
+    - **Fix**: Performed a full dependency audit and added all missing packages.
+- [x] **Mistake**: Frontend `api.ts` was producing malformed URLs (double-slashes) which stripped POST data during login redirects.
+    - **Fix**: Implemented strict URL normalization to ensure requests are direct and data-preserved.
+- [x] **Mistake**: Frontend displayed raw JS objects (`[object Object]`) for server validation errors.
+    - **Fix**: Upgraded the API fetcher to stringify errors into human-readable JSON.
+- [x] **Mistake**: CORS wildcard policy conflicted with browser credential/token requirements.
+    - **Fix**: Standardized the CORS middleware to specifically handle credentials with dynamic origins.
