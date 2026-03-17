@@ -173,23 +173,3 @@ def load_stocks(symbols: list, period: str = None):
                             logger.info(f"  ✅ Fallback: {sym} ({len(records)} days)")
                             break
                     except Exception: continue
-
-def run():
-    create_tables()
-    load_indices()
-    
-    logger.info("Fetching Nifty 500 list from NSE...")
-    try:
-        url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-        nifty500_df = pd.read_csv(io.StringIO(res.text))
-        symbols = nifty500_df['Symbol'].tolist()
-    except Exception:
-        symbols = ["RELIANCE", "TCS", "INFY"]
-    
-    overrides = ["CIGNITITEC", "ONEGLOBAL", "SHILCTECH", "AGI", "LUMAXTECH", "SKFINDIAN"]
-    symbols = list(set(symbols + overrides))
-    load_stocks(symbols)
-
-if __name__ == "__main__":
-    run()

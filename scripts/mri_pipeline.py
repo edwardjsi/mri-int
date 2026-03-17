@@ -31,7 +31,7 @@ def run_pipeline():
         import pandas as pd
         import requests
         import io
-        from src.data_loader import load_indices, load_stocks
+        from src.ingestion_engine import load_indices, load_stocks
 
         load_indices()
 
