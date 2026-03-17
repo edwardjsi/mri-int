@@ -1,0 +1,2 @@
+I am writing to this file at 20:25 IST to verify synchronization.
+If you see this, we are in the same folder!
