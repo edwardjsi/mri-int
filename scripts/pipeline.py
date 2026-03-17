@@ -1,7 +1,6 @@
 """
 MRI Daily Pipeline — ECS Scheduled Task version.
 Runs at 4PM IST Mon-Fri via EventBridge.
-Uses environment variables injected by ECS task definition.
 """
 import os
 import sys
@@ -13,7 +12,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("pipeline")
-
 
 def run_pipeline():
     logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===")
@@ -37,19 +35,11 @@ def run_pipeline():
         logger.info(f"  Fetched {len(symbols)} Nifty 500 symbols")
         load_stocks(symbols)
 
-        # Populate stock_sectors table for sector concentration cap
+        # Update sectors
         from src.db import get_connection as get_db_conn
         sector_conn = get_db_conn()
         sector_cur = sector_conn.cursor()
-        sector_cur.execute("""
-            CREATE TABLE IF NOT EXISTS stock_sectors (
-                symbol VARCHAR(20) PRIMARY KEY,
-                company_name VARCHAR(255),
-                industry VARCHAR(100),
-                updated_at TIMESTAMP DEFAULT NOW()
-            );
-            DELETE FROM stock_sectors;
-        """)
+        sector_cur.execute("DELETE FROM stock_sectors;")
         from psycopg2.extras import execute_batch as eb
         sector_data = df[["Symbol", "Company Name", "Industry"]].dropna().to_dict("records")
         eb(sector_cur, """
@@ -61,11 +51,13 @@ def run_pipeline():
         sector_conn.commit()
         sector_cur.close()
         sector_conn.close()
-        logger.info(f"  ✅ Stock sectors updated ({len(sector_data)} stocks)")
+        logger.info(f"  ✅ Stock sectors updated")
 
-        logger.info("  ✅ Data ingestion complete")
     except Exception as e:
         logger.error(f"  ❌ Data ingestion failed: {e}")
+        # Log precisely what failed to import
+        import traceback
+        logger.error(traceback.format_exc())
         sys.exit(1)
 
     # Step 2: Compute indicators
@@ -79,8 +71,8 @@ def run_pipeline():
         )
 
         add_indicator_columns_if_missing()
-        df, idx_df = fetch_data()
-        updates = compute_indicators(df, idx_df)
+        data_df, idx_df = fetch_data()
+        updates = compute_indicators(data_df, idx_df)
         update_db_with_indicators(updates)
         logger.info("  ✅ Indicators computed")
     except Exception as e:
@@ -104,7 +96,6 @@ def run_pipeline():
     logger.info("[4/5] Generating client signals...")
     try:
         from src.signal_generator import run_signal_generator
-
         run_signal_generator()
         logger.info("  ✅ Signals generated")
     except Exception as e:
@@ -115,15 +106,12 @@ def run_pipeline():
     logger.info("[5/5] Sending signal emails via SES...")
     try:
         from src.email_service import send_signal_emails
-
-        count = send_signal_emails()
-        logger.info(f"  ✅ {count} emails sent")
+        send_signal_emails()
+        logger.info("  ✅ Emails sent")
     except Exception as e:
         logger.error(f"  ❌ Email sending failed: {e}")
-        # Don't exit — email failure shouldn't block pipeline
 
     logger.info(f"=== Pipeline Complete — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===")
-
 
 if __name__ == "__main__":
     run_pipeline()

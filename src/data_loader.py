@@ -11,6 +11,20 @@ from src.db import get_connection, create_tables, insert_daily_prices
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def load_indices():
+    """Daily pipeline entry point for index data."""
+    logger.info("Fetching NIFTY 50 Index data...")
+    idx_raw = yf.download("^NSEI", period="3y", progress=False, auto_adjust=True)
+    if not idx_raw.empty:
+        idx_df = idx_raw.reset_index()
+        idx_df.columns = [c[0].lower().replace(" ", "_") if isinstance(idx_df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in idx_df.columns]
+        idx_df['symbol'] = 'NIFTY50'
+        idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
+        idx_df['adjusted_close'] = idx_df.get('adj_close', idx_df.get('close'))
+        from src.db import insert_index_prices
+        insert_index_prices(idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records'))
+    logger.info("✅ Index data loaded")
+
 def build_symbol_translator() -> dict:
     """Builds a mapping of NSE symbols to BSE codes for dual-exchange fallback."""
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -20,7 +34,6 @@ def build_symbol_translator() -> dict:
         bse_res = requests.get("https://www.bseindia.com/downloads1/List_of_companies.csv", headers=headers, timeout=15)
         bse_df = pd.read_csv(io.StringIO(bse_res.text))
         
-        # Fuzzy column finder
         bse_code_col = [c for c in bse_df.columns if 'Security Code' in c or 'Scrip Code' in c][0]
         bse_isin_col = [c for c in bse_df.columns if 'ISIN' in c][0]
         nse_isin_col = [c for c in nse_df.columns if 'ISIN' in c][0]
@@ -35,27 +48,11 @@ def build_symbol_translator() -> dict:
         logger.error(f"Bridge build failed: {e}. Using mandatory overrides.")
         translator = {}
 
-    # Critical overrides for your specific portfolio
     translator.update({
         "CIGNITITEC": "534758", "LUMAXTECH": "532796", "SKFINDIAN": "500472", 
         "AGI": "500187", "ONEGLOBAL": "514330", "SHILCTECH": "531201"
     })
     return translator
-
-def load_indices():
-    """Daily pipeline entry point for index data."""
-    # This reuse the existing logic in run() but encapsulated
-    logger.info("Fetching NIFTY 50 Index data...")
-    idx_raw = yf.download("^NSEI", period="3y", progress=False, auto_adjust=True)
-    if not idx_raw.empty:
-        idx_df = idx_raw.reset_index()
-        idx_df.columns = [c[0].lower().replace(" ", "_") if isinstance(idx_df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in idx_df.columns]
-        idx_df['symbol'] = 'NIFTY50'
-        idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
-        idx_df['adjusted_close'] = idx_df.get('adj_close', idx_df.get('close'))
-        from src.db import insert_index_prices
-        insert_index_prices(idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records'))
-    logger.info("✅ Index data loaded")
 
 def load_stocks(symbols: list):
     """Daily pipeline entry point for bulk stock data."""
@@ -63,9 +60,8 @@ def load_stocks(symbols: list):
     create_tables()
     translator = build_symbol_translator()
     
-    # Using the existing per-stock logic but optimized for the pipeline call
     for sym in symbols:
-        time.sleep(1.2) # Anti-Throttle
+        time.sleep(1.2)
         bse_code = translator.get(sym, sym)
         search_list = [f"{bse_code}.BO", f"{sym}.NS", f"{sym}.BO"] if bse_code.isdigit() else [f"{sym}.NS", f"{sym}.BO"]
         
@@ -97,7 +93,6 @@ def run():
     create_tables()
     load_indices()
     
-    # 2. Dynamic Nifty 500 List Retrieval
     logger.info("Fetching Nifty 500 list from NSE...")
     try:
         url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
@@ -105,12 +100,11 @@ def run():
         nifty500_df = pd.read_csv(io.StringIO(res.text))
         symbols = nifty500_df['Symbol'].tolist()
     except Exception:
-        symbols = ["RELIANCE", "TCS", "INFY"] # Emergency Fallback
+        symbols = ["RELIANCE", "TCS", "INFY"]
     
-    # Merge with overrides
     overrides = ["CIGNITITEC", "ONEGLOBAL", "SHILCTECH", "AGI", "LUMAXTECH", "SKFINDIAN"]
     symbols = list(set(symbols + overrides))
     load_stocks(symbols)
 
 if __name__ == "__main__":
-    run()
+    run()
