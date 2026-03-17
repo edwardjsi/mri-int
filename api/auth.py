@@ -41,6 +41,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     client_id: str
     name: Optional[str] = "User"
+    email: str
 
 
 # ── Endpoints ───────────────────────────────────────────────
@@ -63,7 +64,12 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
     conn.commit()
 
     token = create_access_token({"sub": client_id})
-    return TokenResponse(access_token=token, client_id=client_id, name=req.name)
+    return TokenResponse(
+        access_token=token, 
+        client_id=client_id, 
+        name=req.name,
+        email=req.email
+    )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -78,7 +84,12 @@ def login(req: LoginRequest, conn=Depends(get_db)):
         raise HTTPException(status_code=403, detail="Account deactivated")
 
     token = create_access_token({"sub": str(client["id"])})
-    return TokenResponse(access_token=token, client_id=str(client["id"]), name=client["name"])
+    return TokenResponse(
+        access_token=token, 
+        client_id=str(client["id"]), 
+        name=client["name"],
+        email=req.email
+    )
 
 
 @router.get("/me")

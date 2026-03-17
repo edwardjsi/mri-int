@@ -6,6 +6,7 @@ interface LoginResponse {
     token_type: string;
     client_id: string;
     name: string;
+    email: string;
 }
 
 function getToken(): string | null {
@@ -20,12 +21,14 @@ function setAuth(data: LoginResponse) {
     localStorage.setItem('mri_token', data.access_token);
     localStorage.setItem('mri_client_id', data.client_id);
     localStorage.setItem('mri_name', data.name || 'User');
+    localStorage.setItem('mri_email', data.email || '');
 }
 
 function clearAuth() {
     localStorage.removeItem('mri_token');
     localStorage.removeItem('mri_client_id');
     localStorage.removeItem('mri_name');
+    localStorage.removeItem('mri_email');
 }
 
 function isAuthenticated(): boolean {
@@ -141,6 +144,15 @@ export const api = {
     uploadPortfolioCsv: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
+        
+        // Include email from localStorage if available
+        const email = localStorage.getItem('mri_email');
+        const name = localStorage.getItem('mri_name') || 'User';
+        if (email) {
+            formData.append('email', email);
+            formData.append('name', name);
+        }
+
         const token = getToken();
         // Since this is Multipart, we don't set Content-Type JSON
         const headers: Record<string, string> = {};
