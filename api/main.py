@@ -1,13 +1,11 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from api.portfolio_review import router as portfolio_review_router
 
 app = FastAPI()
 
-# This tells the backend: "Accept requests from ANYWHERE" 
-# We do this just to get you logged in, then we can tighten it later.
+# OPEN THE GATES: This stops the browser from blocking the dashboard
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -17,6 +15,11 @@ app.add_middleware(
 )
 
 app.include_router(portfolio_review_router)
+
+# THE HEARTBEAT: Render needs this to stay green
+@app.get("/")
+async def root():
+    return {"message": "MRI-Int API is active", "port": 10000}
 
 @app.get("/api/health")
 async def health():
