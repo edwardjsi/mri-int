@@ -21,3 +21,4 @@ __pycache__/
 *.tfstate.backup
 .terraform/
 backups/
+.env

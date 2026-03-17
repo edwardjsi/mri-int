@@ -16,7 +16,6 @@ async def holdings_status(email: str):
     try:
         cur.execute("SELECT COUNT(*) FROM holdings WHERE email = %s", (email,))
         count = cur.fetchone()[0]
-        # This clean JSON prevents the [object Object] error
         return {
             "storage_ready": True if count > 0 else False, 
             "holdings_count": count,

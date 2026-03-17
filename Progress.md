@@ -283,3 +283,14 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **Route Aliases**: Added dash/underscore support for all portfolio routes.
 - [x] **Engine Bridge**: Restored `compute_indicators_for_symbols` in `indicator_engine.py`.
 - [x] **Digital Twin Sync**: Verified `storage_ready` handshake logic.
+
+### Phase 4: Production Handshake (Updated 2026-03-17)
+- [x] **Route Aliases**: Added dash/underscore support for all portfolio routes.
+- [x] **Engine Bridge**: Restored `compute_indicators_for_symbols` in `indicator_engine.py`.
+- [x] **Digital Twin Sync**: Verified `storage_ready` handshake logic.
+
+### Phase 4: Production Handshake (Updated 2026-03-17)
+- [x] **Route Aliases**: Added dash/underscore support for all portfolio routes in `api/portfolio_review.py`.
+- [x] **Engine Bridge**: Restored `compute_indicators_for_symbols` in `indicator_engine.py`.
+- [x] **Infrastructure Fix**: Verified 16 tables in production database.
+- [x] **Regime Sync**: Confirmed NIFTY50 data is flowing to the dashboard.

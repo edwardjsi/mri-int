@@ -1,231 +1,103 @@
-"""
-MRI Client Signal Platform — FastAPI Application
-"""
-import os
-import traceback
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Optional
+from datetime import date
+import logging
+from src.db import get_connection
 
-from api.auth import router as auth_router
-from api.signals import router as signals_router
-from api.actions import router as actions_router
-from api.portfolio import router as portfolio_router
-from api.portfolio_review import router as portfolio_review_router
-from api.email_debug import router as email_debug_router
+router = APIRouter(prefix="/api/signals", tags=["Signals"])
+logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="MRI Signal Platform",
-    description="Market Regime Intelligence — Client Signal API",
-    version="1.0.0",
-)
-
-@app.on_event("startup")
-async def startup_event():
-    print("=== Registered Routes ===")
-    for route in app.routes:
-        if hasattr(route, "path"):
-            print(f"  {route.path} -> {route.name}")
-    print("=========================")
-
-# Global exception handler — surface actual errors
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    tb = traceback.format_exc()
-    print(f"ERROR: {exc}\n{tb}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc), "traceback": tb},
-    )
-
-# CORS — allow React frontend (configurable via env)
-cors_origins_str = os.getenv(
-    "CORS_ORIGINS",
-    "https://mri-frontend.onrender.com,http://localhost:5173,http://localhost:3000",
-)
-cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
-print(f"DEBUG: Allowed CORS Origins: {cors_origins}")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Mount routers
-app.include_router(auth_router)
-app.include_router(signals_router)
-app.include_router(actions_router)
-app.include_router(portfolio_router)
-app.include_router(portfolio_review_router)
-app.include_router(email_debug_router)
-
-
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok", "service": "mri-signal-platform"}
-
-
-@app.get("/api/cors-debug")
-def cors_debug(request: Request):
-    """Debug endpoint to validate CORS config in the running container.
-
-    Safe to expose: returns only CORS-related configuration and request metadata.
-    """
-    return {
-        "request_origin": request.headers.get("origin"),
-        "request_host": request.headers.get("host"),
-        "request_url": str(request.url),
-        "cors_env": os.getenv("CORS_ORIGINS"),
-        "cors_allowed_origins": cors_origins,
-    }
-
-
-@app.get("/api/db-test")
-def db_test():
-    """Test DB connectivity directly."""
-    import os, psycopg2
+@router.get("/latest-date")
+async def get_latest_available_date():
+    """Returns the most recent date present in the scoring table."""
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            port=os.getenv("DB_PORT", "5433"),
-            dbname=os.getenv("DB_NAME", "mri_db"),
-            user=os.getenv("DB_USER", "mri_admin"),
-            password=os.getenv("DB_PASSWORD", ""),
-        )
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM clients")
-        count = cur.fetchone()[0]
-        conn.close()
-        return {"db": "connected", "clients_count": count, "password_set": bool(os.getenv("DB_PASSWORD"))}
+        cur.execute("SELECT MAX(date) FROM stock_scores")
+        row = cur.fetchone()
+        return {"latest_date": row[0] if row else None}
     except Exception as e:
-        return {"db": "failed", "error": str(e), "password_set": bool(os.getenv("DB_PASSWORD"))}
-
-
-# Diagnostic Update - TIMESTAMP: 2026-03-12-12:20
-@app.get("/api/db-debug")
-def db_debug():
-    """Diagnostic endpoint to see what the app sees."""
-    import os, psycopg2
-    from psycopg2.extras import RealDictCursor
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        if not db_url:
-            return {"status": "error", "message": "DATABASE_URL is not set!"}
-        
-        conn = psycopg2.connect(db_url, sslmode="require", cursor_factory=RealDictCursor)
-        cur = conn.cursor()
-        
-        # 1. Get Tables
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
-        tables = [r["table_name"] for r in cur.fetchall()]
-        
-        # 2. Get Holdings Breakdown by Email
-        holdings_audit = []
-        if "client_external_holdings" in tables and "clients" in tables:
-            cur.execute("""
-                SELECT c.email, COUNT(h.id) as count
-                FROM clients c
-                LEFT JOIN client_external_holdings h ON c.id = h.client_id
-                GROUP BY c.email
-                ORDER BY count DESC;
-            """)
-            holdings_audit = [dict(r) for r in cur.fetchall()]
-        
-        # 3. DB Name
-        cur.execute("SELECT current_database();")
-        db_name = cur.fetchone()["current_database"]
-
+        logger.error(f"Error fetching latest date: {e}")
+        return {"latest_date": None}
+    finally:
         cur.close()
         conn.close()
+
+@router.get("/")
+async def get_market_signals(
+    target_date: Optional[date] = None,
+    regime_only: bool = False
+):
+    """
+    Fetches MRI signals and Market Regime.
+    If target_date is not provided, it automatically finds the ABSOLUTE LATEST data.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    try:
+        # 1. Determine the date to show
+        if not target_date:
+            cur.execute("SELECT MAX(date) FROM stock_scores")
+            res = cur.fetchone()
+            if not res or not res[0]:
+                return {"date": None, "regime": "UNKNOWN", "signals": []}
+            effective_date = res[0]
+        else:
+            effective_date = target_date
+
+        # 2. Fetch Market Regime for that date
+        cur.execute("""
+            SELECT classification, sma_200, sma_200_slope_20 
+            FROM market_regime 
+            WHERE date = %s
+        """, (effective_date,))
+        regime_row = cur.fetchone()
         
-        return {
-            "status": "success",
-            "database": db_name,
-            "account_holdings_breakdown": holdings_audit,
-            "total_tables": len(tables),
-            "cors_origins_allowed": cors_origins,
-            "timestamp": "2026-03-12-12:50",
-            "info": "If your email shows 0 holdings, you need to log in with that email. If fetch fails, check VITE_API_URL and ensure you REBUILD the frontend on Render."
+        regime_data = {
+            "classification": regime_row[0] if regime_row else "NEUTRAL",
+            "sma_200": float(regime_row[1]) if regime_row and regime_row[1] else 0,
+            "slope": float(regime_row[2]) if regime_row and regime_row[2] else 0
         }
-    except Exception as e:
-        import traceback
-        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
 
+        if regime_only:
+            return {"date": effective_date, "regime": regime_data, "signals": []}
 
-@app.get("/api/admin/survivorship-check")
-def survivorship_check(secret: str = ""):
-    """
-    TEST-01: Survivorship Bias Check — runs on Render against real Neon DB.
-    Usage: GET /api/admin/survivorship-check?secret=mri-admin-2024
-    TEMPORARY — remove after test is complete.
-    """
-    if secret != "mri-admin-2024":
-        return JSONResponse(status_code=403, content={"error": "Unauthorized"})
-
-    from src.db import get_connection
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-
+        # 3. Fetch all Stock Signals for that date
         cur.execute("""
-            SELECT EXTRACT(YEAR FROM date)::int AS year,
-                   COUNT(DISTINCT symbol)       AS distinct_symbols,
-                   COUNT(*)                     AS total_rows,
-                   MIN(date)::text              AS first_date,
-                   MAX(date)::text              AS last_date
-            FROM daily_prices
-            GROUP BY year
-            ORDER BY year
-        """)
+            SELECT 
+                symbol, total_score, condition_ema_50_200, 
+                condition_ema_200_slope, condition_6m_high, 
+                condition_volume, condition_rs
+            FROM stock_scores 
+            WHERE date = %s
+            ORDER BY total_score DESC, symbol ASC
+        """, (effective_date,))
+        
         rows = cur.fetchall()
-
-        cur.execute("SELECT MIN(date)::text FROM daily_prices")
-        earliest = cur.fetchone()[0]
-
-        cur.execute("""
-            SELECT symbol, COUNT(*) AS days
-            FROM daily_prices
-            GROUP BY symbol
-            ORDER BY days DESC
-            LIMIT 10
-        """)
-        top_symbols = [{"symbol": r[0], "days": r[1]} for r in cur.fetchall()]
-
-        cur.close()
-        conn.close()
-
-        yearly = [
-            {"year": r[0], "distinct_symbols": r[1], "total_rows": r[2],
-             "first_date": r[3], "last_date": r[4]}
-            for r in rows
+        signals = [
+            {
+                "symbol": r[0],
+                "score": r[1],
+                "details": {
+                    "ema_trend": r[2],
+                    "slope_up": r[3],
+                    "at_6m_high": r[4],
+                    "vol_surge": r[5],
+                    "relative_strength": r[6]
+                }
+            } for r in rows
         ]
 
-        counts = [r[1] for r in rows]
-        variation_pct = round((max(counts) - min(counts)) / min(counts) * 100, 1) if counts else 0
-
-        if variation_pct > 20:
-            verdict = "PASS"
-            diagnosis = "Universe varies significantly — historical constituents likely included."
-        elif variation_pct > 5:
-            verdict = "PARTIAL"
-            diagnosis = "Some variation found but verify delisted stocks are present."
-        else:
-            verdict = "FAIL"
-            diagnosis = "Symbol count is nearly flat — survivorship bias likely exists."
-
         return {
-            "test": "TEST-01 Survivorship Bias Check",
-            "verdict": verdict,
-            "diagnosis": diagnosis,
-            "variation_pct": variation_pct,
-            "earliest_data": earliest,
-            "min_symbols_any_year": min(counts),
-            "max_symbols_any_year": max(counts),
-            "yearly_breakdown": yearly,
-            "top_10_symbols_by_history": top_symbols,
+            "date": effective_date,
+            "regime": regime_data,
+            "signals": signals
         }
+
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        logger.error(f"Failed to fetch signals: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
