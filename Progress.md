@@ -258,3 +258,23 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 ### Phase 4: Code Integrity (Updated 2026-03-17)
 - [x] **Syntax Hotfix**: Corrected truncated `df.columns` assignment in `on_demand_ingest.py`.
 - [x] **Import Chain Verified**: Confirmed `portfolio_review.py` -> `on_demand_ingest.py` path is clear.
+
+### Phase 3: Recovery & Schema Alignment (Completed 2026-03-17)
+- [x] **Database Restored**: All 16 tables verified in production via `db-debug`.
+- [x] **Index Recovery**: Manually injected 493 days of NIFTY50 data to fix the Regime Engine stall.
+- [x] **Date Sync**: Confirmed March 16, 2026, as the current "Latest Regime" state.
+- [x] **User Persistence**: Successfully mapped `edwardjsi@gmail.com` to the digital twin layer.
+
+### Phase 4: API & Frontend Handshake (In Progress)
+- [ ] **Route Normalization**: Adding underscore and dash aliases to `portfolio_review` routes to fix 404s.
+- [ ] **Score Propagation**: Verifying that background ingestion triggers after CSV upload.
+
+### Phase 4: Production Handshake (Updated 2026-03-17)
+- [x] **Route Resilience**: Added aliases for `holdings-status` and `upload-csv` to resolve 404s.
+- [x] **Engine Bridge**: Implemented `compute_indicators_for_symbols` to allow on-demand analysis.
+- [x] **Schema Alignment**: Verified JSON response matches React state for `storage_ready`.
+
+### Phase 4: Production Stability (Updated 2026-03-17)
+- [x] **Import Bridge**: Standardized `compute_indicators_for_symbols` to resolve engine-to-api linkage.
+- [x] **Status Handshake**: Aligned `holdings-status` JSON response with React state expectations.
+- [x] **404 Resolution**: Added route aliases to handle naming variation in frontend API calls.

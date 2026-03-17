@@ -46,18 +46,17 @@ def fetch_data_for_symbols(symbols: list):
     return df, idx_df
 
 def compute_indicators(df, idx_df):
-    """Performs the actual technical analysis calculations."""
+    """Performs technical analysis calculations with Young Stock fallbacks."""
     updates = []
     for symbol in df['symbol'].unique():
         s_df = df[df['symbol'] == symbol].copy().sort_values('date')
         if len(s_df) < 20:
-            logger.warning(f"Insufficient data for {symbol}. Skipping.")
             continue
 
         s_df['ema_20'] = s_df['close'].ewm(span=20, adjust=False).mean()
         s_df['ema_50'] = s_df['close'].ewm(span=50, adjust=False).mean()
         
-        # EMA 200 Fallback for Young Stocks
+        # Fallback for Young Stocks: Use EMA50 if 200 days of data aren't available
         if len(s_df) >= 200:
             s_df['ema_200'] = s_df['close'].ewm(span=200, adjust=False).mean()
         else:
@@ -97,7 +96,7 @@ def update_db_with_indicators(updates):
     conn.close()
 
 def compute_indicators_for_symbols(symbols: list):
-    """API Bridge: Computes indicators for specific symbols on demand."""
+    """Bridge for On-Demand API requests."""
     if not symbols: return
     add_indicator_columns_if_missing()
     df, idx_df = fetch_data_for_symbols(symbols)
@@ -106,7 +105,7 @@ def compute_indicators_for_symbols(symbols: list):
     if updates: update_db_with_indicators(updates)
 
 def run_indicator_engine():
-    """Bulk runner for the entire database."""
+    """Bulk runner for the whole DB."""
     add_indicator_columns_if_missing()
     conn = get_connection()
     cur = conn.cursor()
