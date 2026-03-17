@@ -36,12 +36,10 @@ def fetch_data_for_symbols(symbols: list):
     conn = get_connection()
     sym_tuple = tuple(symbols) if len(symbols) > 1 else f"('{symbols[0]}')"
     
-    # Fetch stock data
     query = f"SELECT symbol, date, close, volume FROM daily_prices WHERE symbol IN {sym_tuple} ORDER BY date"
     df = pd.read_sql(query, conn)
     
-    # Fetch Index data for Relative Strength
-    idx_query = "SELECT date, close as idx_close FROM daily_prices WHERE symbol = 'NIFTY50' ORDER BY date"
+    idx_query = "SELECT date, close as idx_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date"
     idx_df = pd.read_sql(idx_query, conn)
     
     conn.close()
@@ -50,106 +48,70 @@ def fetch_data_for_symbols(symbols: list):
 def compute_indicators(df, idx_df):
     """Performs the actual technical analysis calculations."""
     updates = []
-    
     for symbol in df['symbol'].unique():
         s_df = df[df['symbol'] == symbol].copy().sort_values('date')
-        
         if len(s_df) < 20:
-            logger.warning(f"Insufficient data for {symbol} ({len(s_df)} days). Skipping.")
+            logger.warning(f"Insufficient data for {symbol}. Skipping.")
             continue
 
-        # 1. EMAs
         s_df['ema_20'] = s_df['close'].ewm(span=20, adjust=False).mean()
         s_df['ema_50'] = s_df['close'].ewm(span=50, adjust=False).mean()
         
-        # Fallback for Young Stocks (SHILCTECH fix)
+        # EMA 200 Fallback for Young Stocks
         if len(s_df) >= 200:
             s_df['ema_200'] = s_df['close'].ewm(span=200, adjust=False).mean()
         else:
-            s_df['ema_200'] = s_df['ema_50'] # Use EMA50 as proxy for young stocks
+            s_df['ema_200'] = s_df['ema_50'] 
 
-        # 2. RSI 14
         delta = s_df['close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
+        rs = gain / (loss + 1e-9)
         s_df['rsi_14'] = 100 - (100 / (1 + rs))
-
-        # 3. Logic Flags
         s_df['below_200ema'] = s_df['close'] < s_df['ema_200']
 
-        # Clean NaN values for DB insertion
         s_df = s_df.replace({np.nan: None})
-
         for _, row in s_df.iterrows():
             updates.append({
-                'symbol': symbol,
-                'date': row['date'],
-                'ema_20': row['ema_20'],
-                'ema_50': row['ema_50'],
-                'ema_200': row['ema_200'],
-                'rsi_14': row['rsi_14'],
+                'symbol': symbol, 'date': row['date'],
+                'ema_20': row['ema_20'], 'ema_50': row['ema_50'],
+                'ema_200': row['ema_200'], 'rsi_14': row['rsi_14'],
                 'below_200ema': row['below_200ema']
             })
-            
     return updates
 
 def update_db_with_indicators(updates):
     """Pushes calculated indicators back to the daily_prices table."""
     conn = get_connection()
     cur = conn.cursor()
-    
     sql = """
         UPDATE daily_prices 
-        SET ema_20 = %(ema_20)s, 
-            ema_50 = %(ema_50)s, 
-            ema_200 = %(ema_200)s, 
-            rsi_14 = %(rsi_14)s, 
-            below_200ema = %(below_200ema)s
+        SET ema_20 = %(ema_20)s, ema_50 = %(ema_50)s, ema_200 = %(ema_200)s, 
+            rsi_14 = %(rsi_14)s, below_200ema = %(below_200ema)s
         WHERE symbol = %(symbol)s AND date = %(date)s
     """
-    
     from psycopg2.extras import execute_batch
     execute_batch(cur, sql, updates)
-    
     conn.commit()
     cur.close()
     conn.close()
-    logger.info(f"Successfully committed indicators for {len(updates)} records.")
 
 def compute_indicators_for_symbols(symbols: list):
-    """
-    Bridge function for on-demand processing.
-    This resolves the ImportError in the API routers.
-    """
-    if not symbols:
-        return
-
-    logger.info(f"Triggering on-demand indicators for: {symbols}")
+    """API Bridge: Computes indicators for specific symbols on demand."""
+    if not symbols: return
     add_indicator_columns_if_missing()
-    
     df, idx_df = fetch_data_for_symbols(symbols)
-    
-    if df.empty:
-        logger.warning(f"No price data found for {symbols}")
-        return
-
+    if df.empty: return
     updates = compute_indicators(df, idx_df)
-    
-    if updates:
-        update_db_with_indicators(updates)
+    if updates: update_db_with_indicators(updates)
 
 def run_indicator_engine():
-    """Main execution loop for bulk indicator updates."""
-    logger.info("Starting Bulk Indicator Engine...")
+    """Bulk runner for the entire database."""
     add_indicator_columns_if_missing()
-    
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT symbol FROM daily_prices")
     all_symbols = [r[0] for r in cur.fetchall()]
     cur.close()
     conn.close()
-    
-    if all_symbols:
-        compute_indicators_for_symbols(all_symbols)
+    if all_symbols: compute_indicators_for_symbols(all_symbols)
