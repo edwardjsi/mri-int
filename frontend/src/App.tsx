@@ -972,8 +972,8 @@ function RiskAuditPage() {
 	        <h2 className="section-title" style={{ margin: 0 }}>🛡️ My Holdings (Digital Twin)</h2>
 	        {canDeleteSavedHoldings && (
 	          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-	            <button className="btn-secondary" onClick={handleRegradeHoldings} style={{ padding: '8px 12px' }}>
-	              🔄 Regrade Holdings
+	            <button className="btn-secondary" onClick={handleRegradeHoldings} disabled={savedLoading} style={{ padding: '8px 12px' }}>
+	              {savedLoading ? '🔄 Regrading...' : '🔄 Regrade Holdings'}
 	            </button>
 	            {deleteAllArmed && (
 	              <div style={{ color: '#fecaca', fontSize: '12px', fontWeight: 700 }}>

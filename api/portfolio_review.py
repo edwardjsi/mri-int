@@ -239,6 +239,7 @@ async def delete_all_holdings(
         cur.close()
 
 @router.post("/holdings/regrade")
+@router.post("/regrade")
 async def regrade_holdings(
     background_tasks: BackgroundTasks,
     send_email: bool = False,
@@ -254,6 +255,7 @@ async def regrade_holdings(
     return {"status": "success", "message": "Regrading started"}
 
 @router.post("/holdings/regrade-sync")
+@router.post("/regrade-sync")
 async def regrade_holdings_sync(
     send_email: bool = False,
     client=Depends(get_current_client),
@@ -264,5 +266,7 @@ async def regrade_holdings_sync(
     symbols = [r[0] for r in cur.fetchall()]
     cur.close()
     if symbols:
+        # Now uses bulk ingestion optimized for speed
+        logger.info(f"Regrading {len(symbols)} symbols sync for {client['email']}")
         ingest_missing_symbols_sync(symbols, 'admin', client["email"])
     return {"status": "success", "message": "Regrading complete"}

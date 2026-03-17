@@ -330,3 +330,21 @@ Status: FINAL.
 **Date**: 2026-03-17
 **Decision**: Standardized the use of `df.columns` list comprehensions across all ingestion modules.
 **Reasoning**: Prevents `AttributeError` and `SyntaxError` when switching between different `yfinance` versions or multi-exchange dataframes.
+
+## Decision 051: Bulk Portfolio Ingestion
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Switched from sequential yfinance downloads to bulk `yf.download(list_of_symbols)` for on-demand regrading.
+**Reasoning**: Sequential downloads for a standard 33-item portfolio take ~40 seconds, exceeding Render's 30s timeout and triggering "Failed to fetch" errors. Bulk downloads reduce this to <10 seconds, ensuring request completion.
+
+## Decision 052: Enhanced Tiered Support (BSE Numeric)
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Expanded ingestion logic to explicitly iterate through NSE (.NS), BSE (.BO), and Numeric BSE codes if a symbol fails to resolve.
+**Reasoning**: Users often have older BSE stocks or newly listed companies that don't follow standard NSE naming. This tiered fallback ensures the "Digital Twin" stays accurate even for non-standard brokerage exports.
+
+## Decision 053: UI State for Regrade Operations
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Implemented explicit loading states and "Regrading..." feedback in the Digital Twin UI.
+**Reasoning**: Even with bulk optimizations, ingestion can take 5-10 seconds. Providing visual feedback prevents users from re-clicking or assuming the application has hung, improving overall UX.

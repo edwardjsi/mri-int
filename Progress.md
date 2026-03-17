@@ -344,3 +344,7 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
     - **Fix**: Upgraded the API fetcher to stringify errors into human-readable JSON.
 - [x] **Mistake**: CORS wildcard policy conflicted with browser credential/token requirements.
     - **Fix**: Standardized the CORS middleware to specifically handle credentials with dynamic origins.
+- [x] **Mistake**: Digital Twin storage was "summary-only", returning counts but no actual list of holdings to the UI.
+    - **Fix**: Upgraded `/api/portfolio-review/holdings` to return a full, enriched list with pricing and P&L analysis.
+- [x] **Mistake**: CSV uploads were failing with "Connection Error" because the authenticated user's email was missing from the form data.
+    - **Fix**: Updated `api.ts` to persist user email and enforced token-based identity resolution in the backend.
