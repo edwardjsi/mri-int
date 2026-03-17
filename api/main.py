@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -8,11 +8,9 @@ from api.portfolio_review import router as portfolio_review_router
 
 load_dotenv()
 
-# THE CRITICAL VARIABLE: Render looks for 'app'
 app = FastAPI(title="MRI-Int API")
 
-# CORS setup: This allows the frontend to talk to the backend
-# Using "*" (Allow All) temporarily to break through the "Not Found" errors
+# Wide open CORS to stop the browser from blocking you
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,13 +19,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include the portfolio review routes
+# --- MISSING AUTH ROUTE START ---
+auth_router = APIRouter(prefix="/api/auth", tags=["Auth"])
+
+@auth_router.post("/login")
+async def login(email: str = Form(...), name: str = Form("User")):
+    # This is a simple pass-through to let you into the dashboard
+    return {
+        "status": "success",
+        "user": {"email": email, "name": name},
+        "message": "Login successful"
+    }
+
+app.include_router(auth_router)
+# --- MISSING AUTH ROUTE END ---
+
 app.include_router(portfolio_review_router)
 
-# ROOT HEARTBEAT: Render needs this to stay green and not shut down
 @app.get("/")
 async def root():
-    return {"message": "MRI-Int API is Live", "status": "healthy"}
+    return {"message": "MRI-Int API is Live"}
 
 @app.get("/api/health")
 async def health():
