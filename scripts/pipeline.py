@@ -19,6 +19,15 @@ def run_pipeline():
     # Step 1: Ingest today's data
     logger.info("[1/5] Ingesting today's market data...")
     try:
+        import os
+        import sys
+        logger.info(f"DEBUG: Current Directory: {os.getcwd()}")
+        logger.info(f"DEBUG: Python Path: {sys.path}")
+        if os.path.exists('src'):
+            logger.info(f"DEBUG: src directory contents: {os.listdir('src')}")
+        else:
+            logger.error("DEBUG: src directory MISSING!")
+
         import pandas as pd
         import requests
         import io
