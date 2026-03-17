@@ -2,6 +2,7 @@ import logging
 import io
 import pandas as pd
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form
+from typing import Optional
 from src.db import get_connection
 from src.on_demand_ingest import ingest_missing_symbols_sync
 
@@ -10,15 +11,16 @@ logger = logging.getLogger(__name__)
 
 @router.get("/holdings-status")
 @router.get("/holdings_status")
-@router.get("/holdings")  # Alias to fix frontend 404
-async def holdings_status(email: str = None):
+@router.get("/holdings")  # CRITICAL: This alias stops the 404 Not Found error
+async def holdings_status(email: Optional[str] = None):
     """
-    Checks if the user has any holdings in the database.
-    Returns storage_ready: True if holdings exist.
+    Checks if a user has existing holdings. 
+    Returns storage_ready: True/False for the Digital Twin handshake.
     """
     if not email:
-        logger.warning("Holdings check requested without email")
-        return {"storage_ready": False, "message": "Email parameter is required"}
+        # Returning a 200 with False is better than a 422 crash
+        logger.warning("Handshake requested without an email string.")
+        return {"storage_ready": False, "message": "Email is required for status check."}
 
     conn = get_connection()
     cur = conn.cursor()
@@ -33,14 +35,14 @@ async def holdings_status(email: str = None):
             "status": "active"
         }
     except Exception as e:
-        logger.error(f"Handshake failed for {email}: {e}")
+        logger.error(f"Database handshake failed for {email}: {e}")
         return {"storage_ready": False, "error": str(e)}
     finally:
         cur.close()
         conn.close()
 
 @router.post("/upload-csv")
-@router.post("/upload_csv") # Alias for compatibility
+@router.post("/upload_csv")
 async def upload_csv(
     background_tasks: BackgroundTasks,
     email: str = Form(...),
@@ -48,57 +50,38 @@ async def upload_csv(
     file: UploadFile = File(...)
 ):
     """
-    Handles CSV upload, saves symbols to the database, 
-    and triggers background data ingestion.
+    Processes the uploaded CSV, stores symbols, and triggers the MRI engine.
     """
     try:
-        # Read the uploaded CSV
+        # 1. Read and Parse CSV
         contents = await file.read()
         df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
         
-        # Normalize column names to find the symbols
+        # Standardize column names
         df.columns = [c.lower().strip() for c in df.columns]
         symbol_col = next((c for c in df.columns if 'symbol' in c or 'ticker' in c), None)
         
         if not symbol_col:
-            logger.error(f"Upload failed: No symbol column found in {df.columns}")
-            raise HTTPException(status_code=400, detail="No symbol/ticker column found in CSV")
+            logger.error(f"CSV Upload Error: No symbol column found. Columns: {df.columns.tolist()}")
+            raise HTTPException(status_code=400, detail="CSV missing 'symbol' or 'ticker' column.")
 
-        # Extract unique symbols
+        # Extract unique tickers
         symbols = [str(s).upper().strip() for s in df[symbol_col].dropna().unique()]
 
         if not symbols:
-            raise HTTPException(status_code=400, detail="CSV contains no valid symbols")
+            raise HTTPException(status_code=400, detail="The uploaded CSV contains no valid symbols.")
 
+        # 2. Database Operations
         conn = get_connection()
         cur = conn.cursor()
         
-        # 1. Ensure User exists
+        # Ensure user entry exists
         cur.execute(
             "INSERT INTO users (email, name) VALUES (%s, %s) ON CONFLICT (email) DO NOTHING", 
             (email, name)
         )
         
-        # 2. Insert Holdings
+        # Insert holdings for the user
         for sym in symbols:
             cur.execute(
-                "INSERT INTO holdings (email, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING", 
-                (email, sym)
-            )
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        # 3. Trigger background data fetch and indicator calculation
-        background_tasks.add_task(ingest_missing_symbols_sync, symbols, 'admin', email)
-        
-        logger.info(f"Successfully processed upload for {email}: {len(symbols)} symbols")
-        return {
-            "status": "success", 
-            "message": f"Synced {len(symbols)} symbols. Analysis starting in background."
-        }
-        
-    except Exception as e:
-        logger.error(f"Upload processing failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+                "INSERT INTO holdings (email, symbol) VALUES (%s, %s) ON

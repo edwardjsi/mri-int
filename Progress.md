@@ -312,3 +312,9 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 [x] Backend Entry: app variable restored.
 
 [ ] Login Verification: Awaiting successful handshake after Render deploy.
+
+### Phase 6: Port & Route Finalization (2026-03-17)
+- [x] **Port Alignment**: Matching Docker Command to internal port 8000.
+- [x] **Route Aliases**: Added `/holdings` to satisfy frontend requirements.
+- [x] **Parameter Safety**: Handled missing email strings to prevent 422 errors.
+- [ ] **Verification**: Final dashboard login test.
