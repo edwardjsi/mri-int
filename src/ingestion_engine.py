@@ -5,7 +5,12 @@ import requests
 import io
 import logging
 import time
+import os
 from datetime import datetime, timedelta
+
+# SUPER DEBUG: Print exactly who is being loaded
+print(f"DEBUG: LOADING ingestion_engine.py from {os.path.abspath(__file__)}")
+
 from src.db import get_connection, create_tables, insert_daily_prices
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
