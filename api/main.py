@@ -4,16 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# Import your routes
+# Import Routers
 from api.portfolio_review import router as portfolio_review_router
 
-# Load environment variables
+# Load env vars
 load_dotenv()
 
-# THE CRITICAL FIX: Render looks for this 'app' variable
+# THE FIX: Render looks for this 'app' variable to start the server
 app = FastAPI(title="MRI-Int API", version="1.0.0")
 
-# CORS Configuration
+# CORS Setup - Ensures the frontend can talk to the backend
 cors_origins_str = os.getenv("CORS_ORIGINS", "https://mri-frontend.onrender.com")
 origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
@@ -25,18 +25,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
+# Attach the Portfolio routes
 app.include_router(portfolio_review_router)
 
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "MRI-Int API is running"}
+    return {"status": "online", "message": "MRI-Int API is active"}
 
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy"}
 
-# Standard Debug Endpoints
 @app.get("/api/db-debug")
 async def db_debug():
     from src.db import get_connection

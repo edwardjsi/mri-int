@@ -294,3 +294,9 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **Engine Bridge**: Restored `compute_indicators_for_symbols` in `indicator_engine.py`.
 - [x] **Infrastructure Fix**: Verified 16 tables in production database.
 - [x] **Regime Sync**: Confirmed NIFTY50 data is flowing to the dashboard.
+
+[x] Entry Point Fix: Standardized FastAPI instance naming to app.
+
+[x] Namespace Alignment: Verified api.main:app matching between code and Render settings.
+
+[ ] Handshake Verification: Awaiting dashboard storage_ready confirmation.
