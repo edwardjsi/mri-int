@@ -91,7 +91,8 @@ def build_signal_email_html(client_name, signals, regime):
                     <th style="padding:8px;text-align:left">Score</th>
                     <th style="padding:8px;text-align:left">Reason</th>
                 </tr>
-                {sell_rows}"""
+                {sell_rows}
+            </table>"""
 
     if not buy_signals and not sell_signals:
         html += """<p style="color:#6b7280;font-style:italic;text-align:center;padding:20px">No signals today. Hold current positions.</p>"""
@@ -187,7 +188,7 @@ def send_password_reset_email_detailed(email: str, name: str, token: str) -> tup
 
 
 def send_signal_emails():
-    """Send daily signal digest to all clients with unsent signals."""
+    """Send daily signal digest to ALL active clients, including regime summary."""
     conn = get_connection()
     cur = conn.cursor()
 
@@ -207,38 +208,60 @@ def send_signal_emails():
 
     ses = get_ses_client(ses_region)
 
-    # Get today's unsent signals grouped by client
+    # 1. Get current market regime for the latest date
     cur.execute("""
-        SELECT cs.client_id, c.email, c.name,
-               json_agg(json_build_object(
-                   'symbol', cs.symbol, 'action', cs.action,
-                   'recommended_price', cs.recommended_price,
-                   'score', cs.score, 'regime', cs.regime, 'reason', cs.reason
-               )) AS signals
-        FROM client_signals cs
-        JOIN clients c ON c.id = cs.client_id
-        WHERE cs.email_sent = false
-          AND cs.date = (SELECT MAX(date) FROM client_signals)
-        GROUP BY cs.client_id, c.email, c.name
+        SELECT classification, date FROM market_regime 
+        ORDER BY date DESC LIMIT 1
     """)
-    client_groups = cur.fetchall()
+    regime_row = cur.fetchone()
+    if not regime_row:
+        logger.warning("No market regime data found. Cannot send meaningful emails.")
+        conn.close()
+        return 0
+    
+    regime = regime_row["classification"]
+    latest_date = regime_row["date"]
 
-    if not client_groups:
-        logger.info("No unsent signals. Nothing to email.")
+    # 2. Get all active clients
+    cur.execute("SELECT id, email, name FROM clients WHERE is_active = true")
+    active_clients = cur.fetchall()
+
+    if not active_clients:
+        logger.info("No active clients. Nothing to email.")
         conn.close()
         return 0
 
     sent_count = 0
-    for group in client_groups:
-        client_id = str(group["client_id"])
-        email = group["email"]
-        name = group["name"] or "Investor"
-        signals = group["signals"]
-        regime = signals[0]["regime"] if signals else "NEUTRAL"
+    for client in active_clients:
+        client_id = str(client["id"])
+        email = client["email"]
+        name = client["name"] or "Investor"
+
+        # 3. Prevent duplicate emails for the same day
+        cur.execute("""
+            SELECT id FROM email_log 
+            WHERE client_id = %s AND date = CURRENT_DATE 
+              AND email_type = 'DAILY_SIGNAL' AND status = 'SENT'
+        """, (client_id,))
+        if cur.fetchone():
+            logger.info(f"  ⏭️ Skipping {email}: Daily email already sent today.")
+            continue
+
+        # 4. Fetch signals (if any) for this client on the latest date
+        cur.execute("""
+            SELECT symbol, action, recommended_price, score, regime, reason
+            FROM client_signals
+            WHERE client_id = %s AND date = %s
+        """, (client_id, latest_date))
+        signals = cur.fetchall()
 
         buy_count = sum(1 for s in signals if s["action"] == "BUY")
         sell_count = sum(1 for s in signals if s["action"] == "SELL")
-        subject = f"MRI Signals: {buy_count} BUY, {sell_count} SELL — {regime} Market"
+        
+        if signals:
+            subject = f"MRI Signals: {buy_count} BUY, {sell_count} SELL — {regime} Market"
+        else:
+            subject = f"MRI Daily Summary: {regime} Market — No New Signals"
 
         html_body = build_signal_email_html(name, signals, regime)
 
@@ -254,17 +277,18 @@ def send_signal_emails():
             status_val = "SENT"
             sent_count += 1
             logger.info(f"  ✅ Sent to {email}: {subject}")
+
+            # Mark signals as sent (if they exist)
+            if signals:
+                cur.execute(
+                    "UPDATE client_signals SET email_sent = true WHERE client_id = %s AND date = %s",
+                    (client_id, latest_date),
+                )
         except Exception as e:
             status_val = "FAILED"
             logger.error(f"  ❌ Failed to send to {email}: {e}")
 
-        # Mark signals as sent
-        cur.execute(
-            "UPDATE client_signals SET email_sent = true WHERE client_id = %s AND date = (SELECT MAX(date) FROM client_signals WHERE client_id = %s)",
-            (client_id, client_id),
-        )
-
-        # Log email
+        # 5. Log the email attempt
         cur.execute("""
             INSERT INTO email_log (client_id, date, email_type, service, subject, status)
             VALUES (%s, CURRENT_DATE, 'DAILY_SIGNAL', 'SES', %s, %s)
@@ -274,7 +298,7 @@ def send_signal_emails():
     cur.close()
     conn.close()
 
-    logger.info(f"=== Email Service Complete: {sent_count}/{len(client_groups)} emails sent ===")
+    logger.info(f"=== Email Service Complete: {sent_count}/{len(active_clients)} emails sent ===")
     return sent_count
 
 
