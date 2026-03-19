@@ -141,6 +141,15 @@ Status: FINAL.
 
 ## Decision 023 — Full-Scale Architecture Demonstrated → Cost-Conscious Testing Phase
 Date: 2026-03-03
+Context: The MRI platform was built and deployed as a **production-grade, full-scale DevOps project** demonstrating enterprise best practices:
+  - **Infrastructure as Code**: Terraform modules for VPC, RDS, IAM, ECS, S3, CloudFront (6 modules, ~30 resources)
+  - **Container Orchestration**: ECS Fargate behind ALB with ECR, health checks, auto-restart
+  - **CI/CD Pipeline**: One-command `deploy.sh` — Docker build → ECR push → ECS rolling deployment → S3 sync → CloudFront invalidation
+  - **Serverless Automation**: EventBridge scheduled ECS tasks for daily pipeline
+  - **Security**: Private subnets for RDS + ECS, NAT Gateway, Secrets Manager, IAM least-privilege roles
+  - **Frontend CDN**: S3 + CloudFront with API proxy, SPA routing, OAC-based access control
+  - **Email Service**: AWS SES for client signal digests
+  Full-scale cost: ~$80/month.
 Decision: Transition to a **cost-conscious testing phase** for the next 6 months. Keep only RDS (stopped, ~$3/mo storage) and CloudFront/S3 (free). Spin up infrastructure daily at 4PM IST for ~30 minutes, run pipeline, then tear down. Estimated cost: ~$5/month. The full-scale architecture can be restored at any time via `terraform apply` + `deploy.sh` (~10 minutes) when going public.
 Reason: During the testing phase with a small group of users, 24/7 infrastructure is unnecessary. This reduces 6-month costs from ~$480 to ~$27 while retaining all data and the ability to scale back up instantly.
 Status: FINAL.
@@ -358,3 +367,33 @@ Status: FINAL.
 **Status**: APPROVED
 **Decision**: Switched daily pipeline ingestion to a 1-month lookback period using high-performance bulk `yf.download`.
 **Reasoning**: Downloading 3 years of history for 500 stocks individually is slow (~30 min) and prone to rate-limiting. Bulk downloads (NSE-first) combined with a tight incremental window reduce runtime to <5 minutes and significantly lower memory/bandwidth usage.
+
+## Decision 057: Module Rebranding for Deployment Stability
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Renamed core ingestion and pipeline entry points to `ingestion_engine.py` and `mri_pipeline.py`.
+**Reasoning**: Persistent Git synchronization issues and file-system "ghosting" in the WSL/GitHub environment prevented updates to the legacy filenames from being recognized. Creating brand-new files forced a clean Git index state and bypassed the corrupted deployment path.
+
+## Decision 058: Transition to RESCUE MRI Pipeline (CI/CD)
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Replaced `daily_pipeline.yml` with `rescue_pipeline.yml` as the primary GitHub Action workflow.
+**Reasoning**: Renaming the workflow file forced GitHub to recognize it as a new distinct entity, ensuring that any stale runner caches or "ghost" versions of the old pipeline were completely bypassed.
+
+## Decision 059: Transition to Daily Persistence for Signals
+**Date**: 2026-03-17
+**Status**: APPROVED
+**Decision**: Overrode Decision 046 to ensure a daily email is sent to all active clients.
+**Reasoning**: Consistent communication is key for a quantitative platform. Even if no new signals are generated, providing a market regime update keeps users engaged and informed of the system's "Risk-On/Risk-Off" status.
+
+## Decision 060: ISIN-Based Deduplication for Multi-Exchange Ingestion
+**Date**: 2026-03-18
+**Status**: APPROVED
+**Decision**: Implemented ISIN-based filtering to deduplicate the unified stock universe (Nifty 500 + BSE Group A + User Holdings).
+**Reasoning**: Many high-quality stocks are listed on both NSE and BSE. Downloading both would waste bandwidth and storage. ISIN is the only reliable global identifier to ensure we only download each company's data once, prioritizing NSE for primary data and BSE for unique listings.
+
+## Decision 061 — Railway Port Environment Variable for FastAPI
+Date: 2026-03-19
+Decision: FastAPI backend must use the $PORT environment variable (default 8000) when running on Railway.
+Reason: Railway assigns a dynamic port for each service; hardcoding 8000 causes healthcheck failures.
+Status: FINAL.

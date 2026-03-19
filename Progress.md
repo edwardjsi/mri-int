@@ -363,3 +363,23 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **Optimization**: Sequential ingestion was extremely slow and resource-intensive (3-year downloads).
     - **Fix**: Ported high-performance bulk NSE patterns and switched to 1-month incremental "top-ups."
     - **Result**: Daily pipeline is now ~10-20x faster and maintains 100% backward compatibility.
+
+### Phase 10: Deployment & Sync Rescue (2026-03-17)
+- [x] **Problem**: Persistent `ImportError` in CI due to WSL/Git sync failure.
+- [x] **Action**: Created `src/ingestion_engine.py` and `scripts/mri_pipeline.py`.
+- [x] **Result**: Pipeline is now 🟢 GREEN on GitHub Actions.
+
+### Phase 11: Signal Visibility & Daily Summaries (2026-03-17)
+- [x] **Goal**: Inform users of pending signals on login and via daily emails.
+- [x] **Action**: Added `has_pending_signals` to `TokenResponse`; overhauled `email_service.py` for daily persistence.
+- [x] **Verification**: Logic verified for duplicate prevention and regime-only summaries.
+
+### Phase 12: BSE-Only Stock Expansion (2026-03-18)
+- [x] **Deduplication**: Implemented ISIN-based filtering to avoid redundant downloads for stocks listed on both NSE and BSE.
+- [x] **BSE Expansion**: Integrated unique BSE "Group A" stocks into the daily `mri_pipeline.py`.
+- [x] **Digital Twin Sync**: Automated daily updates for all user-tracked holdings in `client_external_holdings`.
+- [x] **Sector Enrichment**: Unified `stock_sectors` update logic to include BSE-only company metadata and industries.- [x] Dockerfile.api updated to use $PORT for Railway deploys (fixes backend healthcheck)
+- [x] Backend and frontend both deploy and pass healthchecks on Railway
+
+- [x] Dockerfile.api updated to use $PORT for Railway deploys (fixes backend healthcheck)
+- [x] Backend and frontend both deploy and pass healthchecks on Railway

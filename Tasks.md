@@ -51,8 +51,13 @@
 
 ---
 
-## 🔜 TODO — 2026-03-15
-- [ ] Fix SES region mismatch on production: set `SES_REGION` (preferred) or `AWS_REGION` to the SES region where `SES_SENDER_EMAIL` is verified (region codes look like `ap-south-1` or `ap-southeast-1` — **not** `asia-pacific-1`). Use `GET /api/email/debug?check_identity=true` to confirm verification/quota in the running container.
-- [ ] Confirm Render API env vars for email: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SES_REGION` (or `AWS_REGION`), `SES_SENDER_EMAIL`, `FRONTEND_URL`.
-- [ ] Verify password reset email end-to-end (forgot → receive email → reset).
-- [ ] Verify daily signal emails end-to-end (pipeline writes `client_signals` + email sender runs without SES sandbox/identity errors).
+## ✅ Day 27: Deployment Rescue & Rebranding (Completed 2026-03-17)
+- [x] Resolved persistent `ImportError` in CI/CD by rebranding core modules to `ingestion_engine.py`.
+- [x] Bypassed WSL/Git cache "ghosting" by implementing the `RESCUE MRI Pipeline` workflow.
+- [x] Verified full 500-stock daily ingestion on GitHub Actions in under 5 minutes.
+- [x] Finalized 3-tier fallback logic for BSE/NSE symbol resolution.
+
+## ✅ Day 28: Railway Deployment Fix (Completed 2026-03-19)
+- [x] Updated Dockerfile.api to use $PORT for uvicorn.
+- [x] Redeployed backend on Railway; healthcheck now passes.
+- [x] Both frontend and backend live on Railway.
