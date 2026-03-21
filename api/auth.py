@@ -1,29 +1,32 @@
 """
 Authentication endpoints: register, login, profile.
 """
+import secrets
+from datetime import datetime, timedelta
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 import bcrypt
 import psycopg2.extras
 
 from api.deps import get_db, create_access_token, get_current_client
+from src.email_service import send_password_reset_email_detailed
+from src.mailerlite import add_subscriber
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
-import secrets
-from datetime import datetime, timedelta
-from src.email_service import send_password_reset_email_detailed
 
 # ── Schemas ─────────────────────────────────────────────────
+
 class RegisterRequest(BaseModel):
     email: str
     name: str
@@ -45,11 +48,11 @@ class TokenResponse(BaseModel):
 
 
 # ── Endpoints ───────────────────────────────────────────────
+
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(req: RegisterRequest, conn=Depends(get_db)):
     cur = conn.cursor()
 
-    # Check if email exists
     cur.execute("SELECT id FROM clients WHERE email = %s", (req.email,))
     if cur.fetchone():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -63,19 +66,25 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
     client_id = str(cur.fetchone()["id"])
     conn.commit()
 
+    # Add to MailerLite mailing list (non-blocking — never raises)
+    add_subscriber(email=req.email, name=req.name)
+
     token = create_access_token({"sub": client_id})
     return TokenResponse(
-        access_token=token, 
-        client_id=client_id, 
+        access_token=token,
+        client_id=client_id,
         name=req.name,
-        email=req.email
+        email=req.email,
     )
 
 
 @router.post("/login", response_model=TokenResponse)
 def login(req: LoginRequest, conn=Depends(get_db)):
     cur = conn.cursor()
-    cur.execute("SELECT id, name, password_hash, is_active FROM clients WHERE email = %s", (req.email,))
+    cur.execute(
+        "SELECT id, name, password_hash, is_active FROM clients WHERE email = %s",
+        (req.email,),
+    )
     client = cur.fetchone()
 
     if not client or not verify_password(req.password, client["password_hash"]):
@@ -85,17 +94,20 @@ def login(req: LoginRequest, conn=Depends(get_db)):
 
     token = create_access_token({"sub": str(client["id"])})
     return TokenResponse(
-        access_token=token, 
-        client_id=str(client["id"]), 
+        access_token=token,
+        client_id=str(client["id"]),
         name=client["name"],
-        email=req.email
+        email=req.email,
     )
 
 
 @router.get("/me")
 def get_profile(client=Depends(get_current_client), conn=Depends(get_db)):
     cur = conn.cursor()
-    cur.execute("SELECT COALESCE(SUM(amount), 0) AS added FROM capital_additions WHERE client_id = %s", (str(client["id"]),))
+    cur.execute(
+        "SELECT COALESCE(SUM(amount), 0) AS added FROM capital_additions WHERE client_id = %s",
+        (str(client["id"]),),
+    )
     added = float(cur.fetchone()["added"])
     total = float(client["initial_capital"]) + added
     return {
@@ -143,19 +155,16 @@ class ForgotPasswordRequest(BaseModel):
 def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
     """Generate a reset token and send an email."""
     cur = conn.cursor()
-    
-    # Check if email exists
+
     cur.execute("SELECT id, name FROM clients WHERE email = %s", (req.email,))
     client = cur.fetchone()
-    
+
     if not client:
         raise HTTPException(status_code=404, detail="No account found with that email address.")
-    
-    # Generate token
+
     token = secrets.token_urlsafe(32)
     client_id = str(client["id"])
-    
-    # Ensure table exists
+
     cur.execute(
         """CREATE TABLE IF NOT EXISTS password_reset_tokens (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -166,8 +175,7 @@ def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
             created_at TIMESTAMPTZ DEFAULT NOW()
         )"""
     )
-    
-    # Insert token (expires in 1 hour), send email, then commit only if email send succeeds.
+
     expires_at = datetime.now() + timedelta(hours=1)
     try:
         cur.execute(
@@ -193,7 +201,7 @@ def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to generate reset email: {e}")
-        
+
     return {"message": "Password reset link sent! Please check your email."}
 
 
@@ -205,28 +213,25 @@ class ResetPasswordRequest(BaseModel):
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, conn=Depends(get_db)):
     """Verify token and update password."""
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) if hasattr(conn, 'cursor_factory') else conn.cursor()
-    
-    # Verify token
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) if hasattr(conn, "cursor_factory") else conn.cursor()
+
     cur.execute(
-        """SELECT id, client_id FROM password_reset_tokens 
+        """SELECT id, client_id FROM password_reset_tokens
            WHERE token = %s AND used = FALSE AND expires_at > NOW()""",
-        (req.token,)
+        (req.token,),
     )
     token_record = cur.fetchone()
-    
+
     if not token_record:
         raise HTTPException(status_code=400, detail="Invalid or expired password reset token.")
-    
+
     client_id = str(token_record["client_id"] if isinstance(token_record, dict) else token_record[1])
     token_id = str(token_record["id"] if isinstance(token_record, dict) else token_record[0])
-    
-    # Hash new password
+
     hashed = hash_password(req.new_password)
-    
-    # Update password and mark token as used
+
     cur.execute("UPDATE clients SET password_hash = %s WHERE id = %s", (hashed, client_id))
     cur.execute("UPDATE password_reset_tokens SET used = TRUE WHERE id = %s", (token_id,))
-    
+
     conn.commit()
     return {"message": "Password successfully reset."}
