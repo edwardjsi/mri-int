@@ -397,3 +397,14 @@ Date: 2026-03-19
 Decision: FastAPI backend must use the $PORT environment variable (default 8000) when running on Railway.
 Reason: Railway assigns a dynamic port for each service; hardcoding 8000 causes healthcheck failures.
 Status: FINAL.
+## Decision 062 — MailerLite Mailing List Integration on Registration
+Date: 2026-03-21
+Decision: On successful user registration, automatically add the new subscriber (email + name) to a MailerLite mailing list group via the MailerLite v2 API (`POST https://connect.mailerlite.com/api/subscribers`).
+Implementation:
+  - New module `src/mailerlite.py` wraps the MailerLite API call. Returns bool, never raises.
+  - Called from `api/auth.py` `register()` endpoint **after** `conn.commit()` — registration always succeeds regardless of MailerLite availability.
+  - Two new env vars required: `MAILERLITE_API_KEY` (MailerLite API token) and `MAILERLITE_GROUP_ID` (target group/list ID). Both set as Railway environment variables.
+  - API key is NOT stored in AWS Secrets Manager — Railway env vars are sufficient for the current free-tier deployment.
+  - Subscriber status set to `active` (skips double opt-in). Change to `unconfirmed` if GDPR double opt-in is required later.
+Reason: Builds a reachable mailing list of interested users from day one. MailerLite free tier (1,000 subscribers, 12,000 emails/month) is sufficient for the testing phase. Decoupled from registration flow so email list issues never block user sign-ups.
+Status: FINAL.
