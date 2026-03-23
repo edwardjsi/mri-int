@@ -800,6 +800,26 @@
   padding: 8px 0;
 }
 
+/* ─── Watchlist ─── */
+.watchlist-add-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  max-width: 400px;
+}
+
+.watchlist-add-form .form-input {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.watchlist-add-form .btn-primary {
+  width: auto;
+  margin-top: 0;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
 .modal-actions {
   display: flex;
   gap: 8px;

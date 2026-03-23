@@ -1,0 +1,51 @@
+# Railway Migration Guide
+
+Deploying to Railway is simple and operates similarly to Render. You will deploy your two services (`mri-api` and `mri-frontend`) from your GitHub repository onto a single Railway Project.
+
+## Steps to Deploy
+
+### 1. Set up the Railway Project
+1. Log in to [Railway.app](https://railway.app/).
+2. Create a **New Project** and select **Deploy from GitHub repo**.
+3. Choose your `mri-int` repository. (You might need to give Railway access to the repo).
+
+### 2. Deploy the Backend API (`mri-api`)
+After connecting the repo, Railway will create a service. Let's configure it as our backend API.
+
+1. Go to the newly created service's **Settings**.
+2. Under **Build**, change the **Builder** to **Dockerfile**.
+3. Set the **Dockerfile Path** to [Dockerfile.api](file://wsl$/Ubuntu/home/edwar/mri-int/Dockerfile.api).
+4. Go to the **Variables** tab for this service, and add the following Environment Variables (similar to your [render.yaml](file://wsl$/Ubuntu/home/edwar/mri-int/render.yaml)):
+   - `DATABASE_URL`: Your new **Neon** connection string
+   - `DB_SSL`: `true`
+   - `JWT_SECRET`: (Generate a secure random string or copy the existing one)
+   - `PYTHONPATH`: `/app`
+   - `SES_SENDER_EMAIL`: `edwardjsi@gmail.com`
+   - `SES_REGION`: `ap-southeast-1`
+   - `AWS_REGION`: `ap-south-1`
+   - `AWS_ACCESS_KEY_ID`: Your AWS access key
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret
+   - *Leave `CORS_ORIGINS` and `FRONTEND_URL` temporarily blank or set them later after deploying the frontend.*
+5. Go to the **Networking** tab, and generate a **Public Railway Domain** (e.g., `mri-api-production.up.railway.app`).
+
+### 3. Deploy the Frontend (`mri-frontend`)
+Now, deploy the frontend from the exact same GitHub repository in the same Railway project.
+
+1. Click **New** (or `Cmd + K` -> Add Service) -> **GitHub Repo** -> select `mri-int` again.
+2. Go to this second service's **Settings**.
+3. Under **Build**, set the **Root Directory** to `/frontend`.
+4. The builder will automatically detect Vite/React. Ensure the **Build Command** is `npm install && npm run build` (or `npm run build`).
+5. Under **Variables**, add:
+   - `VITE_API_URL`: **https://[YOUR_RAILWAY_API_URL_FROM_STEP_2]/api**
+6. Go to the **Networking** tab and generate a **Public Railway Domain** for the frontend.
+
+### 4. Final Configuration Update
+Once the frontend generates its URL (e.g., `mri-frontend-production.up.railway.app`), go back to your **Backend Service Variables** and update:
+1. `FRONTEND_URL`: `https://[YOUR_RAILWAY_FRONTEND_URL]`
+2. `CORS_ORIGINS`: `https://[YOUR_RAILWAY_FRONTEND_URL]`
+
+Redeploy the backend if necessary so the new variables take effect.
+
+## Review
+- Use the **Neon** UI to ensure your database connection string is properly copied (it usually looks like `postgresql://[user]:[password]@[host]/[dbname]?sslmode=require`).
+- Once both are deployed, test your frontend domain to make sure it loads and can successfully query the API!

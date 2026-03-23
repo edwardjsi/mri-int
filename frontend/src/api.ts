@@ -215,6 +215,18 @@ export const api = {
             body: JSON.stringify({ amount }),
         }),
 
+    // Watchlist
+    getWatchlist: () => apiFetch('/watchlist'),
+    addToWatchlist: (symbol: string) =>
+        apiFetch('/watchlist', {
+            method: 'POST',
+            body: JSON.stringify({ symbol }),
+        }),
+    removeFromWatchlist: (symbol: string) =>
+        apiFetch(`/watchlist/${symbol}`, {
+            method: 'DELETE',
+        }),
+
     // Health
     health: () => fetch(`${API_BASE}/health`).then(r => r.json()),
 };

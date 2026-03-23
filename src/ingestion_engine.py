@@ -33,7 +33,7 @@ def get_last_date(table_name="daily_prices") -> str:
     finally:
         cur.close()
         conn.close()
-    return "2023-01-01" # Default fallback
+    return (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d") # Default fallback 2 years
 
 def load_indices(period: str = None):
     """Daily pipeline entry point for index data."""
@@ -97,9 +97,15 @@ def load_stocks(symbols: list, period: str = None):
         batch = symbols[i:i+batch_size]
         logger.info(f"--- Processing Batch {i//batch_size + 1}/{ (len(symbols)-1)//batch_size + 1 } ({len(batch)} symbols) ---")
         
+        def get_ticker(s):
+            if s.isdigit(): return f"{s}.BO"
+            if s.endswith(".BO") or s.endswith(".NS"): return s
+            return f"{s}.NS"
+
+        tickers = [get_ticker(s) for s in batch]
+        
         if period:
             logger.info(f"  Forcing {period} bulk download...")
-            tickers = [f"{s}.NS" for s in batch]
             try:
                 raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
             except Exception as e:
@@ -108,7 +114,6 @@ def load_stocks(symbols: list, period: str = None):
         else:
             start_date = get_last_date("daily_prices")
             logger.info(f"  Incremental download from {start_date}...")
-            tickers = [f"{s}.NS" for s in batch]
             try:
                 raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
             except Exception as e:
@@ -119,7 +124,7 @@ def load_stocks(symbols: list, period: str = None):
         failed_symbols = []
 
         for sym in batch:
-            ticker = f"{sym}.NS"
+            ticker = get_ticker(sym)
             # Handle single ticker edge case
             if len(batch) == 1:
                 df = raw_data.reset_index()

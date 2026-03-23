@@ -45,6 +45,7 @@ class TokenResponse(BaseModel):
     client_id: str
     name: Optional[str] = "User"
     email: str
+    has_pending_signals: bool = False
 
 
 # ── Endpoints ───────────────────────────────────────────────
@@ -75,6 +76,7 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
         client_id=client_id,
         name=req.name,
         email=req.email,
+        has_pending_signals=False  # New account has no signals yet
     )
 
 
@@ -93,11 +95,22 @@ def login(req: LoginRequest, conn=Depends(get_db)):
         raise HTTPException(status_code=403, detail="Account deactivated")
 
     token = create_access_token({"sub": str(client["id"])})
+    
+    # Check for pending signals
+    cur.execute("""
+        SELECT 1 FROM client_signals cs
+        LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+        WHERE cs.client_id = %s AND ca.id IS NULL
+        LIMIT 1
+    """, (str(client["id"]),))
+    has_pending = cur.fetchone() is not None
+
     return TokenResponse(
         access_token=token,
         client_id=str(client["id"]),
         name=client["name"],
         email=req.email,
+        has_pending_signals=has_pending
     )
 
 

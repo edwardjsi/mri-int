@@ -1,0 +1,1050 @@
+{
+    "Resources": [
+        {
+            "Arn": "arn:aws:iam::251876202726:role/cdk-hnb659fds-deploy-role-251876202726-ap-south-1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:46+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/resource-explorer-2.amazonaws.com/AWSServiceRoleForResourceExplorer",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-valkey7",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ce::251876202726:anomalysubscription/c60dd1fb-fed0-4de2-bd5f-23a2f9a26461",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "ce:anomalysubscription",
+            "Service": "ce",
+            "LastReportedAt": "2026-03-04T01:20:39+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group/sg-04fdbe6d1b2a0a6ed",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-14T21:38:03+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ce::251876202726:anomalymonitor/c297e3f8-a0dc-40d7-a64c-cab3a8551d2e",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "ce:anomalymonitor",
+            "Service": "ce",
+            "LastReportedAt": "2026-03-09T11:13:49+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:route-table/rtb-0fdfae577916375d5",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:route-table",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-16T03:37:50+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:athena:us-east-1:251876202726:workgroup/primary",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "athena:workgroup",
+            "Service": "athena",
+            "LastReportedAt": "2026-03-14T21:57:11+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:route-table/rtb-0057499259c4f7291",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:route-table",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-16T03:37:50+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:34:43+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-routetable"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group/sg-045df8efe1559d25b",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-14T21:38:03+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:38:19+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-sg"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:network-acl/acl-0fccb801d0560d45d",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:network-acl",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T04:14:39+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:policy/AuserFullAccessNoDeleteAccount",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:policy",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-14T10:13:23+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/VolvoSSM",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:51+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:cloudfront::251876202726:distribution/EQIHZOITBGSE3",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "cloudfront:distribution",
+            "Service": "cloudfront",
+            "LastReportedAt": "2026-03-15T21:41:09+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2026-02-26T15:49:38+00:00",
+                    "Data": []
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:44+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/Ec2ReadOnlyRule",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:48+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:44+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:route-table/rtb-0f389e1ab4d58bebb",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:route-table",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-16T03:37:50+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-12-08T07:47:44+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-nat"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:kms:us-east-1:251876202726:key/a25b2e50-ae05-4f93-a3b3-38572c6cda06",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "kms:key",
+            "Service": "kms",
+            "LastReportedAt": "2026-03-17T23:06:43+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:subnet/subnet-07dd06b2a7c3a4ca9",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:subnet",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-17T21:33:26+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-12-13T13:25:19+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "mysubnet"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:policy/SESOnlyAccess",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:policy",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-17T03:16:18+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-redis7",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:network-acl/acl-0e4b3f0965576426c",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:network-acl",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T04:14:39+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-valkey7.search",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:apprunner:us-east-1:251876202726:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "apprunner:autoscalingconfiguration",
+            "Service": "apprunner",
+            "LastReportedAt": "2026-03-13T17:22:05+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:instance-profile/Ec2ReadOnlyRule",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:instance-profile",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T16:57:37+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-0c00ec6ae0992d0e5",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:subnet/subnet-00e1298ae5dd0216b",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:subnet",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-17T21:33:26+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:23:45+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "web1-volvo"
+                        },
+                        {
+                            "Key": "web1-volvo",
+                            "Value": "web1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:key-pair/key-0338e15af6b5d62de",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:key-pair",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-15T22:49:54+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:acl/open-access",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:acl",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-13T17:16:49+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/ecsTaskExecutionRole",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:49+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:resource-explorer-2:us-east-1:251876202726:index/7034ab41-1f8f-4355-9ba1-45d6f18590a8",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "resource-explorer-2:index",
+            "Service": "resource-explorer-2",
+            "LastReportedAt": "2026-03-04T14:34:39+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group/sg-0f11e8129592badc9",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-14T21:38:03+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:user/terraform-backend-user",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:user",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-16T19:24:01+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:backup:us-east-1:251876202726:backup-vault:aws/efs/automatic-backup-vault",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "backup:backup-vault",
+            "Service": "backup",
+            "LastReportedAt": "2026-02-26T21:50:24+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:s3:us-east-1:251876202726:storage-lens/default-account-dashboard",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "s3:storage-lens",
+            "Service": "s3",
+            "LastReportedAt": "2026-03-13T14:21:38+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:vpc/vpc-0d0132f1c5c9003ae",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:vpc",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-12T16:57:04+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-redis7.search",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:44+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:policy/SESOnlyAccess1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:policy",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-17T03:21:13+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:mfa/Authapp",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:mfa",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-16T10:21:39+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-0a8b6824bf65cda0a",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-04cc428d22e5c89e4",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T02:06:26+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:resource-explorer-2:us-east-1:251876202726:view/us-east-1/29b178e6-3fbc-4210-8a48-fba6b9a524b9",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "resource-explorer-2:view",
+            "Service": "resource-explorer-2",
+            "LastReportedAt": "2026-02-27T15:29:06+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:cloudfront::251876202726:origin-access-identity/EQELUB2TC5T3X",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "cloudfront:origin-access-identity",
+            "Service": "cloudfront",
+            "LastReportedAt": "2026-03-14T11:28:10+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:athena:us-east-1:251876202726:datacatalog/AwsDataCatalog",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "athena:datacatalog",
+            "Service": "athena",
+            "LastReportedAt": "2026-03-15T00:57:30+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:elasticache:us-east-1:251876202726:user:default",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "elasticache:user",
+            "Service": "elasticache",
+            "LastReportedAt": "2026-03-14T06:44:13+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-07ce9de5a43e2e6ab",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/sr-calculator-dev-ecs-execution-role",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:51+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:user/mrsessender",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:user",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-17T03:24:21+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:policy/terraform-backend-user",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:policy",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-14T10:13:23+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-12-23T15:57:00+00:00",
+                    "Data": [
+                        {
+                            "Key": "terraform-backend-user",
+                            "Value": "terraform-backend-user"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-056668042926475bd",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/cdk-hnb659fds-image-publishing-role-251876202726-ap-south-1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:47+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:events:us-east-1:251876202726:event-bus/default",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "events:event-bus",
+            "Service": "events",
+            "LastReportedAt": "2026-03-17T05:43:55+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group/sg-022bbc3f42e3c4dac",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-14T21:38:03+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-04784ea24d32b9574",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T02:06:26+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:kms:us-east-1:251876202726:key/315a6ed3-8810-40ff-b8a3-97ed0289f7dd",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "kms:key",
+            "Service": "kms",
+            "LastReportedAt": "2026-03-17T23:06:43+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:dhcp-options/dopt-039d89e44d46648df",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:dhcp-options",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T10:12:44+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:subnet/subnet-0d87144372968f148",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:subnet",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-17T21:33:26+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:28:28+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-db2"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:user/Auser",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:user",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-16T19:24:01+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:user/default",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:user",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-14T05:50:57+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:instance-profile/VolvoSSM",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:instance-profile",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T16:57:37+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/InfraStack-ScoringFunctionServiceRole8A649595-c9GenOEB22pI",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:50+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:policy/mrisessender",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:policy",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-17T03:16:18+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/support.amazonaws.com/AWSServiceRoleForSupport",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-09c544823679080c7",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-0b7e1ca97057a1b9a",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/AdminRole",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:42+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/elasticfilesystem.amazonaws.com/AWSServiceRoleForAmazonElasticFileSystem",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:42+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:43+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:dynamodb:us-east-1:251876202726:table/triple-proof-leads",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "dynamodb:table",
+            "Service": "dynamodb",
+            "LastReportedAt": "2026-02-22T02:36:08+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2026-01-27T13:27:29+00:00",
+                    "Data": [
+                        {
+                            "Key": "Project",
+                            "Value": "Triple-Proof-Calculator"
+                        },
+                        {
+                            "Key": "Environment",
+                            "Value": "Dev"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-07b924fb5913a3493",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-0199bf7c31c94477e",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T02:06:26+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/cdk-hnb659fds-file-publishing-role-251876202726-ap-south-1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:47+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-redis6",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-02bb9074d7ec03885",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:subnet/subnet-04b368d3cf04ed4ce",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:subnet",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-17T21:33:26+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:26:03+00:00",
+                    "Data": [
+                        {
+                            "Key": "web2-volvo",
+                            "Value": "web2-volvo"
+                        },
+                        {
+                            "Key": "Name",
+                            "Value": "web2-volvo"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:launch-template/lt-026646f1a23692737",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:launch-template",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-11T15:49:43+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:instance-profile/AdminRole",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:instance-profile",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T16:57:37+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:sns:us-east-1:251876202726:Default_CloudWatch_Alarms_Topic",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "sns:topic",
+            "Service": "sns",
+            "LastReportedAt": "2026-03-12T00:47:14+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:user/edward",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:user",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-16T19:24:01+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/cdk-hnb659fds-lookup-role-251876202726-ap-south-1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:47+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-0d8301615c49c1a2b",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-18T02:06:26+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/cdk-hnb659fds-cfn-exec-role-251876202726-ap-south-1",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:46+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:vpc/vpc-0b0582e130eae72e7",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:vpc",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-12T16:57:04+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:22:31+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-vpc"
+                        },
+                        {
+                            "Key": "volvo-vpc",
+                            "Value": "volvo-vpc"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/trustedadvisor.amazonaws.com/AWSServiceRoleForTrustedAdvisor",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:45+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:backup:us-east-1:251876202726:backup-plan:aws/efs/73d922fb-9312-3a70-99c3-e69367f9fdad",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "backup:backup-plan",
+            "Service": "backup",
+            "LastReportedAt": "2026-03-12T00:28:16+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:key-pair/key-03bb0396a36feb5da",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:key-pair",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-15T22:49:54+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/aws-service-role/ops.apigateway.amazonaws.com/AWSServiceRoleForAPIGateway",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:41:43+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:cloudwatch:us-east-1:251876202726:alarm:ewsbilling",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "cloudwatch:alarm",
+            "Service": "cloudwatch",
+            "LastReportedAt": "2026-03-09T05:36:25+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-12-20T12:42:56+00:00",
+                    "Data": []
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/InfraStack-CustomCDKBucketDeployment8693BB64968944B-T9bruvCK46Ix",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:49+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:iam::251876202726:role/InfraStack-CustomS3AutoDeleteObjectsCustomResourceP-mLoMiXwMY0ou",
+            "OwningAccountId": "251876202726",
+            "Region": "global",
+            "ResourceType": "iam:role",
+            "Service": "iam",
+            "LastReportedAt": "2026-03-13T13:42:50+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:internet-gateway/igw-0c47de7ab5581f6e6",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:internet-gateway",
+            "Service": "ec2",
+            "LastReportedAt": "2026-02-22T17:55:46+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:subnet/subnet-08307cb3946867757",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:subnet",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-17T21:33:26+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:27:22+00:00",
+                    "Data": [
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-db1"
+                        },
+                        {
+                            "Key": "volvo-db1",
+                            "Value": "volvo-db1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:internet-gateway/igw-00574103b4f264291",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:internet-gateway",
+            "Service": "ec2",
+            "LastReportedAt": "2026-02-22T17:55:46+00:00",
+            "Properties": [
+                {
+                    "Name": "tags",
+                    "LastReportedAt": "2025-11-21T01:32:42+00:00",
+                    "Data": [
+                        {
+                            "Key": "volvo-igw",
+                            "Value": "volvo-igw"
+                        },
+                        {
+                            "Key": "Name",
+                            "Value": "volvo-igw"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Arn": "arn:aws:memorydb:us-east-1:251876202726:parametergroup/default.memorydb-redis7.search.preview",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "memorydb:parametergroup",
+            "Service": "memorydb",
+            "LastReportedAt": "2026-03-15T04:43:34+00:00",
+            "Properties": []
+        },
+        {
+            "Arn": "arn:aws:ec2:us-east-1:251876202726:security-group-rule/sgr-07217e3ed871a1180",
+            "OwningAccountId": "251876202726",
+            "Region": "us-east-1",
+            "ResourceType": "ec2:security-group-rule",
+            "Service": "ec2",
+            "LastReportedAt": "2026-03-13T16:39:45+00:00",
+            "Properties": []
+        }
+    ],
+    "ViewArn": "arn:aws:resource-explorer-2:us-east-1:251876202726:view/us-east-1/29b178e6-3fbc-4210-8a48-fba6b9a524b9",
+    "Count": {
+        "TotalResources": 97,
+        "Complete": true
+    }
+}

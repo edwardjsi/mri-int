@@ -2,32 +2,78 @@ import pandas as pd
 import numpy as np
 import logging
 from src.db import get_connection
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def add_indicator_columns_if_missing():
+    """Ensures all required columns exist in daily_prices."""
     conn = get_connection()
     cur = conn.cursor()
-    columns = [("ema_20", "NUMERIC"), ("ema_50", "NUMERIC"), ("ema_200", "NUMERIC"), ("rsi_14", "NUMERIC"), ("below_200ema", "BOOLEAN")]
+    columns = [
+        ("ema_20", "NUMERIC"), 
+        ("ema_50", "NUMERIC"), 
+        ("ema_200", "NUMERIC"), 
+        ("rsi_14", "NUMERIC"), 
+        ("below_200ema", "BOOLEAN"),
+        ("ema_200_slope_20", "NUMERIC"),
+        ("rolling_high_6m", "NUMERIC"),
+        ("avg_volume_20d", "NUMERIC"),
+        ("rs_90d", "NUMERIC")
+    ]
     for col_name, col_type in columns:
-        cur.execute(f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='daily_prices' AND column_name='{col_name}') THEN ALTER TABLE daily_prices ADD COLUMN {col_name} {col_type}; END IF; END $$;")
+        cur.execute(f"""
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name='daily_prices' AND column_name='{col_name}') 
+                THEN 
+                    ALTER TABLE daily_prices ADD COLUMN {col_name} {col_type}; 
+                END IF; 
+            END $$;
+        """)
     conn.commit()
     cur.close()
     conn.close()
 
-def fetch_data():
-    """Bulk fetch price data for all symbols and the Nifty 50 benchmark."""
+def fetch_data(symbols=None):
+    """
+    Incremental fetch: Only fetch symbols that need updates (ema_50 IS NULL).
+    Fetches the last 255 days of history for calculation accuracy.
+    """
     conn = get_connection()
     try:
-        df = pd.read_sql("SELECT symbol, date, close, volume FROM daily_prices ORDER BY symbol, date", conn)
+        if not symbols:
+            # Detect symbols needing indicators
+            cur = conn.cursor()
+            cur.execute("SELECT DISTINCT symbol FROM daily_prices WHERE ema_50 IS NULL")
+            symbols = [r[0] for r in cur.fetchall()]
+            cur.close()
+            
+        if not symbols:
+            logger.info("No symbols found needing indicators.")
+            return pd.DataFrame(), pd.DataFrame()
+
+        logger.info(f"Incremental update for {len(symbols)} symbols...")
+        
+        # Optimized query: Fetch the last 255 days for these symbols
+        # (255 is enough for a stable 200 EMA and 6-month high)
+        sql = """
+            SELECT symbol, date, high, close, volume, ema_20, ema_50, ema_200 
+            FROM daily_prices 
+            WHERE symbol = ANY(%s)
+            AND date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '255 days'
+            ORDER BY symbol, date
+        """
+        df = pd.read_sql(sql, conn, params=(symbols,))
         idx_df = pd.read_sql("SELECT date, close as idx_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
         return df, idx_df
     finally:
         conn.close()
 
 def compute_indicators(df, idx_df):
-    """Bulk compute indicators for the entire universe."""
+    """Calculates all technical indicators including slopes and relative strength."""
     if df.empty: return []
     
     updates = []
@@ -35,40 +81,69 @@ def compute_indicators(df, idx_df):
         s_df = df[df['symbol'] == symbol].copy().sort_values('date')
         if len(s_df) < 20: continue
         
+        # 1. EMAs
         s_df['ema_20'] = s_df['close'].ewm(span=20, adjust=False).mean()
         s_df['ema_50'] = s_df['close'].ewm(span=50, adjust=False).mean()
         s_df['ema_200'] = s_df['close'].ewm(span=200, adjust=False).mean() if len(s_df) >= 200 else s_df['ema_50']
         
-        # Simple RSI
+        # 2. EMA 200 Slope (20-day regression equivalent)
+        s_df['ema_200_slope_20'] = s_df['ema_200'].diff(20)
+        
+        # 3. RSI
         delta = s_df['close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / (loss + 1e-9)
         s_df['rsi_14'] = 100 - (100 / (1 + rs))
-        s_df['below_200ema'] = s_df['close'] < s_df['ema_200']
         
+        # 4. Misc indicators
+        s_df['below_200ema'] = s_df['close'] < s_df['ema_200']
+        s_df['rolling_high_6m'] = s_df['close'].rolling(window=126, min_periods=20).max()
+        s_df['avg_volume_20d'] = s_df['volume'].rolling(window=20).mean()
+        
+        # 5. Relative Strength (RS_90D) - Simplified calculation
+        # Normalized returns of stock vs index
+        if not idx_df.empty:
+            merged = pd.merge(s_df[['date', 'close']], idx_df[['date', 'idx_close']], on='date', how='inner')
+            if len(merged) > 90:
+                merged['stock_ret'] = merged['close'] / merged['close'].shift(90)
+                merged['idx_ret'] = merged['idx_close'] / merged['idx_close'].shift(90)
+                merged['rs_90d'] = (merged['stock_ret'] / merged['idx_ret']) * 100
+                s_df = pd.merge(s_df, merged[['date', 'rs_90d']], on='date', how='left')
+
+        # Clean up NaNs for Postgres
         s_df = s_df.replace({np.nan: None})
-        for _, row in s_df.iterrows():
-            updates.append({
-                'symbol': symbol, 
-                'date': row['date'], 
-                'ema_20': row['ema_20'], 
-                'ema_50': row['ema_50'], 
-                'ema_200': row['ema_200'], 
-                'rsi_14': row['rsi_14'], 
-                'below_200ema': row['below_200ema']
-            })
+
+        # Only add rows that need update (latest ones)
+        for _, row in s_df.tail(10).iterrows():
+            if row.get('ema_50') is None or row.get('ema_50') == 0:
+                updates.append({
+                    'symbol': row['symbol'], 
+                    'date': row['date'],
+                    'ema_20': row['ema_20'], 
+                    'ema_50': row['ema_50'], 
+                    'ema_200': row['ema_200'],
+                    'rsi_14': row['rsi_14'] if row['rsi_14'] is not None else 50,
+                    'below_200ema': bool(row['below_200ema']),
+                    'ema_200_slope_20': row.get('ema_200_slope_20'),
+                    'rolling_high_6m': row.get('rolling_high_6m'),
+                    'avg_volume_20d': row.get('avg_volume_20d'),
+                    'rs_90d': row.get('rs_90d')
+                })
     return updates
 
 def update_db_with_indicators(updates):
-    """Bulk update the daily_prices table with computed indicators."""
+    """Bulk update the daily_prices table."""
     if not updates: return
     conn = get_connection()
     try:
         cur = conn.cursor()
         sql = """
             UPDATE daily_prices 
-            SET ema_20=%(ema_20)s, ema_50=%(ema_50)s, ema_200=%(ema_200)s, rsi_14=%(rsi_14)s, below_200ema=%(below_200ema)s 
+            SET ema_20=%(ema_20)s, ema_50=%(ema_50)s, ema_200=%(ema_200)s, 
+                rsi_14=%(rsi_14)s, below_200ema=%(below_200ema)s,
+                ema_200_slope_20=%(ema_200_slope_20)s, rolling_high_6m=%(rolling_high_6m)s,
+                avg_volume_20d=%(avg_volume_20d)s, rs_90d=%(rs_90d)s
             WHERE symbol=%(symbol)s AND date=%(date)s
         """
         from psycopg2.extras import execute_batch
@@ -79,42 +154,9 @@ def update_db_with_indicators(updates):
         conn.close()
 
 def compute_indicators_for_symbols(symbols: list):
-
     """API Bridge function for on-demand scoring."""
     if not symbols: return
     add_indicator_columns_if_missing()
-    
-    conn = get_connection()
-    sym_tuple = tuple(symbols) if len(symbols) > 1 else f"('{symbols[0]}')"
-    df = pd.read_sql(f"SELECT symbol, date, close, volume FROM daily_prices WHERE symbol IN {sym_tuple} ORDER BY date", conn)
-    idx_df = pd.read_sql("SELECT date, close as idx_close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
-    
-    if df.empty: return
-
-    updates = []
-    for symbol in df['symbol'].unique():
-        s_df = df[df['symbol'] == symbol].copy().sort_values('date')
-        if len(s_df) < 20: continue
-        
-        s_df['ema_20'] = s_df['close'].ewm(span=20, adjust=False).mean()
-        s_df['ema_50'] = s_df['close'].ewm(span=50, adjust=False).mean()
-        s_df['ema_200'] = s_df['close'].ewm(span=200, adjust=False).mean() if len(s_df) >= 200 else s_df['ema_50']
-        
-        delta = s_df['close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / (loss + 1e-9)
-        s_df['rsi_14'] = 100 - (100 / (1 + rs))
-        s_df['below_200ema'] = s_df['close'] < s_df['ema_200']
-        
-        s_df = s_df.replace({np.nan: None})
-        for _, row in s_df.iterrows():
-            updates.append({'symbol': symbol, 'date': row['date'], 'ema_20': row['ema_20'], 'ema_50': row['ema_50'], 'ema_200': row['ema_200'], 'rsi_14': row['rsi_14'], 'below_200ema': row['below_200ema']})
-
-    if updates:
-        cur = conn.cursor()
-        sql = "UPDATE daily_prices SET ema_20=%(ema_20)s, ema_50=%(ema_50)s, ema_200=%(ema_200)s, rsi_14=%(rsi_14)s, below_200ema=%(below_200ema)s WHERE symbol=%(symbol)s AND date=%(date)s"
-        from psycopg2.extras import execute_batch
-        execute_batch(cur, sql, updates)
-        conn.commit()
-    conn.close()
+    data_df, idx_df = fetch_data(symbols)
+    updates = compute_indicators(data_df, idx_df)
+    update_db_with_indicators(updates)

@@ -112,15 +112,17 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
     conn = get_connection()
     
     try:
-        # 1. Fetch data
+        # 1. Fetch data - Incremental: Only fetch last 10 days since indicators are already stored
         sql = """
             SELECT dp.symbol, dp.date, dp.close, dp.volume, dp.ema_50, dp.ema_200,
                    dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d
             FROM daily_prices dp
             WHERE dp.symbol = ANY(%s)
+            AND dp.date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '10 days'
             ORDER BY dp.symbol, dp.date
         """
         df = pd.read_sql(sql, conn, params=(symbols_clean,))
+
 
         if df.empty:
             logger.info("No rows found for targeted scoring.")
@@ -168,18 +170,75 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         conn.close()
 
 # Keep your original background bulk processing function
+def compute_market_regime():
+    """Calculates market regime (NIFTY 50) incrementally."""
+    conn = get_connection()
+    # Fetch last 255 days of Nifty to compute 200 SMA
+    idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' AND date >= (SELECT MAX(date) FROM index_prices) - INTERVAL '255 days' ORDER BY date", conn)
+    
+    if idx_df.empty:
+        logger.warning("No index data for regime.")
+        conn.close()
+        return
+
+    # SMA & Slope logic
+    idx_df['sma_200'] = idx_df['close'].rolling(window=200).mean()
+    idx_df['sma_200_slope_20'] = idx_df['sma_200'].diff(20)
+    
+    def classify(row):
+        if pd.isna(row['sma_200_slope_20']): return 'NEUTRAL'
+        if row['close'] > row['sma_200'] and row['sma_200_slope_20'] > 0: return 'BULL'
+        elif row['close'] < row['sma_200'] and row['sma_200_slope_20'] < 0: return 'BEAR'
+        else: return 'NEUTRAL'
+            
+    idx_df['classification'] = idx_df.apply(classify, axis=1)
+    
+    # Only update the latest 5 days (saves writes)
+    idx_df = idx_df.tail(5).replace({np.nan: None})
+    update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].to_dict('records')
+
+    cur = conn.cursor()
+    sql = """
+        INSERT INTO market_regime (date, sma_200, sma_200_slope_20, classification)
+        VALUES (%(date)s, %(sma_200)s, %(sma_200_slope_20)s, %(classification)s)
+        ON CONFLICT (date) DO UPDATE SET 
+            sma_200 = EXCLUDED.sma_200,
+            sma_200_slope_20 = EXCLUDED.sma_200_slope_20,
+            classification = EXCLUDED.classification;
+    """
+    execute_batch(cur, sql, update_data, page_size=100)
+    conn.commit()
+    cur.close()
+    conn.close()
+    logger.info("Incremental regime complete.")
+
 def compute_stock_scores():
-    """Bulk processing for the entire universe, following safety patterns."""
+    """Incremental scoring: only process newest dates for all symbols."""
     create_market_regime_and_scores_tables()
     conn = get_connection()
     try:
+        # Detect dates needing scores (where data exists in daily_prices but not in stock_scores)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT DISTINCT(date) FROM daily_prices 
+            WHERE date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '10 days'
+            AND date NOT IN (SELECT DISTINCT(date) FROM stock_scores)
+        """)
+        dates_to_process = [r[0] for r in cur.fetchall()]
+        cur.close()
+        
+        if not dates_to_process:
+            logger.info("Stock scores already up to date.")
+            return
+
+        # Fetch symbols to process
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT symbol FROM daily_prices")
         symbols = [r[0] for r in cur.fetchall()]
         cur.close()
         
-        if symbols:
-            compute_stock_scores_for_symbols(symbols)
+        logger.info(f"Computing scores for {len(dates_to_process)} dates across {len(symbols)} symbols...")
+        compute_stock_scores_for_symbols(symbols)
     finally:
         conn.close()
 

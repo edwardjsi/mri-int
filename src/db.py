@@ -107,6 +107,20 @@ def create_tables():
         END $$;
     """)
 
+    # Add client_watchlist table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS client_watchlist (
+            id          SERIAL PRIMARY KEY,
+            client_id   UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol      VARCHAR(20) NOT NULL,
+            created_at  TIMESTAMP DEFAULT NOW(),
+            UNIQUE(client_id, symbol)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_client_watchlist_client
+            ON client_watchlist(client_id);
+    """)
+
     conn.commit()
     cur.close()
     conn.close()

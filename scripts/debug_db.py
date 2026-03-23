@@ -1,53 +1,56 @@
-import boto3
-import json
-import psycopg2
+import argparse
 import sys
+import os
+import pandas as pd
 
-def debug_connection():
-    region = "ap-south-1"
-    secret_id = "mri-dev-db-credentials"
+# Ensure project root is in path
+sys.path.append(os.getcwd())
 
-    print(f"Fetching secret from {secret_id}...")
+from src.db import get_connection
+
+def run_query(query):
+    print(f"Executing query: {query}")
+    print("-" * 40)
+    
+    conn = get_connection()
+    if not conn:
+        print("❌ Failed to connect to the database. Check .env configuration.")
+        return
+        
     try:
-        client = boto3.client("secretsmanager", region_name=region)
-        response = client.get_secret_value(SecretId=secret_id)
-        secret = json.loads(response["SecretString"])
-        password = secret.get("password")
-        print(f"Password length: {len(password) if password else 0}")
+        query_upper = query.strip().upper()
+        if query_upper.startswith(("DELETE", "UPDATE", "INSERT", "DROP", "CREATE")):
+            cur = conn.cursor()
+            cur.execute(query)
+            conn.commit()
+            print(f"✅ Statement executed successfully. Rows affected: {cur.rowcount}")
+            cur.close()
+        else:
+            # Using pandas for pretty printing the tabular result for SELECT
+            df = pd.read_sql_query(query, conn)
+            if df.empty:
+                print("No rows returned.")
+            else:
+                print(df.to_markdown(index=False))
+                print("-" * 40)
+                print(f"Total rows: {len(df)}")
     except Exception as e:
-        print(f"Failed to fetch secret: {e}")
-        sys.exit(1)
-
-    print("\nTesting connection WITH explicit sslmode='require'...")
-    try:
-        conn = psycopg2.connect(
-            host="localhost",
-            port=5433,
-            dbname="mri_db",
-            user="mri_admin",
-            password=password,
-            connect_timeout=10,
-            sslmode="require"
-        )
-        print("✅ Connection SUCCESSFUL with sslmode='require'!")
+        print(f"❌ Error executing query: {e}")
+    finally:
         conn.close()
-    except Exception as e:
-        print(f"❌ Connection failed with sslmode='require': {e}")
-
-    print("\nTesting connection WITH default sslmode (prefer)...")
-    try:
-        conn = psycopg2.connect(
-            host="localhost",
-            port=5433,
-            dbname="mri_db",
-            user="mri_admin",
-            password=password,
-            connect_timeout=10
-        )
-        print("✅ Connection SUCCESSFUL with default sslmode!")
-        conn.close()
-    except Exception as e:
-        print(f"❌ Connection failed with default sslmode: {e}")
 
 if __name__ == "__main__":
-    debug_connection()
+    parser = argparse.ArgumentParser(description="Debug Database Queries")
+    parser.add_argument("--query", type=str, help="SQL query to execute")
+    args = parser.parse_args()
+    
+    if args.query:
+        run_query(args.query)
+    else:
+        print("No query provided. Testing basic connection...")
+        conn = get_connection()
+        if conn:
+            print("✅ Successfully connected to the database!")
+            conn.close()
+        else:
+            print("❌ Connection failed.")

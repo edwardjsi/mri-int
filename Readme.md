@@ -63,13 +63,15 @@ mri-intelligence/
 │   └── environments/
 │       └── dev/
 ├── src/
-│   ├── data_loader.py          \# Day 2: NSE EOD ingestion
+│   ├── ingestion_engine.py     \# Day 2/10: NSE EOD ingestion (Rebranded)
 │   ├── indicator_engine.py     \# Day 3: EMA, slope, RS, volume
 │   ├── regime_engine.py        \# Day 4: Daily Risk-On/Off classification
 │   ├── trend_engine.py         \# Day 5-6: Per-stock 0-5 scoring
-│   ├── portfolio_engine.py     \# Day 7-8: Capital simulation
 │   ├── metrics.py              \# Day 9: CAGR, Sharpe, Drawdown, etc.
 │   └── stress_tests.py         \# Day 10: 2008, 2020, param sensitivity
+├── scripts/
+│   ├── mri_pipeline.py         \# Day 7-10: Main entry point (Rebranded)
+│   └── reseed_history.py       \# One-time historical ingestion
 ├── outputs/
 │   ├── equity_curve.csv
 │   ├── trade_log.csv
@@ -171,13 +173,11 @@ User uploads holdings → system returns weighted risk level:
 
 ```
 
-1. Ingest new EOD data
-2. Update indicators
-3. Compute regime score
-4. Compute stock trend scores
-5. Store results in RDS
-6. Export outputs to S3
-7. Update CloudWatch metrics
+1. Ingest new EOD data (`src/ingestion_engine.py`)
+2. Update indicators (`src/indicator_engine.py`)
+3. Compute regime score (`src/regime_engine.py`)
+4. Compute stock trend scores (`src/signal_generator.py`)
+5. Workflow Orchestration (`scripts/mri_pipeline.py`)
 ```
 
 ---

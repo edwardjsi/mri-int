@@ -1378,11 +1378,124 @@ function RiskAuditPage() {
 	  );
 	}
 
+/* ─── Watchlist Page ─────────────────────────────────────── */
+function WatchlistPage() {
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newSymbol, setNewSymbol] = useState('');
+  const [error, setError] = useState('');
+
+  const loadWatchlist = async () => {
+    try {
+      const data = await api.getWatchlist();
+      setWatchlist(data);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadWatchlist();
+  }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSymbol.trim()) return;
+    setError('');
+    try {
+      await api.addToWatchlist(newSymbol);
+      setNewSymbol('');
+      loadWatchlist();
+    } catch (err: any) {
+      setError(err.message || 'Failed to add symbol');
+    }
+  };
+
+  const handleRemove = async (symbol: string) => {
+    if (!confirm(`Remove ${symbol} from watchlist?`)) return;
+    try {
+      await api.removeFromWatchlist(symbol);
+      loadWatchlist();
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove symbol');
+    }
+  };
+
+  if (loading) return <div className="loading">Loading watchlist...</div>;
+
+  return (
+    <div className="watchlist">
+      <h2 className="section-title">Stock Watchlist</h2>
+      <p className="section-subtitle">Track custom stocks without owning them. They will be automatically updated in the daily pipeline.</p>
+      
+      <form onSubmit={handleAdd} className="watchlist-add-form">
+        <input 
+          type="text" 
+          placeholder="Enter Symbol (e.g. RELIANCE)" 
+          value={newSymbol} 
+          onChange={e => setNewSymbol(e.target.value)} 
+          className="form-input"
+        />
+        <button type="submit" className="btn-primary">Add Stock</button>
+      </form>
+      
+      {error && <div className="error-alert">{error}</div>}
+
+      {watchlist.length > 0 ? (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>MRI Grade</th>
+                <th>Trend</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {watchlist.map(item => (
+                <tr key={item.symbol}>
+                  <td className="font-bold">{item.symbol}</td>
+                  <td>{item.price ? `₹${item.price.toLocaleString()}` : 'N/A'}</td>
+                  <td>
+                    {item.score !== null ? (
+                      <span className="score-badge">{item.score}/5</span>
+                    ) : 'N/A'}
+                  </td>
+                  <td>
+                    {item.trend_alignment ? (
+                      <span className={`action-badge ${item.trend_alignment === 'BULL' ? 'badge-executed' : 'badge-skipped'}`}>
+                        {item.trend_alignment}
+                      </span>
+                    ) : 'N/A'}
+                  </td>
+                  <td>
+                    <button className="btn-danger" onClick={() => handleRemove(item.symbol)} style={{ padding: '4px 8px', fontSize: '12px' }}>
+                      🗑️ Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">
+          No stocks in your watchlist. Start adding symbols to track their grades daily.
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main App ────────────────────────────────────────────── */
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist'>('dashboard');
 
   // Custom simple routing for password reset link
   const urlParams = new URLSearchParams(window.location.search);
@@ -1426,6 +1539,9 @@ function App() {
           <button className={`nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
             <span className="nav-icon">🛡️</span> Risk Audit
           </button>
+          <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
+            <span className="nav-icon">👀</span> Watchlist
+          </button>
         </div>
         <div className="sidebar-footer">
           <div className="user-info">{getClientName()}</div>
@@ -1435,7 +1551,7 @@ function App() {
       <main className="main-content">
         <header className="content-header">
           <h1 className="page-title">
-            {page === 'dashboard' ? 'Signal Dashboard' : page === 'history' ? 'Trade History' : page === 'riskaudit' ? 'Portfolio Risk Audit' : 'My Performance'}
+            {page === 'dashboard' ? 'Signal Dashboard' : page === 'history' ? 'Trade History' : page === 'riskaudit' ? 'Portfolio Risk Audit' : page === 'watchlist' ? 'Stock Watchlist' : 'My Performance'}
           </h1>
         </header>
         <div className="content-body">
@@ -1443,6 +1559,7 @@ function App() {
           {page === 'history' && <HistoryPage />}
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage />}
+          {page === 'watchlist' && <WatchlistPage />}
         </div>
       </main>
     </div>

@@ -393,3 +393,4 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Marketing landing page in front of auth.
 - [x] Watchlist feature with persistent tracking.
 - [x] Database optimization (sliding window + indexing).
+- [x] Reclaimed 1.1GB space via VACUUM FULL.

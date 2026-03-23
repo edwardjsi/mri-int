@@ -1,0 +1,4 @@
+
+An error occurred (DBInstanceNotFound) when calling the StartDBInstance operation: DBInstance mri-dev-db not found.
+
+Waiter DBInstanceAvailable failed: An error occurred (DBInstanceNotFound): DBInstance mri-dev-db not found.
