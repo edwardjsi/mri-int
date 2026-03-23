@@ -136,15 +136,22 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['avg_volume_20d'] = df['avg_volume_20d'].fillna(df['volume'])
         df['rs_90d'] = df['rs_90d'].fillna(0)
 
-        # 3. Calculate MRI Conditions
+        # 3. Calculate MRI Conditions & Weighted Scores
         df['condition_ema_50_200'] = (df['ema_50'] > df['ema_200']).astype(bool)
         df['condition_ema_200_slope'] = (df['ema_200_slope_20'] > 0).astype(bool)
         df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m']).astype(bool)
         df['condition_volume'] = (df['volume'] > (1.5 * df['avg_volume_20d'])).astype(bool)
         df['condition_rs'] = (df['rs_90d'] > 0).astype(bool)
 
-        bool_cols = ['condition_ema_50_200', 'condition_ema_200_slope', 'condition_6m_high', 'condition_volume', 'condition_rs']
-        df['total_score'] = df[bool_cols].sum(axis=1)
+        # Apply Weights (Total = 100)
+        # EMA 50/200: 25 pts, Slope: 25 pts, RS: 20 pts, 6m High: 20 pts, Volume: 10 pts
+        df['total_score'] = (
+            df['condition_ema_50_200'].astype(int) * 25 +
+            df['condition_ema_200_slope'].astype(int) * 25 +
+            df['condition_rs'].astype(int) * 20 +
+            df['condition_6m_high'].astype(int) * 20 +
+            df['condition_volume'].astype(int) * 10
+        )
 
         # 4. Write back to DB
         df = df.replace({np.nan: None})

@@ -432,3 +432,15 @@ Date: 2026-03-23
 Decision: Add a persistent `client_watchlist` table for users to track custom stocks.
 Reason: Users need to monitor stocks they don't yet own.
 Status: FINAL.
+
+## Decision 068 — 0-100 Weighted Scoring Engine
+Date: 2026-03-23
+Decision: Transition from 0-5 binary sum to a 0-100 weighted score: EMA 50/200 (25), Slope (25), Momentum/RS (20), 6m High (20), Volume (10).
+Reason: Provides greater granularity and allows weighting critical trend indicators over secondary surge indicators.
+Status: FINAL.
+
+## Decision 069 — Holistic Daily Activity Digest
+Date: 2026-03-23
+Decision: Expand the daily SES email to include segments for "Portfolio Status" and "Watchlist Update", reporting the latest MRI score and Regime for every tracked asset.
+Reason: Fulfills Requirement 10 (Daily Analysis/Email on all recommended, portfolio, and watchlist stocks).
+Status: FINAL.

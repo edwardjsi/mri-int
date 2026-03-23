@@ -25,10 +25,14 @@ def get_connection():
     return conn
 
 
-def build_signal_email_html(client_name, signals, regime):
+def build_signal_email_html(client_name, signals, regime, holdings=None, watchlist=None):
     """Build HTML email body for daily signal digest."""
     buy_signals = [s for s in signals if s["action"] == "BUY"]
     sell_signals = [s for s in signals if s["action"] == "SELL"]
+    
+    # Tracked items (Portfolio/Watchlist)
+    holdings = holdings or []
+    watchlist = watchlist or []
 
     regime_color = {"BULL": "#22c55e", "BEAR": "#ef4444", "NEUTRAL": "#f59e0b"}.get(regime, "#6b7280")
 
@@ -95,7 +99,47 @@ def build_signal_email_html(client_name, signals, regime):
             </table>"""
 
     if not buy_signals and not sell_signals:
-        html += """<p style="color:#6b7280;font-style:italic;text-align:center;padding:20px">No signals today. Hold current positions.</p>"""
+        html += """<p style="color:#6b7280;font-style:italic;text-align:center;padding:10px 0">No fresh signals today.</p>"""
+
+    # 💼 Portfolio Section
+    if holdings:
+        html += f"""
+            <h2 style="color:#3b82f6;font-size:16px;margin:24px 0 8px">💼 Your Portfolio Status</h2>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <tr style="background:#eff6ff">
+                    <th style="padding:8px;text-align:left">Symbol</th>
+                    <th style="padding:8px;text-align:left">MRI Score</th>
+                    <th style="padding:8px;text-align:left">Regime</th>
+                </tr>"""
+        for h in holdings:
+            score_color = "#22c55e" if (h['total_score'] or 0) >= 70 else ("#f59e0b" if (h['total_score'] or 0) >= 40 else "#ef4444")
+            html += f"""
+                <tr>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{h['symbol']}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{h['total_score'] or 0}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">{regime}</td>
+                </tr>"""
+        html += "</table>"
+
+    # 👀 Watchlist Section
+    if watchlist:
+        html += f"""
+            <h2 style="color:#8b5cf6;font-size:16px;margin:24px 0 8px">👀 Your Watchlist Update</h2>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <tr style="background:#f5f3ff">
+                    <th style="padding:8px;text-align:left">Symbol</th>
+                    <th style="padding:8px;text-align:left">MRI Score</th>
+                    <th style="padding:8px;text-align:left">Alignment</th>
+                </tr>"""
+        for w in watchlist:
+            score_color = "#22c55e" if (w['total_score'] or 0) >= 70 else ("#f59e0b" if (w['total_score'] or 0) >= 40 else "#ef4444")
+            html += f"""
+                <tr>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{w['symbol']}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{w['total_score'] or 0}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">{regime}</td>
+                </tr>"""
+        html += "</table>"
 
     html += """
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
@@ -255,15 +299,33 @@ def send_signal_emails():
         """, (client_id, latest_date))
         signals = cur.fetchall()
 
+        # 5. Fetch Latest Scores for Portfolio Holdings
+        cur.execute("""
+            SELECT eh.symbol, ss.total_score
+            FROM client_external_holdings eh
+            LEFT JOIN stock_scores ss ON eh.symbol = ss.symbol AND ss.date = %s
+            WHERE eh.client_id = %s
+        """, (latest_date, client_id))
+        holdings_scores = cur.fetchall()
+
+        # 6. Fetch Latest Scores for Watchlist
+        cur.execute("""
+            SELECT cw.symbol, ss.total_score
+            FROM client_watchlist cw
+            LEFT JOIN stock_scores ss ON cw.symbol = ss.symbol AND ss.date = %s
+            WHERE cw.client_id = %s
+        """, (latest_date, client_id))
+        watchlist_scores = cur.fetchall()
+
         buy_count = sum(1 for s in signals if s["action"] == "BUY")
         sell_count = sum(1 for s in signals if s["action"] == "SELL")
         
         if signals:
             subject = f"MRI Signals: {buy_count} BUY, {sell_count} SELL — {regime} Market"
         else:
-            subject = f"MRI Daily Summary: {regime} Market — No New Signals"
+            subject = f"MRI Daily Update: {regime} Market Summary"
 
-        html_body = build_signal_email_html(name, signals, regime)
+        html_body = build_signal_email_html(name, signals, regime, holdings=holdings_scores, watchlist=watchlist_scores)
 
         try:
             ses.send_email(

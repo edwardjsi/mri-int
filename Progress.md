@@ -388,9 +388,11 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Hooked into `api/auth.py` `register()` endpoint.
 - [x] Subscriber added to MailerLite group on sign-up.
 
-### Phase 14: Unified Deployment & Watchlist (2026-03-23)
-- [x] Unified Dockerfile for monolithic deployment.
-- [x] Marketing landing page in front of auth.
-- [x] Watchlist feature with persistent tracking.
-- [x] Database optimization (sliding window + indexing).
-- [x] Reclaimed 1.1GB space via VACUUM FULL.
+### Phase 14: Railway Migration & Mobile Optimization (2026-03-23)
+- [x] **Unified Monolithic Deployment**: Merged frontend/backend into a single Docker container serving from root.
+- [x] **Mobile Optimization Rework**: Hashed bottom navigation bar for small screens; overhauled CSS for all platform pages.
+- [x] **Railway Migration**: Successfully moved to Railway with unified service architecture.
+- [x] **AWS Secret Manager**: Integrated MailerLite credentials fetching via AWS Secrets Manager `mri-mailerlite-credentials`.
+- [x] **0-100 Weighted Scoring**: Transitioned from 0-5 sum to 0-100 weighted risk engine (Trend, Slope, RS, Momentum, Volume).
+- [x] **Enhanced Daily Digest**: Updated daily email service to report Portfolio and Watchlist status in a holistic daily activity report.
+- [x] **Database Optimization**: Pruned `daily_prices` and optimized indices for Neon/Railway environment.

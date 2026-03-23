@@ -112,7 +112,7 @@ const heroStats = [
 const featureHighlights = [
   {
     title: 'Regime awareness',
-    description: 'Blends SMA-200 regime with 0-5 stock scores to skip Risk-Off stretches.',
+    description: 'Blends SMA-200 regime with 0-100 stock scores to skip Risk-Off stretches.',
   },
   {
     title: 'Digital Twin portfolio',
@@ -130,7 +130,7 @@ const testimonials = [
     name: 'Ananya, Retail investor • Bangalore',
   },
   {
-    quote: 'Landing page told the story: regime filter + 0-5 score + persistence. Trial let me backtest real portfolios.',
+    quote: 'Landing page told the story: regime filter + 0-100 score + persistence. Trial let me backtest real portfolios.',
     name: 'Siddharth, Quant analyst • Mumbai',
   },
 ];
@@ -159,7 +159,7 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
         <div className="landing-hero-copy">
           <p className="landing-tagline">Market Regime Intelligence</p>
           <h1>Daily quant signals + portfolio risk visibility for Indian investors.</h1>
-          <p className="landing-subtitle">MRI blends regime filtering, 0-5 trend scores, and persistent holdings to keep you aligned with risk-on opportunities.</p>
+          <p className="landing-subtitle">MRI blends regime filtering, 0-100 trend scores, and persistent holdings to keep you aligned with risk-on opportunities.</p>
           <div className="hero-actions">
             <button className="btn-primary" onClick={() => onRequestAuth()}>Enter the dashboard</button>
             <button className="btn-ghost" onClick={() => onRequestAuth()}>Start risk audit</button>
@@ -412,7 +412,7 @@ function SignalCard({ signal, totalCapital, onAction }: {
         </div>
         <div className="signal-details">
           <div className="signal-detail"><span className="detail-label">Price</span><span className="detail-value">₹{signal.recommended_price?.toLocaleString()}</span></div>
-          <div className="signal-detail"><span className="detail-label">Score</span><span className="detail-value">{signal.score}/5</span></div>
+          <div className="signal-detail"><span className="detail-label">Score</span><span className="detail-value">{signal.score}/100</span></div>
           {isBuy && (
             <div className="signal-detail"><span className="detail-label">Qty</span><span className="detail-value suggested-qty">{suggestedQty} shares (₹{allocation.toLocaleString()})</span></div>
           )}
@@ -677,7 +677,7 @@ function HistoryPage() {
                   <td>₹{a.recommended_price?.toLocaleString()}</td>
                   <td>₹{a.actual_price?.toLocaleString()}</td>
                   <td>{a.quantity || '-'}</td>
-                  <td>{a.score}/5</td>
+                  <td>{a.score}/100</td>
                   <td>{a.regime}</td>
                 </tr>
               ))}
@@ -1204,7 +1204,7 @@ function RiskAuditPage() {
 	                {sortedSavedHoldings.map((h: any) => (
 	                  <tr key={h.symbol}>
 	                    <td className="font-bold">{h.symbol}</td>
-	                    <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
+	                    <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
 	                    <td>
 	                      <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
 	                        {h.alignment}
@@ -1329,7 +1329,7 @@ function RiskAuditPage() {
                 <thead>
                   <tr>
                     <th title="The stock symbol or ticker name" onClick={() => handleSort('symbol')} style={{cursor: 'pointer', userSelect: 'none'}}>Symbol{getSortIcon('symbol')}</th>
-                    <th title="The MRI trend score (0-5) combining moving averages, momentum, and volume" onClick={() => handleSort('score')} style={{cursor: 'pointer', userSelect: 'none'}}>Score (0-5){getSortIcon('score')}</th>
+                    <th title="The MRI trend score (0-100) combining moving averages, momentum, and volume" onClick={() => handleSort('score')} style={{cursor: 'pointer', userSelect: 'none'}}>Score (0-100){getSortIcon('score')}</th>
                     <th title="Whether the stock's trend aligns with the overall Market Regime" onClick={() => handleSort('alignment')} style={{cursor: 'pointer', userSelect: 'none'}}>Alignment{getSortIcon('alignment')}</th>
                     <th title="Percentage of your total portfolio value invested in this stock" onClick={() => handleSort('weight_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Weight{getSortIcon('weight_pct')}</th>
                     <th title="How much of your portfolio's total risk comes from this specific holding" onClick={() => handleSort('risk_contribution_pct')} style={{cursor: 'pointer', userSelect: 'none'}}>Risk Contribution{getSortIcon('risk_contribution_pct')}</th>
@@ -1341,7 +1341,7 @@ function RiskAuditPage() {
                   {sortedHoldings.map((h: any) => (
                     <tr key={h.symbol}>
                       <td className="font-bold">{h.symbol}</td>
-                      <td>{h.score !== null ? `${h.score}/5` : 'N/A'}</td>
+                      <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
                       <td>
                         <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
                           {h.alignment}
@@ -1462,7 +1462,7 @@ function WatchlistPage() {
                   <td>{item.price ? `₹${item.price.toLocaleString()}` : 'N/A'}</td>
                   <td>
                     {item.score !== null ? (
-                      <span className="score-badge">{item.score}/5</span>
+                      <span className="score-badge">{item.score}/100</span>
                     ) : 'N/A'}
                   </td>
                   <td>
@@ -1562,6 +1562,22 @@ function App() {
           {page === 'watchlist' && <WatchlistPage />}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-nav">
+        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
+          <span className="nav-icon">🏠</span> Dashboard
+        </button>
+        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
+          <span className="nav-icon">👀</span> Watchlist
+        </button>
+        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
+          <span className="nav-icon">🛡️</span> Audit
+        </button>
+        <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
+          <span className="nav-icon">📋</span> History
+        </button>
+      </nav>
     </div>
   );
 }
