@@ -384,10 +384,12 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] Dockerfile.api updated to use $PORT for Railway deploys (fixes backend healthcheck)
 - [x] Backend and frontend both deploy and pass healthchecks on Railway
 ### Phase 13: MailerLite Mailing List Integration (2026-03-21)
-- [x] Created `src/mailerlite.py` — thin wrapper around MailerLite v2 API (`POST /api/subscribers`)
-- [x] Hooked into `api/auth.py` `register()` endpoint — fires after `conn.commit()`, non-blocking
-- [x] Subscriber added to configured MailerLite group with `status: active`
-- [x] Failure to reach MailerLite does NOT block registration — errors are logged only
-- [ ] Set `MAILERLITE_API_KEY` env var on Railway (MailerLite → Settings → Integrations → API)
-- [ ] Set `MAILERLITE_GROUP_ID` env var on Railway (MailerLite → Groups → click group → ID in URL)
-- [ ] Verify first test registration appears in MailerLite group
+- [x] Created `src/mailerlite.py` — wrapper for MailerLite v2 API.
+- [x] Hooked into `api/auth.py` `register()` endpoint.
+- [x] Subscriber added to MailerLite group on sign-up.
+
+### Phase 14: Unified Deployment & Watchlist (2026-03-23)
+- [x] Unified Dockerfile for monolithic deployment.
+- [x] Marketing landing page in front of auth.
+- [x] Watchlist feature with persistent tracking.
+- [x] Database optimization (sliding window + indexing).

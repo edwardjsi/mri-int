@@ -935,3 +935,196 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+
+/* Landing page + hero section */
+.landing-shell {
+  min-height: 100vh;
+  padding: 4rem 1.5rem 3rem;
+  background: radial-gradient(circle at 20% -10%, rgba(59,130,246,0.35) 0%, rgba(15,23,42,0.95) 60%);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+.landing-header {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.landing-hero-copy h1 {
+  font-size: 2.5rem;
+  margin: 0.5rem 0 0.75rem;
+  color: #f8fafc;
+}
+
+.landing-tagline {
+  letter-spacing: 0.25em;
+  font-size: 0.9rem;
+  color: #60a5fa;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.landing-subtitle {
+  max-width: 520px;
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1.5rem;
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn-primary {
+  min-width: 190px;
+}
+
+.btn-ghost {
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.5);
+  background: transparent;
+  color: #a5b4fc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.landing-hero-card {
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 18px;
+  padding: 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 25px 60px rgba(2, 6, 23, 0.5);
+}
+.landing-hero-card .hero-card-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: #f1f5f9;
+  font-weight: 700;
+}
+.landing-trial-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.landing-trial-form label {
+  font-size: 13px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.landing-trial-form input {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 0.85rem 0.9rem;
+  color: #f8fafc;
+}
+.landing-form-status {
+  margin-top: 1rem;
+  color: #bbf7d0;
+  font-size: 0.95rem;
+}
+.landing-form-error {
+  margin-top: 1rem;
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+.hero-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+.hero-stat {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.hero-stat strong {
+  display: block;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+.hero-stat span {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+.hero-stat small {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.feature-card {
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 1.25rem;
+  text-align: left;
+}
+.feature-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+.feature-card p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.landing-testimonials {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.testimonial-card {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+.testimonial-quote {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #f8fafc;
+}
+.testimonial-name {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+.landing-back-link {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .landing-shell { padding: 3rem 1rem 2rem; }
+  .landing-header { grid-template-columns: 1fr; }
+  .hero-actions { justify-content: flex-start; }
+  .hero-meta { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+}

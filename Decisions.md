@@ -397,14 +397,38 @@ Date: 2026-03-19
 Decision: FastAPI backend must use the $PORT environment variable (default 8000) when running on Railway.
 Reason: Railway assigns a dynamic port for each service; hardcoding 8000 causes healthcheck failures.
 Status: FINAL.
-## Decision 062 — MailerLite Mailing List Integration on Registration
+## Decision 062 — Static Frontend Environment Variable Workaround
+Date: 2026-03-19
+Decision: To securely provide the VITE_API_URL (with /api) to the static frontend on Railway, we added a prebuild script in frontend/package.json that generates the .env file at build time. This avoids committing .env to version control and bypasses Railway UI limitations that strip /api from environment variables.
+Reason: Railway's UI would not accept /api in env vars, and committing .env with secrets is unsafe. The prebuild script ensures the correct API URL is always set for production builds, with no risk of leaking secrets.
+Status: FINAL.
+
+## Decision 063 — MailerLite Mailing List Integration on Registration
 Date: 2026-03-21
 Decision: On successful user registration, automatically add the new subscriber (email + name) to a MailerLite mailing list group via the MailerLite v2 API (`POST https://connect.mailerlite.com/api/subscribers`).
-Implementation:
-  - New module `src/mailerlite.py` wraps the MailerLite API call. Returns bool, never raises.
-  - Called from `api/auth.py` `register()` endpoint **after** `conn.commit()` — registration always succeeds regardless of MailerLite availability.
-  - Two new env vars required: `MAILERLITE_API_KEY` (MailerLite API token) and `MAILERLITE_GROUP_ID` (target group/list ID). Both set as Railway environment variables.
-  - API key is NOT stored in AWS Secrets Manager — Railway env vars are sufficient for the current free-tier deployment.
-  - Subscriber status set to `active` (skips double opt-in). Change to `unconfirmed` if GDPR double opt-in is required later.
-Reason: Builds a reachable mailing list of interested users from day one. MailerLite free tier (1,000 subscribers, 12,000 emails/month) is sufficient for the testing phase. Decoupled from registration flow so email list issues never block user sign-ups.
+Reason: Builds a reachable mailing list of interested users from day one. MailerLite free tier is sufficient for testing.
+Status: FINAL.
+
+## Decision 064 — Launch landing-first entry
+Date: 2026-03-23
+Decision: Serve a marketing-first landing page to unauthenticated visitors and reuse the existing login/register component as the CTA target.
+Reason: Provide an introductory narrative/soft-sell while keeping the auth flow intact for existing users.
+Status: FINAL.
+
+## Decision 065 — Neon Database Rollback & Optimization
+Date: 2026-03-23
+Decision: Pruned daily_prices to a 2-year sliding window (~400k rows) and implemented incremental logic in engines.
+Reason: Fixed GitHub Actions quota exhaustion and Neon storage bloat. Pipeline now runs in <1 minute.
+Status: FINAL.
+
+## Decision 066 — Unified Monolithic Deployment
+Date: 2026-03-23
+Decision: Merge frontend and backend into a single Docker container. FastAPI serves static frontend files from `frontend/dist`.
+Reason: Solves visibility issues on Railway/Render via single URL.
+Status: FINAL.
+
+## Decision 067 — Watchlist Feature (Tracking Stocks)
+Date: 2026-03-23
+Decision: Add a persistent `client_watchlist` table for users to track custom stocks.
+Reason: Users need to monitor stocks they don't yet own.
 Status: FINAL.
