@@ -25,6 +25,10 @@ load_dotenv()
 
 app = FastAPI(title="MRI-Int API")
 
+@app.get("/api/health")
+async def health():
+    return {"status": "healthy"}
+
 # Custom Exception Handler to log validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
