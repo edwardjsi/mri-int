@@ -46,6 +46,33 @@ def get_db_credentials():
     }
 
 
+def get_mailerlite_credentials():
+    """
+    Fetch MailerLite API Key and Group ID. Priority:
+    1. Environment variables (MAILERLITE_API_KEY, MAILERLITE_GROUP_ID)
+    2. AWS Secrets Manager (mri-mailerlite-credentials)
+    """
+    api_key = os.environ.get("MAILERLITE_API_KEY")
+    group_id = os.environ.get("MAILERLITE_GROUP_ID")
+
+    if api_key:
+        return {"api_key": api_key, "group_id": group_id}
+
+    # Fallback to AWS Secrets Manager
+    secret_name = os.environ.get("MAILERLITE_SECRET_NAME", "mri-mailerlite-credentials")
+    try:
+        client = boto3.client("secretsmanager", region_name=os.environ.get("AWS_REGION", "ap-south-1"))
+        response = client.get_secret_value(SecretId=secret_name)
+        secret = json.loads(response["SecretString"])
+        return {
+            "api_key":  secret.get("MAILERLITE_API_KEY", ""),
+            "group_id": secret.get("MAILERLITE_GROUP_ID", ""),
+        }
+    except Exception as e:
+        # If we fail to fetch from AWS and have no env var, return empty
+        return {"api_key": "", "group_id": ""}
+
+
 # SSL required for cloud PostgreSQL providers (Neon, Supabase, etc.)
 DB_SSL = os.environ.get("DB_SSL", "false").lower() == "true"
 

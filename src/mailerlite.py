@@ -6,10 +6,14 @@ import os
 import logging
 import requests
 
+from src.config import get_mailerlite_credentials
+
 logger = logging.getLogger(__name__)
 
-MAILERLITE_API_KEY = os.environ.get("MAILERLITE_API_KEY", "")
-MAILERLITE_GROUP_ID = os.environ.get("MAILERLITE_GROUP_ID", "")  # your list/group ID
+# Fetch credentials once on module load or inside the function
+_creds = get_mailerlite_credentials()
+MAILERLITE_API_KEY = _creds["api_key"]
+MAILERLITE_GROUP_ID = _creds["group_id"]
 
 
 def add_subscriber(email: str, name: str) -> bool:
