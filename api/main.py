@@ -59,6 +59,11 @@ app.include_router(portfolio_review_router)
 app.include_router(email_debug_router)
 app.include_router(watchlist_router)
 
+# Explicit Health Check (Must be before catch-all)
+@app.get("/api/health")
+async def health():
+    return {"status": "healthy"}
+
 # Serve Frontend Static Files
 static_path = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_path):
