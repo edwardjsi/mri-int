@@ -25,10 +25,6 @@ load_dotenv()
 
 app = FastAPI(title="MRI-Int API")
 
-@app.get("/api/health")
-async def health():
-    return {"status": "healthy"}
-
 # Custom Exception Handler to log validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -73,15 +69,21 @@ if os.path.exists(static_path):
     
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
-        # Allow API/Auth calls to pass through normally.
+        # Allow API calls to pass through. If they reached here, they matched nothing in the routers.
         if full_path.startswith("api/") or full_path.startswith("auth/"):
              return JSONResponse(status_code=404, content={"detail": "Not Found"})
             
-        # For everything else, serve index.html (React Router handles it)
+        # Check if the requested file exists in static/
         file_path = os.path.join(static_path, full_path)
-        if os.path.isfile(file_path):
+        if full_path and os.path.isfile(file_path):
             return FileResponse(file_path)
-        return FileResponse(os.path.join(static_path, "index.html"))
+            
+        # Fallback to index.html for React Router
+        index_path = os.path.join(static_path, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        
+        return JSONResponse(status_code=404, content={"detail": "Static files not found"})
 
 @app.get("/api/health")
 async def health():

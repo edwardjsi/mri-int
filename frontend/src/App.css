@@ -653,6 +653,49 @@
   .summary-stats {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* Landing Page Mobile */
+  .landing-header {
+    flex-direction: column;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .landing-hero-copy h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .landing-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-meta {
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .landing-hero-card {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
+
+  .landing-features {
+    grid-template-columns: 1fr;
+    padding: 2rem 1rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+    margin: 1rem;
+    border-radius: 12px;
+  }
 }
 
 /* ─── Dashboard Top Row (Regime + Capital) ─── */
