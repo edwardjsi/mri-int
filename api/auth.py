@@ -83,7 +83,6 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(req: LoginRequest, conn=Depends(get_db)):
     try:
         cur = conn.cursor()
         cur.execute(
@@ -92,12 +91,26 @@ def login(req: LoginRequest, conn=Depends(get_db)):
         )
         client = cur.fetchone()
 
-        if not client or not verify_password(req.password.strip(), client["password_hash"]):
+        if not client:
             raise HTTPException(status_code=401, detail="Invalid email or password")
-        if not client["is_active"]:
+            
+        # Support both DictCursor and Tuple access to be safe
+        def get_val(item, key, index):
+            if isinstance(item, dict): return item.get(key)
+            return item[index] if len(item) > index else None
+
+        c_id = get_val(client, "id", 0)
+        c_name = get_val(client, "name", 1)
+        c_hash = get_val(client, "password_hash", 2)
+        c_active = get_val(client, "is_active", 3)
+        c_admin = get_val(client, "is_admin", 4)
+
+        if not c_hash or not verify_password(req.password.strip(), c_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not c_active:
             raise HTTPException(status_code=403, detail="Account deactivated")
 
-        token = create_access_token({"sub": str(client["id"])})
+        token = create_access_token({"sub": str(c_id)})
         
         # Check for pending signals
         cur.execute("""
@@ -105,22 +118,23 @@ def login(req: LoginRequest, conn=Depends(get_db)):
             LEFT JOIN client_actions ca ON ca.signal_id = cs.id
             WHERE cs.client_id = %s AND ca.id IS NULL
             LIMIT 1
-        """, (str(client["id"]),))
+        """, (str(c_id),))
         has_pending = cur.fetchone() is not None
 
         return TokenResponse(
             access_token=token,
-            client_id=str(client["id"]),
-            name=client["name"],
+            client_id=str(c_id),
+            name=c_name or "User",
             email=req.email,
             has_pending_signals=has_pending,
-            is_admin=bool(client.get("is_admin", False))
+            is_admin=bool(c_admin)
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"LOGIN CRASH: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"DEBUG SERVER CRASH: {type(e).__name__}: {str(e)}")
+        # Return exact error for debugging
+        raise HTTPException(status_code=500, detail=f"v7-TUPLE_SAFE CRASH: {type(e).__name__}: {str(e)}")
 
 
 @router.get("/me")
