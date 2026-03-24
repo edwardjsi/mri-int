@@ -17,8 +17,17 @@ function resolveApiBase(): string {
 }
 
 const API_BASE = resolveApiBase();
-console.log(`🚀 MRI Platform Booted | API_BASE: ${API_BASE} | Origin: ${window.location.origin}`);
-(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v4-final-fix' };
+(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v5-CLEANPAYLOAD' };
+
+/**
+ * Strips invisible control characters that can cause fetch() to fail or proxies to block.
+ * Specifically targets non-printable ASCII and common zero-width unicode.
+ */
+function sanitize(str: string): string {
+    if (!str) return '';
+    // Strip control chars (0-31, 127) and common invisible unicode like ZWSP
+    return str.replace(/[\x00-\x1F\x7F-\x9F\u200B-\u200D\uFEFF]/g, '');
+}
 
 interface LoginResponse {
     access_token: string;
@@ -132,7 +141,10 @@ export const api = {
     login: (email: string, password: string) =>
         apiFetch('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ 
+                email: sanitize(email), 
+                password: sanitize(password) 
+            }),
         }, true).then((data: LoginResponse) => { setAuth(data); return data; }),
 
     forgotPassword: (email: string) =>
