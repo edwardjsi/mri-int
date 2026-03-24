@@ -1,4 +1,6 @@
-const API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
+let API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
+// Strip out any accidental single or double quotes from Railway environment variables
+API_BASE_RAW = API_BASE_RAW.replace(/['"]/g, '');
 const API_BASE = API_BASE_RAW.endsWith('/') ? API_BASE_RAW.slice(0, -1) : API_BASE_RAW;
 
 interface LoginResponse {
