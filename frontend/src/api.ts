@@ -69,18 +69,17 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
         throw new Error('Session expired');
     }
 
-    if (!res.ok) {
+        if (!res.ok) {
         let errorData: any;
         try {
             errorData = await res.json();
         } catch (e) {
             const text = await res.text().catch(() => 'No response body');
-            console.error("Server Error (Non-JSON):", text);
-            throw new Error(`Server Error (${res.status}): ${text.substring(0, 100)}`);
+            console.error(`Status ${res.status} on URL [${url}] (Non-JSON):`, text);
+            throw new Error(`DEBUG ${res.status} on ${url} -> ${text.substring(0, 40)}`);
         }
 
         console.error("API Error Response:", errorData);
-        // Include the raw error data in the Error object so App.tsx can show it
         const detail = errorData.detail || 'Request failed';
         const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
         throw new Error(message);
