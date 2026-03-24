@@ -83,6 +83,7 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
+def login(req: LoginRequest, conn=Depends(get_db)):
     try:
         cur = conn.cursor()
         cur.execute(
@@ -97,7 +98,9 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
         # Support both DictCursor and Tuple access to be safe
         def get_val(item, key, index):
             if isinstance(item, dict): return item.get(key)
-            return item[index] if len(item) > index else None
+            if isinstance(item, (list, tuple)):
+                return item[index] if len(item) > index else None
+            return None
 
         c_id = get_val(client, "id", 0)
         c_name = get_val(client, "name", 1)
