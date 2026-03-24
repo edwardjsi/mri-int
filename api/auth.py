@@ -84,37 +84,43 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(req: LoginRequest, conn=Depends(get_db)):
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT id, name, password_hash, is_active, is_admin FROM clients WHERE email = %s",
-        (req.email,),
-    )
-    client = cur.fetchone()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, name, password_hash, is_active, is_admin FROM clients WHERE email = %s",
+            (req.email.strip(),),
+        )
+        client = cur.fetchone()
 
-    if not client or not verify_password(req.password, client["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    if not client["is_active"]:
-        raise HTTPException(status_code=403, detail="Account deactivated")
+        if not client or not verify_password(req.password.strip(), client["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not client["is_active"]:
+            raise HTTPException(status_code=403, detail="Account deactivated")
 
-    token = create_access_token({"sub": str(client["id"])})
-    
-    # Check for pending signals
-    cur.execute("""
-        SELECT 1 FROM client_signals cs
-        LEFT JOIN client_actions ca ON ca.signal_id = cs.id
-        WHERE cs.client_id = %s AND ca.id IS NULL
-        LIMIT 1
-    """, (str(client["id"]),))
-    has_pending = cur.fetchone() is not None
+        token = create_access_token({"sub": str(client["id"])})
+        
+        # Check for pending signals
+        cur.execute("""
+            SELECT 1 FROM client_signals cs
+            LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+            WHERE cs.client_id = %s AND ca.id IS NULL
+            LIMIT 1
+        """, (str(client["id"]),))
+        has_pending = cur.fetchone() is not None
 
-    return TokenResponse(
-        access_token=token,
-        client_id=str(client["id"]),
-        name=client["name"],
-        email=req.email,
-        has_pending_signals=has_pending,
-        is_admin=bool(client.get("is_admin", False))
-    )
+        return TokenResponse(
+            access_token=token,
+            client_id=str(client["id"]),
+            name=client["name"],
+            email=req.email,
+            has_pending_signals=has_pending,
+            is_admin=bool(client.get("is_admin", False))
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"LOGIN CRASH: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"DEBUG SERVER CRASH: {type(e).__name__}: {str(e)}")
 
 
 @router.get("/me")
