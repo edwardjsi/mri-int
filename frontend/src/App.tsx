@@ -101,7 +101,8 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
                   `Base: ${(window as any).MRI_DEBUG.API_BASE}\n` +
                   `GET Health: ${getHealth.status}\n` +
                   `POST Health: ${postHealth.status || 'FAILED (' + postHealth.error + ')'}\n` +
-                  `POST Login Status: ${postLogin}`
+                  `POST Login Status: ${postLogin}\n` +
+                  `Login URL: ${(window as any).MRI_DEBUG.API_BASE}/auth/login`
                 );
               } catch (err: any) {
                 alert(`API Connection CRITICAL FAILURE!\nError: ${err.message}`);

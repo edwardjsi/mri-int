@@ -18,7 +18,7 @@ function resolveApiBase(): string {
 
 const API_BASE = resolveApiBase();
 console.log(`🚀 MRI Platform Booted | API_BASE: ${API_BASE} | Origin: ${window.location.origin}`);
-(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v2' };
+(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v4-final-fix' };
 
 interface LoginResponse {
     access_token: string;
@@ -83,7 +83,7 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
     const res = await fetch(url, { 
         ...options, 
         headers,
-        mode: 'cors' // Added back to support cross-origin deployments (e.g. mri-int -> mri-api)
+        mode: 'cors' // MANADATORY for cross-origin [mri-int -> mri-api]
     }).catch(err => {
         console.error(`Network Error on [${url}]:`, err);
         throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]`);
