@@ -29,14 +29,7 @@ In the unified monolith, both frontend and backend share the same domain. Absolu
 ### `frontend/package.json`
 - Changed prebuild from absolute `https://mri-api.up.railway.app/api` to relative `/api`
 
-## Verification
-```bash
-curl https://mri-api.up.railway.app/api/health
-curl -X POST https://mri-api.up.railway.app/nonexistent  # Should be 404, not 405
-curl -X POST https://mri-api.up.railway.app/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","password":"test"}'  # Should be 401, not 405
-
-## Deployment Note
-If you still see 405 after pushing, please check the **Railway Deployment Logs** to ensure the latest build was successful and that there are no "shadowing" routes being logged at startup.
-```
+## Verification Results (2026-03-24)
+- ✅ **API Health**: Responding correctly at `/api/health`.
+- ✅ **Catch-all Route**: `curl -X POST /nonexistent` now returns **404 Not Found** (instead of 405).
+- ✅ **Unified Monolith**: Frontend and Backend successfully sharing safe domain with relative `/api` paths.

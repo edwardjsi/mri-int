@@ -62,7 +62,7 @@ app.include_router(watchlist_router)
 # Explicit Health Check (Must be before catch-all)
 @app.get("/api/health")
 async def health():
-    return {"status": "healthy", "version": "2026-03-24-0810"}
+    return {"status": "healthy"}
 
 # Serve Frontend Static Files
 static_path = os.path.join(os.path.dirname(__file__), "static")
