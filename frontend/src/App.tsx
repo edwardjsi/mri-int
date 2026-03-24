@@ -76,17 +76,29 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
 
           <div style={{ marginTop: '16px', textAlign: 'center' }}>
             <button 
-              type="button" 
-              className="link-btn" 
-              style={{ fontSize: '12px', opacity: 0.6 }}
-              onClick={async () => {
-                try {
-                  const health = await api.getHealth();
-                  alert(`API Connection Success!\nBase: ${(window as any).MRI_DEBUG?.API_BASE}\nStatus: ${health.status}`);
-                } catch (err: any) {
-                  alert(`API Connection FAILED!\nBase: ${(window as any).MRI_DEBUG?.API_BASE}\nError: ${err.message}`);
-                }
-              }}
+              type="button" onClick={async () => {
+              try {
+                // Test GET
+                const getHealth = await api.getHealth();
+                
+                // Test POST (this triggers Preflight)
+                const postHealth = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/health`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ test: true })
+                }).then(r => r.json()).catch(e => ({ error: e.message }));
+
+                alert(
+                  `Diagnostic Results:\n` +
+                  `Build: ${(window as any).MRI_DEBUG.build}\n` +
+                  `Base: ${(window as any).MRI_DEBUG.API_BASE}\n` +
+                  `GET Health: ${getHealth.status}\n` +
+                  `POST Health: ${postHealth.status || 'FAILED (' + postHealth.error + ')'}`
+                );
+              } catch (err: any) {
+                alert(`API Connection CRITICAL FAILURE!\nError: ${err.message}`);
+              }
+            }}
             >
               🔧 Network Diagnostics
             </button>

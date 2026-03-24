@@ -58,7 +58,7 @@ app.include_router(watchlist_router)
 app.include_router(admin_router)
 
 # Explicit Health Check (Must be before catch-all)
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "POST"])
 async def health():
     return {"status": "healthy"}
 
