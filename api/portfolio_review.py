@@ -40,9 +40,10 @@ async def get_holdings(
             try:
                 cur.execute("SELECT symbol FROM holdings WHERE email = %s", (email,))
                 legacy_rows = cur.fetchall()
+                is_dict_legacy = not legacy_rows or isinstance(legacy_rows[0], dict)
                 for r in legacy_rows:
                     holdings_list.append({
-                        "symbol": r["symbol"],
+                        "symbol": r["symbol"] if is_dict_legacy else r[0],
                         "quantity": 0,
                         "avg_cost": 0
                     })
@@ -54,13 +55,29 @@ async def get_holdings(
         if holdings_list:
             from src.portfolio_review_engine import analyze_portfolio
             try:
-                raw_list = [dict(h) for h in holdings_list]
+                is_dict_holdings = not holdings_list or isinstance(holdings_list[0], dict)
+                raw_list = []
+                for h in holdings_list:
+                    if is_dict_holdings:
+                        raw_list.append(dict(h))
+                    else:
+                        # Manual conversion for tuple
+                        raw_list.append({
+                            "symbol": h[0],
+                            "quantity": h[1],
+                            "avg_cost": h[2]
+                        })
                 analysis = analyze_portfolio(raw_list, conn=conn)
                 enriched_holdings = analysis.get("holdings", [])
             except Exception as e:
                 logger.error(f"Analysis Error: {e}")
                 conn.rollback()
-                enriched_holdings = [dict(h) for h in holdings_list]
+                # Manual conversion for fallback if dict fails
+                is_dict_fallback = not holdings_list or isinstance(holdings_list[0], dict)
+                if is_dict_fallback:
+                    enriched_holdings = [dict(h) for h in holdings_list]
+                else:
+                    enriched_holdings = [{"symbol": h[0], "quantity": h[1], "avg_cost": h[2]} for h in holdings_list]
 
         return {
             "storage_ready": True if enriched_holdings else False, 

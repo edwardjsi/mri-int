@@ -439,10 +439,10 @@ Decision: Transition from 0-5 binary sum to a 0-100 weighted score: EMA 50/200 (
 Reason: Provides greater granularity and allows weighting critical trend indicators over secondary surge indicators.
 Status: FINAL.
 
-## Decision 070 — Tuple-Safe Database Access Pattern
+## Decision 070 — System-Wide Tuple-Safe Database Access Pattern
 Date: 2026-03-24
-Decision: Implement a "Tuple-Safe" access pattern across all FastAPI endpoints (`is_dict = isinstance(row, dict)`). Use index-based fallbacks (e.g., `row[0]`) specifically when rows are returned as tuples.
-Reason: The Railway production environment's cursor behavior was inconsistent (returning tuples instead of expected dictionaries), causing widespread 500 errors. This pattern ensures runtime stability across any PostgreSQL driver configuration.
+Decision: Implement an exhaustive "Tuple-Safe" access pattern across ALL FastAPI routers (`auth`, `admin`, `signals`, `portfolio`, `portfolio_review`, `watchlist`, `actions`). Use index-based fallbacks (e.g., `row[0]`) specifically when rows are returned as tuples.
+Reason: The Railway production environment's cursor behavior was inconsistent (returning tuples even when RealDictCursor was specified), causing cascading 500 errors and UI loading hangs. This pattern ensures absolute runtime resilience.
 Status: FINAL.
 
 ## Decision 071 — Monolith Same-Origin Deployment Strategy

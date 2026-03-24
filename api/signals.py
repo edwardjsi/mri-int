@@ -53,21 +53,24 @@ def get_todays_signals(
         ORDER BY cs.action, cs.score DESC
     """, (str(client["id"]), str(client["id"])))
     signals = cur.fetchall()
+    cur.close()
 
+    is_dict = not signals or isinstance(signals[0], dict)
+    
     return {
-        "date": str(signals[0]["date"]) if signals else str(date.today()),
+        "date": str(signals[0]["date"] if is_dict else signals[0][1]) if signals else str(date.today()),
         "signals": [
             {
-                "id": str(s["id"]),
-                "symbol": s["symbol"],
-                "action": s["action"],
-                "recommended_price": float(s["recommended_price"]) if s["recommended_price"] else None,
-                "score": s["score"],
-                "regime": s["regime"],
-                "reason": s["reason"],
-                "client_action": s["action_taken"],
-                "actual_price": float(s["actual_price"]) if s["actual_price"] else None,
-                "quantity": s["quantity"],
+                "id": str(s["id"] if is_dict else s[0]),
+                "symbol": s["symbol"] if is_dict else s[2],
+                "action": s["action"] if is_dict else s[3],
+                "recommended_price": float(s["recommended_price"] if is_dict else s[4]) if (s["recommended_price"] if is_dict else s[4]) else None,
+                "score": s["score"] if is_dict else s[5],
+                "regime": s["regime"] if is_dict else s[6],
+                "reason": s["reason"] if is_dict else s[7],
+                "client_action": s["action_taken"] if is_dict else s[8],
+                "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
+                "quantity": s["quantity"] if is_dict else s[10],
             }
             for s in signals
         ],
@@ -91,17 +94,20 @@ def get_pending_signals(
         ORDER BY cs.date DESC, cs.action, cs.score DESC
     """, (str(client["id"]),))
     signals = cur.fetchall()
+    cur.close()
+
+    is_dict = not signals or isinstance(signals[0], dict)
 
     return [
         {
-            "id": str(s["id"]),
-            "date": str(s["date"]),
-            "symbol": s["symbol"],
-            "action": s["action"],
-            "recommended_price": float(s["recommended_price"]) if s["recommended_price"] else None,
-            "score": s["score"],
-            "regime": s["regime"],
-            "reason": s["reason"],
+            "id": str(s["id"] if is_dict else s[0]),
+            "date": str(s["date"] if is_dict else s[1]),
+            "symbol": s["symbol"] if is_dict else s[2],
+            "action": s["action"] if is_dict else s[3],
+            "recommended_price": float(s["recommended_price"] if is_dict else s[4]) if (s["recommended_price"] if is_dict else s[4]) else None,
+            "score": s["score"] if is_dict else s[5],
+            "regime": s["regime"] if is_dict else s[6],
+            "reason": s["reason"] if is_dict else s[7],
         }
         for s in signals
     ]
@@ -126,20 +132,23 @@ def get_signal_history(
         ORDER BY cs.date DESC, cs.action, cs.symbol
     """, (str(client["id"]), days))
     signals = cur.fetchall()
+    cur.close()
+
+    is_dict = not signals or isinstance(signals[0], dict)
 
     return [
         {
-            "id": str(s["id"]),
-            "date": str(s["date"]),
-            "symbol": s["symbol"],
-            "action": s["action"],
-            "recommended_price": float(s["recommended_price"]) if s["recommended_price"] else None,
-            "score": s["score"],
-            "regime": s["regime"],
-            "reason": s["reason"],
-            "client_action": s["action_taken"],
-            "actual_price": float(s["actual_price"]) if s["actual_price"] else None,
-            "quantity": s["quantity"],
+            "id": str(s["id"] if is_dict else s[0]),
+            "date": str(s["date"] if is_dict else s[1]),
+            "symbol": s["symbol"] if is_dict else s[2],
+            "action": s["action"] if is_dict else s[3],
+            "recommended_price": float(s["recommended_price"] if is_dict else s[4]) if (s["recommended_price"] if is_dict else s[4]) else None,
+            "score": s["score"] if is_dict else s[5],
+            "regime": s["regime"] if is_dict else s[6],
+            "reason": s["reason"] if is_dict else s[7],
+            "client_action": s["action_taken"] if is_dict else s[8],
+            "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
+            "quantity": s["quantity"] if is_dict else s[10],
         }
         for s in signals
     ]
@@ -164,22 +173,25 @@ def get_screener(
         ORDER BY ss.total_score DESC, ss.symbol
     """, (min_score,))
     stocks = cur.fetchall()
+    cur.close()
+
+    is_dict = not stocks or isinstance(stocks[0], dict)
 
     return {
-        "date": str(stocks[0]["date"]) if stocks else None,
+        "date": str(stocks[0]["date"] if is_dict else stocks[0][2]) if stocks else None,
         "count": len(stocks),
         "stocks": [
             {
-                "symbol": s["symbol"],
-                "score": s["total_score"],
-                "close": float(s["close"]) if s["close"] else None,
-                "volume": int(s["volume"]) if s["volume"] else None,
+                "symbol": s["symbol"] if is_dict else s[0],
+                "score": s["total_score"] if is_dict else s[1],
+                "close": float(s["close"] if is_dict else s[8]) if (s["close"] if is_dict else s[8]) else None,
+                "volume": int(s["volume"] if is_dict else s[9]) if (s["volume"] if is_dict else s[9]) else None,
                 "conditions": {
-                    "ema_50_200": s["condition_ema_50_200"],
-                    "ema_200_slope": s["condition_ema_200_slope"],
-                    "6m_high": s["condition_6m_high"],
-                    "volume": s["condition_volume"],
-                    "relative_strength": s["condition_rs"],
+                    "ema_50_200": s["condition_ema_50_200"] if is_dict else s[3],
+                    "ema_200_slope": s["condition_ema_200_slope"] if is_dict else s[4],
+                    "6m_high": s["condition_6m_high"] if is_dict else s[5],
+                    "volume": s["condition_volume"] if is_dict else s[6],
+                    "relative_strength": s["condition_rs"] if is_dict else s[7],
                 },
             }
             for s in stocks

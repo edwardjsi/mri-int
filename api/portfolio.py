@@ -71,7 +71,18 @@ def get_open_positions(
 
     # Process External via Review Engine for valuation
     if external_rows:
-        external_holdings = [dict(r) for r in external_rows]
+        is_dict_ext = isinstance(external_rows[0], dict)
+        external_holdings = []
+        for r in external_rows:
+            if is_dict_ext:
+                external_holdings.append(dict(r))
+            else:
+                external_holdings.append({
+                    "symbol": r[0],
+                    "quantity": r[1],
+                    "avg_cost": r[2]
+                })
+
         try:
             analysis = analyze_portfolio(external_holdings, conn=conn)
             for h in analysis.get("holdings", []):
@@ -101,7 +112,13 @@ def get_open_positions(
                     """,
                     (syms,),
                 )
-                prices_by_symbol = {r["symbol"]: r["close"] for r in cur.fetchall() if r.get("symbol")}
+                prices_rows = cur.fetchall()
+                is_dict_pr = not prices_rows or isinstance(prices_rows[0], dict)
+                prices_by_symbol = {
+                    (r["symbol"] if is_dict_pr else r[0]): (r["close"] if is_dict_pr else r[1]) 
+                    for r in prices_rows 
+                    if (r["symbol"] if is_dict_pr else r[0])
+                }
 
             for h in external_holdings:
                 sym = str(h.get("symbol", "")).upper().strip()
@@ -145,13 +162,16 @@ def get_equity_curve(
         (str(client["id"]),),
     )
     rows = cur.fetchall()
+    cur.close()
+
+    is_dict = not rows or isinstance(rows[0], dict)
 
     return [
         {
-            "date": str(r["date"]),
-            "equity": float(r["equity"]),
-            "cash": float(r["cash"]),
-            "open_positions": r["open_positions"],
+            "date": str(r["date"] if is_dict else r[0]),
+            "equity": float(r["equity"] if is_dict else r[1]),
+            "cash": float(r["cash"] if is_dict else r[2]),
+            "open_positions": r["open_positions"] if is_dict else r[3],
         }
         for r in rows
     ]
@@ -176,10 +196,13 @@ def get_performance(
     client_eq = cur.fetchall()
 
     if not client_eq:
+        cur.close()
         return {"message": "No equity data yet. Execute some signals first."}
 
+    is_dict_ce = isinstance(client_eq[0], dict)
+
     # Nifty benchmark for same period
-    start_date = client_eq[0]["date"]
+    start_date = client_eq[0]["date"] if is_dict_ce else client_eq[0][0]
     cur.execute(
         """
         SELECT date, close FROM index_prices
@@ -189,22 +212,25 @@ def get_performance(
         (start_date,),
     )
     nifty = cur.fetchall()
+    cur.close()
 
     # Normalize to base 100
-    client_base = float(client_eq[0]["equity"])
-    nifty_base = float(nifty[0]["close"]) if nifty else 1
+    client_base = float(client_eq[0]["equity"] if is_dict_ce else client_eq[0][1])
+    
+    is_dict_nf = not nifty or isinstance(nifty[0], dict)
+    nifty_base = float(nifty[0]["close"] if is_dict_nf else nifty[0][1]) if nifty else 1
 
     return {
         "client": [
-            {"date": str(r["date"]), "value": round(float(r["equity"]) / client_base * 100, 2)}
+            {"date": str(r["date"] if is_dict_ce else r[0]), "value": round(float(r["equity"] if is_dict_ce else r[1]) / client_base * 100, 2)}
             for r in client_eq
         ],
         "nifty": [
-            {"date": str(r["date"]), "value": round(float(r["close"]) / nifty_base * 100, 2)}
+            {"date": str(r["date"] if is_dict_nf else r[0]), "value": round(float(r["close"] if is_dict_nf else r[1]) / nifty_base * 100, 2)}
             for r in nifty
         ],
         "initial_capital": client_base,
-        "latest_equity": float(client_eq[-1]["equity"]) if client_eq else 0,
+        "latest_equity": float(client_eq[-1]["equity"] if is_dict_ce else client_eq[-1][1]) if client_eq else 0,
     }
 
 
@@ -228,6 +254,7 @@ def get_daily_summary(
         (client_id,),
     )
     core_rows = cur.fetchall()
+    is_dict_core = not core_rows or isinstance(core_rows[0], dict)
 
     # 2. Fetch External Data
     external_rows = []
@@ -245,12 +272,25 @@ def get_daily_summary(
     except Exception:
         conn.rollback()
 
+    cur.close()
+
     ext_market_value = 0
     ext_cost_basis = 0
     ext_count = 0
 
     if external_rows:
-        ext_holdings = [dict(r) for r in external_rows]
+        is_dict_ext = isinstance(external_rows[0], dict)
+        ext_holdings = []
+        for r in external_rows:
+            if is_dict_ext:
+                ext_holdings.append(dict(r))
+            else:
+                ext_holdings.append({
+                    "symbol": r[0],
+                    "quantity": r[1],
+                    "avg_cost": r[2]
+                })
+
         analysis = analyze_portfolio(ext_holdings, conn=conn)
         ext_market_value = analysis.get("total_portfolio_value", 0)
         ext_cost_basis = sum(h["quantity"] * h["avg_cost"] for h in ext_holdings)
@@ -267,15 +307,15 @@ def get_daily_summary(
     core_yesterday = core_rows[1] if len(core_rows) > 1 else None
     initial_cap = float(client["initial_capital"])
 
-    today_equity = float(core_today["equity"]) if core_today else initial_cap
-    today_cash = float(core_today["cash"]) if core_today else initial_cap
+    today_equity = float(core_today["equity"] if is_dict_core else core_today[1]) if core_today else initial_cap
+    today_cash = float(core_today["cash"] if is_dict_core else core_today[2]) if core_today else initial_cap
 
     # Combined Metrics
     total_wealth = today_equity + float(ext_market_value)
 
     # Crude approx for daily change:
     if core_yesterday:
-        prev_equity = float(core_yesterday["equity"]) + float(ext_market_value)
+        prev_equity = float(core_yesterday["equity"] if is_dict_core else core_yesterday[1]) + float(ext_market_value)
     else:
         prev_equity = today_equity + float(ext_market_value)
 
@@ -285,11 +325,11 @@ def get_daily_summary(
 
     return {
         "has_data": True,
-        "date": str(core_today["date"]) if core_today else str(date.today()),
+        "date": str(core_today["date"] if is_dict_core else core_today[0]) if core_today else str(date.today()),
         "equity": float(round(total_wealth, 2)),
         "cash": float(round(today_cash, 2)),
         "open_positions": int(
-            (core_today["open_positions"] if core_today and core_today.get("open_positions") is not None else 0)
+            ((core_today["open_positions"] if is_dict_core else core_today[3]) if core_today and (core_today["open_positions"] if is_dict_core else core_today[3]) is not None else 0)
             + ext_count
         ),
         "daily_change": float(round(total_wealth - prev_equity, 2)),

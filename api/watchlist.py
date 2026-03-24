@@ -26,10 +26,14 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     
     # Fetch symbols from watchlist
     cur.execute("SELECT symbol FROM client_watchlist WHERE client_id = %s", (str(client["id"]),))
-    symbols = [row["symbol"] for row in cur.fetchall()]
+    rows = cur.fetchall()
     
-    if not symbols:
+    if not rows:
+        cur.close()
         return []
+
+    is_dict_sym = isinstance(rows[0], dict)
+    symbols = [row["symbol"] if is_dict_sym else row[0] for row in rows]
     
     # Fetch latest scores and prices for these symbols
     # We use a subquery to get the latest date from stock_scores
@@ -51,18 +55,24 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     """, (symbols,))
     
     data = cur.fetchall()
+    cur.close()
     
     # Map back to symbols to handle missing data cases
     results = []
-    data_map = {row["symbol"]: row for row in data}
+    
+    is_dict_data = not data or isinstance(data[0], dict)
+    data_map = {}
+    for row in data:
+        sym = row["symbol"] if is_dict_data else row[0]
+        data_map[sym] = row
     
     for symbol in symbols:
         row = data_map.get(symbol)
         results.append(WatchlistItem(
             symbol=symbol,
-            price=float(row["current_price"]) if row and row["current_price"] else None,
-            score=row["score"] if row else None,
-            trend_alignment=row["trend_alignment"] if row else None
+            price=float(row["current_price"] if is_dict_data else row[3]) if row and (row["current_price"] if is_dict_data else row[3]) else None,
+            score=row["score"] if is_dict_data else row[1],
+            trend_alignment=row["trend_alignment"] if is_dict_data else row[4] if row else None
         ))
         
     return results
