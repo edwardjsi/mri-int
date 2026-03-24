@@ -85,8 +85,8 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
         headers,
         mode: 'cors' // Added back to support cross-origin deployments (e.g. mri-int -> mri-api)
     }).catch(err => {
-        console.error("Network Error:", err);
-        throw new Error(`Connection Error: ${err.message || 'Server unreachable'}`);
+        console.error(`Network Error on [${url}]:`, err);
+        throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]`);
     });
 
     if (res.status === 401 && !isLogin) {
