@@ -21,10 +21,24 @@ from api.portfolio_review import router as portfolio_review_router
 from api.email_debug import router as email_debug_router
 from api.watchlist import router as watchlist_router
 from api.admin import router as admin_router
+from api.schema import ensure_required_tables
+from src.db import get_connection
 
 load_dotenv()
 
 app = FastAPI(title="MRI-Int API")
+
+@app.on_event("startup")
+def on_startup():
+    logger.info("Syncing Database Schema...")
+    conn = get_connection()
+    try:
+        ensure_required_tables(conn)
+        logger.info("✅ Database Schema Synced")
+    except Exception as e:
+        logger.error(f"❌ Database Schema Sync FAILED: {e}")
+    finally:
+        conn.close()
 
 # Custom Exception Handler to log validation errors
 @app.exception_handler(RequestValidationError)

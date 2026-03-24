@@ -20,22 +20,35 @@ mkdir -p /home/edwar/mri-int/logs
 
 echo "=== MRI Daily Pipeline — $(date) ===" | tee -a $LOG_FILE
 
-# Step 1: Ingest today's data
+# Step 1: Ingest today's data (Nifty 500 + User added stocks)
 echo "[1/5] Ingesting today's market data..." | tee -a $LOG_FILE
 python -c "
 from src.data_loader import load_indices, load_stocks
+from src.db import get_connection
 import pandas as pd, requests, io
 
 # Load indices
 load_indices()
 
-# Load Nifty 50 stocks only
+# 1. Fetch Nifty 500
 url = 'https://archives.nseindia.com/content/indices/ind_nifty500list.csv'
 headers = {'User-Agent': 'Mozilla/5.0'}
 response = requests.get(url, headers=headers, timeout=30)
 df = pd.read_csv(io.StringIO(response.text))
-symbols = df['Symbol'].dropna().unique().tolist()
-load_stocks(symbols)
+symbols = set(df['Symbol'].dropna().unique().tolist())
+
+# 2. Fetch all user-added stocks (Watchlist + Holdings)
+conn = get_connection()
+cur = conn.cursor()
+cur.execute('SELECT symbol FROM client_watchlist')
+symbols.update([r[0] for r in cur.fetchall()])
+cur.execute('SELECT symbol FROM client_external_holdings')
+symbols.update([r[0] for r in cur.fetchall()])
+cur.close()
+conn.close()
+
+print(f'Ingesting total universe of {len(symbols)} symbols...')
+load_stocks(list(symbols))
 " 2>&1 | tee -a $LOG_FILE
 
 # Step 2: Compute indicators

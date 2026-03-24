@@ -456,3 +456,15 @@ Date: 2026-03-24
 Decision: Hardened the Admin Dashboard backend with automatic table existence checks (`CREATE TABLE IF NOT EXISTS`) for all metrics dependencies.
 Reason: Prevented 500 errors on fresh deployments where operational tables (watchlist, external holdings) might not yet exist.
 Status: FINAL.
+
+## Decision 073 — Centralized Schema & Symbol Freshness
+Date: 2026-03-25
+Decision: Consolidate all database table definitions into `api/schema.py:ensure_required_tables` and register it in the FastAPI startup sequence (`api/main.py`). Additionally, update `run_daily_pipeline.sh` to include all unique symbols from user watchlists and holdings.
+Reason: Resolves persistence failures caused by missing unique constraints in ad-hoc `CREATE TABLE` statements and addresses "lame old data" issues for custom stocks by integrating them into the core pipeline.
+Status: FINAL.
+
+## Decision 074 — Universal Watchlist Feature Integration 
+Date: 2026-03-25
+Decision: Implement `GET /api/watchlist/universal` in `api/watchlist.py` to aggregate all unique symbols tracked across the platform.
+Reason: Provides a global view of community interests and allows the system to efficiently track the entire "active" universe of user-specified stocks.
+Status: FINAL.

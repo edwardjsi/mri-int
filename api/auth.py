@@ -13,6 +13,7 @@ import psycopg2.extras
 import logging
 
 from api.deps import get_db, create_access_token, get_current_client
+from api.schema import ensure_required_tables
 from src.email_service import send_password_reset_email_detailed
 from src.mailerlite import add_subscriber
 
@@ -176,14 +177,7 @@ def add_capital(req: UpdateCapitalRequest, client=Depends(get_current_client), c
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
     cur = conn.cursor()
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS capital_additions (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            client_id UUID NOT NULL REFERENCES clients(id),
-            amount NUMERIC(14,2) NOT NULL,
-            added_at TIMESTAMPTZ DEFAULT NOW()
-        )"""
-    )
+    ensure_required_tables(conn)
     cur.execute(
         "INSERT INTO capital_additions (client_id, amount) VALUES (%s, %s)",
         (str(client["id"]), req.amount),

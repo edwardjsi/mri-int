@@ -406,3 +406,12 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **Admin Hardening**: Renamed Admin header to "Platform Intelligence" and implemented auto-initialization for operational tables.
 - [x] **Origin Normalization**: Configured the frontend to use relative API paths, resolving same-origin constraints on Railway.
 - [x] **Build Verification**: Updated platform build to **v9-UI_FIXED** with integrated network diagnostics.
+
+---
+
+## Phase 16: Persistence & Data Freshness (2026-03-25)
+- [x] **Monolithic Schema Control**: Consolidated all `CREATE TABLE` and constraint logic into `api/schema.py` and enabled auto-bootstrapping in `api/main.py`.
+- [x] **Persistence Recovery**: Repaired structural mismatches in `client_watchlist` and `client_external_holdings` by adding missing `id` columns and `UNIQUE` constraints.
+- [x] **Data Freshness Fix**: Enhanced `run_daily_pipeline.sh` to fetch all user-tracked symbols, ensuring daily updates and MRI scores for custom stocks.
+- [x] **Universal Watchlist**: Implemented `GET /api/watchlist/universal` to provide a global view of all tracked symbols across the platform.
+- [x] **Architecture Cleanup**: Refactored `auth`, `portfolio`, and `portfolio_review` routers to remove redundant database initialization logic.

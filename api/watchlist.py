@@ -20,6 +20,15 @@ class WatchlistItem(BaseModel):
     regime: Optional[str] = None
     trend_alignment: Optional[str] = None # BULL / BEAR / NEUTRAL (from EMA-200)
 
+@router.get("/universal", response_model=List[str])
+def get_universal_watchlist(conn=Depends(get_db)):
+    """Return all unique symbols currently being tracked by any user."""
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT symbol FROM client_watchlist")
+    rows = cur.fetchall()
+    cur.close()
+    return [row[0] for row in rows]
+
 @router.get("/", response_model=List[WatchlistItem])
 def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -36,7 +45,6 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     symbols = [row["symbol"] if is_dict_sym else row[0] for row in rows]
     
     # Fetch latest scores and prices for these symbols
-    # We use a subquery to get the latest date from stock_scores
     cur.execute("""
         WITH latest_scores AS (
             SELECT ss.symbol, ss.score, ss.date,
@@ -57,9 +65,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     data = cur.fetchall()
     cur.close()
     
-    # Map back to symbols to handle missing data cases
     results = []
-    
     is_dict_data = not data or isinstance(data[0], dict)
     data_map = {}
     for row in data:
@@ -86,7 +92,7 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
     cur = conn.cursor()
     try:
         cur.execute(
-            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s) ON CONFLICT (client_id, symbol) DO NOTHING",
             (str(client["id"]), symbol)
         )
         conn.commit()
@@ -95,6 +101,8 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to add symbol: {e}")
+    finally:
+        cur.close()
         
     return {"message": f"{symbol} added to watchlist"}
 
@@ -107,6 +115,7 @@ def remove_from_watchlist(symbol: str, client=Depends(get_current_client), conn=
         (str(client["id"]), symbol)
     )
     conn.commit()
+    cur.close()
     return {"message": f"{symbol} removed from watchlist"}
 
 @router.post("/upload-csv")

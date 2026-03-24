@@ -8,7 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from src.db import get_connection
 from src.on_demand_ingest import ingest_missing_symbols_sync
-from api.schema import ensure_client_external_holdings_table
+from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["Portfolio Review"])
@@ -27,7 +27,8 @@ async def get_holdings(
         client_id = str(client["id"])
         email = client["email"]
         
-        ensure_client_external_holdings_table(conn)
+        # Schema is ensured at startup, but we keep this as a lightweight safeguard
+        ensure_required_tables(conn)
         cur.execute("""
             SELECT symbol, quantity, avg_cost 
             FROM client_external_holdings 
@@ -145,7 +146,7 @@ async def upload_csv(
         symbols = []
         if client:
             client_id = client["id"]
-            ensure_client_external_holdings_table(conn)
+            ensure_required_tables(conn)
             for _, row in df.iterrows():
                 sym = str(row[symbol_col]).upper().strip()
                 if not sym or sym == 'NAN': continue
@@ -197,7 +198,7 @@ async def save_holdings_bulk(
     cur = conn.cursor()
     try:
         client_id = str(client["id"])
-        ensure_client_external_holdings_table(conn)
+        ensure_required_tables(conn)
         cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s", (client_id,))
         for h in holdings:
             sym = str(h.get("symbol", "")).upper().strip()

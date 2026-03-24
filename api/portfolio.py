@@ -2,7 +2,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
-from api.schema import ensure_client_external_holdings_table
+from api.schema import ensure_required_tables
 from src.portfolio_review_engine import analyze_portfolio
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
@@ -39,7 +39,7 @@ def get_open_positions(
     # 2. Fetch External Positions (Digital Twin)
     external_rows = []
     try:
-        ensure_client_external_holdings_table(conn)
+        ensure_required_tables(conn)
         cur.execute(
             """
             SELECT symbol, quantity, avg_cost
@@ -259,7 +259,7 @@ def get_daily_summary(
     # 2. Fetch External Data
     external_rows = []
     try:
-        ensure_client_external_holdings_table(conn)
+        ensure_required_tables(conn)
         cur.execute(
             """
             SELECT symbol, quantity, avg_cost
