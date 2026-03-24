@@ -19,19 +19,18 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMsg('');
-    setLoading(true);
+    const sanitizedEmail = email.trim();
+    const sanitizedPassword = password.trim();
+
     try {
       if (isForgotPassword) {
-        const res = await api.forgotPassword(email);
+        const res = await api.forgotPassword(sanitizedEmail);
         setSuccessMsg(res.message || 'Password reset link sent! Check your email.');
       } else if (isRegister) {
-        await api.register(email, name, password, parseFloat(capital));
+        await api.register(sanitizedEmail, name.trim(), sanitizedPassword, parseFloat(capital));
         onLogin();
       } else {
-        await api.login(email, password);
+        await api.login(sanitizedEmail, sanitizedPassword);
         onLogin();
       }
     } catch (err: any) {
@@ -48,7 +47,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
           <h1 className="brand-title">📊 MRI</h1>
           <p className="brand-subtitle">Market Regime Intelligence</p>
         </div>
-        <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-form">
           <h2 className="form-title">
             {isForgotPassword ? 'Reset Password' : (isRegister ? 'Create Account' : 'Sign In')}
           </h2>
@@ -108,6 +107,15 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
                   apiLoginStatus = e.message;
                 }
 
+                // Test 5: api.login(form values) - Final sanity check
+                let formLoginResult = 'N/A';
+                try {
+                   await api.login(email.trim(), password.trim());
+                   formLoginResult = 'SUCCESS (Wait, how?!)';
+                } catch(e: any) {
+                   formLoginResult = `FAILED: ${e.message}`;
+                }
+
                 alert(
                   `Diagnostic Results:\n` +
                   `Build: ${(window as any).MRI_DEBUG.build}\n` +
@@ -115,7 +123,8 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
                   `GET Health: ${getHealth.status}\n` +
                   `POST Health: ${postHealth.status || 'FAILED (' + postHealth.error + ')'}\n` +
                   `POST Login Status: ${postLogin}\n` +
-                  `API.LOGIN Result: ${apiLoginStatus}`
+                  `API.LOGIN Result (Dummy): ${apiLoginStatus}\n` +
+                  `API.LOGIN Result (Form): ${formLoginResult}`
                 );
               } catch (err: any) {
                 alert(`API Connection CRITICAL FAILURE!\nError: ${err.message}`);
@@ -322,13 +331,14 @@ function ResetPasswordPage({ token, onComplete }: { token: string, onComplete: (
           <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" required minLength={6} />
 
           <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Please wait...' : 'Save New Password'}
           </button>
 
           <p className="toggle-text">
             <button type="button" className="link-btn" onClick={onComplete}>Back to Sign In</button>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );
