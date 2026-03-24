@@ -17,16 +17,15 @@ function resolveApiBase(): string {
 }
 
 const API_BASE = resolveApiBase();
-(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v5-CLEANPAYLOAD' };
+(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v6-AGRESSIVE_CLEAN' };
 
 /**
- * Strips invisible control characters that can cause fetch() to fail or proxies to block.
- * Specifically targets non-printable ASCII and common zero-width unicode.
+ * Strips EVERYTHING except printable ASCII (32-126).
+ * This eliminates all possible invisible unicode, BOMs, and control chars.
  */
 function sanitize(str: string): string {
     if (!str) return '';
-    // Strip control chars (0-31, 127) and common invisible unicode like ZWSP
-    return str.replace(/[\x00-\x1F\x7F-\x9F\u200B-\u200D\uFEFF]/g, '');
+    return str.replace(/[^\x20-\x7E]/g, '');
 }
 
 interface LoginResponse {
@@ -101,8 +100,9 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
         cache: 'no-cache',   // Prevent stale responses interfering with auth
     }).catch(err => {
         const bodyPreview = bodyStr ? ` | Body: ${bodyStr.slice(0, 50)}... [Len: ${bodyStr.length}]` : "";
+        const hex = bodyStr ? ` | Hex: ${[...bodyStr].map(c => c.charCodeAt(0).toString(16)).join(' ')}` : "";
         console.error(`Network Error on [${url}]:`, err);
-        throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]${bodyPreview}`);
+        throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]${bodyPreview}${hex}`);
     });
 
     if (res.status === 401 && !isLogin) {
