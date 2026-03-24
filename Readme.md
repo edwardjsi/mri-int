@@ -16,23 +16,16 @@ The model proceeds to SaaS ONLY IF:
 - Stable across 3+ market regimes
 - Does not collapse when transaction cost doubles
 
----
-
-## Tech Stack
+## Tech Stack (Current Deployment)
 
 | Layer              | Technology                          |
 |--------------------|-------------------------------------|
 | Quant Engine       | Python (pandas, numpy, scipy)       |
-| API Framework      | FastAPI (future SaaS phase)         |
-| Database           | PostgreSQL on AWS RDS               |
-| Containerization   | Docker + Docker Compose             |
-| Orchestration      | AWS ECS Fargate (scheduled tasks)   |
-| Infrastructure     | Terraform (modular)                 |
-| CI/CD              | GitHub Actions → ECR → ECS          |
-| Storage            | AWS S3 (outputs, reports, charts)   |
-| Secrets            | AWS Secrets Manager                 |
-| Monitoring         | AWS CloudWatch                      |
-| Region             | ap-south-1 (Mumbai)                 |
+| Backend API        | FastAPI (Monolith Mode)             |
+| Frontend           | React + Vite + Tailwind             |
+| Database           | Neon.tech (Serverless PostgreSQL)   |
+| Deployment         | Railway.app (Unified Service)       |
+| Monitoring         | Railway Metrics + Health Checks     |
 
 ---
 
@@ -41,7 +34,7 @@ The model proceeds to SaaS ONLY IF:
 | Phase   | Description                                      | Pricing                  |
 |---------|--------------------------------------------------|--------------------------| 
 | Phase 0 | 10-day research prototype + viability test       | Internal only            |
-| Phase 1 | Retail SaaS                                      | ₹1,499 / ₹2,999 per month|
+| Phase 1 | Retail SaaS MVP (Live: Railway)                  | ₹1,499 / ₹2,999 per month|
 | Phase 2 | Advisor SaaS                                     | ₹15,000–₹40,000 per month|
 | Phase 3 | Signal API monetization                          | TBD                      |
 | Phase 4 | PMS / AIF (optional, long-term)                  | TBD                      |
@@ -53,37 +46,22 @@ The model proceeds to SaaS ONLY IF:
 ```
 
 mri-intelligence/
-├── terraform/
-│   ├── modules/
-│   │   ├── vpc/
-│   │   ├── rds/
-│   │   ├── ecs/
-│   │   ├── s3/
-│   │   └── iam/
-│   └── environments/
-│       └── dev/
+├── api/                        \# Backend routers (auth, signals, admin, etc.)
+├── frontend/                   \# React/Vite/Tailwind Frontend
 ├── src/
-│   ├── ingestion_engine.py     \# Day 2/10: NSE EOD ingestion (Rebranded)
-│   ├── indicator_engine.py     \# Day 3: EMA, slope, RS, volume
-│   ├── regime_engine.py        \# Day 4: Daily Risk-On/Off classification
-│   ├── trend_engine.py         \# Day 5-6: Per-stock 0-5 scoring
-│   ├── metrics.py              \# Day 9: CAGR, Sharpe, Drawdown, etc.
-│   └── stress_tests.py         \# Day 10: 2008, 2020, param sensitivity
+│   ├── ingestion_engine.py     \# NSE/BSE EOD ingestion
+│   ├── indicator_engine.py     \# EMA, slope, RS, volume
+│   ├── regime_engine.py        \# Daily Risk-On/Off classification
+│   └── signal_generator.py     \# Score-to-Signal logic
 ├── scripts/
-│   ├── mri_pipeline.py         \# Day 7-10: Main entry point (Rebranded)
-│   └── reseed_history.py       \# One-time historical ingestion
-├── outputs/
-│   ├── equity_curve.csv
-│   ├── trade_log.csv
-│   └── performance_report.pdf
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
+│   └── mri_pipeline.py         \# Daily automation entry point
+├── Dockerfile                  \# Unified Monolith Build
+├── requirements.txt            \# Backend dependencies
 ├── .gitignore
 ├── README.md
 ├── SESSION.md
-├── DECISIONS.md
-├── PROGRESS.md
+├── DECISIONS.md                \# Architectural log
+├── PROGRESS.md                 \# Build status
 └── .llm-context.md
 
 ```
@@ -114,24 +92,16 @@ Scores overall market health (0–100):
 | 20–39   | Risk-Off          |
 | 0–19    | Strong Risk-Off   |
 
-### 2. Stock Trend Score Engine (Prototype: 0–5)
+### 2. Weighted Trend Score Engine (0–100)
 
-| Condition                          | Points |
-|------------------------------------|--------|
-| 50 EMA > 200 EMA                   | 1      |
-| 200 EMA slope > 0                  | 1      |
-| Close > 6-month high               | 1      |
-| Volume > 1.5× 20-day average       | 1      |
-| Relative strength vs Nifty > 1     | 1      |
-| **Total**                          | **5**  |
-
-| Condition                          | Points |
-|------------------------------------|--------|
-| ADX > 25 (strong trend)            | 1      |
-| RSI between 50–70                  | 1      |
-| Price > 90% of 52-week high        | 1      |
-| **Total**                          | **3**  |
-
+| Indicator                  | Weight |
+|----------------------------|--------|
+| EMA 50 > 200               | 25%    |
+| 200 EMA Slope > 0          | 25%    |
+| Relative Strength (90d)    | 20%    |
+| 6m Price Momentum          | 20%    |
+| Volume Surge (10d)         | 10%    |
+| **Total**                  | **100**|
 
 ### 3. Portfolio Risk Engine
 User uploads holdings → system returns weighted risk level:

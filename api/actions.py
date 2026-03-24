@@ -34,10 +34,16 @@ def record_action(
     )
     signal = cur.fetchone()
     if not signal:
+        cur.close()
         raise HTTPException(status_code=404, detail="Signal not found")
 
+    is_dict = isinstance(signal, dict)
+    rec_price = signal["recommended_price"] if is_dict else signal[3]
+    sig_symbol = signal["symbol"] if is_dict else signal[1]
+    sig_action = signal["action"] if is_dict else signal[2]
+
     # Use recommended price if no actual price provided
-    actual_price = req.actual_price or float(signal["recommended_price"])
+    actual_price = req.actual_price or float(rec_price)
 
     # Check for duplicate action
     cur.execute(

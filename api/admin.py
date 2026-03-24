@@ -1,26 +1,45 @@
-import psycopg2.extras
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import logging
+import psycopg2.extras
 from api.deps import get_db, get_current_client
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+logger = logging.getLogger("mri_api.admin")
+
 def verify_admin(client=Depends(get_current_client), conn=Depends(get_db)):
     """Dependency to check if the current user is an admin."""
-    cur = conn.cursor()
-    cur.execute("SELECT is_admin FROM clients WHERE id = %s", (str(client["id"]),))
-    record = cur.fetchone()
-    cur.close()
-    
-    if not record or not record[0]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return client
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT is_admin FROM clients WHERE id = %s", (str(client["id"]),))
+        record = cur.fetchone()
+        cur.close()
+        
+        is_admin = False
+        if record:
+            # Tuple-safe check
+            is_admin = record[0] if isinstance(record, (list, tuple)) else record.get("is_admin", False)
+
+        if not is_admin:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+        return client
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"ADMIN VERIFY CRASH: {e}")
+        raise HTTPException(status_code=500, detail=f"Admin verification failed: {e}")
 
 @router.get("/metrics")
 def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Get 30,000 foot view metrics of the MRI platform."""
     cur = conn.cursor()
     try:
+        # Ensure tables exist
+        cur.execute("CREATE TABLE IF NOT EXISTS client_watchlist (client_id UUID, symbol TEXT)")
+        cur.execute("CREATE TABLE IF NOT EXISTS client_external_holdings (client_id UUID, symbol TEXT, quantity NUMERIC, avg_cost NUMERIC)")
+
         cur.execute("SELECT COUNT(*) FROM clients")
         total_users = cur.fetchone()[0]
 
@@ -35,6 +54,9 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
             "active_watchlists": active_watchlists,
             "active_portfolios": active_portfolios
         }
+    except Exception as e:
+        logger.error(f"METRICS ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": f"Metrics Error: {str(e)}"})
     finally:
         cur.close()
 
@@ -64,8 +86,11 @@ def get_top_stocks(conn=Depends(get_db), admin=Depends(verify_admin)):
         top_held = cur.fetchall()
 
         return {
-            "top_watched": top_watched,
-            "top_held": top_held
+            "top_watched": [dict(r) for r in top_watched],
+            "top_held": [dict(r) for r in top_held]
         }
+    except Exception as e:
+        logger.error(f"TOP STOCKS ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": f"Top Stocks Error: {str(e)}"})
     finally:
         cur.close()

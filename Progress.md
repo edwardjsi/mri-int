@@ -396,3 +396,12 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] **0-100 Weighted Scoring**: Transitioned from 0-5 sum to 0-100 weighted risk engine (Trend, Slope, RS, Momentum, Volume).
 - [x] **Enhanced Daily Digest**: Updated daily email service to report Portfolio and Watchlist status in a holistic daily activity report.
 - [x] **Database Optimization**: Pruned `daily_prices` and optimized indices for Neon/Railway environment.
+
+---
+
+## Phase 15: Monolith Hardening & UI Stabilization (2026-03-24)
+- [x] **UI Restoration**: Fixed JSX structural errors in `App.tsx` and restored native `<form>` submission for the login page.
+- [x] **Tuple-Safe Backend**: Hardened `auth`, `admin`, `signals`, `actions`, and `portfolio` modules to handle both dict and tuple cursor formats.
+- [x] **Admin Hardening**: Renamed Admin header to "Platform Intelligence" and implemented auto-initialization for operational tables.
+- [x] **Origin Normalization**: Configured the frontend to use relative API paths, resolving same-origin constraints on Railway.
+- [x] **Build Verification**: Updated platform build to `v9-UI_FIXED` with integrated network diagnostics.

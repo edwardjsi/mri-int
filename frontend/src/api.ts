@@ -17,7 +17,7 @@ function resolveApiBase(): string {
 }
 
 const API_BASE = resolveApiBase();
-(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v8-NUCLEAR_DEBUG' };
+(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v9-UI_FIXED' };
 
 /**
  * Strips EVERYTHING except printable ASCII (32-126).

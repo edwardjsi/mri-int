@@ -18,7 +18,12 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+
     const sanitizedEmail = email.trim();
     const sanitizedPassword = password.trim();
 
@@ -47,7 +52,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
           <h1 className="brand-title">📊 MRI</h1>
           <p className="brand-subtitle">Market Regime Intelligence</p>
         </div>
-        <div className="login-form">
+        <form onSubmit={handleSubmit} className="login-form">
           <h2 className="form-title">
             {isForgotPassword ? 'Reset Password' : (isRegister ? 'Create Account' : 'Sign In')}
           </h2>
@@ -70,10 +75,9 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
           )}
 
           <button 
-            type="button" 
+            type="submit" 
             className="btn-primary" 
             disabled={loading}
-            onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
           >
             {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isRegister ? 'Create Account' : 'Sign In'))}
           </button>
@@ -161,7 +165,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
               </button>
             </div>
           )}
-        </div>
+        </form>
       </div>
     </div>
   );
@@ -323,21 +327,21 @@ function ResetPasswordPage({ token, onComplete }: { token: string, onComplete: (
           <h1 className="brand-title">📊 MRI</h1>
           <p className="brand-subtitle">Market Regime Intelligence</p>
         </div>
-        <div className="login-form">
+        <form onSubmit={handleSubmit} className="login-form">
           <h2 className="form-title">Enter New Password</h2>
           {error && <div className="error-alert">{error}</div>}
 
           <input type="password" placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required minLength={6} />
           <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" required minLength={6} />
 
-          <button type="button" className="btn-primary" onClick={handleSubmit} disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Please wait...' : 'Save New Password'}
           </button>
 
-          <p className="toggle-text">
+          <div className="toggle-text">
             <button type="button" className="link-btn" onClick={onComplete}>Back to Sign In</button>
-          </p>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -1649,7 +1653,11 @@ function App() {
       <main className="main-content">
         <header className="content-header">
           <h1 className="page-title">
-            {page === 'dashboard' ? 'Signal Dashboard' : page === 'history' ? 'Trade History' : page === 'riskaudit' ? 'Portfolio Risk Audit' : page === 'watchlist' ? 'Stock Watchlist' : 'My Performance'}
+            {page === 'dashboard' ? 'Signal Dashboard' : 
+             page === 'history' ? 'Trade History' : 
+             page === 'riskaudit' ? 'Portfolio Risk Audit' : 
+             page === 'watchlist' ? 'Stock Watchlist' : 
+             page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
           </h1>
         </header>
         <div className="content-body">

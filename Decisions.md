@@ -439,8 +439,20 @@ Decision: Transition from 0-5 binary sum to a 0-100 weighted score: EMA 50/200 (
 Reason: Provides greater granularity and allows weighting critical trend indicators over secondary surge indicators.
 Status: FINAL.
 
-## Decision 069 — Holistic Daily Activity Digest
-Date: 2026-03-23
-Decision: Expand the daily SES email to include segments for "Portfolio Status" and "Watchlist Update", reporting the latest MRI score and Regime for every tracked asset.
-Reason: Fulfills Requirement 10 (Daily Analysis/Email on all recommended, portfolio, and watchlist stocks).
+## Decision 070 — Tuple-Safe Database Access Pattern
+Date: 2026-03-24
+Decision: Implement a "Tuple-Safe" access pattern across all FastAPI endpoints (`is_dict = isinstance(row, dict)`). Use index-based fallbacks (e.g., `row[0]`) specifically when rows are returned as tuples.
+Reason: The Railway production environment's cursor behavior was inconsistent (returning tuples instead of expected dictionaries), causing widespread 500 errors. This pattern ensures runtime stability across any PostgreSQL driver configuration.
+Status: FINAL.
+
+## Decision 071 — Monolith Same-Origin Deployment Strategy
+Date: 2026-03-24
+Decision: Converge all frontend and backend traffic to a single domain (`mri-api.up.railway.app`) and use relative API paths in the frontend.
+Reason: Eliminates CORS "Preflight" complexity and resolves "Same-Origin" cookie/header issues on Railway. This simplifies the architecture and improves connection reliability.
+Status: FINAL.
+
+## Decision 072 — Defensive Admin Metrics & Table Auto-Initialization
+Date: 2026-03-24
+Decision: Hardened the Admin Dashboard backend with automatic table existence checks (`CREATE TABLE IF NOT EXISTS`) for all metrics dependencies.
+Reason: Prevented 500 errors on fresh deployments where operational tables (watchlist, external holdings) might not yet exist.
 Status: FINAL.

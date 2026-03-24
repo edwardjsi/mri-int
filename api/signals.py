@@ -19,14 +19,20 @@ def get_current_regime(conn=Depends(get_db)):
         ORDER BY date DESC LIMIT 1
     """)
     row = cur.fetchone()
+    cur.close()
+    
     if not row:
         return {"regime": "UNKNOWN", "date": None}
-    return {
-        "regime": row["classification"],
-        "date": str(row["date"]),
-        "sma_200": float(row["sma_200"]) if row["sma_200"] else None,
-        "sma_200_slope": float(row["sma_200_slope_20"]) if row["sma_200_slope_20"] else None,
+    
+    # Tuple-safe access
+    is_dict = isinstance(row, dict)
+    res = {
+        "regime": row["classification"] if is_dict else row[1],
+        "date": str(row["date"] if is_dict else row[0]),
+        "sma_200": float(row["sma_200"] if is_dict else row[2]) if (row["sma_200"] if is_dict else row[2]) else None,
+        "sma_200_slope": float(row["sma_200_slope_20"] if is_dict else row[3]) if (row["sma_200_slope_20"] if is_dict else row[3]) else None,
     }
+    return res
 
 
 @router.get("/today")

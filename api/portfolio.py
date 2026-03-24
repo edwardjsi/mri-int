@@ -55,16 +55,17 @@ def get_open_positions(
     positions = []
 
     # Process Core
+    is_dict = not core_rows or isinstance(core_rows[0], dict)
     for p in core_rows:
         positions.append(
             {
                 "source": "Core",
-                "symbol": p["symbol"],
-                "entry_date": str(p["entry_date"]),
-                "entry_price": float(p["entry_price"]) if p["entry_price"] else None,
-                "quantity": p["quantity"],
-                "current_price": float(p["current_price"]) if p["current_price"] else None,
-                "pnl_pct": float(p["pnl_pct"]) if p["pnl_pct"] else None,
+                "symbol": p["symbol"] if is_dict else p[0],
+                "entry_date": str(p["entry_date"] if is_dict else p[1]),
+                "entry_price": float(p["entry_price"] if is_dict else p[2]) if (p["entry_price"] if is_dict else p[2]) else None,
+                "quantity": p["quantity"] if is_dict else p[3],
+                "current_price": float(p["current_price"] if is_dict else p[5]) if (p["current_price"] if is_dict else p[5]) else None,
+                "pnl_pct": float(p["pnl_pct"] if is_dict else p[6]) if (p["pnl_pct"] if is_dict else p[6]) else None,
             }
         )
 
