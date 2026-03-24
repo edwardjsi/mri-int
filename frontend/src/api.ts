@@ -83,7 +83,7 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
     const res = await fetch(url, { 
         ...options, 
         headers,
-        mode: 'cors' 
+        // Removed mode: 'cors' to allow browser default behaviors for same-origin stability
     }).catch(err => {
         console.error("Network Error:", err);
         throw new Error(`Connection Error: ${err.message || 'Server unreachable'}`);

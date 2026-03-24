@@ -74,7 +74,25 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
             {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isRegister ? 'Create Account' : 'Sign In'))}
           </button>
 
-          <div className="toggle-text" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <button 
+              type="button" 
+              className="link-btn" 
+              style={{ fontSize: '12px', opacity: 0.6 }}
+              onClick={async () => {
+                try {
+                  const health = await api.getHealth();
+                  alert(`API Connection Success!\nBase: ${(window as any).MRI_DEBUG?.API_BASE}\nStatus: ${health.status}`);
+                } catch (err: any) {
+                  alert(`API Connection FAILED!\nBase: ${(window as any).MRI_DEBUG?.API_BASE}\nError: ${err.message}`);
+                }
+              }}
+            >
+              🔧 Network Diagnostics
+            </button>
+          </div>
+
+          <div className="toggle-text" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
             {!isForgotPassword && (
               <button type="button" className="link-btn" style={{ alignSelf: 'center' }} onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); }}>
                 Forgot your password?
