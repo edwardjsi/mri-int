@@ -37,9 +37,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": exc.errors(), "body": body.decode() if body else None},
     )
 
-# Wide open CORS for dev
+# Wide open CORS for dev if not restricted, but always allow the app's own domain
 origins_str = os.getenv("CORS_ORIGINS", "*")
-cors_origins = [o.strip() for o in origins_str.split(",")]
+cors_origins = [o.strip() for o in origins_str.split(",") if o.strip()]
+
+# Explicitly whitelist the Railway domain so the frontend is never blocked
+cors_origins.extend([
+    "https://mri-api.up.railway.app",
+    "http://localhost:5173",
+])
+
+# Deduplicate
+cors_origins = list(set(cors_origins))
 
 allow_all = "*" in cors_origins
 app.add_middleware(

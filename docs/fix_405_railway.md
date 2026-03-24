@@ -14,10 +14,13 @@ The frontend catch-all `@app.get("/{full_path:path}")` only handles GET requests
 Two identical handlers — the second shadows the first.
 
 ### 3. Frontend prebuild uses absolute URL (`frontend/package.json`)
+```json
+"prebuild": "echo VITE_API_URL=/api > .env"
 ```
-"prebuild": "echo VITE_API_URL=https://mri-api.up.railway.app/api > .env"
-```
-In the unified monolith, both frontend and backend share the same domain. Absolute URL forces unnecessary cross-origin requests.
+In the unified monolith, both frontend and backend share the same domain. Absolute URLs force unnecessary cross-origin preflight requests.
+
+### 4. CORS Missing Railway Domain (`api/main.py` lines 41-48)
+Because the Railway environment has `CORS_ORIGINS` set strictly, it blocked the `OPTIONS` preflight requests from the frontend, returning a `400 Disallowed CORS origin`. The frontend `fetch` surfaced this as a network error (often shown as 405 error or no response body).
 
 ## Changes Made
 
@@ -25,6 +28,7 @@ In the unified monolith, both frontend and backend share the same domain. Absolu
 - Changed catch-all from `@app.get` to `@app.api_route` with all HTTP methods (including `OPTIONS`)
 - Non-GET/HEAD requests to frontend paths return 404 (not 405)
 - Removed duplicate `/api/health` endpoint
+- explicitly whitelisted `https://mri-api.up.railway.app` in `cors_origins` array so preflight `OPTIONS` requests are no longer blocked.
 
 ### `frontend/package.json`
 - Changed prebuild from absolute `https://mri-api.up.railway.app/api` to relative `/api`
