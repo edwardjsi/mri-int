@@ -1,6 +1,7 @@
-// Hardcode API_BASE to a relative path to natively bypass CORS, Mixed Content, and bad env variable strings.
-// Since the frontend is a unified monolith served by FastAPI, the domain will ALWAYS be identical.
-const API_BASE = '/api';
+// Parse API base safely to support separate frontend/backend deployments (e.g. Vercel to Railway)
+let API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
+API_BASE_RAW = API_BASE_RAW.replace(/['"]/g, '');
+const API_BASE = API_BASE_RAW.endsWith('/') ? API_BASE_RAW.slice(0, -1) : API_BASE_RAW;
 
 interface LoginResponse {
     access_token: string;
