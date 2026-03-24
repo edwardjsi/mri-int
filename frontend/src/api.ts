@@ -83,7 +83,7 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
     const res = await fetch(url, { 
         ...options, 
         headers,
-        // Removed mode: 'cors' to allow browser default behaviors for same-origin stability
+        mode: 'cors' // Added back to support cross-origin deployments (e.g. mri-int -> mri-api)
     }).catch(err => {
         console.error("Network Error:", err);
         throw new Error(`Connection Error: ${err.message || 'Server unreachable'}`);
@@ -285,7 +285,7 @@ export const api = {
     },
 
     // Health
-    health: () => fetch(`${API_BASE}/health`).then(r => r.json()),
+    getHealth: () => fetch(`${API_BASE}/health`, { mode: 'cors' }).then(r => r.json()),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
