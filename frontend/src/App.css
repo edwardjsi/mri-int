@@ -4,6 +4,8 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Sidebar */
@@ -117,6 +119,7 @@
   margin-left: 240px;
   background: #0f172a;
   min-height: 100vh;
+  max-width: calc(100vw - 240px);
 }
 
 .content-header {
@@ -626,6 +629,7 @@
   .main-content {
     margin-left: 0;
     padding-bottom: 70px; /* Space for bottom nav */
+    max-width: 100vw;
   }
 
   .content-header {
@@ -635,10 +639,12 @@
     background: #0f172a;
     z-index: 50;
     border-bottom: 1px solid #1e293b;
+    max-width: 100vw;
   }
 
   .content-body {
     padding: 1rem;
+    max-width: 100vw;
   }
 
   /* Bottom Navigation */
@@ -1041,7 +1047,7 @@
 
 .landing-header {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2.5rem;
   align-items: center;
   max-width: 1200px;
@@ -1078,7 +1084,7 @@
 }
 
 .hero-actions .btn-primary {
-  min-width: 190px;
+  min-width: 160px;
 }
 
 .btn-ghost {

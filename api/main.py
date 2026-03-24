@@ -90,6 +90,11 @@ if os.path.exists(static_path):
         # Fallback to index.html for React Router
         index_path = os.path.join(static_path, "index.html")
         if os.path.exists(index_path):
-            return FileResponse(index_path)
+            response = FileResponse(index_path)
+            # Prevent caching of the entry point so users always get the latest JS bundle
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            return response
         
         return JSONResponse(status_code=404, content={"detail": "Static files not found"})

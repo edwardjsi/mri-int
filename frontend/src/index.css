@@ -11,4 +11,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #0f172a; /* slate-900 */
   color: #f8fafc; /* slate-50 */
+  overflow-x: hidden;
+  width: 100%;
 }
