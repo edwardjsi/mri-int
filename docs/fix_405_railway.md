@@ -22,7 +22,7 @@ In the unified monolith, both frontend and backend share the same domain. Absolu
 ## Changes Made
 
 ### `api/main.py`
-- Changed catch-all from `@app.get` to `@app.api_route` with all HTTP methods
+- Changed catch-all from `@app.get` to `@app.api_route` with all HTTP methods (including `OPTIONS`)
 - Non-GET/HEAD requests to frontend paths return 404 (not 405)
 - Removed duplicate `/api/health` endpoint
 
@@ -36,4 +36,7 @@ curl -X POST https://mri-api.up.railway.app/nonexistent  # Should be 404, not 40
 curl -X POST https://mri-api.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"test"}'  # Should be 401, not 405
+
+## Deployment Note
+If you still see 405 after pushing, please check the **Railway Deployment Logs** to ensure the latest build was successful and that there are no "shadowing" routes being logged at startup.
 ```

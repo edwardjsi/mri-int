@@ -62,7 +62,7 @@ app.include_router(watchlist_router)
 # Explicit Health Check (Must be before catch-all)
 @app.get("/api/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": "2026-03-24-0810"}
 
 # Serve Frontend Static Files
 static_path = os.path.join(os.path.dirname(__file__), "static")
@@ -72,7 +72,7 @@ if os.path.exists(static_path):
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
     
-    @app.api_route("/{full_path:path}", methods=["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"])
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
     async def serve_frontend(request: Request, full_path: str):
         # Allow API calls to pass through. If they reached here, they matched nothing in the routers.
         if full_path.startswith("api/") or full_path.startswith("auth/"):
