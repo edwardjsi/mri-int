@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "prebuild": "echo VITE_API_URL=https://mri-api.up.railway.app/api > .env",
+    "prebuild": "echo VITE_API_URL=/api > .env",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

@@ -39,7 +39,7 @@ The model proceeds to SaaS ONLY IF:
 ## Project Phases
 
 | Phase   | Description                                      | Pricing                  |
-|---------|--------------------------------------------------|--------------------------|
+|---------|--------------------------------------------------|--------------------------| 
 | Phase 0 | 10-day research prototype + viability test       | Internal only            |
 | Phase 1 | Retail SaaS                                      | ₹1,499 / ₹2,999 per month|
 | Phase 2 | Advisor SaaS                                     | ₹15,000–₹40,000 per month|
@@ -245,4 +245,3 @@ All outputs must be accompanied by appropriate disclaimers.
 - AWS Region: ap-south-1 (Mumbai)
 - Build method: LLM-assisted, module-by-module
 ```
-

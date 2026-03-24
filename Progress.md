@@ -30,13 +30,13 @@
 - ✅ Duplicate/missing row validation passed
 
 ## Day 3 — Indicator Engine
-- ⬜ EMA 50 implemented + unit tested
-- ⬜ EMA 200 implemented + unit tested
-- ⬜ 200 EMA slope (20-day regression) implemented
-- ⬜ 6-month rolling high implemented
-- ⬜ 20-day average volume implemented
-- ⬜ 90-day relative strength vs Nifty implemented
-- ⬜ Indicators stored in RDS
+- ✅ EMA 50 implemented + unit tested
+- ✅ EMA 200 implemented + unit tested
+- ✅ 200 EMA slope (20-day regression) implemented
+- ✅ 6-month rolling high implemented
+- ✅ 20-day average volume implemented
+- ✅ 90-day relative strength vs Nifty implemented
+- ✅ Indicators stored in RDS
 
 ## Day 4 — Regime Engine
 - [x] regime_engine.py written
@@ -45,11 +45,11 @@
 - [x] Regime vs index chart generated
 
 ## Day 5–6 — Stock Trend Scoring Engine
-- ⬜ trend_engine.py written
-- ⬜ Daily 0–5 score computed for all stocks
-- ⬜ No look-ahead bias confirmed
-- ⬜ Score dataset stored in RDS
-- ⬜ 20 random days manually spot-checked
+- ✅ trend_engine.py written
+- ✅ Daily 0–5 score computed for all stocks
+- ✅ No look-ahead bias confirmed
+- ✅ Score dataset stored in RDS
+- ✅ 20 random days manually spot-checked
 
 ## Day 7–8 — Portfolio Simulation Engine
 - [x] portfolio_engine.py written
@@ -173,15 +173,15 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] `GET /api/portfolio-review/holdings` no longer throws 500 if analysis tables are missing; it returns saved holdings with `analysis_error` (2026-03-13).
 - [x] Added delete-all Digital Twin holdings endpoint + UI control to reset a saved portfolio (2026-03-13).
 - [x] Risk Audit UX: show saved portfolio first and render upload/replace panel below it when holdings exist; delete button is now prominent (2026-03-13).
-- [x] Delete-all holdings uses `POST /api/portfolio-review/holdings/delete-all` + 2-step confirm to avoid “Method Not Allowed” environments (2026-03-13).
+- [x] Delete-all holdings uses `POST /api/portfolio-review/holdings/delete-all` + 2-step confirm to avoid "Method Not Allowed" environments (2026-03-13).
 - [x] On-demand ingestion now grades missing/ungraded symbols using targeted indicator computation (avoids full-table indicator runs that could stall for hours) and exposes `ungraded_symbols_count` in holdings-status (2026-03-13).
 - [x] Added `POST /api/portfolio-review/holdings/regrade` + UI button to manually trigger grading for persisted portfolios that are stuck ungraded (2026-03-13).
 - [x] Bounded on-demand missing-symbol downloads to ~3 years (prevents grading jobs from stalling for hours on Render) (2026-03-13).
-- [x] Dashboard `GET /api/portfolio/positions` now falls back to showing Digital Twin holdings even if full MRI analysis fails (prevents holdings from “disappearing”) (2026-03-13).
+- [x] Dashboard `GET /api/portfolio/positions` now falls back to showing Digital Twin holdings even if full MRI analysis fails (prevents holdings from "disappearing") (2026-03-13).
 - [x] Targeted stock scoring for on-demand grading: compute `stock_scores` only for portfolio symbols (avoids long full-DB scoring runs) (2026-03-13).
 - [x] On-demand grading now refreshes `market_regime` and the UI surfaces `analysis_error` when analysis falls back (2026-03-13).
 - [x] Fixed `Decimal * float` crash in `analyze_portfolio()` by coercing DB NUMERIC values to float (2026-03-13).
-- [x] Regrade now optionally emails updated Risk Audit report and UI messaging no longer mentions “signals” (2026-03-13).
+- [x] Regrade now optionally emails updated Risk Audit report and UI messaging no longer mentions "signals" (2026-03-13).
 - [x] Added synchronous regrade endpoint and UI wiring so regrade returns updated scores immediately (avoids BackgroundTasks reliability issues) (2026-03-13).
 - [x] Password reset emails use deployed frontend URL and log clear SES/AWS-credential misconfig (2026-03-13).
 - [x] Reduced Risk Audit CSV upload panel size for better layout (2026-03-13).

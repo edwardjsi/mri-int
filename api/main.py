@@ -72,12 +72,16 @@ if os.path.exists(static_path):
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
     
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"])
+    async def serve_frontend(request: Request, full_path: str):
         # Allow API calls to pass through. If they reached here, they matched nothing in the routers.
         if full_path.startswith("api/") or full_path.startswith("auth/"):
              return JSONResponse(status_code=404, content={"detail": "Not Found"})
-            
+
+        # Only serve static files for GET/HEAD requests
+        if request.method not in ("GET", "HEAD"):
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
         # Check if the requested file exists in static/
         file_path = os.path.join(static_path, full_path)
         if full_path and os.path.isfile(file_path):
@@ -89,7 +93,3 @@ if os.path.exists(static_path):
             return FileResponse(index_path)
         
         return JSONResponse(status_code=404, content={"detail": "Static files not found"})
-
-@app.get("/api/health")
-async def health():
-    return {"status": "healthy"}
