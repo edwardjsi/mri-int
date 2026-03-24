@@ -70,7 +70,6 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
         ...(options.headers as Record<string, string> || {}),
     };
     

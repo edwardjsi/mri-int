@@ -70,7 +70,12 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
             <input type="number" placeholder="Initial Capital (₹)" value={capital} onChange={e => setCapital(e.target.value)} className="form-input" min="10000" />
           )}
 
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button 
+            type="button" 
+            className="btn-primary" 
+            disabled={loading}
+            onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+          >
             {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isRegister ? 'Create Account' : 'Sign In'))}
           </button>
 
