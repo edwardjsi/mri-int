@@ -1,18 +1,24 @@
-// Parse API base safely to support separate frontend/backend deployments (e.g. Vercel to Railway)
-let API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
+// Parse API base safely to support separate frontend/backend deployments
+function resolveApiBase(): string {
+    const rawEnv = (import.meta.env.VITE_API_URL || '').replace(/['"]/g, '').trim();
 
-// 1. Remove any surrounding quotes (Railway sometimes injects Literal quotes like 'https://...')
-API_BASE_RAW = API_BASE_RAW.replace(/['"]/g, '').trim();
+    // 1. If no env var, or if the env var matches our current domain, 
+    // ALWAYS use relative path '/api'. This is the safest way to avoid CORS/Mixed-Content.
+    if (!rawEnv || rawEnv === '/api' || rawEnv.includes(window.location.hostname)) {
+        return '/api';
+    }
 
-// 2. If it's a full URL but missing the /api prefix, add it.
-// Many users paste the Railway URL without the /api suffix, which breaks routes.
-if (API_BASE_RAW.startsWith('http') && !API_BASE_RAW.toLowerCase().includes('/api')) {
-    API_BASE_RAW = API_BASE_RAW.endsWith('/') ? `${API_BASE_RAW}api` : `${API_BASE_RAW}/api`;
+    // 2. If it is an external URL, ensure it has /api suffix
+    let base = rawEnv;
+    if (base.startsWith('http') && !base.toLowerCase().includes('/api')) {
+        base = base.endsWith('/') ? `${base}api` : `${base}/api`;
+    }
+    return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
-// 3. Final normalization
-const API_BASE = API_BASE_RAW.endsWith('/') ? API_BASE_RAW.slice(0, -1) : API_BASE_RAW;
-console.log("🛠️ MRI API BASE:", API_BASE);
+const API_BASE = resolveApiBase();
+console.log(`🚀 MRI Platform Booted | API_BASE: ${API_BASE} | Origin: ${window.location.origin}`);
+(window as any).MRI_DEBUG = { API_BASE, origin: window.location.origin, build: '2026-03-24-v2' };
 
 interface LoginResponse {
     access_token: string;
