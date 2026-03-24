@@ -6,15 +6,18 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 import bcrypt
 import psycopg2.extras
+import logging
 
 from api.deps import get_db, create_access_token, get_current_client
 from src.email_service import send_password_reset_email_detailed
 from src.mailerlite import add_subscriber
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+logger = logging.getLogger("mri_api.auth")
 
 
 def hash_password(password: str) -> str:
@@ -132,12 +135,15 @@ def login(req: LoginRequest, conn=Depends(get_db)):
             has_pending_signals=has_pending,
             is_admin=bool(c_admin)
         )
-    except HTTPException:
-        raise
+    except HTTPException as he:
+        # Re-wrap HTTPExceptions into JSONResponse to be absolutely sure the body is sent
+        return JSONResponse(status_code=he.status_code, content={"detail": str(he.detail)})
     except Exception as e:
-        logger.error(f"LOGIN CRASH: {str(e)}")
-        # Return exact error for debugging
-        raise HTTPException(status_code=500, detail=f"v7-TUPLE_SAFE CRASH: {type(e).__name__}: {str(e)}")
+        logger.error(f"FATAL LOGIN CRASH: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=500, 
+            content={"detail": f"V8-NUCLEAR-DEBUG CRASH: {type(e).__name__}: {str(e)}", "type": type(e).__name__}
+        )
 
 
 @router.get("/me")
