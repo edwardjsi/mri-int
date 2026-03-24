@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { api, isAuthenticated, getClientName, clearAuth } from './api';
+import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
+import AdminDashboard from './AdminDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -1430,16 +1431,45 @@ function WatchlistPage() {
       <h2 className="section-title">Stock Watchlist</h2>
       <p className="section-subtitle">Track custom stocks without owning them. They will be automatically updated in the daily pipeline.</p>
       
-      <form onSubmit={handleAdd} className="watchlist-add-form">
-        <input 
-          type="text" 
-          placeholder="Enter Symbol (e.g. RELIANCE)" 
-          value={newSymbol} 
-          onChange={e => setNewSymbol(e.target.value)} 
-          className="form-input"
-        />
-        <button type="submit" className="btn-primary">Add Stock</button>
-      </form>
+      <div className="watchlist-controls" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+        <form onSubmit={handleAdd} className="watchlist-add-form" style={{ flex: 1, display: 'flex', gap: '8px' }}>
+          <input 
+            type="text" 
+            placeholder="Enter Symbol (e.g. RELIANCE)" 
+            value={newSymbol} 
+            onChange={e => setNewSymbol(e.target.value)} 
+            className="form-input"
+            style={{ marginBottom: 0 }}
+          />
+          <button type="submit" className="btn-primary" style={{ whiteSpace: 'nowrap' }}>Add Stock</button>
+        </form>
+        
+        <div className="csv-upload-btn">
+          <input
+            type="file"
+            id="watchlist-csv"
+            accept=".csv"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                setLoading(true);
+                await api.uploadWatchlistCsv(file);
+                alert('Watchlist updated from CSV');
+                loadWatchlist();
+              } catch (err: any) {
+                alert(err.message || 'Upload failed');
+              } finally {
+                setLoading(false);
+              }
+            }}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="watchlist-csv" className="btn-secondary" style={{ cursor: 'pointer', padding: '10px 16px', display: 'inline-block', borderRadius: '8px' }}>
+            📁 Upload CSV
+          </label>
+        </div>
+      </div>
       
       {error && <div className="error-alert">{error}</div>}
 
@@ -1495,7 +1525,7 @@ function WatchlistPage() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin'>('dashboard');
 
   // Custom simple routing for password reset link
   const urlParams = new URLSearchParams(window.location.search);
@@ -1542,6 +1572,11 @@ function App() {
           <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
             <span className="nav-icon">👀</span> Watchlist
           </button>
+          {isAdmin() && (
+            <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
+              <span className="nav-icon">🛡️</span> Admin Panel
+            </button>
+          )}
         </div>
         <div className="sidebar-footer">
           <div className="user-info">{getClientName()}</div>
@@ -1560,6 +1595,7 @@ function App() {
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage />}
           {page === 'watchlist' && <WatchlistPage />}
+          {page === 'admin' && <AdminDashboard />}
         </div>
       </main>
 
@@ -1577,6 +1613,11 @@ function App() {
         <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
           <span className="nav-icon">📋</span> History
         </button>
+        {isAdmin() && (
+          <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
+            <span className="nav-icon">🛡️</span> Admin
+          </button>
+        )}
       </nav>
     </div>
   );

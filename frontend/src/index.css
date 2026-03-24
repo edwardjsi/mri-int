@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -12,5 +16,7 @@ body {
   background-color: #0f172a; /* slate-900 */
   color: #f8fafc; /* slate-50 */
   overflow-x: hidden;
+  max-width: 100vw;
   width: 100%;
 }
+

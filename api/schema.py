@@ -21,6 +21,10 @@ def ensure_client_external_holdings_table(conn) -> None:
     cur = conn.cursor()
 
     cur.execute(
+        "ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;"
+    )
+
+    cur.execute(
         """
         CREATE TABLE IF NOT EXISTS client_external_holdings (
             id UUID PRIMARY KEY,

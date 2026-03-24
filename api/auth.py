@@ -46,6 +46,7 @@ class TokenResponse(BaseModel):
     name: Optional[str] = "User"
     email: str
     has_pending_signals: bool = False
+    is_admin: bool = False
 
 
 # ── Endpoints ───────────────────────────────────────────────
@@ -76,7 +77,8 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
         client_id=client_id,
         name=req.name,
         email=req.email,
-        has_pending_signals=False  # New account has no signals yet
+        has_pending_signals=False,  # New account has no signals yet
+        is_admin=False
     )
 
 
@@ -84,7 +86,7 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
 def login(req: LoginRequest, conn=Depends(get_db)):
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, name, password_hash, is_active FROM clients WHERE email = %s",
+        "SELECT id, name, password_hash, is_active, is_admin FROM clients WHERE email = %s",
         (req.email,),
     )
     client = cur.fetchone()
@@ -110,7 +112,8 @@ def login(req: LoginRequest, conn=Depends(get_db)):
         client_id=str(client["id"]),
         name=client["name"],
         email=req.email,
-        has_pending_signals=has_pending
+        has_pending_signals=has_pending,
+        is_admin=bool(client.get("is_admin", False))
     )
 
 

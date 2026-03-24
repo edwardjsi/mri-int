@@ -1,7 +1,18 @@
 // Parse API base safely to support separate frontend/backend deployments (e.g. Vercel to Railway)
 let API_BASE_RAW = import.meta.env.VITE_API_URL || '/api';
-API_BASE_RAW = API_BASE_RAW.replace(/['"]/g, '');
+
+// 1. Remove any surrounding quotes (Railway sometimes injects Literal quotes like 'https://...')
+API_BASE_RAW = API_BASE_RAW.replace(/['"]/g, '').trim();
+
+// 2. If it's a full URL but missing the /api prefix, add it.
+// Many users paste the Railway URL without the /api suffix, which breaks routes.
+if (API_BASE_RAW.startsWith('http') && !API_BASE_RAW.toLowerCase().includes('/api')) {
+    API_BASE_RAW = API_BASE_RAW.endsWith('/') ? `${API_BASE_RAW}api` : `${API_BASE_RAW}/api`;
+}
+
+// 3. Final normalization
 const API_BASE = API_BASE_RAW.endsWith('/') ? API_BASE_RAW.slice(0, -1) : API_BASE_RAW;
+console.log("🛠️ MRI API BASE:", API_BASE);
 
 interface LoginResponse {
     access_token: string;
@@ -9,6 +20,7 @@ interface LoginResponse {
     client_id: string;
     name: string;
     email: string;
+    is_admin: boolean;
 }
 
 function getToken(): string | null {
@@ -24,6 +36,7 @@ function setAuth(data: LoginResponse) {
     localStorage.setItem('mri_client_id', data.client_id);
     localStorage.setItem('mri_name', data.name || 'User');
     localStorage.setItem('mri_email', data.email || '');
+    localStorage.setItem('mri_is_admin', data.is_admin ? 'true' : 'false');
 }
 
 function clearAuth() {
@@ -31,10 +44,15 @@ function clearAuth() {
     localStorage.removeItem('mri_client_id');
     localStorage.removeItem('mri_name');
     localStorage.removeItem('mri_email');
+    localStorage.removeItem('mri_is_admin');
 }
 
 function isAuthenticated(): boolean {
     return !!getToken();
+}
+
+function isAdmin(): boolean {
+    return localStorage.getItem('mri_is_admin') === 'true';
 }
 
 async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolean = false) {
@@ -119,6 +137,10 @@ export const api = {
     logout: () => { clearAuth(); window.location.reload(); },
 
     getProfile: () => apiFetch('/auth/me'),
+
+    // Admin
+    getAdminMetrics: () => apiFetch('/admin/metrics'),
+    getAdminTopStocks: () => apiFetch('/admin/top-stocks'),
 
     // Signals
     getRegime: () => apiFetch('/signals/regime'),
@@ -227,9 +249,37 @@ export const api = {
         apiFetch(`/watchlist/${symbol}`, {
             method: 'DELETE',
         }),
+    uploadWatchlistCsv: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const token = getToken();
+        // multipart so empty headers mapping
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const url = `${API_BASE}/watchlist/upload-csv`;
+
+        const res = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers,
+            mode: 'cors'
+        });
+        if (res.status === 401) {
+            clearAuth();
+            window.location.reload();
+            throw new Error('Session expired');
+        }
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({ detail: 'Request failed' }));
+            throw new Error(typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail));
+        }
+        return res.json();
+    },
 
     // Health
     health: () => fetch(`${API_BASE}/health`).then(r => r.json()),
 };
 
-export { isAuthenticated, getClientName, clearAuth };
+export { isAuthenticated, isAdmin, getClientName, clearAuth };
