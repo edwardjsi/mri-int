@@ -79,13 +79,21 @@ async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolea
 
     console.log(`📡 Fetching: ${options.method || 'GET'} ${url}`, options.body ? "(with body)" : "(no body)");
 
+    const bodyStr = options.body ? String(options.body) : null;
+    if (bodyStr) {
+        console.log(`📡 Sending Body (len: ${bodyStr.length}):`, bodyStr);
+    }
+
     const res = await fetch(url, { 
         ...options, 
         headers,
-        mode: 'cors' // MANADATORY for cross-origin [mri-int -> mri-api]
+        mode: 'cors',
+        credentials: 'omit', // Ensure no unintended cookies/creds cause CORS preflight blocks
+        cache: 'no-cache',   // Prevent stale responses interfering with auth
     }).catch(err => {
+        const bodyPreview = bodyStr ? ` | Body: ${bodyStr.slice(0, 50)}... [Len: ${bodyStr.length}]` : "";
         console.error(`Network Error on [${url}]:`, err);
-        throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]`);
+        throw new Error(`Connection Error: ${err.message || 'Server unreachable'} [to ${url}]${bodyPreview}`);
     });
 
     if (res.status === 401 && !isLogin) {
