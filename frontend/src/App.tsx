@@ -83,15 +83,24 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
             <button 
               type="button" onClick={async () => {
               try {
-                // Test GET
+                // Test 1: GET Health
                 const getHealth = await api.getHealth();
                 
-                // Test POST Health
+                // Test 2: POST Health
                 const postHealth = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/health`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ test: true })
-                // Test 3: Call api.login directly (The real test)
+                }).then(r => r.json()).catch(e => ({ error: e.message }));
+
+                // Test 3: POST Login (Raw fetch)
+                const postLogin = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/auth/login`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: 'diag@test.com', password: 'diag' })
+                }).then(r => r.status).catch(e => `ERR: ${e.message}`);
+
+                // Test 4: Call api.login directly (The real test)
                 let apiLoginStatus = 'N/A';
                 try {
                   await api.login('diag@test.com', 'diag');
