@@ -91,14 +91,13 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ test: true })
-                }).then(r => r.json()).catch(e => ({ error: e.message }));
-
-                // Test POST Login (The actual failing path)
-                const postLogin = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/auth/login`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: 'diag@test.com', password: 'diag' })
-                }).then(r => r.status).catch(e => `ERR: ${e.message}`);
+                // Test 3: Call api.login directly (The real test)
+                let apiLoginStatus = 'N/A';
+                try {
+                  await api.login('diag@test.com', 'diag');
+                } catch (e: any) {
+                  apiLoginStatus = e.message;
+                }
 
                 alert(
                   `Diagnostic Results:\n` +
@@ -107,7 +106,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
                   `GET Health: ${getHealth.status}\n` +
                   `POST Health: ${postHealth.status || 'FAILED (' + postHealth.error + ')'}\n` +
                   `POST Login Status: ${postLogin}\n` +
-                  `Login URL: ${(window as any).MRI_DEBUG.API_BASE}/auth/login`
+                  `API.LOGIN Result: ${apiLoginStatus}`
                 );
               } catch (err: any) {
                 alert(`API Connection CRITICAL FAILURE!\nError: ${err.message}`);
