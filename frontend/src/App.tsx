@@ -161,7 +161,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
               </button>
             </div>
           )}
-        </form>
+        </div>
       </div>
     </div>
   );
@@ -323,15 +323,14 @@ function ResetPasswordPage({ token, onComplete }: { token: string, onComplete: (
           <h1 className="brand-title">📊 MRI</h1>
           <p className="brand-subtitle">Market Regime Intelligence</p>
         </div>
-        <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-form">
           <h2 className="form-title">Enter New Password</h2>
           {error && <div className="error-alert">{error}</div>}
 
           <input type="password" placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} className="form-input" required minLength={6} />
           <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-input" required minLength={6} />
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-          <button type="submit" className="btn-primary" onClick={handleSubmit} disabled={loading}>
+          <button type="button" className="btn-primary" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Please wait...' : 'Save New Password'}
           </button>
 
