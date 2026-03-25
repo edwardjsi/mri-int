@@ -195,10 +195,13 @@ def load_stocks(symbols: list, period: str = None):
         for sym in batch:
             ticker = get_ticker(sym)
             try:
-                # Handle single vs multi-index download structure
+                # Handle single vs multi-index download structure safely
+                is_multi = isinstance(raw_data.columns, pd.MultiIndex)
                 if len(batch) == 1:
                     df = raw_data.reset_index()
-                elif ticker in raw_data.columns.levels[0]:
+                elif is_multi and ticker in raw_data.columns.get_level_values(0):
+                    df = raw_data[ticker].dropna(how='all').reset_index()
+                elif ticker in raw_data.columns:
                     df = raw_data[ticker].dropna(how='all').reset_index()
                 else:
                     logger.warning(f"  ⚠️ Symbol {sym} missing from Yahoo result batch.")
