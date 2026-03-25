@@ -113,9 +113,15 @@ async def add_single_holding(
 ):
     """Save a single stock holding (Watchlist-style functionality for Portfolio)."""
     try:
-        client_id = str(client["id"])
         cur = conn.cursor()
+        sym = req.symbol.upper().strip()
         
+        # WISE GUARD: Verify against Master Universe
+        cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (sym, sym))
+        if not cur.fetchone():
+             raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in NSE/BSE Universe. It may be delisted.")
+
+        client_id = str(client["id"])
         cur.execute("""
             INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
             VALUES (%s::uuid, %s, %s, %s)
@@ -124,7 +130,7 @@ async def add_single_holding(
                 quantity = EXCLUDED.quantity,
                 avg_cost = EXCLUDED.avg_cost,
                 updated_at = NOW()
-        """, (client_id, req.symbol.upper().strip(), req.quantity, req.avg_cost))
+        """, (client_id, sym, req.quantity, req.avg_cost))
         
         conn.commit()
         cur.close()
@@ -210,10 +216,21 @@ async def upload_csv(
 
         cur = conn.cursor()
         processed_symbols = []
+        skipped_symbols = []
+        
+        # WISE GUARD: Pre-fetch universe for bulk check
+        cur.execute("SELECT symbol, bse_code FROM universe")
+        universe_map = {r[0]: r[1] for r in cur.fetchall()}
+
         for _, row in df.iterrows():
             sym = str(row[sym_col]).upper().strip()
             if not sym or sym == 'NAN': continue
             
+            # Wise Filtering: Skip if not in universe
+            if sym not in universe_map and sym not in universe_map.values():
+                skipped_symbols.append(sym)
+                continue
+
             qty = 0.0
             try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
             except: pass
@@ -231,6 +248,9 @@ async def upload_csv(
             """, (str(client_id), sym, qty, cost))
         
         conn.commit()
+        if skipped_symbols:
+            logger.warning(f"Skipped {len(skipped_symbols)} stocks not found in universe: {skipped_symbols[:5]}...")
+
         cur.close()
 
         # Trigger on-demand sync

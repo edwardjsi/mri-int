@@ -89,13 +89,56 @@ def build_symbol_translator() -> dict:
             logger.warning("⚠️ BSE/NSE headers changed. Using manual overrides.")
     except Exception as e:
         logger.error(f"Bridge build failed: {e}. Using mandatory overrides.")
+    
+    # BLACKLIST: Specifically remove delisted/toxic symbols that clutter logs
+    blacklist = {"ONEGLOBAL", "FRONTSP", "ONEGLOBAL.NS", "FRONTSP.NS"}
+    for b in blacklist:
+        if b in translator: del translator[b]
 
     # Always include these key persistent overrides
     translator.update({
         "CIGNITITEC": "534758", "LUMAXTECH": "532796", "SKFINDIAN": "500472", 
-        "AGI": "500187", "ONEGLOBAL": "514330", "SHILCTECH": "531201"
+        "AGI": "500187", "SHILCTECH": "531201"
     })
     return translator
+
+def sync_universe():
+    """Builds a master lookup table of all valid BSE/NSE symbols to avoid nonsense inputs."""
+    logger.info("📡 Syncing Master Stock Universe (BSE + NSE)...")
+    translator = build_symbol_translator()
+    from src.db import get_connection
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("CREATE TABLE IF NOT EXISTS universe (symbol TEXT PRIMARY KEY, company_name TEXT, isin TEXT, bse_code TEXT)")
+        # Clear old data (optional, but keep it fresh)
+        # cur.execute("TRUNCATE universe") 
+        
+        # We use a greedy approach to find all active names
+        headers = {"User-Agent": "Mozilla/5.0"}
+        nse_res = requests.get("https://archives.nseindia.com/content/equities/EQUITY_L.csv", headers=headers, timeout=15)
+        nse_df = pd.read_csv(io.StringIO(nse_res.text))
+        nse_df.columns = [c.upper().strip() for c in nse_df.columns]
+        
+        for _, row in nse_df.iterrows():
+            sym = str(row.get('SYMBOL', '')).strip().upper()
+            name = str(row.get('NAME OF COMPANY', row.get('COMPANY', ''))).strip()
+            isin = str(row.get('ISIN NUMBER', row.get('ISIN', ''))).strip()
+            if not sym or sym == 'NAN': continue
+            
+            cur.execute("""
+                INSERT INTO universe (symbol, company_name, isin, bse_code)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (symbol) DO UPDATE SET company_name = EXCLUDED.company_name
+            """, (sym, name, isin, translator.get(sym)))
+            
+        conn.commit()
+        logger.info(f"✅ Master Universe Synced. {len(nse_df)} NSE stocks verified.")
+    except Exception as e:
+        logger.error(f"Universe Sync failed: {e}")
+    finally:
+        cur.close()
+        conn.close()
 
 def load_stocks(symbols: list, period: str = None):
     """Daily pipeline entry point for stock data, now with batching for stability."""
@@ -109,6 +152,11 @@ def load_stocks(symbols: list, period: str = None):
         batch = symbols[i:i+batch_size]
         logger.info(f"--- Processing Batch {i//batch_size + 1}/{ (len(symbols)-1)//batch_size + 1 } ({len(batch)} symbols) ---")
         
+        # Nuke Blacklist right at the start
+        blacklist = {"ONEGLOBAL", "FRONTSP", "ONEGLOBAL.NS", "FRONTSP.NS"}
+        batch = [s for s in batch if s.upper().strip() not in blacklist]
+        if not batch: continue
+
         def get_ticker(s):
             if s.isdigit(): return f"{s}.BO"
             if s.endswith(".BO") or s.endswith(".NS"): return s
@@ -121,14 +169,15 @@ def load_stocks(symbols: list, period: str = None):
             try:
                 if period:
                     logger.info(f"  Forcing {period} bulk download (Attempt {attempt+1})...")
-                    raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+                    raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
                 else:
                     # AGGRESSIVE CATCH-UP: 7 days back to ensure we bridge weekends and missing days
                     last_date_raw = get_last_date("daily_prices")
                     start_dt = datetime.strptime(last_date_raw, "%Y-%m-%d") - timedelta(days=7)
                     start_date = start_dt.strftime("%Y-%m-%d")
                     logger.info(f"  Incremental download from {start_date} (Attempt {attempt+1})...")
-                    raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+                    # Silently skip missing symbols by adding threads=False (makes catching single errors easier)
+                    raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
                 
                 if not raw_data.empty:
                     break

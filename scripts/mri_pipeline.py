@@ -13,6 +13,7 @@ from datetime import datetime
 
 # Add parent directory to sys.path to find src module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.ingestion_engine import sync_universe
 
 
 logging.basicConfig(
@@ -147,18 +148,6 @@ def run_pipeline():
     # Step 1: Ingest today's data
     logger.info("[1/5] Ingesting today's market data...")
     try:
-        from src.ingestion_engine import load_indices, load_stocks
-
-        load_indices()
-        
-        symbols, sector_data = get_full_symbol_list()
-        if not symbols:
-            raise Exception("No symbols found to ingest.")
-            
-        load_stocks(symbols)
-
-        # Update sectors using unified list
-        if sector_data:
             from src.db import get_connection as get_db_conn
             from psycopg2.extras import execute_batch as eb
             

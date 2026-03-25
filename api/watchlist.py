@@ -126,6 +126,12 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
         
     cur = conn.cursor()
     try:
+        # WISE GUARD: Is this stock even real?
+        cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (symbol, symbol))
+        universe_record = cur.fetchone()
+        if not universe_record:
+             raise HTTPException(status_code=400, detail=f"⚠️ {symbol} not found in NSE/BSE Universe. It may be delisted or invalid.")
+
         # Check if it already exists to avoid unique constraint error
         cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol))
         if cur.fetchone():
