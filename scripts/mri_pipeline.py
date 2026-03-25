@@ -1,6 +1,5 @@
 """
-MRI Daily Pipeline — ECS Scheduled Task version.
-Runs at 4PM IST Mon-Fri via EventBridge.
+MRI Daily Pipeline — [RESCUE HASH: 8872-FORCE-SYNC]
 """
 import os
 import sys
