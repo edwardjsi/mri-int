@@ -121,18 +121,21 @@ def get_full_symbol_list():
         sector_records.extend(n500_records)
     
     if bse_only_symbols and 'bse_df' in locals():
-        # Map BSE columns to NSE-style keys for the DB
-        bse_sym_col = [c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()][0]
-        bse_name_col = [c for c in bse_df.columns if 'SECURITY NAME' in str(c).upper()][0]
-        # BSE doesn't always have 'Industry' in the simple CSV, might be 'Industry' or missing
-        bse_ind_col = [c for c in bse_df.columns if 'INDUSTRY' in str(c).upper()]
-        bse_ind_col = bse_ind_col[0] if bse_ind_col else None
+        # Map BSE columns to NSE-style keys for the DB (using resilient lookup)
+        bse_sym_col = next((c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()), None)
+        bse_name_col = next((c for c in bse_df.columns if 'SECURITY NAME' in str(c).upper() or 'SHORT NAME' in str(c).upper()), None)
+        bse_ind_col = next((c for c in bse_df.columns if 'INDUSTRY' in str(c).upper()), None)
         
-        bse_mapped = bse_only[[bse_sym_col, bse_name_col] + ([bse_ind_col] if bse_ind_col else [])].copy()
-        bse_mapped = bse_mapped.rename(columns={
-            bse_sym_col: 'Symbol',
-            bse_name_col: 'Company Name'
-        })
+        # Guard against missing columns
+        if bse_sym_col and bse_name_col:
+            columns_to_grab = [bse_sym_col, bse_name_col]
+            if bse_ind_col: columns_to_grab.append(bse_ind_col)
+            
+            bse_mapped = bse_only[columns_to_grab].copy()
+            bse_mapped = bse_mapped.rename(columns={
+                bse_sym_col: 'Symbol',
+                bse_name_col: 'Company Name'
+            })
         if bse_ind_col:
             bse_mapped = bse_mapped.rename(columns={bse_ind_col: 'Industry'})
         else:
