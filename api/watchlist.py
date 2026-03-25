@@ -68,14 +68,30 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     cur.close()
     
     results = []
-    # RealDictCursor check
     for row in data:
-        sym = row["symbol"] if isinstance(row, dict) else row[0]
+        # Determine if row is dict (RealDictCursor) or tuple
+        is_dict = isinstance(row, dict)
+        sym = row["symbol"] if is_dict else row[0]
+        
+        price = None
+        score = None
+        trend = None
+        
+        if row:
+            try:
+                price_raw = row["current_price"] if is_dict else row[2]
+                price = float(price_raw) if price_raw is not None else None
+                
+                score = row["score"] if is_dict else row[1]
+                trend = row["trend_alignment"] if is_dict else row[3]
+            except (IndexError, KeyError, TypeError):
+                pass
+
         results.append(WatchlistItem(
             symbol=sym,
-            price=float(row["current_price"]) if isinstance(row, dict) and row["current_price"] else float(row[2]) if not isinstance(row, dict) and len(row) > 2 and row[2] else None,
-            score=row["score"] if isinstance(row, dict) else row[1] if not isinstance(row, dict) and len(row) > 1 else None,
-            trend_alignment=row["trend_alignment"] if isinstance(row, dict) else row[3] if not isinstance(row, dict) and len(row) > 3 else None
+            price=price,
+            score=score,
+            trend_alignment=trend
         ))
         
     return results
