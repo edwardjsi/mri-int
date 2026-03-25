@@ -166,6 +166,8 @@ export const api = {
     // Admin
     getAdminMetrics: () => apiFetch('/admin/metrics'),
     getAdminTopStocks: () => apiFetch('/admin/top-stocks'),
+    getAdminClients: () => apiFetch('/admin/clients'),
+    getAdminClientPortfolio: (id: string) => apiFetch(`/admin/clients/${id}/portfolio`),
 
     // Signals
     getRegime: () => apiFetch('/signals/regime'),
@@ -230,6 +232,12 @@ export const api = {
     getSavedHoldings: () => apiFetch('/portfolio-review/holdings'),
     getHoldingsStatus: () => apiFetch('/portfolio-review/holdings-status'),
 
+    addHolding: (symbol: string, quantity: number, avg_cost: number) =>
+        apiFetch('/portfolio-review/add', {
+            method: 'POST',
+            body: JSON.stringify({ symbol, quantity, avg_cost }),
+        }),
+
     saveHoldingsBulk: (holdings: { symbol: string, quantity: number, avg_cost: number }[]) =>
         apiFetch('/portfolio-review/save-bulk', {
             method: 'POST',
@@ -274,6 +282,7 @@ export const api = {
         apiFetch(`/watchlist/${symbol}`, {
             method: 'DELETE',
         }),
+    searchStocks: (q: string) => apiFetch(`/watchlist/search?q=${q}`),
     uploadWatchlistCsv: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);

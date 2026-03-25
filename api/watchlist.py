@@ -29,6 +29,28 @@ def get_universal_watchlist(conn=Depends(get_db)):
     cur.close()
     return [row[0] for row in rows]
 
+
+@router.get("/search")
+def search_universe(q: str, conn=Depends(get_db)):
+    """Search the 500+ stock universe by symbol or name for autocomplete."""
+    if not q or len(q) < 2:
+        return []
+    
+    query = f"%{q.upper()}%"
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT symbol, company_name 
+            FROM universe 
+            WHERE symbol ILIKE %s OR company_name ILIKE %s 
+            LIMIT 10
+        """, (query, query))
+        return [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        return []
+    finally:
+        cur.close()
+
 @router.get("/", response_model=List[WatchlistItem])
 def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
