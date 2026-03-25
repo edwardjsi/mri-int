@@ -133,33 +133,55 @@ def load_stocks(symbols: list, period: str = None):
 
         for sym in batch:
             ticker = get_ticker(sym)
-            # Handle single ticker edge case
-            if len(batch) == 1:
-                df = raw_data.reset_index()
-            elif ticker not in raw_data.columns.levels[0]:
+            try:
+                # Handle single vs multi-index download structure
+                if len(batch) == 1:
+                    df = raw_data.reset_index()
+                elif ticker in raw_data.columns.levels[0]:
+                    df = raw_data[ticker].dropna(how='all').reset_index()
+                else:
+                    logger.warning(f"  ⚠️ Symbol {sym} missing from Yahoo result batch.")
+                    failed_symbols.append(sym)
+                    continue
+                
+                if df.empty:
+                    failed_symbols.append(sym)
+                    continue
+                
+                # Standardize columns
+                df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+                # Map 'date' if it came back as 'index' or 'datetime'
+                if 'date' not in df.columns and 'datetime' in df.columns:
+                    df = df.rename(columns={'datetime': 'date'})
+                
+                # Double-check we actually have a date column
+                if 'date' not in df.columns:
+                    logger.warning(f"  ⚠️ No date column found for {sym}. Skipping.")
+                    continue
+
+                df['symbol'] = sym
+                df['date'] = pd.to_datetime(df['date']).dt.date
+                df['adjusted_close'] = df.get('adj_close', df.get('close'))
+                
+                # Ensure OHL format is valid
+                for col in ['open', 'high', 'low']: 
+                    if col not in df.columns: df[col] = df['close']
+                
+                # Log the specific dates we're about to store
+                found_dates = df['date'].unique().tolist()
+                if found_dates:
+                    logger.info(f"    -> {sym}: Found {len(found_dates)} new days (latest: {max(found_dates)})")
+
+                clean_df = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'adjusted_close', 'volume']].dropna(subset=['close'])
+                all_records.extend(clean_df.to_dict('records'))
+            except Exception as e:
+                logger.error(f"  ❌ Critical error processing {sym}: {e}")
                 failed_symbols.append(sym)
-                continue
-            else:
-                df = raw_data[ticker].dropna(how='all').reset_index()
-            
-            if df.empty:
-                failed_symbols.append(sym)
-                continue
-            
-            df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
-            df['symbol'] = sym
-            df['date'] = pd.to_datetime(df['date']).dt.date
-            df['adjusted_close'] = df.get('adj_close', df.get('close'))
-            for col in ['open', 'high', 'low']: 
-                if col not in df.columns: df[col] = df['close']
-            
-            clean_df = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'adjusted_close', 'volume']].dropna(subset=['close'])
-            all_records.extend(clean_df.to_dict('records'))
 
         if all_records:
             from src.db import insert_daily_prices
             insert_daily_prices(all_records)
-            logger.info(f"  ✅ Batch: Stored {len(all_records)} records")
+            logger.info(f"  ✅ DONE: Stored {len(all_records)} records for batch {i//batch_size + 1}")
 
         # Fallback for failed/BSE symbols in this batch
         if failed_symbols:
