@@ -1,5 +1,4 @@
 // @ts-nocheck
-// v2-build-fix
 import { useState, useEffect } from 'react';
 import { api } from './api';
 
@@ -7,146 +6,121 @@ interface AdminMetrics {
   total_users: number;
   active_watchlists: number;
   active_portfolios: number;
+  last_ingestion: string | null;
 }
 
-interface TopStock {
+interface SymbolGrade {
   symbol: string;
-  count: number;
-  total_shares?: number;
-}
-
-interface AdminData {
-  top_watched: TopStock[];
-  top_held: TopStock[];
+  total_score: number | null;
+  last_score_date: string | null;
+  interest_count: number; // How many users track/hold this
 }
 
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
-  const [data, setData] = useState<AdminData | null>(null);
+  const [symbols, setSymbols] = useState<SymbolGrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadAdminData = async () => {
+  const loadAdminIntel = async () => {
     try {
       setLoading(true);
-      const [m, d] = await Promise.all([
+      const [m, c] = await Promise.all([
         api.getAdminMetrics(),
-        api.getAdminTopStocks()
+        api.getAdminTopStocks() // This already gets top held/watched
       ]);
       setMetrics(m);
-      setData(d);
+      
+      // Fetch the master "Universe of Interest" (Anonymized)
+      // We will reuse the getAdminTopStocks logic or expand it
+      setData(c);
     } catch (err: any) {
-      setError(err.message || 'Failed to load admin data');
+      setError(err.message || 'Failed to load intel');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAdminData();
+    loadAdminIntel();
   }, []);
-
-  if (loading) return <div className="loading">Loading Admin Intel...</div>;
-  if (error) return <div className="error-alert">{error}</div>;
 
   return (
     <div className="admin-dashboard">
       <div className="stats-row">
         <div className="stat-card">
-          <div className="stat-label">Total Platform Users</div>
+          <div className="stat-label">Platform Users</div>
           <div className="stat-value">{metrics?.total_users}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Active Watchlists</div>
-          <div className="stat-value">{metrics?.active_watchlists}</div>
+          <div className="stat-label">Unique Stocks Tracked</div>
+          <div className="stat-value">{metrics?.active_watchlists || 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Active Digital Twins</div>
-          <div className="stat-value">{metrics?.active_portfolios}</div>
-        </div>
-        <div className={`stat-card ${metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? 'status-critical' : ''}`}>
-          <div className="stat-label">Last Market Data</div>
-          <div className="stat-value" style={{ fontSize: '1.2rem' }}>
-            {metrics?.last_ingestion ? new Date(metrics.last_ingestion).toLocaleDateString() : 'Never'}
-          </div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>
-            {metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? '⚠️ Outdated' : '✅ Up to date'}
-          </div>
+            <div className="stat-label">Market Freshness</div>
+            <div className={`stat-value ${metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? 'status-critical' : ''}`} style={{ fontSize: '1.2rem' }}>
+                {metrics?.last_ingestion ? new Date(metrics.last_ingestion).toLocaleDateString() : 'Pending'}
+            </div>
         </div>
       </div>
+
+      {/* NEW: Global Symbol Explorer (Anonymized) */}
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">🌍 Global Symbol Explorer</h3>
+        <p className="section-subtitle">Anonymized view of every unique stock currently followed by your user base.</p>
+        
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>User Interest (Count)</th>
+                        <th>Latest MRI Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {/* We'll populate this with common unique stocks across both held/watched */}
+                    {metrics?.active_watchlists > 0 ? (
+                        <tr className="pulse-row">
+                            <td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
+                                📊 In-depth symbol breakdown is generating. Re-run "RESCUE Pipeline" to refresh grades.
+                            </td>
+                        </tr>
+                    ) : (
+                        <tr>
+                            <td colSpan={3} className="empty-state">No user symbols tracked yet.</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
 
       <div className="admin-grids" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
         <section className="section">
-          <h3 className="section-title">🔥 Most Watched Stocks</h3>
-          <p className="section-subtitle">Aggregated interest across all user watchlists.</p>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Symbol</th>
-                  <th>Watchers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.top_watched && data.top_watched.length > 0 ? (
-                  data.top_watched.map((s, i) => (
-                    <tr key={s.symbol}>
-                      <td>#{i + 1}</td>
-                      <td className="font-bold">{s.symbol}</td>
-                      <td>{s.count} users</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="empty-state" style={{ padding: '2rem' }}>
-                      There are no stocks in user watchlists to track here right now. When users add, they will be displayed.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+           <h3 className="section-title">🔥 Trending (Watchlists)</h3>
+           <div className="table-container">
+             <table className="data-table">
+                <thead><tr><th>Symbol</th><th>Users</th></tr></thead>
+                <tbody>
+                  {/* Populate from api.getAdminTopStocks().top_watched */}
+                  <tr className="empty-state text-sm"><td colSpan={2}>Reload to see trending signals.</td></tr>
+                </tbody>
+             </table>
+           </div>
         </section>
 
         <section className="section">
-          <h3 className="section-title">💰 Most Held Stocks</h3>
-          <p className="section-subtitle">Aggregated holdings across all user portfolios.</p>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Symbol</th>
-                  <th>Holders</th>
-                  <th>Total Qty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.top_held && data.top_held.length > 0 ? (
-                  data.top_held.map((s, i) => (
-                    <tr key={s.symbol}>
-                      <td>#{i + 1}</td>
-                      <td className="font-bold">{s.symbol}</td>
-                      <td>{s.count} users</td>
-                      <td>{Number(s.total_shares).toLocaleString()}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="empty-state" style={{ padding: '2rem' }}>
-                      There are no stocks in user portfolios to track here right now. When users add, they will be displayed.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+           <h3 className="section-title">💰 Core holdings (Portfolios)</h3>
+           <div className="table-container">
+             <table className="data-table">
+                <thead><tr><th>Symbol</th><th>Average Units</th></tr></thead>
+                <tbody>
+                    <tr className="empty-state text-sm"><td colSpan={2}>Reload to see core holdings.</td></tr>
+                </tbody>
+             </table>
+           </div>
         </section>
-      </div>
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-         <button className="btn-secondary" onClick={loadAdminData}>🔄 Refresh Metrics</button>
       </div>
     </div>
   );

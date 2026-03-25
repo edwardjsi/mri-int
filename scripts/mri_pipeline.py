@@ -90,20 +90,24 @@ def get_full_symbol_list():
         if bse_res.status_code == 200:
             bse_df = pd.read_csv(io.StringIO(bse_res.text))
             
-            # Find relevant columns (BSE headers can vary)
-            isin_col = [c for c in bse_df.columns if 'ISIN' in str(c).upper()][0]
-            group_col = [c for c in bse_df.columns if 'GROUP' in str(c).upper()][0]
-            sym_col = [c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()][0]
+            # Find relevant columns safely
+            isin_col = next((c for c in bse_df.columns if 'ISIN' in str(c).upper()), None)
+            group_col = next((c for c in bse_df.columns if 'GROUP' in str(c).upper()), None)
+            sym_col = next((c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()), None)
             
-            # Filter for Group A that are NOT in Nifty 500 by ISIN
-            group_a = bse_df[bse_df[group_col].str.strip() == 'A']
-            bse_only = group_a[~group_a[isin_col].str.strip().isin(n500_isins)]
-            bse_only_symbols = bse_only[sym_col].dropna().unique().tolist()
-            logger.info(f"  Identified {len(bse_only_symbols)} unique BSE-only Group A stocks")
+            if not isin_col or not group_col or not sym_col:
+                logger.warning(f"  ⚠️ BSE CSV structure unrecognized. Columns: {list(bse_df.columns)}")
+                bse_only_symbols = []
+            else:
+                # Filter for Group A that are NOT in Nifty 500 by ISIN
+                group_a = bse_df[bse_df[group_col].astype(str).str.strip() == 'A']
+                bse_only = group_a[~group_a[isin_col].astype(str).str.strip().isin(n500_isins)]
+                bse_only_symbols = bse_only[sym_col].dropna().unique().tolist()
+                logger.info(f"  Identified {len(bse_only_symbols)} unique BSE-only Group A stocks")
         else:
             logger.warning(f"  ⚠️ BSE List fetch returned {bse_res.status_code}. Skipping BSE expansion.")
     except Exception as e:
-        logger.warning(f"  ⚠️ BSE List fetch failed: {e}. Skipping BSE expansion.")
+        logger.warning(f"  ⚠️ BSE List fetch failed: {str(e)}. Skipping BSE expansion.")
 
         # 5. Merge and Deduplicate
     all_symbols = list(set(n500_symbols + user_symbols + bse_only_symbols))

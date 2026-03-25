@@ -220,31 +220,22 @@ def compute_market_regime():
     logger.info("Incremental regime complete.")
 
 def compute_stock_scores():
-    """Incremental scoring: only process newest dates for all symbols."""
+    """Aggressive daily scoring: ensures all symbols get graded for the newest data."""
     create_market_regime_and_scores_tables()
     conn = get_connection()
     try:
-        # Detect dates needing scores (where data exists in daily_prices but not in stock_scores)
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT DISTINCT(date) FROM daily_prices 
-            WHERE date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '10 days'
-            AND date NOT IN (SELECT DISTINCT(date) FROM stock_scores)
-        """)
-        dates_to_process = [r[0] for r in cur.fetchall()]
-        cur.close()
-        
-        if not dates_to_process:
-            logger.info("Stock scores already up to date.")
-            return
-
         # Fetch symbols to process
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT symbol FROM daily_prices")
         symbols = [r[0] for r in cur.fetchall()]
         cur.close()
         
-        logger.info(f"Computing scores for {len(dates_to_process)} dates across {len(symbols)} symbols...")
+        if not symbols:
+            logger.info("No symbols found in daily_prices for scoring.")
+            return
+
+        logger.info(f"Computing/Refreshing scores for {len(symbols)} symbols...")
+        # Force a refresh of the last 5 days to catch all newest data
         compute_stock_scores_for_symbols(symbols)
     finally:
         conn.close()

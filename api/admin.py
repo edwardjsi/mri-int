@@ -98,3 +98,40 @@ def get_top_stocks(conn=Depends(get_db), admin=Depends(verify_admin)):
         return JSONResponse(status_code=500, content={"detail": f"Top Stocks Error: {str(e)}"})
     finally:
         cur.close()
+
+
+@router.get("/clients")
+def get_clients(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch list of all clients for admin selection."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("SELECT id, email, name, is_active FROM clients ORDER BY name")
+        clients = cur.fetchall()
+        return [dict(c) for c in clients]
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
+
+@router.get("/clients/{client_id}/portfolio")
+def get_client_portfolio(client_id: str, conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch specific client's portfolio with MRI grades for admin review."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # Get latest score for each symbol in holdings
+        cur.execute("""
+            SELECT eh.symbol, eh.quantity, eh.avg_cost, ss.total_score, ss.date as last_score_date
+            FROM client_external_holdings eh
+            LEFT JOIN (
+                SELECT symbol, total_score, date FROM stock_scores s1
+                WHERE date = (SELECT MAX(date) FROM stock_scores WHERE symbol = s1.symbol)
+            ) ss ON ss.symbol = eh.symbol
+            WHERE eh.client_id = %s
+        """, (client_id,))
+        holdings = cur.fetchall()
+        return [dict(h) for h in holdings]
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
