@@ -59,26 +59,38 @@ def load_indices(period: str = None):
 def build_symbol_translator() -> dict:
     """Builds a mapping of NSE symbols to BSE codes for dual-exchange fallback."""
     headers = {"User-Agent": "Mozilla/5.0"}
+    translator = {}
     try:
+        # NSE ISIN Fetch
         nse_res = requests.get("https://archives.nseindia.com/content/equities/EQUITY_L.csv", headers=headers, timeout=15)
         nse_df = pd.read_csv(io.StringIO(nse_res.text))
+        nse_df.columns = [c.upper().strip() for c in nse_df.columns]
+        
+        # BSE ISIN Fetch
         bse_res = requests.get("https://www.bseindia.com/downloads1/List_of_companies.csv", headers=headers, timeout=15)
         bse_df = pd.read_csv(io.StringIO(bse_res.text))
-        
-        bse_code_col = [c for c in bse_df.columns if 'Security Code' in c or 'Scrip Code' in c][0]
-        bse_isin_col = [c for c in bse_df.columns if 'ISIN' in c][0]
-        nse_isin_col = [c for c in nse_df.columns if 'ISIN' in c][0]
+        bse_df.columns = [c.upper().strip() for c in bse_df.columns]
 
-        merged = pd.merge(
-            nse_df[['SYMBOL', nse_isin_col]].rename(columns={nse_isin_col: 'ISIN'}),
-            bse_df[[bse_code_col, bse_isin_col]].rename(columns={bse_code_col: 'BSE_CODE', bse_isin_col: 'ISIN'}),
-            on='ISIN', how='inner'
-        )
-        translator = dict(zip(merged['SYMBOL'].str.strip(), merged['BSE_CODE'].astype(str).str.strip()))
+        # Fuzzy Column Finder
+        bse_code_col = next((c for c in bse_df.columns if 'SECURITY CODE' in c or 'SCRIP CODE' in c or 'SCRIP_CODE' in c), None)
+        bse_isin_col = next((c for c in bse_df.columns if 'ISIN' in c), None)
+        nse_isin_col = next((c for c in nse_df.columns if 'ISIN' in c), None)
+        nse_sym_col = next((c for c in nse_df.columns if 'SYMBOL' in c), None)
+
+        if bse_code_col and bse_isin_col and nse_isin_col and nse_sym_col:
+            merged = pd.merge(
+                nse_df[[nse_sym_col, nse_isin_col]].rename(columns={nse_isin_col: 'ISIN', nse_sym_col: 'SYMBOL'}),
+                bse_df[[bse_code_col, bse_isin_col]].rename(columns={bse_code_col: 'BSE_CODE', bse_isin_col: 'ISIN'}),
+                on='ISIN', how='inner'
+            )
+            translator = dict(zip(merged['SYMBOL'].str.strip(), merged['BSE_CODE'].astype(str).str.strip()))
+            logger.info(f"✅ Symbol bridge built: {len(translator)} mappings linked.")
+        else:
+            logger.warning("⚠️ BSE/NSE headers changed. Using manual overrides.")
     except Exception as e:
         logger.error(f"Bridge build failed: {e}. Using mandatory overrides.")
-        translator = {}
 
+    # Always include these key persistent overrides
     translator.update({
         "CIGNITITEC": "534758", "LUMAXTECH": "532796", "SKFINDIAN": "500472", 
         "AGI": "500187", "ONEGLOBAL": "514330", "SHILCTECH": "531201"
