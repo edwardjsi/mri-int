@@ -130,14 +130,17 @@ async def upload_csv(
         if not current_email:
              raise HTTPException(status_code=422, detail="No email provided in token or form.")
 
+        # Resolve identity: Priority 1: Current Session, Priority 2: Case-Insensitive Email Lookup
         if not client:
             cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur_find.execute("SELECT id, email, name FROM clients WHERE LOWER(email) = %s", (current_email.lower().strip(),))
+            # Standardize on case-insensitive email to ensure persistence
+            lookup_email = current_email.lower().strip()
+            cur_find.execute("SELECT id, email, name FROM clients WHERE LOWER(email) = %s", (lookup_email,))
             client = cur_find.fetchone()
             
             # If still not found, check legacy users table and promote to clients
             if not client:
-                cur_find.execute("SELECT name FROM users WHERE LOWER(email) = %s", (current_email.lower().strip(),))
+                cur_find.execute("SELECT name FROM users WHERE LOWER(email) = %s", (lookup_email,))
                 legacy_user = cur_find.fetchone()
                 # Auto-create Client record so persistence works
                 new_id = str(uuid.uuid4())
@@ -174,19 +177,32 @@ async def upload_csv(
         symbols = []
         
         ensure_required_tables(conn)
+        # Ensure IDs are valid UUID strings for the database
+        clean_client_id = str(client_id).strip()
+        
         for _, row in df.iterrows():
             sym = str(row[symbol_col]).upper().strip()
             if not sym or sym == 'NAN': continue
-            qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
-            cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
+            
+            # Use safe numeric conversions
+            qty = 0.0
+            try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
+            except: pass
+            
+            cost = 0.0
+            try: cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
+            except: pass
+            
             symbols.append(sym)
             raw_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
+            
+            # Explicitly cast to UUID in SQL for maximum compatibility
             cur.execute("""
                 INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (gen_random_uuid(), %s::uuid, %s, %s, %s)
                 ON CONFLICT (client_id, symbol) 
                 DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
-            """, (str(uuid.uuid4()), client_id, sym, qty, cost))
+            """, (clean_client_id, sym, qty, cost))
 
         conn.commit()
 

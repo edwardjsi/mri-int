@@ -361,9 +361,14 @@ def send_signal_emails():
                     "UPDATE client_signals SET email_sent = true WHERE client_id = %s AND date = %s",
                     (client_id, latest_date),
                 )
+        except ClientError as e:
+            status_val = "FAILED"
+            code = (e.response or {}).get("Error", {}).get("Code", "ClientError")
+            msg = (e.response or {}).get("Error", {}).get("Message", str(e))
+            logger.error(f"  ❌ Failed to send to {email} ({code}): {msg}")
         except Exception as e:
             status_val = "FAILED"
-            logger.error(f"  ❌ Failed to send to {email}: {e}")
+            logger.error(f"  ❌ Failed to send to {email}: {str(e)}")
 
         # 5. Log the email attempt
         cur.execute("""
