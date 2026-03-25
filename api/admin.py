@@ -49,10 +49,14 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
         cur.execute("SELECT COUNT(DISTINCT client_id) FROM client_external_holdings")
         active_portfolios = cur.fetchone()[0]
 
+        cur.execute("SELECT MAX(date) FROM daily_prices")
+        last_ingestion = cur.fetchone()[0]
+
         return {
             "total_users": total_users,
             "active_watchlists": active_watchlists,
-            "active_portfolios": active_portfolios
+            "active_portfolios": active_portfolios,
+            "last_ingestion": str(last_ingestion) if last_ingestion else None
         }
     except Exception as e:
         logger.error(f"METRICS ERROR: {e}")

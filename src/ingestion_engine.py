@@ -104,21 +104,26 @@ def load_stocks(symbols: list, period: str = None):
 
         tickers = [get_ticker(s) for s in batch]
         
-        if period:
-            logger.info(f"  Forcing {period} bulk download...")
+        raw_data = pd.DataFrame()
+        for attempt in range(3):
             try:
-                raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+                if period:
+                    logger.info(f"  Forcing {period} bulk download (Attempt {attempt+1})...")
+                    raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+                else:
+                    start_date = get_last_date("daily_prices")
+                    logger.info(f"  Incremental download from {start_date} (Attempt {attempt+1})...")
+                    raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
+                
+                if not raw_data.empty:
+                    break
             except Exception as e:
-                logger.error(f"  Batch download failed: {e}")
-                continue
-        else:
-            start_date = get_last_date("daily_prices")
-            logger.info(f"  Incremental download from {start_date}...")
-            try:
-                raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
-            except Exception as e:
-                logger.error(f"  Batch download failed: {e}")
-                continue
+                logger.error(f"  Batch download attempt {attempt+1} failed: {e}")
+                if attempt < 2: time.sleep(5)
+        
+        if raw_data.empty:
+            logger.error(f"  ❌ Batch {i//batch_size + 1} failed after all retries.")
+            continue
         
         all_records = []
         failed_symbols = []

@@ -44,41 +44,38 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     is_dict_sym = isinstance(rows[0], dict)
     symbols = [row["symbol"] if is_dict_sym else row[0] for row in rows]
     
-    # Fetch latest scores and prices for these symbols
+    # Fetch latest scores and prices (using LEFT JOIN so we don't lose new symbols)
     cur.execute("""
-        WITH latest_scores AS (
-            SELECT ss.symbol, ss.score, ss.date,
-                   dp.close as current_price,
-                   CASE 
-                     WHEN dp.close > dp.ema_200 THEN 'BULL'
-                     WHEN dp.close < dp.ema_200 THEN 'BEAR'
-                     ELSE 'NEUTRAL'
-                   END as trend_alignment
-            FROM stock_scores ss
-            JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
-            WHERE ss.symbol = ANY(%s)
-            AND ss.date = (SELECT MAX(date) FROM stock_scores WHERE symbol = ss.symbol)
-        )
-        SELECT * FROM latest_scores
-    """, (symbols,))
+        SELECT 
+            cw.symbol,
+            ss.score,
+            dp.close as current_price,
+            CASE 
+                WHEN dp.close > dp.ema_200 THEN 'BULL'
+                WHEN dp.close < dp.ema_200 THEN 'BEAR'
+                ELSE 'NEUTRAL'
+            END as trend_alignment
+        FROM client_watchlist cw
+        LEFT JOIN (
+            SELECT symbol, score, date FROM stock_scores s1
+            WHERE date = (SELECT MAX(date) FROM stock_scores WHERE symbol = s1.symbol)
+        ) ss ON ss.symbol = cw.symbol
+        LEFT JOIN daily_prices dp ON dp.symbol = cw.symbol AND dp.date = ss.date
+        WHERE cw.client_id = %s
+    """, (str(client["id"]),))
     
     data = cur.fetchall()
     cur.close()
     
     results = []
-    is_dict_data = not data or isinstance(data[0], dict)
-    data_map = {}
+    # RealDictCursor check
     for row in data:
-        sym = row["symbol"] if is_dict_data else row[0]
-        data_map[sym] = row
-    
-    for symbol in symbols:
-        row = data_map.get(symbol)
+        sym = row["symbol"] if isinstance(row, dict) else row[0]
         results.append(WatchlistItem(
-            symbol=symbol,
-            price=float(row["current_price"] if is_dict_data else row[3]) if row and (row["current_price"] if is_dict_data else row[3]) else None,
-            score=row["score"] if is_dict_data else row[1],
-            trend_alignment=row["trend_alignment"] if is_dict_data else row[4] if row else None
+            symbol=sym,
+            price=float(row["current_price"]) if isinstance(row, dict) and row["current_price"] else float(row[2]) if not isinstance(row, dict) and len(row) > 2 and row[2] else None,
+            score=row["score"] if isinstance(row, dict) else row[1] if not isinstance(row, dict) and len(row) > 1 else None,
+            trend_alignment=row["trend_alignment"] if isinstance(row, dict) else row[3] if not isinstance(row, dict) and len(row) > 3 else None
         ))
         
     return results

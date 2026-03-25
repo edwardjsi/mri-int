@@ -129,40 +129,52 @@ def create_tables():
 
 def insert_daily_prices(records):
     """Bulk insert price records. Skips duplicates."""
+    if not records: return
     conn = get_connection()
-    cur = conn.cursor()
-
-    sql = """
-        INSERT INTO daily_prices
-            (symbol, date, open, high, low, close, adjusted_close, volume)
-        VALUES
-            (%(symbol)s, %(date)s, %(open)s, %(high)s,
-             %(low)s, %(close)s, %(adjusted_close)s, %(volume)s)
-        ON CONFLICT (symbol, date) DO NOTHING;
-    """
-    execute_batch(cur, sql, records, page_size=1000)
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        cur = conn.cursor()
+        sql = """
+            INSERT INTO daily_prices
+                (symbol, date, open, high, low, close, adjusted_close, volume)
+            VALUES
+                (%(symbol)s, %(date)s, %(open)s, %(high)s,
+                 %(low)s, %(close)s, %(adjusted_close)s, %(volume)s)
+            ON CONFLICT (symbol, date) DO NOTHING;
+        """
+        execute_batch(cur, sql, records, page_size=1000)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Error inserting daily prices: {e}")
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def insert_index_prices(records):
     """Bulk insert index price records. Skips duplicates."""
+    if not records: return
     conn = get_connection()
-    cur = conn.cursor()
-
-    sql = """
-        INSERT INTO index_prices
-            (symbol, date, open, high, low, close, volume)
-        VALUES
-            (%(symbol)s, %(date)s, %(open)s, %(high)s,
-             %(low)s, %(close)s, %(volume)s)
-        ON CONFLICT (symbol, date) DO NOTHING;
-    """
-    execute_batch(cur, sql, records, page_size=1000)
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        cur = conn.cursor()
+        sql = """
+            INSERT INTO index_prices
+                (symbol, date, open, high, low, close, volume)
+            VALUES
+                (%(symbol)s, %(date)s, %(open)s, %(high)s,
+                 %(low)s, %(close)s, %(volume)s)
+            ON CONFLICT (symbol, date) DO NOTHING;
+        """
+        execute_batch(cur, sql, records, page_size=1000)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Error inserting index prices: {e}")
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def run_quality_checks():

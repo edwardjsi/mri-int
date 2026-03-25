@@ -168,7 +168,16 @@ But yes, if you plan to share that mri-frontend.onrender.com link publicly on Tw
 - [x] API ensures client_external_holdings exists before save/load/delete (prevents "upload succeeded but holdings not visible" issues on Neon/Render).
 
 - [x] API + frontend now report verified persisted holdings counts and expose `GET /api/portfolio-review/holdings-status` for diagnostics (2026-03-13).
-- [x] Risk Audit UI shows a "Storage Status" box (database + client_id + holdings_count) for fast environment mismatch debugging (2026-03-13).
+- [x] Risk Audit UI shows a "Storage Status" box (database + client_id + holdings_count) for
+## 2026-03-25: Stability & Persistence Overhaul
+-   **Identity Fix**: Resolved NameError and identity resolution for Admin/Legacy users, ensuring persistent portfolio data.
+-   **DB Health**: Fixed connection leaks in `src/db.py` with strict `try/finally` blocks to prevent ingestion crashes.
+-   **Retries**: Added 3-attempt automated retry to the data pipeline for resilient downloads.
+-   **Watchlist**: Implemented `LEFT JOIN` logic to ensure new symbols appear even if not yet scored.
+-   **Monitoring**: Added real-time "Last Market Data" health indicator to the Admin Dashboard.
+-   **Mobile UX**: Integrated functional logout to the mobile navigation bar.
+
+# Past Achievements mismatch debugging (2026-03-13).
 - [x] Fixed `holdings-status` error `"0"` by using dict-safe cursor access for COUNT(*) on RealDictCursor connections (2026-03-13).
 - [x] `GET /api/portfolio-review/holdings` no longer throws 500 if analysis tables are missing; it returns saved holdings with `analysis_error` (2026-03-13).
 - [x] Added delete-all Digital Twin holdings endpoint + UI control to reset a saved portfolio (2026-03-13).

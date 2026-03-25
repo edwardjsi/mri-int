@@ -64,6 +64,15 @@ export default function AdminDashboard() {
           <div className="stat-label">Active Digital Twins</div>
           <div className="stat-value">{metrics?.active_portfolios}</div>
         </div>
+        <div className={`stat-card ${metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? 'status-critical' : ''}`}>
+          <div className="stat-label">Last Market Data</div>
+          <div className="stat-value" style={{ fontSize: '1.2rem' }}>
+            {metrics?.last_ingestion ? new Date(metrics.last_ingestion).toLocaleDateString() : 'Never'}
+          </div>
+          <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>
+            {metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? '⚠️ Outdated' : '✅ Up to date'}
+          </div>
+        </div>
       </div>
 
       <div className="admin-grids" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
