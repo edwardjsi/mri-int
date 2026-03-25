@@ -50,8 +50,17 @@ def create_tables():
             adjusted_close  NUMERIC(12,4),
             volume          BIGINT,
             created_at      TIMESTAMP DEFAULT NOW(),
+            updated_at      TIMESTAMP DEFAULT NOW(),
             UNIQUE(symbol, date)
         );
+
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                           WHERE table_name='daily_prices' AND column_name='updated_at') THEN 
+                ALTER TABLE daily_prices ADD COLUMN updated_at TIMESTAMP DEFAULT NOW(); 
+            END IF; 
+        END $$;
 
         CREATE INDEX IF NOT EXISTS idx_daily_prices_symbol_date
             ON daily_prices(symbol, date);
