@@ -104,12 +104,17 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
         
     cur = conn.cursor()
     try:
+        # Check if it already exists to avoid unique constraint error
+        cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol))
+        if cur.fetchone():
+            return {"message": f"{symbol} already in watchlist"}
+
         cur.execute(
-            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s) ON CONFLICT (client_id, symbol) DO NOTHING",
+            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s)",
             (str(client["id"]), symbol)
         )
         conn.commit()
-        # Trigger background data sync
+        # Trigger background data sync (this makes sure RELIANCE is fetched if missing)
         background_tasks.add_task(ingest_missing_symbols_sync, [symbol], 'admin', client["email"])
     except Exception as e:
         conn.rollback()

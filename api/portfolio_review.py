@@ -132,12 +132,12 @@ async def upload_csv(
 
         if not client:
             cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur_find.execute("SELECT id, email, name FROM clients WHERE email = %s", (current_email,))
+            cur_find.execute("SELECT id, email, name FROM clients WHERE LOWER(email) = %s", (current_email.lower().strip(),))
             client = cur_find.fetchone()
             
             # If still not found, check legacy users table and promote to clients
             if not client:
-                cur_find.execute("SELECT name FROM users WHERE email = %s", (current_email,))
+                cur_find.execute("SELECT name FROM users WHERE LOWER(email) = %s", (current_email.lower().strip(),))
                 legacy_user = cur_find.fetchone()
                 # Auto-create Client record so persistence works
                 new_id = str(uuid.uuid4())

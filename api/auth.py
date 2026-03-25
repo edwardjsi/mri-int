@@ -90,9 +90,11 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
 def login(req: LoginRequest, conn=Depends(get_db)):
     try:
         cur = conn.cursor()
+        # Case-insensitive email lookup to prevent duplicate IDs
+        clean_email = req.email.strip().lower()
         cur.execute(
-            "SELECT id, name, password_hash, is_active, is_admin FROM clients WHERE email = %s",
-            (req.email.strip(),),
+            "SELECT id, name, password_hash, is_active, is_admin FROM clients WHERE LOWER(email) = %s",
+            (clean_email,),
         )
         client = cur.fetchone()
 
