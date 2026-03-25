@@ -111,7 +111,10 @@ def load_stocks(symbols: list, period: str = None):
                     logger.info(f"  Forcing {period} bulk download (Attempt {attempt+1})...")
                     raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
                 else:
-                    start_date = get_last_date("daily_prices")
+                    # AGGRESSIVE CATCH-UP: 7 days back to ensure we bridge weekends and missing days
+                    last_date_raw = get_last_date("daily_prices")
+                    start_dt = datetime.strptime(last_date_raw, "%Y-%m-%d") - timedelta(days=7)
+                    start_date = start_dt.strftime("%Y-%m-%d")
                     logger.info(f"  Incremental download from {start_date} (Attempt {attempt+1})...")
                     raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True)
                 
