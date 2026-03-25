@@ -131,9 +131,9 @@ async def upload_csv(
         df = pd.read_csv(io.StringIO(contents.decode('utf-8', errors='ignore')))
         df.columns = [c.lower().strip() for c in df.columns]
         
-        symbol_col = next((c for c in df.columns if any(k in c for k in ['symbol', 'ticker', 'instrument'])), None)
-        qty_col = next((c for c in df.columns if any(k in c for k in ['quantity', 'qty', 'shares'])), None)
-        cost_col = next((c for c in df.columns if any(k in c for k in ['avg_cost', 'cost', 'buy_price', 'price'])), None)
+        symbol_col = next((c for c in df.columns if c in ('symbol', 'ticker', 'instrument', 'stock', 'isin')), None)
+        qty_col = next((c for c in df.columns if c in ('quantity', 'shares', 'qty', 'qty.')), None)
+        cost_col = next((c for c in df.columns if c in ('avg_cost', 'avg cost', 'cost', 'avg_buy_price', 'avg. cost', 'average price', 'buy price')), None)
         
         if not symbol_col:
             raise HTTPException(status_code=400, detail="No symbol column found.")
