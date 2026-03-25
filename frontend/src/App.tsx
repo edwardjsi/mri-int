@@ -1027,18 +1027,30 @@ function RiskAuditPage() {
     setError('');
     try {
       const data = await api.uploadPortfolioCsv(file);
-      setResult(data);
+
+      // ── Immediately show analysis if the server returned it ──
+      if (data?.analysis) {
+        setResult(data.analysis);
+      }
+
       await loadSavedHoldings();
       await loadHoldingsStatus();
+
+      const persisted = (data?.digital_twin_row_count !== undefined && data?.digital_twin_row_count !== null)
+        ? ` (Saved: ${data.digital_twin_row_count} holdings)` : '';
+
+      const pending = data?.pending_symbols?.length > 0
+        ? `\n\n⏳ ${data.pending_symbols.length} unknown symbol(s) queued for scoring: ${data.pending_symbols.slice(0,5).join(', ')}${data.pending_symbols.length > 5 ? '...' : ''}. Scores will appear after the next pipeline run.`
+        : '';
+
       if (data?.digital_twin_saved) {
-        const persisted = (data?.digital_twin_row_count !== undefined && data?.digital_twin_row_count !== null) ? ` (Persisted: ${data.digital_twin_row_count})` : '';
-        alert(`Portfolio uploaded and analyzed! Holdings have been saved to your Digital Twin.${persisted}`);
+        alert(`✅ Portfolio uploaded and analysed!${persisted}${pending}`);
       } else {
         const extra = data?.digital_twin_error ? `\n\nSave failed: ${data.digital_twin_error}` : '';
-        alert(`Portfolio uploaded and analyzed, but could not save holdings to your Digital Twin.${extra}`);
+        alert(`Portfolio uploaded and analysed, but could not save holdings to your Digital Twin.${extra}${pending}`);
       }
     } catch (err: any) {
-      setError(err.message === 'Failed to fetch' 
+      setError(err.message === 'Failed to fetch'
         ? '⚠️ Connection Failed: Please ensure you have "Clear Cache & Re-deployed" on Render and your VITE_API_URL is correct.'
         : (err.message || 'Failed to analyze portfolio'));
     } finally {
@@ -1521,13 +1533,17 @@ function WatchlistPage() {
               if (!file) return;
               try {
                 setLoading(true);
-                await api.uploadWatchlistCsv(file);
-                alert('Watchlist updated from CSV');
+                const result = await api.uploadWatchlistCsv(file);
+                const added = result?.total_processed ?? result?.added ?? '?';
+                const msg = result?.message || 'Watchlist updated from CSV';
+                alert(`✅ ${msg} (${added} symbols processed)`);
                 loadWatchlist();
               } catch (err: any) {
                 alert(err.message || 'Upload failed');
               } finally {
                 setLoading(false);
+                // Reset input so same file can be re-uploaded
+                e.target.value = '';
               }
             }}
             style={{ display: 'none' }}

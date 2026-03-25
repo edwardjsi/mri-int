@@ -143,6 +143,7 @@ async def upload_csv(
             cur.execute("SELECT id, name FROM clients WHERE email = %s", (final_email,))
             client = cur.fetchone()
         
+        raw_holdings = []
         symbols = []
         if client:
             client_id = client["id"]
@@ -153,6 +154,7 @@ async def upload_csv(
                 qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
                 cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
                 symbols.append(sym)
+                raw_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
                 cur.execute("""
                     INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
                     VALUES (%s, %s, %s, %s, %s)
@@ -166,23 +168,55 @@ async def upload_csv(
                     sym = str(row[symbol_col]).upper().strip()
                     if not sym or sym == 'NAN': continue
                     symbols.append(sym)
+                    raw_holdings.append({"symbol": sym, "quantity": 0, "avg_cost": 0})
                     cur.execute("INSERT INTO holdings (email, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING", (final_email, sym))
             except Exception:
                 conn.rollback()
                 raise HTTPException(status_code=400, detail="Account not found.")
 
         conn.commit()
+
+        # ── Synchronous analysis for symbols already in stock_scores ──
+        known_symbols = []
+        unknown_symbols = []
+        if symbols:
+            unique_syms = list(set(symbols))
+            placeholders = ','.join(['%s'] * len(unique_syms))
+            cur.execute(
+                f"SELECT DISTINCT symbol FROM stock_scores WHERE symbol IN ({placeholders})",
+                unique_syms
+            )
+            scored_set = {r[0] if not isinstance(r, dict) else r['symbol'] for r in cur.fetchall()}
+            for sym in unique_syms:
+                (known_symbols if sym in scored_set else unknown_symbols).append(sym)
+
+        analysis = None
+        if raw_holdings:
+            try:
+                from src.portfolio_review_engine import analyze_portfolio
+                analysis = analyze_portfolio(raw_holdings, conn=conn)
+            except Exception as e:
+                logger.warning(f"Sync analysis failed (non-fatal): {e}")
+                conn.rollback()
+
         cur.close()
 
-        if symbols:
-            background_tasks.add_task(ingest_missing_symbols_sync, list(set(symbols)), 'admin', final_email)
-            
-        return {
-            "status": "success", 
+        # ── Background ingest only for truly unknown symbols ──
+        if unknown_symbols:
+            background_tasks.add_task(ingest_missing_symbols_sync, unknown_symbols, 'admin', final_email)
+
+        resp = {
+            "status": "success",
             "message": f"Synced {len(set(symbols))} symbols",
             "digital_twin_saved": True,
-            "digital_twin_row_count": len(set(symbols))
+            "digital_twin_row_count": len(set(symbols)),
+            "pending_symbols": unknown_symbols,
         }
+        if analysis:
+            resp["analysis"] = analysis
+
+        return resp
+
     except HTTPException:
         raise
     except Exception as e:

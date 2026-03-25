@@ -36,13 +36,20 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
 
     regime_color = {"BULL": "#22c55e", "BEAR": "#ef4444", "NEUTRAL": "#f59e0b"}.get(regime, "#6b7280")
 
+    def _score_label(score):
+        """Return grade badge string for a 0-100 MRI score."""
+        s = score or 0
+        if s >= 80: return f'<span style="color:#22c55e;font-weight:700">🟢 {s}/100</span>'
+        if s >= 40: return f'<span style="color:#f59e0b;font-weight:700">🟡 {s}/100</span>'
+        return f'<span style="color:#ef4444;font-weight:700">🔴 {s}/100</span>'
+
     buy_rows = ""
     for s in buy_signals:
         buy_rows += f"""
         <tr>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{s['symbol']}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{s['recommended_price']:,.2f}</td>
-            <td style="padding:8px;border-bottom:1px solid #e5e7eb">{s['score']}/5</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb">{_score_label(s['score'])}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280">{s['reason']}</td>
         </tr>"""
 
@@ -52,7 +59,7 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
         <tr>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{s['symbol']}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{s['recommended_price']:,.2f}</td>
-            <td style="padding:8px;border-bottom:1px solid #e5e7eb">{s['score']}/5</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb">{_score_label(s['score'])}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280">{s['reason']}</td>
         </tr>"""
 
@@ -109,14 +116,18 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
                 <tr style="background:#eff6ff">
                     <th style="padding:8px;text-align:left">Symbol</th>
                     <th style="padding:8px;text-align:left">MRI Score</th>
+                    <th style="padding:8px;text-align:left">Grade</th>
                     <th style="padding:8px;text-align:left">Regime</th>
                 </tr>"""
         for h in holdings:
-            score_color = "#22c55e" if (h['total_score'] or 0) >= 70 else ("#f59e0b" if (h['total_score'] or 0) >= 40 else "#ef4444")
+            sc = h['total_score'] or 0
+            grade = '🟢 Strong' if sc >= 80 else ('🟡 Neutral' if sc >= 40 else '🔴 Weak')
+            score_color = '#22c55e' if sc >= 80 else ('#f59e0b' if sc >= 40 else '#ef4444')
             html += f"""
                 <tr>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{h['symbol']}</td>
-                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{h['total_score'] or 0}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{sc}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">{grade}</td>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb">{regime}</td>
                 </tr>"""
         html += "</table>"
@@ -129,14 +140,18 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
                 <tr style="background:#f5f3ff">
                     <th style="padding:8px;text-align:left">Symbol</th>
                     <th style="padding:8px;text-align:left">MRI Score</th>
-                    <th style="padding:8px;text-align:left">Alignment</th>
+                    <th style="padding:8px;text-align:left">Grade</th>
+                    <th style="padding:8px;text-align:left">Trend</th>
                 </tr>"""
         for w in watchlist:
-            score_color = "#22c55e" if (w['total_score'] or 0) >= 70 else ("#f59e0b" if (w['total_score'] or 0) >= 40 else "#ef4444")
+            sc = w['total_score'] or 0
+            grade = '🟢 Strong' if sc >= 80 else ('🟡 Neutral' if sc >= 40 else '🔴 Weak')
+            score_color = '#22c55e' if sc >= 80 else ('#f59e0b' if sc >= 40 else '#ef4444')
             html += f"""
                 <tr>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{w['symbol']}</td>
-                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{w['total_score'] or 0}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{sc}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">{grade}</td>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb">{regime}</td>
                 </tr>"""
         html += "</table>"
