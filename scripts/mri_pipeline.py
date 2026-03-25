@@ -10,11 +10,11 @@ import numpy as np
 import requests
 import io
 from datetime import datetime
+from typing import List, Tuple
 
 # Add parent directory to sys.path to find src module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.ingestion_engine import sync_universe
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,211 +22,156 @@ logging.basicConfig(
 )
 logger = logging.getLogger("pipeline")
 
-def get_full_symbol_list():
+def get_full_symbol_list() -> Tuple[List[str], List[dict]]:
     """
     Fetches Nifty 500, User-tracked holdings, and unique BSE Group A stocks.
     Deduplicates using ISIN where possible.
     """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
     
     # 1. Fetch Nifty 500 (NSE)
     logger.info("Fetching Nifty 500 list...")
-    n500_url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
+    n500_symbols = []
+    n500_isins = set()
+    n500_df = pd.DataFrame()
     try:
+        n500_url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
         n500_res = requests.get(n500_url, headers=headers, timeout=30)
-        n500_res.raise_for_status()
         n500_df = pd.read_csv(io.StringIO(n500_res.text))
         n500_symbols = n500_df["Symbol"].dropna().unique().tolist()
         n500_isins = set(n500_df["ISIN Code"].dropna().unique().tolist())
         logger.info(f"  Fetched {len(n500_symbols)} Nifty 500 symbols")
     except Exception as e:
         logger.error(f"  ❌ Failed to fetch Nifty 500: {e}")
-        # FALLBACK: If external list fails, get everything already in our universe table
-        try:
-             from src.db import get_connection
-             conn_fb = get_connection()
-             cur_fb = conn_fb.cursor()
-             cur_fb.execute("SELECT DISTINCT symbol FROM universe")
-             n500_symbols = [r[0] for r in cur_fb.fetchall()]
-             cur_fb.close()
-             conn_fb.close()
-             logger.info(f"  ⚠️ FALLBACK: Using {len(n500_symbols)} symbols from DB universe")
-        except:
-             n500_symbols = []
-        n500_isins = set()
-        n500_df = pd.DataFrame()
 
-    # 2. Fetch User-tracked symbols (Digital Twin + Watchlist)
+    # 2. Fetch User-tracked symbols
     from src.db import get_connection
     user_symbols = []
     try:
         conn = get_connection()
         cur = conn.cursor()
-        
-        # Get from Digital Twin holdings
         cur.execute("SELECT DISTINCT symbol FROM client_external_holdings")
         holdings = [row[0] for row in cur.fetchall()]
-        
-        # Get from Watchlist
         cur.execute("SELECT DISTINCT symbol FROM client_watchlist")
         watchlist = [row[0] for row in cur.fetchall()]
-        
         user_symbols = list(set(holdings + watchlist))
         cur.close()
         conn.close()
-        logger.info(f"  Fetched {len(user_symbols)} user-specific symbols (Holdings: {len(holdings)}, Watchlist: {len(watchlist)})")
+        logger.info(f"  Fetched {len(user_symbols)} user-specific symbols")
     except Exception as e:
         logger.warning(f"  ⚠️ Could not fetch user symbols: {e}")
 
-    # 3. Fetch BSE List (to identify BSE-only Group A)
+    # 3. Fetch BSE List (Resilient Headers)
     logger.info("Fetching BSE List of Companies...")
-    bse_url = "https://www.bseindia.com/downloads1/List_of_companies.csv"
     bse_only_symbols = []
-    bse_df = pd.DataFrame()
+    sector_records = []
     try:
+        bse_url = "https://www.bseindia.com/downloads1/List_of_companies.csv"
         bse_res = requests.get(bse_url, headers=headers, timeout=30)
         if bse_res.status_code == 200:
             bse_df = pd.read_csv(io.StringIO(bse_res.text))
             
-            # Find relevant columns safely
+            # WISE SCAN: Never use [0] indices
             isin_col = next((c for c in bse_df.columns if 'ISIN' in str(c).upper()), None)
             group_col = next((c for c in bse_df.columns if 'GROUP' in str(c).upper()), None)
             sym_col = next((c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()), None)
+            name_col = next((c for c in bse_df.columns if 'SECURITY NAME' in str(c).upper() or 'SHORT NAME' in str(c).upper()), None)
+            ind_col = next((c for c in bse_df.columns if 'INDUSTRY' in str(c).upper()), None)
             
-            if not isin_col or not group_col or not sym_col:
-                logger.warning(f"  ⚠️ BSE CSV structure unrecognized. Columns: {list(bse_df.columns)}")
-                bse_only_symbols = []
-            else:
-                # Filter for Group A that are NOT in Nifty 500 by ISIN
+            if isin_col and group_col and sym_col:
                 group_a = bse_df[bse_df[group_col].astype(str).str.strip() == 'A']
                 bse_only = group_a[~group_a[isin_col].astype(str).str.strip().isin(n500_isins)]
                 bse_only_symbols = bse_only[sym_col].dropna().unique().tolist()
+                
+                # Build sectors mapping for the DB
+                if name_col:
+                    cols = [sym_col, name_col]
+                    if ind_col: cols.append(ind_col)
+                    bse_mapped = bse_only[cols].copy().rename(columns={sym_col: 'Symbol', name_col: 'Company Name'})
+                    if ind_col: bse_mapped = bse_mapped.rename(columns={ind_col: 'Industry'})
+                    else: bse_mapped['Industry'] = 'BSE Stocks'
+                    sector_records.extend(bse_mapped.to_dict('records'))
+                
                 logger.info(f"  Identified {len(bse_only_symbols)} unique BSE-only Group A stocks")
-        else:
-            logger.warning(f"  ⚠️ BSE List fetch returned {bse_res.status_code}. Skipping BSE expansion.")
     except Exception as e:
-        logger.warning(f"  ⚠️ BSE List fetch failed: {str(e)}. Skipping BSE expansion.")
+        logger.warning(f"  ⚠️ BSE Expansion bypassed: {e}")
 
-        # 5. Merge and Deduplicate
+    # 4. Final Merge & Blacklist
     all_symbols = list(set(n500_symbols + user_symbols + bse_only_symbols))
-    logger.info(f"Total unified symbols for ingestion: {len(all_symbols)}")
+    blacklist = {"ONEGLOBAL", "FRONTSP", "ONEGLOBAL.NS", "FRONTSP.NS"}
+    all_symbols = [s for s in all_symbols if s.upper().strip() not in blacklist]
     
-    # 6. Build unified sector map
-    sector_records = []
+    # Add NSE sectors
     if not n500_df.empty:
-        n500_records = n500_df[["Symbol", "Company Name", "Industry"]].dropna().to_dict("records")
-        sector_records.extend(n500_records)
-    
-    if bse_only_symbols and 'bse_df' in locals():
-        # Map BSE columns to NSE-style keys for the DB (using resilient lookup)
-        bse_sym_col = next((c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()), None)
-        bse_name_col = next((c for c in bse_df.columns if 'SECURITY NAME' in str(c).upper() or 'SHORT NAME' in str(c).upper()), None)
-        bse_ind_col = next((c for c in bse_df.columns if 'INDUSTRY' in str(c).upper()), None)
-        
-        # Guard against missing columns
-        if bse_sym_col and bse_name_col:
-            columns_to_grab = [bse_sym_col, bse_name_col]
-            if bse_ind_col: columns_to_grab.append(bse_ind_col)
-            
-            bse_mapped = bse_only[columns_to_grab].copy()
-            bse_mapped = bse_mapped.rename(columns={
-                bse_sym_col: 'Symbol',
-                bse_name_col: 'Company Name'
-            })
-        if bse_ind_col:
-            bse_mapped = bse_mapped.rename(columns={bse_ind_col: 'Industry'})
-        else:
-            bse_mapped['Industry'] = 'BSE Stocks'
-            
-        sector_records.extend(bse_mapped.dropna(subset=['Symbol']).to_dict("records"))
+        nse_sectors = n500_df[["Symbol", "Company Name", "Industry"]].dropna().to_dict("records")
+        sector_records.extend(nse_sectors)
 
     return all_symbols, sector_records
 
 def run_pipeline():
-    logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===")
+    logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')} ===")
 
-    # Step 1: Ingest today's data
-    logger.info("[1/5] Ingesting today's market data...")
+    # Step 0: Sync Universe
     try:
-            from src.db import get_connection as get_db_conn
-            from psycopg2.extras import execute_batch as eb
-            
-            sector_conn = get_db_conn()
-            sector_cur = sector_conn.cursor()
-            
-            eb(sector_cur, """
+        sync_universe()
+    except Exception as e:
+        logger.warning(f"Universe sync failed: {e}")
+
+    # Step 1: Ingest Data
+    logger.info("[1/5] Ingesting market data...")
+    try:
+        from src.ingestion_engine import load_indices, load_stocks
+        from src.db import get_connection
+        from psycopg2.extras import execute_batch
+        
+        load_indices()
+        symbols, sector_data = get_full_symbol_list()
+        load_stocks(symbols)
+
+        # Update sector data for dashboard richness
+        if sector_data:
+            conn = get_connection()
+            cur = conn.cursor()
+            execute_batch(cur, """
                 INSERT INTO stock_sectors (symbol, company_name, industry)
                 VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
-                ON CONFLICT (symbol) DO UPDATE
-                SET industry = EXCLUDED.industry, company_name = EXCLUDED.company_name, updated_at = NOW()
-            """, sector_data, page_size=500)
-            
-            sector_conn.commit()
-            sector_cur.close()
-            sector_conn.close()
-            logger.info(f"  ✅ Stock sectors updated ({len(sector_data)} records)")
-
+                ON CONFLICT (symbol) DO UPDATE SET industry = EXCLUDED.industry, updated_at = NOW()
+            """, sector_data)
+            conn.commit()
+            cur.close()
+            conn.close()
     except Exception as e:
-        logger.error(f"  ❌ Data ingestion failed: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
+        logger.error(f"  ❌ Ingestion failed: {e}")
         sys.exit(1)
 
-    # Step 2: Compute indicators
-    logger.info("[2/5] Running Indicator Engine...")
+    # Steps 2-5 (Standard MRI Engine)
     try:
-        from src.indicator_engine import (
-            add_indicator_columns_if_missing,
-            fetch_data,
-            compute_indicators,
-            update_db_with_indicators,
-        )
+        from src.indicator_engine import add_indicator_columns_if_missing, fetch_data, compute_indicators, update_db_with_indicators
+        from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores
+        from src.signal_generator import run_signal_generator
+        from src.email_service import send_signal_emails
 
+        logger.info("[2/5] Indicators...")
         add_indicator_columns_if_missing()
         data_df, idx_df = fetch_data()
-        updates = compute_indicators(data_df, idx_df)
-        update_db_with_indicators(updates)
-        logger.info("  ✅ Indicators computed")
-    except Exception as e:
-        logger.error(f"  ❌ Indicator engine failed: {e}")
-        sys.exit(1)
+        update_db_with_indicators(compute_indicators(data_df, idx_df))
 
-    # Step 3: Compute regime + scores
-    logger.info("[3/5] Running Regime Engine...")
-    try:
-        from src.regime_engine import create_market_regime_and_scores_tables, compute_market_regime, compute_stock_scores
-
+        logger.info("[3/5] Regime & Scores...")
         create_market_regime_and_scores_tables()
         compute_market_regime()
         compute_stock_scores()
-        logger.info("  ✅ Regime and scores computed")
-    except Exception as e:
-        logger.error(f"  ❌ Regime engine failed: {e}")
-        sys.exit(1)
 
-    # Step 4: Generate client signals
-    logger.info("[4/5] Generating client signals...")
-    try:
-        from src.signal_generator import run_signal_generator
+        logger.info("[4/5] Signals...")
         run_signal_generator()
-        logger.info("  ✅ Signals generated")
+
+        logger.info("[5/5] Emails...")
+        send_signal_emails()
+        
     except Exception as e:
-        logger.error(f"  ❌ Signal generation failed: {e}")
+        logger.error(f"  ❌ Engine failed: {e}")
         sys.exit(1)
 
-    # Step 5: Send email notifications
-    logger.info("[5/5] Sending signal emails via SES...")
-    try:
-        from src.email_service import send_signal_emails
-        send_signal_emails()
-        logger.info("  ✅ Emails sent")
-    except Exception as e:
-        logger.error(f"  ❌ Email sending failed: {e}")
-
-    logger.info(f"=== Pipeline Complete — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===")
+    logger.info("=== Pipeline Complete ===")
 
 if __name__ == "__main__":
     run_pipeline()
