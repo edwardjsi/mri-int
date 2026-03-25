@@ -80,13 +80,21 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data?.top_watched.map((s, i) => (
-                  <tr key={s.symbol}>
-                    <td>#{i + 1}</td>
-                    <td className="font-bold">{s.symbol}</td>
-                    <td>{s.count} users</td>
+                {data?.top_watched && data.top_watched.length > 0 ? (
+                  data.top_watched.map((s, i) => (
+                    <tr key={s.symbol}>
+                      <td>#{i + 1}</td>
+                      <td className="font-bold">{s.symbol}</td>
+                      <td>{s.count} users</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="empty-state" style={{ padding: '2rem' }}>
+                      There are no stocks in user watchlists to track here right now. When users add, they will be displayed.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -106,14 +114,22 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data?.top_held.map((s, i) => (
-                  <tr key={s.symbol}>
-                    <td>#{i + 1}</td>
-                    <td className="font-bold">{s.symbol}</td>
-                    <td>{s.count} users</td>
-                    <td>{Number(s.total_shares).toLocaleString()}</td>
+                {data?.top_held && data.top_held.length > 0 ? (
+                  data.top_held.map((s, i) => (
+                    <tr key={s.symbol}>
+                      <td>#{i + 1}</td>
+                      <td className="font-bold">{s.symbol}</td>
+                      <td>{s.count} users</td>
+                      <td>{Number(s.total_shares).toLocaleString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="empty-state" style={{ padding: '2rem' }}>
+                      There are no stocks in user portfolios to track here right now. When users add, they will be displayed.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

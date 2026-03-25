@@ -124,9 +124,33 @@ async def upload_csv(
         final_email = client["email"] if client else email
         final_name = client["name"] if client else name
 
-        if not final_email:
-            raise HTTPException(status_code=422, detail="Email is required.")
+        if not client and final_email:
+            cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur_find.execute("SELECT id, email, name FROM clients WHERE email = %s", (final_email,))
+            client = cur_find.fetchone()
+            
+            # If still not found, check legacy users table and promote to clients
+            if not client:
+                cur_find.execute("SELECT name FROM users WHERE email = %s", (final_email,))
+                legacy_user = cur_find.fetchone()
+                # Auto-create Client record so persistence works
+                new_id = str(uuid.uuid4())
+                try:
+                    cur_find.execute(
+                        "INSERT INTO clients (id, email, name, initial_capital) VALUES (%s, %s, %s, 100000) ON CONFLICT DO NOTHING",
+                        (new_id, final_email, legacy_user['name'] if legacy_user else final_name)
+                    )
+                    conn.commit()
+                    cur_find.execute("SELECT id, email, name FROM clients WHERE id = %s", (new_id,))
+                    client = cur_find.fetchone()
+                except Exception:
+                    conn.rollback()
+            cur_find.close()
 
+        if not client:
+             raise HTTPException(status_code=403, detail="Could not identify or create client record for persistence.")
+
+        client_id = client["id"]
         contents = await file.read()
         df = pd.read_csv(io.StringIO(contents.decode('utf-8', errors='ignore')))
         df.columns = [c.lower().strip() for c in df.columns]
@@ -139,40 +163,23 @@ async def upload_csv(
             raise HTTPException(status_code=400, detail="No symbol column found.")
 
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        if not client:
-            cur.execute("SELECT id, name FROM clients WHERE email = %s", (final_email,))
-            client = cur.fetchone()
-        
         raw_holdings = []
         symbols = []
-        if client:
-            client_id = client["id"]
-            ensure_required_tables(conn)
-            for _, row in df.iterrows():
-                sym = str(row[symbol_col]).upper().strip()
-                if not sym or sym == 'NAN': continue
-                qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
-                cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
-                symbols.append(sym)
-                raw_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
-                cur.execute("""
-                    INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (client_id, symbol) 
-                    DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
-                """, (str(uuid.uuid4()), client_id, sym, qty, cost))
-        else:
-            try:
-                cur.execute("INSERT INTO users (email, name) VALUES (%s, %s) ON CONFLICT (email) DO NOTHING", (final_email, final_name))
-                for _, row in df.iterrows():
-                    sym = str(row[symbol_col]).upper().strip()
-                    if not sym or sym == 'NAN': continue
-                    symbols.append(sym)
-                    raw_holdings.append({"symbol": sym, "quantity": 0, "avg_cost": 0})
-                    cur.execute("INSERT INTO holdings (email, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING", (final_email, sym))
-            except Exception:
-                conn.rollback()
-                raise HTTPException(status_code=400, detail="Account not found.")
+        
+        ensure_required_tables(conn)
+        for _, row in df.iterrows():
+            sym = str(row[symbol_col]).upper().strip()
+            if not sym or sym == 'NAN': continue
+            qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
+            cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
+            symbols.append(sym)
+            raw_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
+            cur.execute("""
+                INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (client_id, symbol) 
+                DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
+            """, (str(uuid.uuid4()), client_id, sym, qty, cost))
 
         conn.commit()
 

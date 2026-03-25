@@ -1320,7 +1320,7 @@ function RiskAuditPage() {
 	          </div>
 	        </>
 	      ) : (
-	        <div className="empty-state">No holdings saved yet. Upload a CSV to start your Digital Twin layer.</div>
+	        <div className="empty-state">There are no stocks in your portfolio to track here right now. When you add, it will be displayed.</div>
 	      )}
 	    </section>
 	  );
@@ -1596,9 +1596,7 @@ function WatchlistPage() {
           </table>
         </div>
       ) : (
-        <div className="empty-state">
-          No stocks in your watchlist. Start adding symbols to track their grades daily.
-        </div>
+        <div className="empty-state">There are no stocks in your watchlist to track here right now. When you add, it will be displayed.</div>
       )}
     </div>
   );
@@ -1705,6 +1703,9 @@ function App() {
             <span className="nav-icon">🛡️</span> Admin
           </button>
         )}
+        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }}>
+          <span className="nav-icon">🚪</span> Logout
+        </button>
       </nav>
     </div>
   );
