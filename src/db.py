@@ -139,7 +139,14 @@ def insert_daily_prices(records):
             VALUES
                 (%(symbol)s, %(date)s, %(open)s, %(high)s,
                  %(low)s, %(close)s, %(adjusted_close)s, %(volume)s)
-            ON CONFLICT (symbol, date) DO NOTHING;
+            ON CONFLICT (symbol, date) DO UPDATE SET
+                open = EXCLUDED.open,
+                high = EXCLUDED.high,
+                low = EXCLUDED.low,
+                close = EXCLUDED.close,
+                adjusted_close = EXCLUDED.adjusted_close,
+                volume = EXCLUDED.volume,
+                updated_at = NOW();
         """
         execute_batch(cur, sql, records, page_size=1000)
         conn.commit()
