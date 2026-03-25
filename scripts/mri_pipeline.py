@@ -43,7 +43,18 @@ def get_full_symbol_list():
         logger.info(f"  Fetched {len(n500_symbols)} Nifty 500 symbols")
     except Exception as e:
         logger.error(f"  ❌ Failed to fetch Nifty 500: {e}")
-        n500_symbols = []
+        # FALLBACK: If external list fails, get everything already in our universe table
+        try:
+             from src.db import get_connection
+             conn_fb = get_connection()
+             cur_fb = conn_fb.cursor()
+             cur_fb.execute("SELECT DISTINCT symbol FROM universe")
+             n500_symbols = [r[0] for r in cur_fb.fetchall()]
+             cur_fb.close()
+             conn_fb.close()
+             logger.info(f"  ⚠️ FALLBACK: Using {len(n500_symbols)} symbols from DB universe")
+        except:
+             n500_symbols = []
         n500_isins = set()
         n500_df = pd.DataFrame()
 
