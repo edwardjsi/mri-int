@@ -1131,6 +1131,46 @@ function RiskAuditPage() {
 	  const hasSavedHoldings = !!(savedResult && savedResult.holdings && savedResult.holdings.length > 0);
 	  const canDeleteSavedHoldings = (holdingsStatus?.holdings_count ?? 0) > 0 || hasSavedHoldings;
 
+    // Manual Add States
+    const [manualSym, setManualSym] = useState('');
+    const [manualQty, setManualQty] = useState('');
+    const [manualCost, setManualCost] = useState('');
+    const [manualSuggs, setManualSuggs] = useState<any[]>([]);
+
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (manualSym.length >= 2) {
+                try {
+                    const results = await api.searchStocks(manualSym);
+                    setManualSuggs(results || []);
+                } catch (e) {
+                    setManualSuggs([]);
+                }
+            } else {
+                setManualSuggs([]);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [manualSym]);
+
+    const handleManualAdd = async () => {
+        if (!manualSym || !manualQty || !manualCost) {
+            alert('Please fill out all fields: Symbol, Quantity, and Avg Cost');
+            return;
+        }
+        try {
+            setLoading(true);
+            await api.addHolding(manualSym, parseFloat(manualQty), parseFloat(manualCost));
+            setManualSym(''); setManualQty(''); setManualCost('');
+            loadSavedHoldings();
+            loadHoldingsStatus();
+        } catch (err: any) {
+            alert(err.message || 'Failed to add holding');
+        } finally {
+            setLoading(false);
+        }
+    };
+
 	  const uploadPanel = (
 	    <div className="upload-section animate-fade-in">
 	      <div 
@@ -1146,8 +1186,11 @@ function RiskAuditPage() {
 	            {file ? file.name : 'Click or Drag CSV here'}
 	          </span>
 	          <span className="upload-sub-text">
-	            Supports Zerodha, Groww, and standard portfolio CSVs
+	            Supports Zerodha, Groww, and standard portfolio CSVs.
 	          </span>
+            <div className="info-shelf" style={{ marginTop: '12px', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#64748b' }}>
+               <strong>💡 Required Columns:</strong> <code>symbol</code>, <code>quantity</code>, <code>avg_cost</code>
+            </div>
 	        </div>
 	        <input 
 	          type="file" 
@@ -1453,6 +1496,37 @@ function RiskAuditPage() {
         </div>
 	      )}
 
+        <section className="section" style={{ marginTop: '24px', backgroundColor: '#fdfcfe', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e9d5ff' }}>
+            <h3 className="section-title">✨ Add Core Holding Manually</h3>
+            <p className="section-subtitle">No CSV? No problem. Add your 20+ stocks one-by-one with 100% precision.</p>
+            
+            <div className="manual-entry-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                <div style={{ position: 'relative', flex: 2, minWidth: '200px' }}>
+                    <input 
+                        type="text" placeholder="Symbol (e.g. RELIANCE)" 
+                        value={manualSym} onChange={e => setManualSym(e.target.value)} 
+                        className="form-input" style={{ marginBottom: 0 }}
+                    />
+                    {manualSuggs.length > 0 && (
+                        <div className="autocomplete-dropdown" style={{ 
+                            position: 'absolute', top: '100%', left: 0, right: 0, 
+                            backgroundColor: 'white', border: '1px solid #e2e8f0', 
+                            borderRadius: '8px', zIndex: 1000, marginTop: '4px', maxHeight: '160px', overflowY: 'auto'
+                        }}>
+                            {manualSuggs.map(s => (
+                                <div key={s.symbol} onClick={() => { setManualSym(s.symbol); setManualSuggs([]); }} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ fontWeight: 700 }}>{s.symbol}</span> <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.company_name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <input type="number" placeholder="Qty" value={manualQty} onChange={e => setManualQty(e.target.value)} className="form-input" style={{ flex: 1, marginBottom: 0, minWidth: '80px' }} />
+                <input type="number" placeholder="Avg Cost" value={manualCost} onChange={e => setManualCost(e.target.value)} className="form-input" style={{ flex: 1, marginBottom: 0, minWidth: '100px' }} />
+                <button className="btn-primary" onClick={handleManualAdd} style={{ padding: '8px 20px', whiteSpace: 'nowrap' }}>Add to Portfolio</button>
+            </div>
+        </section>
+
 	      {!hasSavedHoldings && savedHoldingsSection}
 	    </div>
 	  );
@@ -1463,7 +1537,25 @@ function WatchlistPage() {
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newSymbol, setNewSymbol] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [error, setError] = useState('');
+
+  // Search Logic for Autocomplete
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+        if (newSymbol.length >= 2) {
+            try {
+                const results = await api.searchStocks(newSymbol);
+                setSuggestions(results || []);
+            } catch (e) {
+                setSuggestions([]);
+            }
+        } else {
+            setSuggestions([]);
+        }
+    }, 300); // Debounce
+    return () => clearTimeout(timer);
+  }, [newSymbol]);
 
   const loadWatchlist = async () => {
     try {
@@ -1510,16 +1602,41 @@ function WatchlistPage() {
       <h2 className="section-title">Stock Watchlist</h2>
       <p className="section-subtitle">Track custom stocks without owning them. They will be automatically updated in the daily pipeline.</p>
       
+      <div className="info-shelf" style={{ margin: '12px 0', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', fontSize: '0.85rem' }}>
+         <strong>💡 CSV Required Format:</strong> Just a single column named <code>symbol</code> (e.g., RELIANCE, INFOSYS).
+      </div>
+      
       <div className="watchlist-controls" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-        <form onSubmit={handleAdd} className="watchlist-add-form" style={{ flex: 1, display: 'flex', gap: '8px' }}>
+        <form onSubmit={handleAdd} className="watchlist-add-form" style={{ flex: 1, display: 'flex', gap: '8px', position: 'relative' }}>
           <input 
             type="text" 
-            placeholder="Enter Symbol (e.g. RELIANCE)" 
+            placeholder="Type Company or Symbol (e.g. TATA)" 
             value={newSymbol} 
             onChange={e => setNewSymbol(e.target.value)} 
             className="form-input"
             style={{ marginBottom: 0 }}
           />
+          {suggestions.length > 0 && (
+            <div className="autocomplete-dropdown" style={{ 
+                position: 'absolute', top: '100%', left: 0, right: 0, 
+                backgroundColor: 'white', border: '1px solid #e2e8f0', 
+                borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                zIndex: 1000, marginTop: '4px', maxHeight: '200px', overflowY: 'auto'
+            }}>
+                {suggestions.map(s => (
+                    <div 
+                        key={s.symbol} 
+                        onClick={() => { setNewSymbol(s.symbol); setSuggestions([]); }}
+                        style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    >
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>{s.symbol}</span>
+                        <span style={{ marginLeft: '8px', fontSize: '0.85rem', color: '#64748b' }}>{s.company_name}</span>
+                    </div>
+                ))}
+            </div>
+          )}
           <button type="submit" className="btn-primary" style={{ whiteSpace: 'nowrap' }}>Add Stock</button>
         </form>
         
@@ -1576,7 +1693,9 @@ function WatchlistPage() {
                   <td>
                     {item.score !== null ? (
                       <span className="score-badge">{item.score}/100</span>
-                    ) : 'N/A'}
+                    ) : (
+                      <span className="badge-pending">🔄 Tracking...</span>
+                    )}
                   </td>
                   <td>
                     {item.trend_alignment ? (

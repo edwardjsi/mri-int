@@ -1,11 +1,14 @@
 import logging
 import io
 import uuid
+import csv
 import pandas as pd
 import psycopg2.extras
+from typing import Optional, List
+from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+
 from src.db import get_connection
 from src.on_demand_ingest import ingest_missing_symbols_sync
 from api.schema import ensure_required_tables
@@ -50,6 +53,8 @@ async def get_holdings(
                     })
             except Exception:
                 conn.rollback()
+            finally:
+                pass
 
         # Enrich with analysis if we have holdings
         enriched_holdings = []
@@ -59,225 +64,208 @@ async def get_holdings(
                 is_dict_holdings = not holdings_list or isinstance(holdings_list[0], dict)
                 raw_list = []
                 for h in holdings_list:
-                    if is_dict_holdings:
-                        raw_list.append(dict(h))
-                    else:
-                        # Manual conversion for tuple
-                        raw_list.append({
-                            "symbol": h[0],
-                            "quantity": h[1],
-                            "avg_cost": h[2]
-                        })
-                analysis = analyze_portfolio(raw_list, conn=conn)
-                enriched_holdings = analysis.get("holdings", [])
+                    raw_list.append({
+                        "symbol": h["symbol"] if is_dict_holdings else h[0],
+                        "quantity": h["quantity"] if is_dict_holdings else h[1],
+                        "avg_cost": h["avg_cost"] if is_dict_holdings else h[2]
+                    })
+                
+                # Use standard analyzer with persistence support
+                analysis_results = analyze_portfolio(raw_list, conn)
+                return analysis_results
             except Exception as e:
-                logger.error(f"Analysis Error: {e}")
-                conn.rollback()
-                # Manual conversion for fallback if dict fails
-                is_dict_fallback = not holdings_list or isinstance(holdings_list[0], dict)
-                if is_dict_fallback:
-                    enriched_holdings = [dict(h) for h in holdings_list]
-                else:
-                    enriched_holdings = [{"symbol": h[0], "quantity": h[1], "avg_cost": h[2]} for h in holdings_list]
-
+                logger.error(f"ANALYSIS CRASH: {e}")
+                return {
+                    "storage_ready": True,
+                    "holdings": holdings_list,
+                    "summary": "Holdings loaded but analysis failed.",
+                    "risk_level": "UNKNOWN",
+                    "analysis_error": str(e)
+                }
+        
         return {
-            "storage_ready": True if enriched_holdings else False, 
-            "holdings_count": len(enriched_holdings),
-            "holdings": enriched_holdings,
-            "email": email
+            "storage_ready": True,
+            "holdings": [],
+            "summary": "No holdings found. Upload your broker CSV to begin.",
+            "risk_level": "N/A"
         }
     except Exception as e:
-        logger.error(f"DB Error: {e}")
-        return {"storage_ready": False, "error": str(e), "holdings": []}
+        logger.error(f"FETCH HOLDINGS ERROR: {e}")
+        return {
+            "storage_ready": False,
+            "error": str(e),
+            "summary": "Database connectivity issue."
+        }
     finally:
         cur.close()
 
+class SingleHoldingAddRequest(BaseModel):
+    symbol: str
+    quantity: float
+    avg_cost: float
+
+@router.post("/add")
+async def add_single_holding(
+    req: SingleHoldingAddRequest,
+    background_tasks: BackgroundTasks,
+    client=Depends(get_current_client),
+    conn=Depends(get_db)
+):
+    """Save a single stock holding (Watchlist-style functionality for Portfolio)."""
+    try:
+        client_id = str(client["id"])
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
+            VALUES (%s::uuid, %s, %s, %s)
+            ON CONFLICT (client_id, symbol) 
+            DO UPDATE SET 
+                quantity = EXCLUDED.quantity,
+                avg_cost = EXCLUDED.avg_cost,
+                updated_at = NOW()
+        """, (client_id, req.symbol.upper().strip(), req.quantity, req.avg_cost))
+        
+        conn.commit()
+        cur.close()
+        
+        background_tasks.add_task(ingest_missing_symbols_sync, [req.symbol.upper()], conn)
+        return {"message": f"Successfully added {req.symbol.upper()}."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload-csv")
 @router.post("/upload_csv")
-@router.post("/")
 async def upload_csv(
     background_tasks: BackgroundTasks,
     email: Optional[str] = Form(None),
-    name: str = Form("User"),
+    name: Optional[str] = Form(None),
     file: UploadFile = File(...),
     conn=Depends(get_db),
     auth: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
 ):
+    """Universal Unbreakable CSV Parser for Portfolios."""
     try:
-        # Resolve identity from Token or Form
+        # Resolve identity
         client = None
         current_email = email
-        current_name = name
-
         if auth:
             try:
                 from jose import jwt
                 from api.deps import SECRET_KEY, ALGORITHM
                 payload = jwt.decode(auth.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-                client_id = payload.get("sub")
-                if client_id:
+                uid = payload.get("sub")
+                if uid:
                     cur_auth = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-                    cur_auth.execute("SELECT id, email, name FROM clients WHERE id = %s", (client_id,))
+                    cur_auth.execute("SELECT id, email, name FROM clients WHERE id = %s", (uid,))
                     client = cur_auth.fetchone()
                     cur_auth.close()
-                    if client:
-                        current_email = client["email"]
-                        current_name = client["name"]
-            except Exception:
-                pass
+            except: pass
 
-        if not current_email:
-             raise HTTPException(status_code=422, detail="No email provided in token or form.")
-
-        # Resolve identity: Priority 1: Current Session, Priority 2: Case-Insensitive Email Lookup
-        if not client:
+        if not client and email:
             cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            # Standardize on case-insensitive email to ensure persistence
-            lookup_email = current_email.lower().strip()
-            cur_find.execute("SELECT id, email, name FROM clients WHERE LOWER(email) = %s", (lookup_email,))
+            cur_find.execute("SELECT id, email FROM clients WHERE LOWER(email) = %s", (email.lower().strip(),))
             client = cur_find.fetchone()
-            
-            # If still not found, check legacy users table and promote to clients
-            if not client:
-                cur_find.execute("SELECT name FROM users WHERE LOWER(email) = %s", (lookup_email,))
-                legacy_user = cur_find.fetchone()
-                # Auto-create Client record so persistence works
-                new_id = str(uuid.uuid4())
-                try:
-                    cur_find.execute(
-                        "INSERT INTO clients (id, email, name, initial_capital) VALUES (%s, %s, %s, 100000) ON CONFLICT DO NOTHING",
-                        (new_id, current_email, legacy_user['name'] if legacy_user else current_name)
-                    )
-                    conn.commit()
-                    cur_find.execute("SELECT id, email, name FROM clients WHERE id = %s", (new_id,))
-                    client = cur_find.fetchone()
-                except Exception:
-                    conn.rollback()
             cur_find.close()
 
         if not client:
-             raise HTTPException(status_code=403, detail="Could not identify or create client record for persistence.")
+             raise HTTPException(status_code=403, detail="Session expired. Please log in again to upload.")
 
         client_id = client["id"]
-        final_email = client["email"] # Used later for background tasks
         contents = await file.read()
-        df = pd.read_csv(io.StringIO(contents.decode('utf-8', errors='ignore')))
-        df.columns = [c.lower().strip() for c in df.columns]
         
-        symbol_col = next((c for c in df.columns if c in ('symbol', 'ticker', 'instrument', 'stock', 'isin')), None)
-        qty_col = next((c for c in df.columns if c in ('quantity', 'shares', 'qty', 'qty.')), None)
-        cost_col = next((c for c in df.columns if c in ('avg_cost', 'avg cost', 'cost', 'avg_buy_price', 'avg. cost', 'average price', 'buy price')), None)
-        
-        if not symbol_col:
-            raise HTTPException(status_code=400, detail="No symbol column found.")
+        # Resilient Reading
+        sep = ','
+        try:
+            snippet = contents.decode('utf-8', errors='ignore')[:1024]
+            dialect = csv.Sniffer().sniff(snippet, delimiters=',;\t|')
+            sep = dialect.delimiter
+        except: pass
 
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        raw_holdings = []
-        symbols = []
+        df = None
+        for enc in ['utf-8', 'latin-1', 'utf-8-sig']:
+            try:
+                df = pd.read_csv(io.StringIO(contents.decode(enc, errors='ignore')), sep=sep)
+                break
+            except: continue
         
-        ensure_required_tables(conn)
-        # Ensure IDs are valid UUID strings for the database
-        clean_client_id = str(client_id).strip()
+        if df is None:
+            raise HTTPException(status_code=400, detail="Invalid CSV format.")
+
+        df.columns = [c.lower().strip() for c in df.columns]
+        symbol_aliases = ('symbol', 'ticker', 'instrument', 'stock', 'isin', 'tradingsymbol', 'trading symbol', 'holding', 'asset', 'script')
+        qty_aliases = ('quantity', 'shares', 'qty', 'qty.', 'available quantity', 'vol', 'volume', 'current qty', 'net qty')
+        cost_aliases = ('avg_cost', 'avg cost', 'cost', 'avg_buy_price', 'avg. cost', 'average price', 'buy price', 'average buy price', 'purchase price', 'avg price', 'avg. price')
         
+        sym_col = next((c for c in df.columns if c in symbol_aliases), None)
+        qty_col = next((c for c in df.columns if c in qty_aliases), None)
+        cst_col = next((c for c in df.columns if c in cost_aliases), None)
+        
+        if not sym_col:
+             sym_col = df.select_dtypes(include=['object']).columns[0] if not df.select_dtypes(include=['object']).empty else None
+        
+        if not sym_col:
+            raise HTTPException(status_code=400, detail="Could not find a Symbol column.")
+
+        cur = conn.cursor()
+        processed_symbols = []
         for _, row in df.iterrows():
-            sym = str(row[symbol_col]).upper().strip()
+            sym = str(row[sym_col]).upper().strip()
             if not sym or sym == 'NAN': continue
             
-            # Use safe numeric conversions
             qty = 0.0
             try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
             except: pass
             
             cost = 0.0
-            try: cost = float(row[cost_col]) if cost_col and pd.notna(row[cost_col]) else 0.0
+            try: cost = float(row[cst_col]) if cst_col and pd.notna(row[cst_col]) else 0.0
             except: pass
             
-            symbols.append(sym)
-            raw_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
-            
-            # Explicitly cast to UUID in SQL for maximum compatibility
+            processed_symbols.append(sym)
             cur.execute("""
-                INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
-                VALUES (gen_random_uuid(), %s::uuid, %s, %s, %s)
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
+                VALUES (%s::uuid, %s, %s, %s)
                 ON CONFLICT (client_id, symbol) 
                 DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
-            """, (clean_client_id, sym, qty, cost))
-
+            """, (str(client_id), sym, qty, cost))
+        
         conn.commit()
-
-        # ── Synchronous analysis for symbols already in stock_scores ──
-        known_symbols = []
-        unknown_symbols = []
-        if symbols:
-            unique_syms = [s for s in list(set(symbols)) if s]
-            if unique_syms:
-                placeholders = ','.join(['%s'] * len(unique_syms))
-                cur.execute(
-                    f"SELECT DISTINCT symbol FROM stock_scores WHERE symbol IN ({placeholders})",
-                    tuple(unique_syms)
-                )
-                scored_set = {r[0] if not isinstance(r, dict) else r['symbol'] for r in cur.fetchall()}
-                for sym in unique_syms:
-                    (known_symbols if sym in scored_set else unknown_symbols).append(sym)
-
-        analysis = None
-        if raw_holdings:
-            try:
-                from src.portfolio_review_engine import analyze_portfolio
-                analysis = analyze_portfolio(raw_holdings, conn=conn)
-            except Exception as e:
-                logger.warning(f"Sync analysis failed (non-fatal): {e}")
-                conn.rollback()
-
         cur.close()
 
-        # ── Background ingest only for truly unknown symbols ──
-        if unknown_symbols:
-            background_tasks.add_task(ingest_missing_symbols_sync, unknown_symbols, 'admin', final_email)
+        # Trigger on-demand sync
+        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, conn)
+        
+        # Analyze and return instantly
+        from src.portfolio_review_engine import analyze_portfolio
+        return analyze_portfolio([{"symbol": s} for s in processed_symbols], conn)
 
-        resp = {
-            "status": "success",
-            "message": f"Synced {len(set(symbols))} symbols",
-            "digital_twin_saved": True,
-            "digital_twin_row_count": len(set(symbols)),
-            "pending_symbols": unknown_symbols,
-        }
-        if analysis:
-            resp["analysis"] = analysis
-
-        return resp
-
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Upload fail: {e}")
+        logger.error(f"UPLOAD ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/save-bulk")
+@router.post("/save_bulk")
 async def save_holdings_bulk(
-    holdings: list[dict],
+    holdings: List[SingleHoldingAddRequest],
     client=Depends(get_current_client),
     conn=Depends(get_db)
 ):
     cur = conn.cursor()
     try:
         client_id = str(client["id"])
-        ensure_required_tables(conn)
-        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s", (client_id,))
         for h in holdings:
-            sym = str(h.get("symbol", "")).upper().strip()
-            if not sym: continue
-            qty = float(h.get("quantity", 0))
-            cost = float(h.get("avg_cost", 0))
             cur.execute("""
-                INSERT INTO client_external_holdings (id, client_id, symbol, quantity, avg_cost)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), client_id, sym, qty, cost))
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
+                VALUES (%s::uuid, %s, %s, %s)
+                ON CONFLICT (client_id, symbol) DO UPDATE SET 
+                    quantity = EXCLUDED.quantity, 
+                    avg_cost = EXCLUDED.avg_cost,
+                    updated_at = NOW()
+            """, (client_id, h.symbol.upper().strip(), h.quantity, h.avg_cost))
         conn.commit()
-        return {"status": "success", "message": f"Saved {len(holdings)} holdings"}
+        return {"status": "success", "count": len(holdings)}
     except Exception as e:
-        logger.error(f"Save bulk fail: {e}")
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -291,16 +279,9 @@ async def delete_holding(
 ):
     cur = conn.cursor()
     try:
-        cur.execute(
-            "DELETE FROM client_external_holdings WHERE client_id = %s AND symbol = %s",
-            (str(client["id"]), symbol.upper().strip())
-        )
+        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol.upper().strip()))
         conn.commit()
         return {"status": "success"}
-    except Exception as e:
-        logger.error(f"Delete fail: {e}")
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close()
 
@@ -313,43 +294,30 @@ async def delete_all_holdings(
     try:
         cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s", (str(client["id"]),))
         conn.commit()
-        return {"status": "success", "message": "All holdings deleted"}
-    except Exception as e:
-        logger.error(f"Delete all fail: {e}")
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "success"}
     finally:
         cur.close()
 
-@router.post("/holdings/regrade")
-@router.post("/regrade")
-async def regrade_holdings(
-    background_tasks: BackgroundTasks,
-    send_email: bool = False,
-    client=Depends(get_current_client),
-    conn=Depends(get_db)
-):
-    cur = conn.cursor()
-    cur.execute("SELECT symbol FROM client_external_holdings WHERE client_id = %s", (str(client["id"]),))
-    symbols = [r[0] for r in cur.fetchall()]
-    cur.close()
-    if symbols:
-        background_tasks.add_task(ingest_missing_symbols_sync, symbols, 'admin', client["email"])
-    return {"status": "success", "message": "Regrading started"}
-
 @router.post("/holdings/regrade-sync")
-@router.post("/regrade-sync")
 async def regrade_holdings_sync(
     send_email: bool = False,
     client=Depends(get_current_client),
     conn=Depends(get_db)
 ):
-    cur = conn.cursor()
-    cur.execute("SELECT symbol FROM client_external_holdings WHERE client_id = %s", (str(client["id"]),))
-    symbols = [r[0] for r in cur.fetchall()]
-    cur.close()
-    if symbols:
-        # Now uses bulk ingestion optimized for speed
-        logger.info(f"Regrading {len(symbols)} symbols sync for {client['email']}")
-        ingest_missing_symbols_sync(symbols, 'admin', client["email"])
-    return {"status": "success", "message": "Regrading complete"}
+    """Manual trigger to refresh grades for all holdings."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        client_id = str(client["id"])
+        cur.execute("SELECT symbol, quantity, avg_cost FROM client_external_holdings WHERE client_id = %s", (client_id,))
+        holdings = cur.fetchall()
+        
+        from src.portfolio_review_engine import analyze_portfolio
+        results = analyze_portfolio(holdings, conn)
+        
+        if send_email:
+            from src.email_service import send_portfolio_review
+            send_portfolio_review(client["email"], client["name"], results)
+            
+        return results
+    finally:
+        cur.close()
