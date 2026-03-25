@@ -43,26 +43,19 @@ def classify_risk(risk_score):
 def _compute_holding_risk_factor(score, below_ema200, regime):
     """
     Compute a 0.0–1.0 risk factor for a single holding.
-
-    Risk factors:
-    - Score 0-1: 1.0 (max risk)
-    - Score 2:   0.75
-    - Score 3:   0.50
-    - Score 4:   0.25
-    - Score 5:   0.0 (no risk)
-    - Below 200 EMA adds +0.25 (capped at 1.0)
-    - BEAR regime adds +0.25 across the board (capped at 1.0)
+    Based on 0-100 MRI score.
     """
-    score_risk_map = {0: 1.0, 1: 1.0, 2: 0.75, 3: 0.50, 4: 0.25, 5: 0.0}
-    risk = score_risk_map.get(score, 0.5)
+    s = score if score is not None else 50
+    # Linear risk: 100 score = 0 risk, 0 score = 1.0 risk
+    risk = (100 - s) / 100.0
 
     if below_ema200:
-        risk += 0.25
+        risk = min(risk + 0.20, 1.0)  # Moderate penalty for being below trend
 
     if regime == "BEAR":
-        risk += 0.25
+        risk = min(risk + 0.20, 1.0)  # Market penalty
 
-    return min(risk, 1.0)
+    return round(max(0.0, risk), 2)
 
 
 def analyze_portfolio(holdings, conn=None):
@@ -206,18 +199,12 @@ def _analyze(holdings, conn):
         if current_price and avg_cost and avg_cost > 0:
             pnl_pct = round(((current_price - avg_cost) / avg_cost) * 100, 2)
 
-        # Alignment label
+        # Alignment label (0-100 scale)
         if score is None:
             alignment = "UNKNOWN"
-        elif regime == "BULL" and score >= 4:
-            alignment = "ALIGNED"
-        elif regime == "BEAR" and score <= 2:
-            alignment = "ALIGNED"  # low score in bear = correctly positioned (shouldn't be holding)
-        elif regime == "NEUTRAL":
-            alignment = "NEUTRAL"
-        elif score >= 4:
-            alignment = "STRONG"
-        elif score <= 2:
+        elif score >= 80:
+            alignment = "STRONG" if regime != "BEAR" else "ALIGNED"
+        elif score <= 40:
             alignment = "WEAK"
         else:
             alignment = "NEUTRAL"
