@@ -107,6 +107,9 @@ async def upload_csv(
     try:
         # Resolve identity from Token or Form
         client = None
+        current_email = email
+        current_name = name
+
         if auth:
             try:
                 from jose import jwt
@@ -118,27 +121,30 @@ async def upload_csv(
                     cur_auth.execute("SELECT id, email, name FROM clients WHERE id = %s", (client_id,))
                     client = cur_auth.fetchone()
                     cur_auth.close()
+                    if client:
+                        current_email = client["email"]
+                        current_name = client["name"]
             except Exception:
                 pass
 
-        final_email = client["email"] if client else email
-        final_name = client["name"] if client else name
+        if not current_email:
+             raise HTTPException(status_code=422, detail="No email provided in token or form.")
 
-        if not client and final_email:
+        if not client:
             cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur_find.execute("SELECT id, email, name FROM clients WHERE email = %s", (final_email,))
+            cur_find.execute("SELECT id, email, name FROM clients WHERE email = %s", (current_email,))
             client = cur_find.fetchone()
             
             # If still not found, check legacy users table and promote to clients
             if not client:
-                cur_find.execute("SELECT name FROM users WHERE email = %s", (final_email,))
+                cur_find.execute("SELECT name FROM users WHERE email = %s", (current_email,))
                 legacy_user = cur_find.fetchone()
                 # Auto-create Client record so persistence works
                 new_id = str(uuid.uuid4())
                 try:
                     cur_find.execute(
                         "INSERT INTO clients (id, email, name, initial_capital) VALUES (%s, %s, %s, 100000) ON CONFLICT DO NOTHING",
-                        (new_id, final_email, legacy_user['name'] if legacy_user else final_name)
+                        (new_id, current_email, legacy_user['name'] if legacy_user else current_name)
                     )
                     conn.commit()
                     cur_find.execute("SELECT id, email, name FROM clients WHERE id = %s", (new_id,))
@@ -151,6 +157,7 @@ async def upload_csv(
              raise HTTPException(status_code=403, detail="Could not identify or create client record for persistence.")
 
         client_id = client["id"]
+        final_email = client["email"] # Used later for background tasks
         contents = await file.read()
         df = pd.read_csv(io.StringIO(contents.decode('utf-8', errors='ignore')))
         df.columns = [c.lower().strip() for c in df.columns]
@@ -187,15 +194,16 @@ async def upload_csv(
         known_symbols = []
         unknown_symbols = []
         if symbols:
-            unique_syms = list(set(symbols))
-            placeholders = ','.join(['%s'] * len(unique_syms))
-            cur.execute(
-                f"SELECT DISTINCT symbol FROM stock_scores WHERE symbol IN ({placeholders})",
-                unique_syms
-            )
-            scored_set = {r[0] if not isinstance(r, dict) else r['symbol'] for r in cur.fetchall()}
-            for sym in unique_syms:
-                (known_symbols if sym in scored_set else unknown_symbols).append(sym)
+            unique_syms = [s for s in list(set(symbols)) if s]
+            if unique_syms:
+                placeholders = ','.join(['%s'] * len(unique_syms))
+                cur.execute(
+                    f"SELECT DISTINCT symbol FROM stock_scores WHERE symbol IN ({placeholders})",
+                    tuple(unique_syms)
+                )
+                scored_set = {r[0] if not isinstance(r, dict) else r['symbol'] for r in cur.fetchall()}
+                for sym in unique_syms:
+                    (known_symbols if sym in scored_set else unknown_symbols).append(sym)
 
         analysis = None
         if raw_holdings:
