@@ -39,6 +39,7 @@ Solve the "Garbage In, Garbage Out" (GIGO) problem by transforming the platform 
 ## ⚡ The Result: A "Wise" Platform
 The platform now handles two users (and thousands more) by ensuring that **No Garbage Data** ever reaches the grade calculation engine. Your logs will remain clean, and your "Digital Twin" will only track real, active wealth.
 
-## 💎 Face Value Awareness (Splits & Dividends)
-- **Grade Integrity**: The system uses `auto_adjust=True` for all price data. This ensures that when a stock splits (e.g., Face Value 10 to 1), historical trends and RSI remain 100% accurate.
-- **Wealth Tracking**: Since quantities are user-entered, users should manually adjust their holding counts after a corporate action to ensure P&L totals reflect their new share count.
+## 📡 Resilient Header Mapping (BSE/NSE)
+- **Fuzzy Scanning**: The system uses `next((c for c in df.columns if 'STR' in c.upper()), None)` logic to find headers like `SECURITY CODE` or `ISIN`. 
+- **Index-Zero Defense**: Strict indexing (e.g., `[0]`) has been eliminated to prevent `list index out of range` failures when CSV formats change.
+- **Fail-Fast Defense**: All ingestion batches trigger a silent skip if a symbol is missing from the Yahoo Finance result, keeping logs professional and quiet.
