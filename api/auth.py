@@ -206,16 +206,7 @@ def forgot_password(req: ForgotPasswordRequest, conn=Depends(get_db)):
     token = secrets.token_urlsafe(32)
     client_id = str(client["id"])
 
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS password_reset_tokens (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            client_id UUID NOT NULL REFERENCES clients(id),
-            token VARCHAR(255) UNIQUE NOT NULL,
-            expires_at TIMESTAMPTZ NOT NULL,
-            used BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )"""
-    )
+    ensure_required_tables(conn)
 
     expires_at = datetime.now() + timedelta(hours=1)
     try:

@@ -32,7 +32,7 @@ echo "=== MRI Cloud Pipeline — $(date) ===" | tee -a "$LOG_FILE"
 # Step 1: Ingest today's data
 echo "[1/5] Ingesting today's market data..." | tee -a "$LOG_FILE"
 python -c "
-from src.data_loader import load_indices, load_stocks
+from src.ingestion_engine import load_indices, load_stocks
 import pandas as pd, requests, io
 
 load_indices()

@@ -20,7 +20,7 @@ import psycopg2
 import pandas as pd
 import requests
 import io
-from src.data_loader import load_stocks, load_indices
+from src.ingestion_engine import load_stocks, load_indices
 from src.db import get_connection, run_quality_checks
 import logging
 

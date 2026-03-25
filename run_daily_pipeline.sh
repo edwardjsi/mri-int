@@ -23,7 +23,7 @@ echo "=== MRI Daily Pipeline — $(date) ===" | tee -a $LOG_FILE
 # Step 1: Ingest today's data (Nifty 500 + User added stocks)
 echo "[1/5] Ingesting today's market data..." | tee -a $LOG_FILE
 python -c "
-from src.data_loader import load_indices, load_stocks
+from src.ingestion_engine import load_indices, load_stocks
 from src.db import get_connection
 import pandas as pd, requests, io
 

@@ -16,4 +16,4 @@ services:
       - AWS_DEFAULT_REGION=ap-south-1
     volumes:
       - ~/.aws:/root/.aws:ro
-    command: python -m src.data_loader
+    command: python scripts/mri_pipeline.py

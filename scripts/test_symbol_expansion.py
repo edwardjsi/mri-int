@@ -57,18 +57,20 @@ def test_symbol_gathering():
             bse_df = pd.read_csv(io.StringIO(bse_res.text))
             
             # Find relevant columns (BSE headers can vary)
-            isin_col = [c for c in bse_df.columns if 'ISIN' in str(c).upper()][0]
-            group_col = [c for c in bse_df.columns if 'GROUP' in str(c).upper()][0]
-            # Headers have weird spacing sometimes
-            sym_col = [c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()][0]
+            isin_col = next((c for c in bse_df.columns if 'ISIN' in str(c).upper()), None)
+            group_col = next((c for c in bse_df.columns if 'GROUP' in str(c).upper()), None)
+            sym_col = next((c for c in bse_df.columns if 'SYMBOL' in str(c).upper() or 'SCRIP ID' in str(c).upper()), None)
             
-            # Filter for Group A that are NOT in Nifty 500 by ISIN
-            bse_df[group_col] = bse_df[group_col].astype(str).str.strip()
-            group_a = bse_df[bse_df[group_col] == 'A']
-            bse_only = group_a[~group_a[isin_col].astype(str).str.strip().isin(n500_isins)]
-            bse_only_symbols = bse_only[sym_col].dropna().unique().tolist()
-            logger.info(f"  Identified {len(bse_only_symbols)} unique BSE-only Group A stocks")
-            logger.info(f"  Sample BSE-only: {bse_only_symbols[:10]}")
+            if isin_col and group_col and sym_col:
+                # Filter for Group A that are NOT in Nifty 500 by ISIN
+                bse_df[group_col] = bse_df[group_col].astype(str).str.strip()
+                group_a = bse_df[bse_df[group_col] == 'A']
+                bse_only = group_a[~group_a[isin_col].astype(str).str.strip().isin(n500_isins)]
+                bse_only_symbols = bse_only[sym_col].dropna().unique().tolist()
+                logger.info(f"  Identified {len(bse_only_symbols)} unique BSE-only Group A stocks")
+                logger.info(f"  Sample BSE-only: {bse_only_symbols[:10]}")
+            else:
+                logger.warning(f"  ⚠️ BSE List columns not found. Headers: {list(bse_df.columns)}")
         else:
             logger.warning(f"  ⚠️ BSE List fetch returned {bse_res.status_code}.")
     except Exception as e:

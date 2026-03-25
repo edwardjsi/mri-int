@@ -27,7 +27,7 @@ def ensure_required_tables(conn) -> None:
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS client_external_holdings (
-            id UUID PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
             symbol VARCHAR(20) NOT NULL,
             quantity NUMERIC(15,4) DEFAULT 0,
@@ -38,6 +38,7 @@ def ensure_required_tables(conn) -> None:
         );
         """
     )
+    cur.execute("ALTER TABLE client_external_holdings ALTER COLUMN id SET DEFAULT gen_random_uuid();")
 
     # 3. Watchlist - Fixes missing Unique constraint for ON CONFLICT logic
     cur.execute(
@@ -51,6 +52,7 @@ def ensure_required_tables(conn) -> None:
         );
         """
     )
+    cur.execute("ALTER TABLE client_watchlist ALTER COLUMN id SET DEFAULT gen_random_uuid();")
 
     # 4. Capital Additions
     cur.execute(
