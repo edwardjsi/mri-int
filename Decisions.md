@@ -468,3 +468,13 @@ Date: 2026-03-25
 Decision: Implement `GET /api/watchlist/universal` in `api/watchlist.py` to aggregate all unique symbols tracked across the platform.
 Reason: Provides a global view of community interests and allows the system to efficiently track the entire "active" universe of user-specified stocks.
 Status: FINAL.
+
+## Decision 075 — "WISE GUARD" Schema Consolidation & Identity Hardening
+Date: 2026-03-26  
+Decision: 
+1. Consolidated all core operational tables (`client_portfolio`, `client_signals`, `client_equity`, `client_actions`, `email_log`) into the `api/schema.py` auto-initialization bootstrap.
+2. Enforced case-insensitive email handling (strip + lower) during registration to prevent dual-identity data fragmentation.
+3. Fixed background task argument mismatch in `portfolio_review.py` where a database connection was being passed as a `user_id`, causing silent ingestion failures.
+4. Active "WISE GUARD" symbol validation now correctly rejects invalid/delisted tickers while allowing valid ones to persist.
+Reason: Multiple sessions were "looping" on missing table errors and data "disappearing" due to casing mismatches or background task crashes. This closes the loop on schema parity between environments and hardens the "Digital Twin" persistence.
+Status: FINAL.

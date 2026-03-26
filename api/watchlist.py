@@ -128,11 +128,13 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
     try:
         # WISE GUARD: Is this stock even real?
         cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (symbol, symbol))
-        universe_record = cur.fetchone()
-        if not universe_record:
-             raise HTTPException(status_code=400, detail=f"⚠️ {symbol} not found in NSE/BSE Universe. It may be delisted or invalid.")
+        if not cur.fetchone():
+             # Fallback: if universe is empty or missing this specific stock, check if we've already ingested data for it
+             cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (symbol,))
+             if not cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"⚠️ {symbol} not found in master universe. Please run the Daily Pipeline once to sync all valid stocks.")
 
-        # Check if it already exists to avoid unique constraint error
+        # Check if it already exists to prevent unique constraint error
         cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol))
         if cur.fetchone():
             return {"message": f"{symbol} already in watchlist"}

@@ -115,13 +115,15 @@ async def add_single_holding(
     try:
         cur = conn.cursor()
         sym = req.symbol.upper().strip()
-        
+        client_id = str(client["id"])
+
         # WISE GUARD: Verify against Master Universe
         cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (sym, sym))
         if not cur.fetchone():
-             raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in NSE/BSE Universe. It may be delisted.")
-
-        client_id = str(client["id"])
+            # Fallback for valid stocks that were just added or not in master yet
+            cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
+            if not cur.fetchone():
+                 raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in master list. Run the pipeline to sync the NSE/BSE universe.")
         cur.execute("""
             INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
             VALUES (%s::uuid, %s, %s, %s)
@@ -135,7 +137,7 @@ async def add_single_holding(
         conn.commit()
         cur.close()
         
-        background_tasks.add_task(ingest_missing_symbols_sync, [req.symbol.upper()], conn)
+        background_tasks.add_task(ingest_missing_symbols_sync, [req.symbol.upper()], client_id)
         return {"message": f"Successfully added {req.symbol.upper()}."}
     except Exception as e:
         conn.rollback()
@@ -226,10 +228,12 @@ async def upload_csv(
             sym = str(row[sym_col]).upper().strip()
             if not sym or sym == 'NAN': continue
             
-            # Wise Filtering: Skip if not in universe
+            # Wise Filtering: Skip if not in universe AND not already in our price DB
             if sym not in universe_map and sym not in universe_map.values():
-                skipped_symbols.append(sym)
-                continue
+                cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
+                if not cur.fetchone():
+                    skipped_symbols.append(sym)
+                    continue
 
             qty = 0.0
             try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
@@ -254,7 +258,7 @@ async def upload_csv(
         cur.close()
 
         # Trigger on-demand sync
-        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, conn)
+        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id)
         
         # Analyze and return instantly
         from src.portfolio_review_engine import analyze_portfolio

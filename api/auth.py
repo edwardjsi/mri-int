@@ -59,7 +59,8 @@ class TokenResponse(BaseModel):
 def register(req: RegisterRequest, conn=Depends(get_db)):
     cur = conn.cursor()
 
-    cur.execute("SELECT id FROM clients WHERE email = %s", (req.email,))
+    clean_email = req.email.strip().lower()
+    cur.execute("SELECT id FROM clients WHERE LOWER(email) = %s", (clean_email,))
     if cur.fetchone():
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -67,7 +68,7 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
     cur.execute(
         """INSERT INTO clients (email, name, password_hash, initial_capital)
            VALUES (%s, %s, %s, %s) RETURNING id""",
-        (req.email, req.name, hashed, req.initial_capital),
+        (clean_email, req.name, hashed, req.initial_capital),
     )
     client_id = str(cur.fetchone()["id"])
     conn.commit()

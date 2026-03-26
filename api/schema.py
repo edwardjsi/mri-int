@@ -38,9 +38,8 @@ def ensure_required_tables(conn) -> None:
         );
         """
     )
-    cur.execute("ALTER TABLE client_external_holdings ALTER COLUMN id SET DEFAULT gen_random_uuid();")
 
-    # 3. Watchlist - Fixes missing Unique constraint for ON CONFLICT logic
+    # 3. Watchlist
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS client_watchlist (
@@ -52,9 +51,78 @@ def ensure_required_tables(conn) -> None:
         );
         """
     )
-    cur.execute("ALTER TABLE client_watchlist ALTER COLUMN id SET DEFAULT gen_random_uuid();")
 
-    # 4. Capital Additions
+    # 4. Client Signals (Daily Recommendations)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS client_signals (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            date DATE NOT NULL,
+            symbol VARCHAR(20) NOT NULL,
+            action VARCHAR(10) NOT NULL,
+            recommended_price NUMERIC(12,4),
+            score INT,
+            regime VARCHAR(20),
+            reason TEXT,
+            email_sent BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(client_id, date, symbol, action)
+        );
+        """
+    )
+
+    # 5. Client Actions
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS client_actions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            signal_id UUID REFERENCES client_signals(id) ON DELETE CASCADE,
+            action_taken VARCHAR(20) NOT NULL,
+            actual_price NUMERIC(12,4),
+            quantity INT,
+            notes TEXT,
+            recorded_at TIMESTAMP DEFAULT NOW()
+        );
+        """
+    )
+
+    # 6. Client Portfolio (Open Positions)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS client_portfolio (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol VARCHAR(20) NOT NULL,
+            entry_date DATE,
+            entry_price NUMERIC(12,4),
+            quantity INT,
+            highest_price NUMERIC(12,4),
+            is_open BOOLEAN DEFAULT true,
+            exit_date DATE,
+            exit_price NUMERIC(12,4),
+            exit_reason VARCHAR(50),
+            UNIQUE(client_id, symbol, entry_date)
+        );
+        """
+    )
+
+    # 7. Client Equity (Daily Snapshots)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS client_equity (
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            date DATE,
+            equity NUMERIC(15,2),
+            cash NUMERIC(15,2),
+            open_positions INT,
+            PRIMARY KEY(client_id, date)
+        );
+        """
+    )
+
+    # 8. Capital Additions
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS capital_additions (
@@ -66,7 +134,7 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
-    # 5. Password Reset Tokens
+    # 9. Password Reset Tokens
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -80,9 +148,27 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
-    # 6. Indexes
+    # 10. Email Log
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS email_log (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            date DATE,
+            email_type VARCHAR(30),
+            service VARCHAR(20),
+            subject VARCHAR(255),
+            status VARCHAR(20),
+            sent_at TIMESTAMP DEFAULT NOW()
+        );
+        """
+    )
+
+    # 11. Indexes
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_external_holdings_client ON client_external_holdings(client_id);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_client_portfolio_client_open ON client_portfolio(client_id, is_open);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_client_signals_client_date ON client_signals(client_id, date);")
 
     conn.commit()
     cur.close()

@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import requests
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Tuple
 
 # Add parent directory to sys.path to find src module
@@ -110,38 +110,61 @@ def get_full_symbol_list() -> Tuple[List[str], List[dict]]:
 def run_pipeline():
     logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')} ===")
 
-    # Step 0: Sync Universe
+    # Step 0: Ensure Schema & Sync Universe
+    from src.db import get_connection
+    from api.schema import ensure_required_tables
+    from src.ingestion_engine import get_last_date
+    
     try:
+        conn = get_connection()
+        ensure_required_tables(conn)
+        conn.close()
+        logger.info("✅ Core Schema Verified")
         sync_universe()
     except Exception as e:
-        logger.warning(f"Universe sync failed: {e}")
+        logger.warning(f"Schema/Universe sync failed: {e}")
+
+    # --- FRESHNESS CHECK ---
+    # If we already have the most recent data, skip to scoring/signals
+    last_stored_date = get_last_date("daily_prices")
+    today = datetime.now().date()
+    # Subtract 1 day for 'last trading day' logic (or 3 for weekends)
+    effective_today = today if today.weekday() < 5 else today - timedelta(days=(today.weekday() - 4))
+    
+    if last_stored_date >= str(effective_today - timedelta(days=1)):
+        logger.info(f"✨ Data is likely up-to-date (Last: {last_stored_date}). Moving straight to scoring/signals.")
+        skip_ingest = True
+    else:
+        logger.info(f"🚀 Data is stale (Last: {last_stored_date}). Starting ingestion...")
+        skip_ingest = False
 
     # Step 1: Ingest Data
-    logger.info("[1/5] Ingesting market data...")
-    try:
-        from src.ingestion_engine import load_indices, load_stocks
-        from src.db import get_connection
-        from psycopg2.extras import execute_batch
-        
-        load_indices()
-        symbols, sector_data = get_full_symbol_list()
-        load_stocks(symbols)
+    if not skip_ingest:
+        logger.info("[1/5] Ingesting market data...")
+        try:
+            from src.ingestion_engine import load_indices, load_stocks
+            from src.db import get_connection
+            from psycopg2.extras import execute_batch
+            
+            load_indices()
+            symbols, sector_data = get_full_symbol_list()
+            load_stocks(symbols)
 
-        # Update sector data for dashboard richness
-        if sector_data:
-            conn = get_connection()
-            cur = conn.cursor()
-            execute_batch(cur, """
-                INSERT INTO stock_sectors (symbol, company_name, industry)
-                VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
-                ON CONFLICT (symbol) DO UPDATE SET industry = EXCLUDED.industry, updated_at = NOW()
-            """, sector_data)
-            conn.commit()
-            cur.close()
-            conn.close()
-    except Exception as e:
-        logger.error(f"  ❌ Ingestion failed: {e}")
-        sys.exit(1)
+            # Update sector data for dashboard richness
+            if sector_data:
+                conn = get_connection()
+                cur = conn.cursor()
+                execute_batch(cur, """
+                    INSERT INTO stock_sectors (symbol, company_name, industry)
+                    VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
+                    ON CONFLICT (symbol) DO UPDATE SET industry = EXCLUDED.industry, updated_at = NOW()
+                """, sector_data)
+                conn.commit()
+                cur.close()
+                conn.close()
+        except Exception as e:
+            logger.error(f"  ❌ Ingestion failed: {e}")
+            sys.exit(1)
 
     # Steps 2-5 (Standard MRI Engine)
     try:
