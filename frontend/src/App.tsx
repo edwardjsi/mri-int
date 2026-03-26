@@ -81,64 +81,6 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
           >
             {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isRegister ? 'Create Account' : 'Sign In'))}
           </button>
-
-          <div style={{ marginTop: '16px', textAlign: 'center' }}>
-            <button 
-              type="button" onClick={async () => {
-              try {
-                // Test 1: GET Health
-                const getHealth = await api.getHealth();
-                
-                // Test 2: POST Health
-                const postHealth = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/health`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ test: true })
-                }).then(r => r.json()).catch(e => ({ error: e.message }));
-
-                // Test 3: POST Login (Raw fetch)
-                const postLogin = await fetch(`${(window as any).MRI_DEBUG.API_BASE}/auth/login`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: 'diag@test.com', password: 'diag' })
-                }).then(r => r.status).catch(e => `ERR: ${e.message}`);
-
-                // Test 4: Call api.login directly (The real test)
-                let apiLoginStatus = 'N/A';
-                try {
-                  await api.login('diag@test.com', 'diag');
-                } catch (e: any) {
-                  apiLoginStatus = e.message;
-                }
-
-                // Test 5: api.login(form values) - Final sanity check
-                let formLoginResult = 'N/A';
-                try {
-                   await api.login(email.trim(), password.trim());
-                   formLoginResult = 'SUCCESS (Wait, how?!)';
-                } catch(e: any) {
-                   formLoginResult = `FAILED: ${e.message}`;
-                }
-
-                alert(
-                  `Diagnostic Results:\n` +
-                  `Build: ${(window as any).MRI_DEBUG.build}\n` +
-                  `Base: ${(window as any).MRI_DEBUG.API_BASE}\n` +
-                  `GET Health: ${getHealth.status}\n` +
-                  `POST Health: ${postHealth.status || 'FAILED (' + postHealth.error + ')'}\n` +
-                  `POST Login Status: ${postLogin}\n` +
-                  `API.LOGIN Result (Dummy): ${apiLoginStatus}\n` +
-                  `API.LOGIN Result (Form): ${formLoginResult}`
-                );
-              } catch (err: any) {
-                alert(`API Connection CRITICAL FAILURE!\nError: ${err.message}`);
-              }
-            }}
-            >
-              🔧 Network Diagnostics
-            </button>
-          </div>
-
           <div className="toggle-text" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
             {!isForgotPassword && (
               <button type="button" className="link-btn" style={{ alignSelf: 'center' }} onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); }}>
@@ -146,7 +88,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
               </button>
             )}
 
-            <p>
+            <p style={{ textAlign: 'center' }}>
               {isForgotPassword ? 'Remember your password?' : (isRegister ? 'Already have an account?' : "Don't have an account?")}{' '}
               <button type="button" className="link-btn" onClick={() => {
                 setIsRegister(!isRegister);
@@ -159,7 +101,7 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
             </p>
           </div>
           {onCancel && (
-            <div className="landing-back-link">
+            <div className="landing-back-link" style={{ textAlign: 'center', marginTop: '10px' }}>
               <button type="button" className="link-btn" onClick={onCancel}>
                 ← Back to landing page
               </button>
@@ -617,8 +559,8 @@ function DashboardPage() {
         <section className="section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 className="section-title" style={{ margin: 0 }}>📦 My Holdings</h2>
-            <button 
-              className="btn-secondary" 
+            <button
+              className="btn-secondary"
               onClick={() => { setLoading(true); loadData(); }}
               style={{ padding: '6px 12px', fontSize: '13px' }}
             >

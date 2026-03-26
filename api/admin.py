@@ -34,7 +34,7 @@ def verify_admin(client=Depends(get_current_client), conn=Depends(get_db)):
 @router.get("/metrics")
 def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Get 30,000 foot view metrics of the MRI platform."""
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         # Optimized single-pass aggregation
         cur.execute("""
@@ -46,10 +46,10 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
         """)
         row = cur.fetchone()
         return {
-            "total_users": row[0],
-            "active_watchlists": row[1],
-            "active_portfolios": row[2],
-            "last_ingestion": str(row[3]) if row[3] else None
+            "total_users": row["total_users"],
+            "active_watchlists": row["active_watchlists"],
+            "active_portfolios": row["active_portfolios"],
+            "last_ingestion": str(row["last_ingestion"]) if row["last_ingestion"] else None
         }
     except Exception as e:
         logger.error(f"METRICS ERROR: {e}")
