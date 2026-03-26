@@ -126,14 +126,6 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
         
     cur = conn.cursor()
     try:
-        # WISE GUARD: Is this stock even real?
-        cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (symbol, symbol))
-        if not cur.fetchone():
-             # Fallback: if universe is empty or missing this specific stock, check if we've already ingested data for it
-             cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (symbol,))
-             if not cur.fetchone():
-                raise HTTPException(status_code=400, detail=f"⚠️ {symbol} not found in master universe. Please run the Daily Pipeline once to sync all valid stocks.")
-
         # Check if it already exists to prevent unique constraint error
         cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol))
         if cur.fetchone():
@@ -145,7 +137,13 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
         )
         conn.commit()
         # Trigger background data sync (this makes sure RELIANCE is fetched if missing)
-        background_tasks.add_task(ingest_missing_symbols_sync, [symbol], 'admin', client["email"])
+        background_tasks.add_task(
+            ingest_missing_symbols_sync, 
+            [symbol], 
+            str(client["id"]), 
+            client.get("email"),
+            client.get("name")
+        )
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to add symbol: {e}")
