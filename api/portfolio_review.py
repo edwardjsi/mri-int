@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @router.get("/holdings-status")
 @router.get("/holdings_status")
 @router.get("/holdings") 
-@router.get("/")
+@router.get("")
 async def get_holdings(
     client=Depends(get_current_client),
     conn=Depends(get_db)
@@ -116,17 +116,6 @@ async def add_single_holding(
         sym = req.symbol.upper().strip()
         client_id = str(client["id"])
 
-        # WISE GUARD: Verify against Master Universe
-        cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (sym, sym))
-        universe_record = cur.fetchone()
-        if not universe_record:
-            # Fallback for valid stocks that were just added or not in master yet
-            cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
-            if not cur.fetchone():
-                 # GRACE RULE: If the universe table is completely empty, allow it for background sync
-                 cur.execute("SELECT COUNT(*) FROM universe")
-                 if cur.fetchone()[0] > 0:
-                     raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in master list. Run the pipeline to sync the NSE/BSE universe.")
         cur.execute("""
             INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
             VALUES (%s::uuid, %s, %s, %s)

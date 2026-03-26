@@ -82,6 +82,8 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest
             FROM watch_counts w
             FULL OUTER JOIN hold_counts h ON h.symbol = w.symbol
+            -- HIDE JUNKS: Only show symbols that have successfully found market data
+            WHERE EXISTS (SELECT 1 FROM daily_prices WHERE symbol = COALESCE(w.symbol, h.symbol))
             ORDER BY total_interest DESC, symbol ASC
         """)
         return cur.fetchall()

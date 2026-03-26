@@ -1702,6 +1702,8 @@ function WatchlistPage() {
                   <td>
                     {item.is_pending ? (
                         <span className="badge-pending">💾 Saving...</span>
+                    ) : item.is_not_found ? (
+                        <span className="action-badge badge-skipped" style={{ background: '#ff4d4f', color: 'white' }}>⚠️ Check Symbol</span>
                     ) : item.score !== null ? (
                       <span className="score-badge">{item.score}/100</span>
                     ) : (

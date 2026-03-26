@@ -18,7 +18,9 @@ class WatchlistItem(BaseModel):
     price: Optional[float] = None
     score: Optional[int] = None
     regime: Optional[str] = None
-    trend_alignment: Optional[str] = None # BULL / BEAR / NEUTRAL (from EMA-200)
+    trend_alignment: Optional[str] = None
+    is_not_found: bool = False
+    is_pending: bool = False
 
 @router.get("/universal", response_model=List[str])
 def get_universal_watchlist(conn=Depends(get_db)):
@@ -51,12 +53,12 @@ def search_universe(q: str, conn=Depends(get_db)):
     finally:
         cur.close()
 
-@router.get("/", response_model=List[WatchlistItem])
+@router.get("", response_model=List[WatchlistItem])
 def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     # Fetch symbols from watchlist
-    cur.execute("SELECT symbol FROM client_watchlist WHERE client_id = %s", (str(client["id"]),))
+    cur.execute("SELECT symbol FROM client_watchlist WHERE client_id = %s::uuid", (str(client["id"]),))
     rows = cur.fetchall()
     
     if not rows:
@@ -76,7 +78,8 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 WHEN dp.close > dp.ema_200 THEN 'BULL'
                 WHEN dp.close < dp.ema_200 THEN 'BEAR'
                 ELSE 'NEUTRAL'
-            END as trend_alignment
+            END as trend_alignment,
+            (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found
         FROM client_watchlist cw
         LEFT JOIN (
             SELECT DISTINCT ON (symbol) symbol, total_score as score, date 
@@ -88,7 +91,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             FROM daily_prices
             ORDER BY symbol, date DESC
         ) dp ON dp.symbol = cw.symbol
-        WHERE cw.client_id = %s
+        WHERE cw.client_id = %s::uuid
     """, (str(client["id"]),))
     
     data = cur.fetchall()
@@ -118,12 +121,13 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             symbol=sym,
             price=price,
             score=score,
-            trend_alignment=trend
+            trend_alignment=trend,
+            is_not_found=row["is_not_found"] if is_dict else False
         ))
         
     return results
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks, client=Depends(get_current_client), conn=Depends(get_db)):
     symbol = req.symbol.upper().strip()
     if not symbol:
@@ -132,12 +136,12 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
     cur = conn.cursor()
     try:
         # Check if it already exists to prevent unique constraint error
-        cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol))
+        cur.execute("SELECT 1 FROM client_watchlist WHERE client_id = %s::uuid AND symbol = %s", (str(client["id"]), symbol))
         if cur.fetchone():
             return {"message": f"{symbol} already in watchlist"}
 
         cur.execute(
-            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s)",
+            "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s::uuid, %s)",
             (str(client["id"]), symbol)
         )
         conn.commit()
@@ -162,7 +166,7 @@ def remove_from_watchlist(symbol: str, client=Depends(get_current_client), conn=
     symbol = symbol.upper().strip()
     cur = conn.cursor()
     cur.execute(
-        "DELETE FROM client_watchlist WHERE client_id = %s AND symbol = %s",
+        "DELETE FROM client_watchlist WHERE client_id = %s::uuid AND symbol = %s",
         (str(client["id"]), symbol)
     )
     conn.commit()
