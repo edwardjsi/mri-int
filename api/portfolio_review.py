@@ -30,8 +30,6 @@ async def get_holdings(
         client_id = str(client["id"])
         email = client["email"]
         
-        # Schema is ensured at startup, but we keep this as a lightweight safeguard
-        ensure_required_tables(conn)
         cur.execute("""
             SELECT symbol, quantity, avg_cost 
             FROM client_external_holdings 
@@ -229,6 +227,8 @@ async def upload_csv(
         cur.execute("SELECT symbol, bse_code FROM universe")
         universe_map = {r[0]: r[1] for r in cur.fetchall()}
 
+        processed_holdings = []
+
         for _, row in df.iterrows():
             sym = str(row[sym_col]).upper().strip()
             if not sym or sym == 'NAN': continue
@@ -250,6 +250,7 @@ async def upload_csv(
             try: cost = float(row[cst_col]) if cst_col and pd.notna(row[cst_col]) else 0.0
             except: pass
             
+            processed_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
             processed_symbols.append(sym)
             cur.execute("""
                 INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
@@ -275,7 +276,7 @@ async def upload_csv(
         
         # Analyze and return instantly
         from src.portfolio_review_engine import analyze_portfolio
-        analysis = analyze_portfolio([{"symbol": s} for s in processed_symbols], conn)
+        analysis = analyze_portfolio(processed_holdings, conn)
         analysis["storage_ready"] = True
         analysis["digital_twin_saved"] = True
         analysis["digital_twin_row_count"] = len(processed_symbols)

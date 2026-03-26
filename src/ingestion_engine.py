@@ -171,13 +171,26 @@ def load_stocks(symbols: list, period: str = None):
                     logger.info(f"  Forcing {period} bulk download (Attempt {attempt+1})...")
                     raw_data = yf.download(tickers, period=period, interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
                 else:
-                    # AGGRESSIVE CATCH-UP: 7 days back to ensure we bridge weekends and missing days
-                    last_date_raw = get_last_date("daily_prices")
-                    start_dt = datetime.strptime(last_date_raw, "%Y-%m-%d") - timedelta(days=7)
-                    start_date = start_dt.strftime("%Y-%m-%d")
-                    logger.info(f"  Incremental download from {start_date} (Attempt {attempt+1})...")
-                    # Silently skip missing symbols by adding threads=False (makes catching single errors easier)
-                    raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
+                    # INDIVIDUAL FRESHNESS CHECK: Avoid the '7-day trap' for new symbols
+                    # We check if the most recent symbol in our batch exists in DB
+                    from src.db import get_connection
+                    conn_check = get_connection()
+                    cur_check = conn_check.cursor()
+                    cur_check.execute("SELECT COUNT(*) FROM daily_prices WHERE symbol = ANY(%s)", (batch,))
+                    has_any = cur_check.fetchone()[0] > 0
+                    cur_check.close()
+                    conn_check.close()
+
+                    if not has_any:
+                        logger.info(f"  New symbols detected in batch. Forcing 2y history download.")
+                        raw_data = yf.download(tickers, period="2y", interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
+                    else:
+                        # AGGRESSIVE CATCH-UP: 10 days back to be safe
+                        last_date_raw = get_last_date("daily_prices")
+                        start_dt = datetime.strptime(last_date_raw, "%Y-%m-%d") - timedelta(days=10)
+                        start_date = start_dt.strftime("%Y-%m-%d")
+                        logger.info(f"  Incremental download from {start_date} (Attempt {attempt+1})...")
+                        raw_data = yf.download(tickers, start=start_date, interval="1d", group_by='ticker', progress=False, auto_adjust=True, threads=False)
                 
                 if not raw_data.empty:
                     break

@@ -79,10 +79,15 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             END as trend_alignment
         FROM client_watchlist cw
         LEFT JOIN (
-            SELECT symbol, score, date FROM stock_scores s1
-            WHERE date = (SELECT MAX(date) FROM stock_scores WHERE symbol = s1.symbol)
+            SELECT DISTINCT ON (symbol) symbol, total_score as score, date 
+            FROM stock_scores 
+            ORDER BY symbol, date DESC
         ) ss ON ss.symbol = cw.symbol
-        LEFT JOIN daily_prices dp ON dp.symbol = cw.symbol AND dp.date = ss.date
+        LEFT JOIN (
+            SELECT DISTINCT ON (symbol) symbol, close, ema_200, date
+            FROM daily_prices
+            ORDER BY symbol, date DESC
+        ) dp ON dp.symbol = cw.symbol
         WHERE cw.client_id = %s
     """, (str(client["id"]),))
     

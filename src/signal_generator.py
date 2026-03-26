@@ -13,11 +13,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 MAX_POSITIONS = 10
-MIN_BUY_SCORE = 4
-MAX_SELL_SCORE = 2
+MIN_BUY_SCORE = 75            # 75/100 (3 conditions met)
+MAX_SELL_SCORE = 40           # Sell if score drops below 40
 MIN_ADTV = 100_000_000       # ₹10 Cr minimum avg daily turnover
 MAX_SECTOR_STOCKS = 3         # Max stocks from any single sector
-MIN_ABSOLUTE_SCORE = 3        # Cash toggle: skip if best available < this
+MIN_ABSOLUTE_SCORE = 50       # Momentum threshold (at least 2 conditions)
 
 
 def get_connection():
@@ -140,12 +140,14 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
     pending_sells = {s["symbol"] for s in signals if s["action"] == "SELL"}
     effective_positions = len(open_positions - pending_sells)
 
-    if regime == "BULL" and effective_positions < MAX_POSITIONS:
+    if (regime == "BULL" or regime == "NEUTRAL") and effective_positions < MAX_POSITIONS:
         slots = MAX_POSITIONS - effective_positions
         # Top scoring stocks not already held, passing liquidity gate
+        # In NEUTRAL regime, we require score >= 85
+        current_threshold = MIN_BUY_SCORE if regime == "BULL" else 85
         eligible = [
             s for s in scores
-            if s["total_score"] >= MIN_BUY_SCORE
+            if s["total_score"] >= current_threshold
             and s["symbol"] not in open_positions
             and s["symbol"] in prices
         ]

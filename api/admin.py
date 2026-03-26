@@ -36,10 +36,6 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Get 30,000 foot view metrics of the MRI platform."""
     cur = conn.cursor()
     try:
-        # Ensure tables exist with correct schema
-        from api.schema import ensure_required_tables
-        ensure_required_tables(conn)
-
         cur.execute("SELECT COUNT(*) FROM clients")
         total_users = cur.fetchone()[0]
 

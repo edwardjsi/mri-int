@@ -202,7 +202,7 @@ def _analyze(holdings, conn):
         # Alignment label (0-100 scale)
         if score is None:
             alignment = "UNKNOWN"
-        elif score >= 80:
+        elif score >= 75:
             alignment = "STRONG" if regime != "BEAR" else "ALIGNED"
         elif score <= 40:
             alignment = "WEAK"
@@ -254,7 +254,7 @@ def _analyze(holdings, conn):
         f"{n_total} holdings analyzed.",
     ]
     if n_weak > 0:
-        summary_parts.append(f"{n_weak} stock(s) have weak trend scores (≤2).")
+        summary_parts.append(f"{n_weak} stock(s) have weak trend scores (≤40).")
     if n_below_ema > 0:
         summary_parts.append(f"{n_below_ema} stock(s) trading below their 200 EMA.")
     if unrecognized:
@@ -328,11 +328,9 @@ def analyze_single_stock(symbol, conn=None):
         # Alignment
         if score is None:
             alignment = "UNKNOWN"
-        elif regime == "BULL" and score >= 4:
-            alignment = "ALIGNED"
-        elif score >= 4:
+        elif score >= 75:
             alignment = "STRONG"
-        elif score <= 2:
+        elif score <= 40:
             alignment = "WEAK"
         else:
             alignment = "NEUTRAL"
@@ -380,7 +378,7 @@ def print_terminal_report(result):
         print(f" 📈 MRI QUICK CHECK: {result['symbol']}")
         print(f"{'='*40}")
         print(f" Market Regime : {result['regime']}")
-        print(f" Trend Score   : {result['score']}/5")
+        print(f" Trend Score   : {result['score']}/100")
         print(f" Alignment     : {result['alignment']}")
         print(f" Close Price   : {result['close']}")
         print(f" EMA-200       : {result['ema_200']}")

@@ -18,22 +18,20 @@ interface SymbolGrade {
 
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
-  const [symbols, setSymbols] = useState<SymbolGrade[]>([]);
+  const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadAdminIntel = async () => {
     try {
       setLoading(true);
       const [m, c] = await Promise.all([
         api.getAdminMetrics(),
-        api.getAdminTopStocks() // This already gets top held/watched
+        api.getAdminTopStocks()
       ]);
       setMetrics(m);
-      
-      // Fetch the master "Universe of Interest" (Anonymized)
-      // We will reuse the getAdminTopStocks logic or expand it
-      setData(c);
+      setTopStocks(c);
     } catch (err: any) {
       setError(err.message || 'Failed to load intel');
     } finally {
@@ -45,6 +43,14 @@ export default function AdminDashboard() {
     loadAdminIntel();
   }, []);
 
+  // Combined unique symbols for the "Global Explorer"
+  const allSymbols = Array.from(new Set([
+    ...(topStocks?.top_watched?.map(s => s.symbol) || []),
+    ...(topStocks?.top_held?.map(s => s.symbol) || [])
+  ])).filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  if (loading && !metrics) return <div className="loading">📡 Gathering intelligence...</div>;
+
   return (
     <div className="admin-dashboard">
       <div className="stats-row">
@@ -53,8 +59,8 @@ export default function AdminDashboard() {
           <div className="stat-value">{metrics?.total_users}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Unique Stocks Tracked</div>
-          <div className="stat-value">{metrics?.active_watchlists || 0}</div>
+          <div className="stat-label">Digital Twins Active</div>
+          <div className="stat-value">{metrics?.active_portfolios || 0}</div>
         </div>
         <div className="stat-card">
             <div className="stat-label">Market Freshness</div>
@@ -64,31 +70,50 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* NEW: Global Symbol Explorer (Anonymized) */}
+      {error && <div className="error-alert">{error}</div>}
+
       <section className="section" style={{ marginTop: '24px' }}>
-        <h3 className="section-title">🌍 Global Symbol Explorer</h3>
-        <p className="section-subtitle">Anonymized view of every unique stock currently followed by your user base.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 className="section-title" style={{ margin: 0 }}>🌍 Global Symbol Explorer</h3>
+            <input 
+                type="text" 
+                placeholder="Search symbol..." 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="form-input" 
+                style={{ width: '200px', marginBottom: 0, padding: '6px 12px' }}
+            />
+        </div>
+        <p className="section-subtitle">Deduplicated view of stocks added by all users (Anonymized).</p>
         
-        <div className="table-container" style={{ marginTop: '16px' }}>
+        <div className="table-container" style={{ marginTop: '16px', maxHeight: '300px', overflowY: 'auto' }}>
             <table className="data-table">
                 <thead>
                     <tr>
                         <th>Symbol</th>
-                        <th>User Interest (Count)</th>
-                        <th>Latest MRI Grade</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {/* We'll populate this with common unique stocks across both held/watched */}
-                    {metrics?.active_watchlists > 0 ? (
-                        <tr className="pulse-row">
-                            <td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
-                                📊 In-depth symbol breakdown is generating. Re-run "RESCUE Pipeline" to refresh grades.
-                            </td>
-                        </tr>
-                    ) : (
+                    {allSymbols.length > 0 ? allSymbols.map(sym => {
+                        const isWatched = topStocks?.top_watched.some(s => s.symbol === sym);
+                        const isHeld = topStocks?.top_held.some(s => s.symbol === sym);
+                        return (
+                            <tr key={sym}>
+                                <td className="font-bold">{sym}</td>
+                                <td>
+                                    {isHeld && <span className="action-badge badge-executed" style={{ marginRight: '4px' }}>HELD</span>}
+                                    {isWatched && <span className="action-badge badge-skipped">WATCHED</span>}
+                                </td>
+                                <td>
+                                    <button className="link-btn" onClick={() => (window as any).location.search = `?q=${sym}`}>Analytics (Soon)</button>
+                                </td>
+                            </tr>
+                        );
+                    }) : (
                         <tr>
-                            <td colSpan={3} className="empty-state">No user symbols tracked yet.</td>
+                            <td colSpan={3} className="empty-state">No symbols matching "{searchTerm}" found.</td>
                         </tr>
                     )}
                 </tbody>
@@ -101,10 +126,17 @@ export default function AdminDashboard() {
            <h3 className="section-title">🔥 Trending (Watchlists)</h3>
            <div className="table-container">
              <table className="data-table">
-                <thead><tr><th>Symbol</th><th>Users</th></tr></thead>
+                <thead><tr><th>Symbol</th><th>Watchers</th></tr></thead>
                 <tbody>
-                  {/* Populate from api.getAdminTopStocks().top_watched */}
-                  <tr className="empty-state text-sm"><td colSpan={2}>Reload to see trending signals.</td></tr>
+                  {topStocks?.top_watched.map(s => (
+                      <tr key={s.symbol}>
+                          <td className="font-bold">{s.symbol}</td>
+                          <td>{s.count} users</td>
+                      </tr>
+                  ))}
+                  {(!topStocks?.top_watched.length) && (
+                      <tr className="empty-state text-sm"><td colSpan={2}>No trending stocks found.</td></tr>
+                  )}
                 </tbody>
              </table>
            </div>
@@ -114,9 +146,17 @@ export default function AdminDashboard() {
            <h3 className="section-title">💰 Core holdings (Portfolios)</h3>
            <div className="table-container">
              <table className="data-table">
-                <thead><tr><th>Symbol</th><th>Average Units</th></tr></thead>
+                <thead><tr><th>Symbol</th><th>Investors</th></tr></thead>
                 <tbody>
-                    <tr className="empty-state text-sm"><td colSpan={2}>Reload to see core holdings.</td></tr>
+                    {topStocks?.top_held.map(s => (
+                        <tr key={s.symbol}>
+                            <td className="font-bold">{s.symbol}</td>
+                            <td>{s.count} users</td>
+                        </tr>
+                    ))}
+                    {(!topStocks?.top_held.length) && (
+                        <tr className="empty-state text-sm"><td colSpan={2}>No core holdings found.</td></tr>
+                    )}
                 </tbody>
              </table>
            </div>

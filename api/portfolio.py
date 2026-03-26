@@ -39,7 +39,6 @@ def get_open_positions(
     # 2. Fetch External Positions (Digital Twin)
     external_rows = []
     try:
-        ensure_required_tables(conn)
         cur.execute(
             """
             SELECT symbol, quantity, avg_cost
@@ -259,7 +258,6 @@ def get_daily_summary(
     # 2. Fetch External Data
     external_rows = []
     try:
-        ensure_required_tables(conn)
         cur.execute(
             """
             SELECT symbol, quantity, avg_cost

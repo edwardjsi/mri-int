@@ -157,7 +157,7 @@ def get_signal_history(
 @router.get("/screener")
 def get_screener(
     conn=Depends(get_db),
-    min_score: int = Query(default=4, ge=0, le=5),
+    min_score: int = Query(default=75, ge=0, le=100),
 ):
     """Latest stock scores, filterable by minimum score."""
     cur = conn.cursor()
