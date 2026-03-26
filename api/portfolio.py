@@ -71,7 +71,7 @@ def get_open_positions(
 
     # Process External via Review Engine for valuation
     if external_rows:
-        is_dict_ext = isinstance(external_rows[0], dict)
+        is_dict_ext = len(external_rows) > 0 and isinstance(external_rows[0], dict)
         external_holdings = []
         for r in external_rows:
             if is_dict_ext:

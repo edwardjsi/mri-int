@@ -72,6 +72,7 @@ async def get_holdings(
                 
                 # Use standard analyzer with persistence support
                 analysis_results = analyze_portfolio(raw_list, conn)
+                analysis_results["storage_ready"] = True
                 return analysis_results
             except Exception as e:
                 logger.error(f"ANALYSIS CRASH: {e}")
@@ -119,11 +120,15 @@ async def add_single_holding(
 
         # WISE GUARD: Verify against Master Universe
         cur.execute("SELECT symbol FROM universe WHERE symbol = %s OR bse_code = %s", (sym, sym))
-        if not cur.fetchone():
+        universe_record = cur.fetchone()
+        if not universe_record:
             # Fallback for valid stocks that were just added or not in master yet
             cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
             if not cur.fetchone():
-                 raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in master list. Run the pipeline to sync the NSE/BSE universe.")
+                 # GRACE RULE: If the universe table is completely empty, allow it for background sync
+                 cur.execute("SELECT COUNT(*) FROM universe")
+                 if cur.fetchone()[0] > 0:
+                     raise HTTPException(status_code=400, detail=f"⚠️ {sym} not found in master list. Run the pipeline to sync the NSE/BSE universe.")
         cur.execute("""
             INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
             VALUES (%s::uuid, %s, %s, %s)
@@ -229,7 +234,8 @@ async def upload_csv(
             if not sym or sym == 'NAN': continue
             
             # Wise Filtering: Skip if not in universe AND not already in our price DB
-            if sym not in universe_map and sym not in universe_map.values():
+            # GRACE RULE: If the universe table is empty, we don't filter (fallback to background ingest)
+            if universe_map and sym not in universe_map and sym not in universe_map.values():
                 cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
                 if not cur.fetchone():
                     skipped_symbols.append(sym)
@@ -258,11 +264,22 @@ async def upload_csv(
         cur.close()
 
         # Trigger on-demand sync
-        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id)
+        background_tasks.add_task(
+            ingest_missing_symbols_sync, 
+            processed_symbols, 
+            client_id, 
+            client.get("email"), 
+            client.get("name")
+        )
         
         # Analyze and return instantly
         from src.portfolio_review_engine import analyze_portfolio
-        return analyze_portfolio([{"symbol": s} for s in processed_symbols], conn)
+        analysis = analyze_portfolio([{"symbol": s} for s in processed_symbols], conn)
+        analysis["storage_ready"] = True
+        analysis["digital_twin_saved"] = True
+        analysis["digital_twin_row_count"] = len(processed_symbols)
+        analysis["skipped_symbols"] = skipped_symbols
+        return analysis
 
     except Exception as e:
         logger.error(f"UPLOAD ERROR: {e}")

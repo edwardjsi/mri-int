@@ -97,6 +97,11 @@ def ingest_missing_symbols_sync(symbols, user_id='admin', user_email=None, user_
         logger.warning(f"[INGEST] Failed to resolve or fetch data for: {pending_symbols}")
 
     logger.info(f"[INGEST] Sync ingestion complete. Success={len(successful_symbols)}, Failed={len(pending_symbols)}")
+    
+    # Send Notification Email
+    if user_email:
+        from src.email_service import send_on_demand_risk_audit_report
+        send_on_demand_risk_audit_report(user_email, user_name, successful_symbols, pending_symbols)
 
 def process_and_save_yf_df(df, symbol):
     """Cleans a Yahoo Finance dataframe and inserts it into daily_prices."""

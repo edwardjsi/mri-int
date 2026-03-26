@@ -37,7 +37,8 @@ The "Universe Guard" was implemented to block invalid stocks, but because it rel
 2. **Background Task Correction**: Fixed the argument order in `api/portfolio_review.py`. It now correctly passes the string `client_id` to the background ingestion engine.
 3. **Identity Hardening**: Emails are now `.strip().lower()` on both Registration and Login.
 4. **Universe Bootstrap**: The `universe` table is now properly referenced and will be populated as soon as the pipeline is run (which is now possible because the tables it needs exist).
-5. **Hardened Symbol Validation (Hybrid Guard)**: Restored strict NSE/BSE universe validation to prevent garbage symbols (like 'fake123'), but added a fallback check against existing market data (`daily_prices`) so that valid stocks already in the system aren't blocked if the universe table is slightly behind.
+5. **Hybrid Guard (Grace Rule)**: Restored strict symbol validation to prevent garbage data, but implemented a **Grace Rule**. If the `universe` table is empty (e.g., first-run scenario), the system gracefully allows symbols through and fetches their data in the background instead of silently skipping them.
+6. **Digital Twin Sync & Notification**: Added the missing `storage_ready` flag and fixed the background task argument mismatch in the API. Crucially, implemented an **automated email report** sent via AWS SES after on-demand ingestion completes, explicitly listing any stocks that could not be graded (delisted/invalid) to close the feedback loop with the user.
 
 ---
 

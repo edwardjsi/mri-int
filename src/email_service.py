@@ -384,5 +384,65 @@ def send_signal_emails():
     return sent_count
 
 
+def send_on_demand_risk_audit_report(email, name, successful, failed):
+    """Send a summary email after an on-demand ingestion completes."""
+    if not email or not aws_credentials_present():
+        return False
+        
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+        
+        subject = f"MRI Risk Audit: {len(successful)} Stocks Graded"
+        if failed:
+            subject += f" ({len(failed)} Failed/Delisted)"
+            
+        # Build Table rows for successful
+        success_rows = ""
+        for s in successful:
+             success_rows += f"<tr><td style='padding:8px;border-bottom:1px solid #eee'>{s}</td><td style='padding:8px;border-bottom:1px solid #eee;color:#22c55e'>Graded ✅</td></tr>"
+             
+        failed_rows = ""
+        for s in failed:
+             failed_rows += f"<tr><td style='padding:8px;border-bottom:1px solid #eee'>{s}</td><td style='padding:8px;border-bottom:1px solid #eee;color:#ef4444'>Unknown/Delisted ❌</td></tr>"
+
+        html_body = f"""
+        <html>
+        <body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;color:#333">
+            <h2 style="color:#111827">📊 MRI Risk Audit Report</h2>
+            <p>Hi {name or 'User'},</p>
+            <p>We've finished analyzing the custom stocks you added to your Digital Twin.</p>
+            
+            <table style="width:100%;border-collapse:collapse;margin:20px 0">
+                <tr style="background:#f9fafb"><th style="padding:8px;text-align:left">Symbol</th><th style="padding:8px;text-align:left">Status</th></tr>
+                {success_rows}
+                {failed_rows}
+            </table>
+            
+            <p style="font-size:14px;color:#666">
+                <strong>Note:</strong> Failed stocks are usually delisted or incorrectly named. 
+                Log in to your dashboard to see the latest trend grades for the accepted stocks.
+            </p>
+            <hr style="border:1px solid #eee;margin:20px 0">
+            <p style="font-size:12px;color:#999;text-align:center">Market Regime Intelligence</p>
+        </body>
+        </html>
+        """
+        
+        ses.send_email(
+            Source=SENDER_EMAIL,
+            Destination={"ToAddresses": [email]},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+            },
+        )
+        logger.info(f"✅ Risk audit report sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send risk audit email: {e}")
+        return False
+
+
 if __name__ == "__main__":
     send_signal_emails()

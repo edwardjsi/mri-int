@@ -478,3 +478,12 @@ Decision:
 4. Active "WISE GUARD" symbol validation now correctly rejects invalid/delisted tickers while allowing valid ones to persist.
 Reason: Multiple sessions were "looping" on missing table errors and data "disappearing" due to casing mismatches or background task crashes. This closes the loop on schema parity between environments and hardens the "Digital Twin" persistence.
 Status: FINAL.
+
+## Decision 076 — Hybrid Guard with Grace Rule for First-Run
+Date: 2026-03-26  
+Decision: 
+1. Implemented a **Hybrid Guard** which validates symbols against the `universe` (NSE/BSE master list) AND the `daily_prices` table.
+2. Added a **Grace Rule**: If the `universe` table is completely empty (common in fresh deployments before the first pipeline run), the system bypasses strict filtering and permits valid symbols for background ingestion.
+3. Added missing `storage_ready` flag to API analysis responses to ensure correct frontend state rendering for "Digital Twin" holdings.
+Reason: Strict "WISE GUARD" validation was silently skipping valid stocks during new user onboarding because the master universe table hadn't been synced yet. This ensures a friction-less "Day 1" experience while maintaining high-quality data once the system is synced.
+Status: FINAL.
