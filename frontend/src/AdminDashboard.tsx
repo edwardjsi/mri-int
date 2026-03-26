@@ -25,21 +25,25 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const loadAdminIntel = async () => {
-    try {
-      setLoading(true);
-      const [m, c, g] = await Promise.all([
-        api.getAdminMetrics(),
-        api.getAdminTopStocks(),
-        api.getAdminGlobalUniverse()
-      ]);
-      setMetrics(m);
-      setTopStocks(c);
-      setGlobalUniverse(g);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load intel');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    setError('');
+
+    // Decoupled fetching: Total Dashboard Failure is now avoided if one service is slow
+    const fetchMetrics = async () => {
+      try { const data = await api.getAdminMetrics(); setMetrics(data); }
+      catch (e) { console.error('Metrics failed', e); }
+    };
+    const fetchTop = async () => {
+      try { const data = await api.getAdminTopStocks(); setTopStocks(data); }
+      catch (e) { console.error('Top stocks failed', e); }
+    };
+    const fetchGlobal = async () => {
+      try { const data = await api.getAdminGlobalUniverse(); setGlobalUniverse(data); }
+      catch (e) { console.error('Global universe failed', e); setError('Global list is taking longer than expected...'); }
+    };
+
+    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal()]);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -102,7 +106,10 @@ export default function AdminDashboard() {
                 <tbody>
                     {filteredSymbols.length > 0 ? filteredSymbols.map(s => (
                         <tr key={s.symbol}>
-                            <td className="font-bold">{s.symbol}</td>
+                            <td className="font-bold">
+                                {s.symbol}
+                                {!s.has_data && <span className="action-badge badge-skipped" style={{ padding: '2px 4px', fontSize: '10px', marginLeft: '8px', background: '#faad14' }}>⏳ PENDING</span>}
+                            </td>
                             <td>{s.watchers}</td>
                             <td>{s.holders}</td>
                             <td style={{ fontWeight: 800 }}>{s.total_interest}</td>

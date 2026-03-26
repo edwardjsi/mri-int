@@ -36,23 +36,20 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Get 30,000 foot view metrics of the MRI platform."""
     cur = conn.cursor()
     try:
-        cur.execute("SELECT COUNT(*) FROM clients")
-        total_users = cur.fetchone()[0]
-
-        cur.execute("SELECT COUNT(DISTINCT client_id) FROM client_watchlist")
-        active_watchlists = cur.fetchone()[0]
-
-        cur.execute("SELECT COUNT(DISTINCT client_id) FROM client_external_holdings")
-        active_portfolios = cur.fetchone()[0]
-
-        cur.execute("SELECT MAX(date) FROM daily_prices")
-        last_ingestion = cur.fetchone()[0]
-
+        # Optimized single-pass aggregation
+        cur.execute("""
+            SELECT 
+                (SELECT COUNT(*) FROM clients) as total_users,
+                (SELECT COUNT(DISTINCT client_id) FROM client_watchlist) as active_watchlists,
+                (SELECT COUNT(DISTINCT client_id) FROM client_external_holdings) as active_portfolios,
+                (SELECT MAX(date) FROM daily_prices) as last_ingestion
+        """)
+        row = cur.fetchone()
         return {
-            "total_users": total_users,
-            "active_watchlists": active_watchlists,
-            "active_portfolios": active_portfolios,
-            "last_ingestion": str(last_ingestion) if last_ingestion else None
+            "total_users": row[0],
+            "active_watchlists": row[1],
+            "active_portfolios": row[2],
+            "last_ingestion": str(row[3]) if row[3] else None
         }
     except Exception as e:
         logger.error(f"METRICS ERROR: {e}")
@@ -79,11 +76,10 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 COALESCE(w.symbol, h.symbol) as symbol,
                 COALESCE(w.watchers, 0) as watchers,
                 COALESCE(h.holders, 0) as holders,
-                (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest
+                (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest,
+                EXISTS (SELECT 1 FROM daily_prices dp WHERE dp.symbol = COALESCE(w.symbol, h.symbol)) as has_data
             FROM watch_counts w
             FULL OUTER JOIN hold_counts h ON h.symbol = w.symbol
-            -- HIDE JUNKS: Only show symbols that have successfully found market data
-            WHERE EXISTS (SELECT 1 FROM daily_prices WHERE symbol = COALESCE(w.symbol, h.symbol))
             ORDER BY total_interest DESC, symbol ASC
         """)
         return cur.fetchall()
