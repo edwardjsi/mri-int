@@ -19,7 +19,26 @@ def ensure_required_tables(conn) -> None:
     """
     cur = conn.cursor()
 
-    # 1. Clients Admin Flag
+    # 0. Base Extensions & Admin/Core Tables
+    cur.execute("CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";")
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS clients (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            email VARCHAR(255) UNIQUE NOT NULL,
+            name VARCHAR(255),
+            password_hash TEXT,
+            is_active BOOLEAN DEFAULT TRUE,
+            is_admin BOOLEAN DEFAULT FALSE,
+            initial_capital NUMERIC(15,2) DEFAULT 100000,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        """
+    )
+    
+    # 1. Clients Table Refinements
+    # Note: ADD COLUMN IF NOT EXISTS is fine, but we've combined it above. 
+    # Still keeping it for existing installs.
     cur.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;")
     cur.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
 
@@ -169,6 +188,11 @@ def ensure_required_tables(conn) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_portfolio_client_open ON client_portfolio(client_id, is_open);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_signals_client_date ON client_signals(client_id, date);")
+    
+    # Core performance indexes (added for Digital Twin/Dashboard speed)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_daily_prices_symbol_date ON daily_prices(symbol, date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_symbol_date ON stock_scores(symbol, date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_date ON stock_scores(date);")
 
     conn.commit()
     cur.close()
