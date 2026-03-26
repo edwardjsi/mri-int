@@ -19,6 +19,7 @@ interface SymbolGrade {
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
+  const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,12 +27,14 @@ export default function AdminDashboard() {
   const loadAdminIntel = async () => {
     try {
       setLoading(true);
-      const [m, c] = await Promise.all([
+      const [m, c, g] = await Promise.all([
         api.getAdminMetrics(),
-        api.getAdminTopStocks()
+        api.getAdminTopStocks(),
+        api.getAdminGlobalUniverse()
       ]);
       setMetrics(m);
       setTopStocks(c);
+      setGlobalUniverse(g);
     } catch (err: any) {
       setError(err.message || 'Failed to load intel');
     } finally {
@@ -44,10 +47,9 @@ export default function AdminDashboard() {
   }, []);
 
   // Combined unique symbols for the "Global Explorer"
-  const allSymbols = Array.from(new Set([
-    ...(topStocks?.top_watched?.map(s => s.symbol) || []),
-    ...(topStocks?.top_held?.map(s => s.symbol) || [])
-  ])).filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredSymbols = globalUniverse.filter(s => 
+    s.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading && !metrics) return <div className="loading">📡 Gathering intelligence...</div>;
 
@@ -91,29 +93,26 @@ export default function AdminDashboard() {
                 <thead>
                     <tr>
                         <th>Symbol</th>
-                        <th>Status</th>
+                        <th>Watchers</th>
+                        <th>Holders</th>
+                        <th>Total Interest</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {allSymbols.length > 0 ? allSymbols.map(sym => {
-                        const isWatched = topStocks?.top_watched.some(s => s.symbol === sym);
-                        const isHeld = topStocks?.top_held.some(s => s.symbol === sym);
-                        return (
-                            <tr key={sym}>
-                                <td className="font-bold">{sym}</td>
-                                <td>
-                                    {isHeld && <span className="action-badge badge-executed" style={{ marginRight: '4px' }}>HELD</span>}
-                                    {isWatched && <span className="action-badge badge-skipped">WATCHED</span>}
-                                </td>
-                                <td>
-                                    <button className="link-btn" onClick={() => (window as any).location.search = `?q=${sym}`}>Analytics (Soon)</button>
-                                </td>
-                            </tr>
-                        );
-                    }) : (
+                    {filteredSymbols.length > 0 ? filteredSymbols.map(s => (
+                        <tr key={s.symbol}>
+                            <td className="font-bold">{s.symbol}</td>
+                            <td>{s.watchers}</td>
+                            <td>{s.holders}</td>
+                            <td style={{ fontWeight: 800 }}>{s.total_interest}</td>
+                            <td>
+                                <button className="link-btn" onClick={() => (window as any).location.search = `?q=${s.symbol}`}>Analytics (Soon)</button>
+                            </td>
+                        </tr>
+                    )) : (
                         <tr>
-                            <td colSpan={3} className="empty-state">No symbols matching "{searchTerm}" found.</td>
+                            <td colSpan={5} className="empty-state">No symbols matching "{searchTerm}" found.</td>
                         </tr>
                     )}
                 </tbody>

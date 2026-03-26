@@ -166,6 +166,7 @@ export const api = {
     // Admin
     getAdminMetrics: () => apiFetch('/admin/metrics'),
     getAdminTopStocks: () => apiFetch('/admin/top-stocks'),
+    getAdminGlobalUniverse: () => apiFetch('/admin/global-universe'),
     getAdminClients: () => apiFetch('/admin/clients'),
     getAdminClientPortfolio: (id: string) => apiFetch(`/admin/clients/${id}/portfolio`),
 

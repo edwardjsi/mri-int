@@ -60,38 +60,48 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     finally:
         cur.close()
 
-@router.get("/top-stocks")
-def get_top_stocks(conn=Depends(get_db), admin=Depends(verify_admin)):
-    """Get the leaderboard of top watched and top held stocks globally (anonymized)."""
+@router.get("/global-universe")
+def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Unified master list of every unique symbol tracked/owned across all users."""
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        # Top 15 watched stocks
+        # Full join on interested counts from both tables
         cur.execute("""
-            SELECT symbol, COUNT(*) as count 
-            FROM client_watchlist 
-            GROUP BY symbol 
-            ORDER BY count DESC 
-            LIMIT 15
+            WITH watch_counts AS (
+                SELECT symbol, COUNT(DISTINCT client_id) as watchers
+                FROM client_watchlist GROUP BY symbol
+            ),
+            hold_counts AS (
+                SELECT symbol, COUNT(DISTINCT client_id) as holders
+                FROM client_external_holdings GROUP BY symbol
+            )
+            SELECT 
+                COALESCE(w.symbol, h.symbol) as symbol,
+                COALESCE(w.watchers, 0) as watchers,
+                COALESCE(h.holders, 0) as holders,
+                (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest
+            FROM watch_counts w
+            FULL OUTER JOIN hold_counts h ON h.symbol = w.symbol
+            ORDER BY total_interest DESC, symbol ASC
         """)
-        top_watched = cur.fetchall()
-
-        # Top 15 held stocks
-        cur.execute("""
-            SELECT symbol, COUNT(*) as count, SUM(quantity) as total_shares 
-            FROM client_external_holdings 
-            GROUP BY symbol 
-            ORDER BY count DESC 
-            LIMIT 15
-        """)
-        top_held = cur.fetchall()
-
-        return {
-            "top_watched": [dict(r) for r in top_watched],
-            "top_held": [dict(r) for r in top_held]
-        }
+        return cur.fetchall()
     except Exception as e:
-        logger.error(f"TOP STOCKS ERROR: {e}")
-        return JSONResponse(status_code=500, content={"detail": f"Top Stocks Error: {str(e)}"})
+        logger.error(f"GLOBAL UNIVERSE ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
+@router.get("/top-stocks")
+def get_top_stocks(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Legacy leaderboard for dashboard cards."""
+    # ... call the new logic or just use a simpler query
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("SELECT symbol, COUNT(*) as count FROM client_watchlist GROUP BY symbol ORDER BY count DESC LIMIT 15")
+        top_watched = cur.fetchall()
+        cur.execute("SELECT symbol, COUNT(*) as count FROM client_external_holdings GROUP BY symbol ORDER BY count DESC LIMIT 15")
+        top_held = cur.fetchall()
+        return {"top_watched": top_watched, "top_held": top_held}
     finally:
         cur.close()
 

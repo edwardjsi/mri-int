@@ -191,8 +191,10 @@ def ensure_required_tables(conn) -> None:
     
     # Core performance indexes (added for Digital Twin/Dashboard speed)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_daily_prices_symbol_date ON daily_prices(symbol, date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_daily_prices_date ON daily_prices(date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_symbol_date ON stock_scores(symbol, date DESC);")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_date ON stock_scores(date);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_date_desc ON stock_scores(date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_market_regime_date ON market_regime(date DESC);")
 
     conn.commit()
     cur.close()

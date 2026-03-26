@@ -1574,14 +1574,23 @@ function WatchlistPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSymbol.trim()) return;
+    const symbol = newSymbol.trim().toUpperCase();
+    if (!symbol) return;
     setError('');
+    
+    // OPTIMISTIC UPDATE: Add to local state immediately
+    const optimisticItem = { symbol, price: null, score: null, trend_alignment: null, is_pending: true };
+    setWatchlist(prev => [optimisticItem, ...prev]);
+    setNewSymbol('');
+    setSuggestions([]);
+
     try {
-      await api.addToWatchlist(newSymbol);
-      setNewSymbol('');
+      await api.addToWatchlist(symbol);
       loadWatchlist();
     } catch (err: any) {
       setError(err.message || 'Failed to add symbol');
+      // Rollback on error
+      setWatchlist(prev => prev.filter(item => item.symbol !== symbol));
     }
   };
 
@@ -1687,25 +1696,27 @@ function WatchlistPage() {
             </thead>
             <tbody>
               {watchlist.map(item => (
-                <tr key={item.symbol}>
+                <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}}>
                   <td className="font-bold">{item.symbol}</td>
-                  <td>{item.price ? `₹${item.price.toLocaleString()}` : 'N/A'}</td>
+                  <td>{item.price ? `₹${item.price.toLocaleString()}` : (item.is_pending ? 'Saving...' : 'N/A')}</td>
                   <td>
-                    {item.score !== null ? (
+                    {item.is_pending ? (
+                        <span className="badge-pending">💾 Saving...</span>
+                    ) : item.score !== null ? (
                       <span className="score-badge">{item.score}/100</span>
                     ) : (
                       <span className="badge-pending">🔄 Tracking...</span>
                     )}
                   </td>
                   <td>
-                    {item.trend_alignment ? (
+                    {item.is_pending ? '...' : (item.trend_alignment ? (
                       <span className={`action-badge ${item.trend_alignment === 'BULL' ? 'badge-executed' : 'badge-skipped'}`}>
                         {item.trend_alignment}
                       </span>
-                    ) : 'N/A'}
+                    ) : 'N/A')}
                   </td>
                   <td>
-                    <button className="btn-danger" onClick={() => handleRemove(item.symbol)} style={{ padding: '4px 8px', fontSize: '12px' }}>
+                    <button className="btn-danger" onClick={() => handleRemove(item.symbol)} disabled={item.is_pending} style={{ padding: '4px 8px', fontSize: '12px' }}>
                       🗑️ Remove
                     </button>
                   </td>
