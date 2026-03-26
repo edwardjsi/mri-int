@@ -116,8 +116,8 @@ def _analyze(holdings, conn):
     regime = regime_row["classification"] if regime_row else "NEUTRAL"
     regime_date = str(regime_row["date"]) if regime_row else None
 
-    # 2. Collect symbols
-    symbols = [h["symbol"].upper().strip() for h in holdings]
+    # 2. Collect symbols (de-duplicated)
+    symbols = list(set([h["symbol"].upper().strip() for h in holdings]))
     symbol_tuple = tuple(symbols)
 
     # 3. Latest stock scores for submitted symbols

@@ -35,7 +35,7 @@ async def get_holdings(
         cur.execute("""
             SELECT symbol, quantity, avg_cost 
             FROM client_external_holdings 
-            WHERE client_id = %s
+            WHERE client_id = %s::uuid
         """, (client_id,))
         holdings_list = cur.fetchall()
         
@@ -233,13 +233,14 @@ async def upload_csv(
             sym = str(row[sym_col]).upper().strip()
             if not sym or sym == 'NAN': continue
             
-            # Wise Filtering: Skip if not in universe AND not already in our price DB
-            # GRACE RULE: If the universe table is empty, we don't filter (fallback to background ingest)
+            # Wise Filtering: We want to accept most stocks during bulk upload for 'Trust & Track'
+            # Only skip if it's truly broken or empty.
             if universe_map and sym not in universe_map and sym not in universe_map.values():
+                # Check price DB as secondary validation
                 cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
                 if not cur.fetchone():
-                    skipped_symbols.append(sym)
-                    continue
+                    # GRACE RULE: We'll accept it anyway but it will stay 'Unknown' until background fetch finishes
+                    pass
 
             qty = 0.0
             try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0

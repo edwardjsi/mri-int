@@ -35,6 +35,7 @@ def create_market_regime_and_scores_tables():
         );
         
         CREATE INDEX IF NOT EXISTS idx_stock_scores_date ON stock_scores(date);
+        CREATE INDEX IF NOT EXISTS idx_stock_scores_symbol_date ON stock_scores(symbol, date DESC);
     """)
     conn.commit()
     cur.close()
