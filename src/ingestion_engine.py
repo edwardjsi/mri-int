@@ -43,17 +43,23 @@ def load_indices(period: str = None):
         idx_raw = yf.download("^NSEI", period=period, progress=False, auto_adjust=True)
     else:
         start_date = get_last_date("index_prices")
-        logger.info(f"Fetching NIFTY 50 Index data from {start_date}...")
+        logger.info(f"Fetching NIFTY 50 Index data since {start_date}...")
         idx_raw = yf.download("^NSEI", start=start_date, progress=False, auto_adjust=True)
     
-    if not idx_raw.empty:
-        idx_df = idx_raw.reset_index()
-        idx_df.columns = [c[0].lower().replace(" ", "_") if isinstance(idx_df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in idx_df.columns]
-        idx_df['symbol'] = 'NIFTY50'
-        idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
-        idx_df['adjusted_close'] = idx_df.get('adj_close', idx_df.get('close'))
-        from src.db import insert_index_prices
-        insert_index_prices(idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records'))
+    if idx_raw.empty:
+        logger.warning(f"⚠️ yfinance returned NO data for index '^NSEI' since {start_date}")
+        return
+
+    idx_df = idx_raw.reset_index()
+    # Normalize columns
+    idx_df.columns = [c[0].lower().replace(" ", "_") if isinstance(idx_df.columns, pd.MultiIndex) else str(c).lower().replace(" ", "_") for c in idx_df.columns]
+    idx_df['symbol'] = 'NIFTY50'
+    idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
+    
+    from src.db import insert_index_prices
+    records = idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
+    logger.info(f"📊 Inserting {len(records)} index rows for NIFTY50")
+    insert_index_prices(records)
     logger.info("✅ Index data loaded")
 
 def build_symbol_translator() -> dict:

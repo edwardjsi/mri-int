@@ -75,12 +75,21 @@ def compute_market_regime():
     idx_df['sma_200_slope_20'] = idx_df['sma_200'].diff(20)
     
     def classify(row):
-        if pd.isna(row['sma_200_slope_20']): return 'NEUTRAL'
-        if row['close'] > row['sma_200'] and row['sma_200_slope_20'] > 0: return 'BULL'
-        elif row['close'] < row['sma_200'] and row['sma_200_slope_20'] < 0: return 'BEAR'
+        # Safety: if SMA is missing, we can't determine a trend
+        if pd.isna(row['sma_200']) or pd.isna(row['sma_200_slope_20']):
+            return 'NEUTRAL'
+        
+        close = float(row['close'])
+        sma = float(row['sma_200'])
+        slope = float(row['sma_200_slope_20'])
+        
+        if close > sma and slope > 0: return 'BULL'
+        elif close < sma and slope < 0: return 'BEAR'
         else: return 'NEUTRAL'
             
     idx_df['classification'] = idx_df.apply(classify, axis=1)
+    idx_df['sma_200'] = idx_df['sma_200'].round(4)
+    idx_df['sma_200_slope_20'] = idx_df['sma_200_slope_20'].round(4)
     
     # Update the latest 5 days (saves writes while staying current)
     recent = idx_df.tail(5).replace({np.nan: None})

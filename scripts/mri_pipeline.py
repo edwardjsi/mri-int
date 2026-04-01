@@ -124,59 +124,35 @@ def run_pipeline():
     except Exception as e:
         logger.warning(f"Schema/Universe sync failed: {e}")
 
-    # --- FRESHNESS CHECK ---
-    # If we already have the most recent data, skip to scoring/signals
-    # NOTE: We query MAX(date) directly — do NOT use get_last_date() here
-    # because it subtracts 3 days as a download lookback buffer.
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT MAX(date) FROM daily_prices")
-        last_stored = cur.fetchone()[0]
-        cur.close()
-        conn.close()
-        last_stored_date = str(last_stored) if last_stored else "1970-01-01"
-    except Exception:
-        last_stored_date = "1970-01-01"
-    
-    today = datetime.now().date()
-    # Subtract 1 day for 'last trading day' logic (or 3 for weekends)
-    effective_today = today if today.weekday() < 5 else today - timedelta(days=(today.weekday() - 4))
-    
-    if last_stored_date >= str(effective_today - timedelta(days=1)):
-        logger.info(f"✨ Data is likely up-to-date (Last: {last_stored_date}). Moving straight to scoring/signals.")
-        skip_ingest = True
-    else:
-        logger.info(f"🚀 Data is stale (Last: {last_stored_date}). Starting ingestion...")
-        skip_ingest = False
-
     # Step 1: Ingest Data
-    if not skip_ingest:
-        logger.info("[1/5] Ingesting market data...")
-        try:
-            from src.ingestion_engine import load_indices, load_stocks
-            from src.db import get_connection
-            from psycopg2.extras import execute_batch
-            
-            load_indices()
-            symbols, sector_data = get_full_symbol_list()
-            load_stocks(symbols)
+    logger.info("[1/5] Ingesting market data...")
+    try:
+        from src.ingestion_engine import load_indices, load_stocks
+        from src.db import get_connection
+        from psycopg2.extras import execute_batch
+        
+        # Always reload indices (Nifty 50) - critical for regime detection
+        load_indices()
+        
+        # Reload stocks for our universe
+        symbols, sector_data = get_full_symbol_list()
+        load_stocks(symbols)
 
-            # Update sector data for dashboard richness
-            if sector_data:
-                conn = get_connection()
-                cur = conn.cursor()
-                execute_batch(cur, """
-                    INSERT INTO stock_sectors (symbol, company_name, industry)
-                    VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
-                    ON CONFLICT (symbol) DO UPDATE SET industry = EXCLUDED.industry, updated_at = NOW()
-                """, sector_data)
-                conn.commit()
-                cur.close()
-                conn.close()
-        except Exception as e:
-            logger.error(f"  ❌ Ingestion failed: {e}")
-            sys.exit(1)
+        # Update sector data for dashboard richness
+        if sector_data:
+            conn = get_connection()
+            cur = conn.cursor()
+            execute_batch(cur, """
+                INSERT INTO stock_sectors (symbol, company_name, industry)
+                VALUES (%(Symbol)s, %(Company Name)s, %(Industry)s)
+                ON CONFLICT (symbol) DO UPDATE SET industry = EXCLUDED.industry, updated_at = NOW()
+            """, sector_data)
+            conn.commit()
+            cur.close()
+            conn.close()
+    except Exception as e:
+        logger.error(f"  ❌ Ingestion failed: {e}")
+        sys.exit(1)
 
     # Steps 2-5 (Standard MRI Engine)
     try:

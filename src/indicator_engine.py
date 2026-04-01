@@ -52,7 +52,7 @@ def fetch_data(symbols=None):
             # recent window — not just globally. This catches new daily rows.
             cur.execute("""
                 SELECT DISTINCT symbol FROM daily_prices
-                WHERE date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '5 days'
+                WHERE date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '30 days'
                   AND (ema_50 IS NULL OR ema_200 IS NULL OR rs_90d IS NULL
                        OR avg_volume_20d IS NULL OR rolling_high_6m IS NULL)
             """)
