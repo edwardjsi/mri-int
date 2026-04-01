@@ -39,25 +39,33 @@ def add_indicator_columns_if_missing():
 
 def fetch_data(symbols=None):
     """
-    Incremental fetch: Only fetch symbols that need updates (ema_50 IS NULL).
-    Fetches the last 255 days of history for calculation accuracy.
+    Incremental fetch: finds symbols with ANY NULL indicator columns in
+    the recent window (last 5 days). This catches newly ingested rows
+    that have prices but no computed indicators yet.
+    Fetches full 255-day history for those symbols for calculation accuracy.
     """
     conn = get_connection()
     try:
         if not symbols:
-            # Detect symbols needing indicators
             cur = conn.cursor()
-            cur.execute("SELECT DISTINCT symbol FROM daily_prices WHERE ema_50 IS NULL")
+            # FIX: Find symbols that have rows with NULL indicators in the
+            # recent window — not just globally. This catches new daily rows.
+            cur.execute("""
+                SELECT DISTINCT symbol FROM daily_prices
+                WHERE date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '5 days'
+                  AND (ema_50 IS NULL OR ema_200 IS NULL OR rs_90d IS NULL
+                       OR avg_volume_20d IS NULL OR rolling_high_6m IS NULL)
+            """)
             symbols = [r[0] for r in cur.fetchall()]
             cur.close()
             
         if not symbols:
-            logger.info("No symbols found needing indicators.")
+            logger.info("✅ All symbols have indicators up to date.")
             return pd.DataFrame(), pd.DataFrame()
 
-        logger.info(f"Incremental update for {len(symbols)} symbols...")
+        logger.info(f"📊 Computing indicators for {len(symbols)} symbols with missing data...")
         
-        # Optimized query: Fetch the last 255 days for these symbols
+        # Fetch the last 255 days for these symbols
         # (255 is enough for a stable 200 EMA and 6-month high)
         sql = """
             SELECT symbol, date, high, close, volume, ema_20, ema_50, ema_200 
@@ -102,7 +110,6 @@ def compute_indicators(df, idx_df):
         s_df['avg_volume_20d'] = s_df['volume'].rolling(window=20).mean()
         
         # 5. Relative Strength (RS_90D) - Simplified calculation
-        # Normalized returns of stock vs index
         if not idx_df.empty:
             merged = pd.merge(s_df[['date', 'close']], idx_df[['date', 'idx_close']], on='date', how='inner')
             if len(merged) > 90:
@@ -114,27 +121,34 @@ def compute_indicators(df, idx_df):
         # Clean up NaNs for Postgres
         s_df = s_df.replace({np.nan: None})
 
-        # Only add rows that need update (latest ones)
+        # FIX: Always write the latest rows. The UPDATE SQL is idempotent
+        # (ON symbol+date), so writing the same correct value twice is harmless.
+        # The old filter "if ema_50 is None" was wrong — it checked AFTER
+        # computing, so the freshly-computed value was never None, and updates
+        # were silently discarded.
         for _, row in s_df.tail(10).iterrows():
-            if row.get('ema_50') is None or row.get('ema_50') == 0:
-                updates.append({
-                    'symbol': row['symbol'], 
-                    'date': row['date'],
-                    'ema_20': row['ema_20'], 
-                    'ema_50': row['ema_50'], 
-                    'ema_200': row['ema_200'],
-                    'rsi_14': row['rsi_14'] if row['rsi_14'] is not None else 50,
-                    'below_200ema': bool(row['below_200ema']),
-                    'ema_200_slope_20': row.get('ema_200_slope_20'),
-                    'rolling_high_6m': row.get('rolling_high_6m'),
-                    'avg_volume_20d': row.get('avg_volume_20d'),
-                    'rs_90d': row.get('rs_90d')
-                })
+            updates.append({
+                'symbol': row['symbol'], 
+                'date': row['date'],
+                'ema_20': row.get('ema_20'), 
+                'ema_50': row.get('ema_50'), 
+                'ema_200': row.get('ema_200'),
+                'rsi_14': row.get('rsi_14') if row.get('rsi_14') is not None else 50,
+                'below_200ema': bool(row.get('below_200ema', False)),
+                'ema_200_slope_20': row.get('ema_200_slope_20'),
+                'rolling_high_6m': row.get('rolling_high_6m'),
+                'avg_volume_20d': row.get('avg_volume_20d'),
+                'rs_90d': row.get('rs_90d')
+            })
+    
+    logger.info(f"📊 Indicator engine prepared {len(updates)} row updates across {df['symbol'].nunique()} symbols")
     return updates
 
 def update_db_with_indicators(updates):
     """Bulk update the daily_prices table."""
-    if not updates: return
+    if not updates:
+        logger.info("⚠️ No indicator updates to write (0 rows). Check if ingestion produced new data.")
+        return
     conn = get_connection()
     try:
         cur = conn.cursor()
@@ -149,6 +163,7 @@ def update_db_with_indicators(updates):
         from psycopg2.extras import execute_batch
         execute_batch(cur, sql, updates, page_size=2000)
         conn.commit()
+        logger.info(f"✅ Wrote {len(updates)} indicator updates to DB")
         cur.close()
     finally:
         conn.close()

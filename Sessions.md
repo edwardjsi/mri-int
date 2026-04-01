@@ -615,3 +615,32 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 
 ### What Was Done
 - Improved password reset reliability and debuggability: forgot-password now rolls back the reset token if SES send fails, and returns a safe actionable error message (with a pointer to `/api/email/debug?check_identity=true`).
+
+
+---
+
+## Session 029 — 2026-04-01
+
+### What Was Done
+- **Pipeline Silent Failure Audit**: Diagnosed why the dashboard was not updating to March 30 data despite the pipeline running and email being sent.
+- Found and fixed **5 critical bugs** across the pipeline (Decision 077):
+  1. `indicator_engine.py`: Write filter `if ema_50 is None` check after computing (always False) — indicators never written for existing symbols.
+  2. `indicator_engine.py`: `fetch_data()` global NULL check missed new daily rows — changed to 5-day recent window check.
+  3. `regime_engine.py`: Duplicate `compute_market_regime()` function — Python used last definition, first was dead code.
+  4. `mri_pipeline.py`: Freshness check used `get_last_date()` (subtracts 3 days for download buffer) instead of actual `MAX(date)`.
+  5. `regime_engine.py`: Scoring engine silently produced garbage on NULL indicators via `.fillna()` — added health check warning.
+- Added **end-of-pipeline health check** that compares MAX(date) across all tables and raises CRITICAL log if stages drift.
+- Added **step-level logging** so zero-output conditions are visible.
+- Created `docs/pipeline_silent_failure_audit.md` and `docs/dashboard_stale_diagnosis_20260401.md`.
+
+### Decisions Made
+- Decision 077: Pipeline Silent Failure Audit & Hardening.
+
+### Current State
+- All 5 bugs fixed. Pipeline now self-validates output at every stage.
+- Ready to re-trigger pipeline to backfill stale data.
+
+### Next Session Must Start With
+> - Re-trigger the pipeline (GitHub Actions workflow_dispatch or manual run).
+> - Verify the health check output shows all dates aligned.
+> - Confirm dashboard reflects the latest market day data.

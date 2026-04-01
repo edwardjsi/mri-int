@@ -487,3 +487,16 @@ Decision:
 3. Added missing `storage_ready` flag to API analysis responses to ensure correct frontend state rendering for "Digital Twin" holdings.
 Reason: Strict "WISE GUARD" validation was silently skipping valid stocks during new user onboarding because the master universe table hadn't been synced yet. This ensures a friction-less "Day 1" experience while maintaining high-quality data once the system is synced.
 Status: FINAL.
+
+## Decision 077 — Pipeline Silent Failure Audit & Hardening
+Date: 2026-04-01  
+Decision:  
+1. Fixed **indicator write filter** in `indicator_engine.py` that discarded freshly-computed indicators by checking `if ema_50 is None` AFTER computing it (always False). Indicators are now always written for the latest 10 rows.
+2. Fixed **symbol detection** in `fetch_data()` to find symbols with NULL indicators in the recent 5-day window, not just globally.
+3. Removed **duplicate `compute_market_regime()` definition** in `regime_engine.py` (Python used the last one; first was dead code loading all history).
+4. Fixed **freshness check** in `mri_pipeline.py` that used `get_last_date()` (which subtracts 3 days as a download buffer) instead of querying `MAX(date)` directly.
+5. Added **pipeline health check** at end of pipeline that compares `MAX(date)` across `daily_prices`, `stock_scores`, `market_regime`, and `index_prices` — raises CRITICAL log if stages drift >3 days.
+6. Added **NULL indicator health check** in scoring engine that warns when >50% of symbols have NULL `ema_50` on the latest date.
+7. Added **step-level logging** across all engines to make zero-output conditions visible.
+Reason: Dashboard was repeatedly going stale despite the pipeline "completing successfully" and emails being sent. The root cause was a pattern of graceful fallbacks that silently produced zero output instead of crashing. See `docs/pipeline_silent_failure_audit.md` for full analysis.
+Status: FINAL.

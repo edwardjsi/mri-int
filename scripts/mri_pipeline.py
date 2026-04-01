@@ -126,7 +126,19 @@ def run_pipeline():
 
     # --- FRESHNESS CHECK ---
     # If we already have the most recent data, skip to scoring/signals
-    last_stored_date = get_last_date("daily_prices")
+    # NOTE: We query MAX(date) directly — do NOT use get_last_date() here
+    # because it subtracts 3 days as a download lookback buffer.
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT MAX(date) FROM daily_prices")
+        last_stored = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        last_stored_date = str(last_stored) if last_stored else "1970-01-01"
+    except Exception:
+        last_stored_date = "1970-01-01"
+    
     today = datetime.now().date()
     # Subtract 1 day for 'last trading day' logic (or 3 for weekends)
     effective_today = today if today.weekday() < 5 else today - timedelta(days=(today.weekday() - 4))
@@ -193,7 +205,51 @@ def run_pipeline():
         logger.error(f"  ❌ Engine failed: {e}")
         sys.exit(1)
 
+    # ═══ PIPELINE HEALTH CHECK ═══
+    # Verify data actually flowed through all stages
+    try:
+        from src.db import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("SELECT MAX(date) FROM daily_prices")
+        max_prices = cur.fetchone()[0]
+        
+        cur.execute("SELECT MAX(date) FROM stock_scores")
+        max_scores = cur.fetchone()[0]
+        
+        cur.execute("SELECT MAX(date) FROM market_regime")
+        max_regime = cur.fetchone()[0]
+        
+        cur.execute("SELECT MAX(date) FROM index_prices WHERE symbol = 'NIFTY50'")
+        max_index = cur.fetchone()[0]
+        
+        cur.close()
+        conn.close()
+        
+        logger.info("═══ PIPELINE HEALTH CHECK ═══")
+        logger.info(f"  daily_prices  MAX(date) = {max_prices}")
+        logger.info(f"  index_prices  MAX(date) = {max_index}")
+        logger.info(f"  stock_scores  MAX(date) = {max_scores}")
+        logger.info(f"  market_regime MAX(date) = {max_regime}")
+        
+        # Check for date drift between stages
+        dates = [d for d in [max_prices, max_scores, max_regime] if d is not None]
+        if dates:
+            spread = (max(dates) - min(dates)).days
+            if spread > 3:
+                logger.critical(
+                    f"🚨 DATA DRIFT DETECTED: {spread}-day gap between pipeline stages! "
+                    f"Prices={max_prices}, Scores={max_scores}, Regime={max_regime}. "
+                    f"Dashboard will show STALE data."
+                )
+            else:
+                logger.info(f"  ✅ All stages within {spread}-day spread — HEALTHY")
+    except Exception as e:
+        logger.warning(f"Health check failed: {e}")
+
     logger.info("=== Pipeline Complete ===")
 
 if __name__ == "__main__":
     run_pipeline()
+

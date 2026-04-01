@@ -1,4 +1,4 @@
-# MRI Platform - Final Stabilization Report (March 26, 2026)
+# MRI Platform - Progress Report (April 1, 2026)
 
 ## ✅ Completed Fixes & Features (March 26 Update)
 1.  **Scoring Logic Overhaul**: Standardized the system to a 0–100 weighted scale. Fixed the "No Signals" bug by aligning thresholds (Buy: 75+, Sell: 40-).
@@ -16,12 +16,22 @@
     - Removed the "Network Diagnostics" debug link from public login/signup pages.
     - Fixed JSX markup errors to ensure build stability on Vercel/Railway.
 
+## ✅ Pipeline Silent Failure Audit (April 1 Update)
+7.  **5 Critical Pipeline Bugs Fixed** (Decision 077):
+    - Fixed indicator write filter that silently discarded freshly-computed indicators.
+    - Fixed symbol detection to catch new daily rows with NULL indicators in recent window.
+    - Removed duplicate `compute_market_regime()` function definition.
+    - Fixed freshness check that used download-buffer date instead of actual MAX(date).
+    - Added pipeline health check, NULL indicator detection, and step-level logging.
+    - See `docs/pipeline_silent_failure_audit.md` for full details.
+
 ## 🚀 Final Status
 -   **Signals**: ✅ **LIVE & ACCURATE**. Generators are producing actionable trades on the correct weighted scale.
 -   **Emails**: ✅ **WORKING**. AWS SES correctly dispatched with your portfolio/watchlist status.
 -   **Admin Portal**: ✅ **READY**. Global explorer lists all user stocks with "PENDING" indicators for new data.
+-   **Pipeline**: ✅ **HARDENED**. Health checks now detect and report stale data across all stages.
 
 ---
-**Current Status**: **STABLE & PRODUCTION READY**
-**Platform Health**: OPTIMIZED
-**Next Milestone**: Monitor the next automated daily run (00:00 UTC).
+**Current Status**: **STABLE & HARDENED**
+**Platform Health**: OPTIMIZED — Pipeline now self-validates output
+**Next Milestone**: Re-trigger pipeline to backfill stale data, then monitor automated daily runs.

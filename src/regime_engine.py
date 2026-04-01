@@ -49,41 +49,42 @@ def calc_slope(s):
     x = np.arange(20)
     for i in range(19, len(s)):
         y = s_values[i-19:i+1]
-        # Safety: check if we have enough non-nan data for linregress
         if not np.isnan(y).any():
             slope, _, _, _, _ = linregress(x, y)
             result[i] = slope
     return pd.Series(result, index=s.index)
 
 def compute_market_regime():
+    """Calculates market regime (NIFTY 50) incrementally."""
     logger.info("Computing Market Regime based on Nifty 50...")
     conn = get_connection()
-    idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' ORDER BY date", conn)
+    # Fetch last 255 days of Nifty to compute 200 SMA
+    idx_df = pd.read_sql(
+        "SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' "
+        "AND date >= (SELECT MAX(date) FROM index_prices) - INTERVAL '255 days' ORDER BY date",
+        conn
+    )
     
     if idx_df.empty:
-        logger.warning("No Nifty 50 data found.")
+        logger.warning("⚠️ No index data for regime computation.")
         conn.close()
         return
 
-    # Calculate 200 SMA and slope
+    # SMA & Slope logic
     idx_df['sma_200'] = idx_df['close'].rolling(window=200, min_periods=1).mean()
-    idx_df['sma_200_slope_20'] = calc_slope(idx_df['sma_200'])
+    idx_df['sma_200_slope_20'] = idx_df['sma_200'].diff(20)
     
     def classify(row):
-        if pd.isna(row['sma_200_slope_20']):
-            return 'NEUTRAL'
-        if row['close'] > row['sma_200'] and row['sma_200_slope_20'] > 0:
-            return 'BULL'
-        elif row['close'] < row['sma_200'] and row['sma_200_slope_20'] < 0:
-            return 'BEAR'
-        else:
-            return 'NEUTRAL'
+        if pd.isna(row['sma_200_slope_20']): return 'NEUTRAL'
+        if row['close'] > row['sma_200'] and row['sma_200_slope_20'] > 0: return 'BULL'
+        elif row['close'] < row['sma_200'] and row['sma_200_slope_20'] < 0: return 'BEAR'
+        else: return 'NEUTRAL'
             
     idx_df['classification'] = idx_df.apply(classify, axis=1)
     
-    # Persist to DB
-    idx_df = idx_df.replace({np.nan: None})
-    update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].to_dict('records')
+    # Update the latest 5 days (saves writes while staying current)
+    recent = idx_df.tail(5).replace({np.nan: None})
+    update_data = recent[['date', 'sma_200', 'sma_200_slope_20', 'classification']].to_dict('records')
 
     cur = conn.cursor()
     sql = """
@@ -94,16 +95,21 @@ def compute_market_regime():
             sma_200_slope_20 = EXCLUDED.sma_200_slope_20,
             classification = EXCLUDED.classification;
     """
-    execute_batch(cur, sql, update_data, page_size=1000)
+    execute_batch(cur, sql, update_data, page_size=100)
     conn.commit()
+    
+    # Health check: log what we computed
+    latest = recent.iloc[-1] if not recent.empty else None
+    if latest is not None:
+        logger.info(f"✅ Regime updated through {latest['date']} → {latest['classification']}")
+    
     cur.close()
     conn.close()
-    logger.info("Regime computation complete.")
 
 def compute_stock_scores_for_symbols(symbols: list[str]):
     """
     Compute scores only for provided symbols. 
-    FIXED: Handles float vs NoneType comparison crash.
+    Includes health checks to detect when indicators are missing.
     """
     symbols_clean = [str(s).upper().strip() for s in (symbols or []) if str(s).strip()]
     if not symbols_clean:
@@ -124,15 +130,27 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         """
         df = pd.read_sql(sql, conn, params=(symbols_clean,))
 
-
         if df.empty:
-            logger.info("No rows found for targeted scoring.")
+            logger.warning("⚠️ No rows found for targeted scoring.")
             return
 
+        # HEALTH CHECK: Detect when indicators are mostly NULL
+        # This catches the case where ingestion ran but indicators didn't compute
+        latest_date = df['date'].max()
+        latest_rows = df[df['date'] == latest_date]
+        null_ema_count = latest_rows['ema_50'].isna().sum()
+        total_latest = len(latest_rows)
+        
+        if total_latest > 0 and null_ema_count / total_latest > 0.5:
+            logger.warning(
+                f"⚠️ HEALTH CHECK: {null_ema_count}/{total_latest} symbols have NULL ema_50 "
+                f"on {latest_date}. Indicators may not have been computed yet!"
+            )
+
         # 2. Safety: Fill NaNs to avoid the '>=' TypeError crash
-        # This replaces the 'None' values with logical fallbacks so math doesn't break
         df['rolling_high_6m'] = df['rolling_high_6m'].fillna(df['close'])
-        df['ema_200'] = df['ema_200'].fillna(df['ema_50']) # Fallback trend
+        df['ema_50'] = df['ema_50'].fillna(df['close'])  # Fallback to close
+        df['ema_200'] = df['ema_200'].fillna(df['ema_50'])  # Fallback trend
         df['ema_200_slope_20'] = df['ema_200_slope_20'].fillna(0)
         df['avg_volume_20d'] = df['avg_volume_20d'].fillna(df['volume'])
         df['rs_90d'] = df['rs_90d'].fillna(0)
@@ -145,7 +163,6 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['condition_rs'] = (df['rs_90d'] > 0).astype(bool)
 
         # Apply Weights (Total = 100)
-        # EMA 50/200: 25 pts, Slope: 25 pts, RS: 20 pts, 6m High: 20 pts, Volume: 10 pts
         df['total_score'] = (
             df['condition_ema_50_200'].astype(int) * 25 +
             df['condition_ema_200_slope'].astype(int) * 25 +
@@ -172,71 +189,26 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         execute_batch(cur, insert_sql, update_data, page_size=5000)
         conn.commit()
         cur.close()
-        logger.info(f"Targeted scoring complete for {len(symbols_clean)} symbols.")
+        logger.info(f"✅ Scoring complete: {len(update_data)} score rows written for {len(symbols_clean)} symbols")
 
     finally:
         conn.close()
-
-# Keep your original background bulk processing function
-def compute_market_regime():
-    """Calculates market regime (NIFTY 50) incrementally."""
-    conn = get_connection()
-    # Fetch last 255 days of Nifty to compute 200 SMA
-    idx_df = pd.read_sql("SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' AND date >= (SELECT MAX(date) FROM index_prices) - INTERVAL '255 days' ORDER BY date", conn)
-    
-    if idx_df.empty:
-        logger.warning("No index data for regime.")
-        conn.close()
-        return
-
-    # SMA & Slope logic
-    idx_df['sma_200'] = idx_df['close'].rolling(window=200).mean()
-    idx_df['sma_200_slope_20'] = idx_df['sma_200'].diff(20)
-    
-    def classify(row):
-        if pd.isna(row['sma_200_slope_20']): return 'NEUTRAL'
-        if row['close'] > row['sma_200'] and row['sma_200_slope_20'] > 0: return 'BULL'
-        elif row['close'] < row['sma_200'] and row['sma_200_slope_20'] < 0: return 'BEAR'
-        else: return 'NEUTRAL'
-            
-    idx_df['classification'] = idx_df.apply(classify, axis=1)
-    
-    # Only update the latest 5 days (saves writes)
-    idx_df = idx_df.tail(5).replace({np.nan: None})
-    update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].to_dict('records')
-
-    cur = conn.cursor()
-    sql = """
-        INSERT INTO market_regime (date, sma_200, sma_200_slope_20, classification)
-        VALUES (%(date)s, %(sma_200)s, %(sma_200_slope_20)s, %(classification)s)
-        ON CONFLICT (date) DO UPDATE SET 
-            sma_200 = EXCLUDED.sma_200,
-            sma_200_slope_20 = EXCLUDED.sma_200_slope_20,
-            classification = EXCLUDED.classification;
-    """
-    execute_batch(cur, sql, update_data, page_size=100)
-    conn.commit()
-    cur.close()
-    conn.close()
-    logger.info("Incremental regime complete.")
 
 def compute_stock_scores():
     """Aggressive daily scoring: ensures all symbols get graded for the newest data."""
     create_market_regime_and_scores_tables()
     conn = get_connection()
     try:
-        # Fetch symbols to process
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT symbol FROM daily_prices")
         symbols = [r[0] for r in cur.fetchall()]
         cur.close()
         
         if not symbols:
-            logger.info("No symbols found in daily_prices for scoring.")
+            logger.warning("⚠️ No symbols found in daily_prices for scoring.")
             return
 
-        logger.info(f"Computing/Refreshing scores for {len(symbols)} symbols...")
-        # Force a refresh of the last 5 days to catch all newest data
+        logger.info(f"📊 Computing/Refreshing scores for {len(symbols)} symbols...")
         compute_stock_scores_for_symbols(symbols)
     finally:
         conn.close()
@@ -244,4 +216,5 @@ def compute_stock_scores():
 if __name__ == "__main__":
     create_market_regime_and_scores_tables()
     compute_market_regime()
-    compute_stock_scores()
+    compute_stock_scores()
+
