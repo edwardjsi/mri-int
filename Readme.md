@@ -94,14 +94,14 @@ Scores overall market health (0–100):
 
 ### 2. Weighted Trend Score Engine (0–100)
 
-| Indicator                  | Weight |
-|----------------------------|--------|
-| EMA 50 > 200               | 25%    |
-| 200 EMA Slope > 0          | 25%    |
-| Relative Strength (90d)    | 20%    |
-| 6m Price Momentum          | 20%    |
-| Volume Surge (10d)         | 10%    |
-| **Total**                  | **100**|
+| Indicator                  | Weight | Score Component |
+|----------------------------|--------|-----------------|
+| EMA 50 > 200               | 25%    | Trend Integrity |
+| 200 EMA Slope > 0          | 25%    | Long-term Bias  |
+| Relative Strength (90d)    | 20%    | Outperformance  |
+| 6m Price Momentum          | 20%    | Alpha-Strength  |
+| Volume Surge (10d)         | 10%    | Liquidity-Gate  |
+| **Total**                  | **100**| **Trend Score** |
 
 ### 3. Portfolio Risk Engine
 User uploads holdings → system returns weighted risk level:
@@ -115,27 +115,39 @@ User uploads holdings → system returns weighted risk level:
 
 ---
 
-## Strategy Rules (Prototype)
+## 🛡️ Security & Stability Hardening (April 2026 Audit)
+
+The platform has passed a comprehensive **Python** and **PostgreSQL** architectural audit:
+
+- **Row Level Security (RLS)**: Every user's data is isolated at the database level. Even if an API query has a logic bug, User A cannot see User B's portfolio.
+- **SQL Injection Prevention**: All queries use `psycopg2.sql` parameterization. No f-string interpolation is permitted in the analytics engine.
+- **Connection Leak Remediation**: Database connections are strictly managed with `try...finally` blocks to ensure infinite uptime on serverless DBs like Neon.
+- **64-bit Scalability**: Tracking tables use `BIGSERIAL` (64-bit) primary keys to support billions of rows.
+- **Temporal Consistency**: Standardized to `TIMESTAMPTZ` for global-ready tracking.
+
+---
+
+## 🗺️ Architectural Codemaps
+Detailed structural maps for developers and AI agents:
+- [Backend Engine Codemap](docs/CODEMAPS/backend.md)
+- [Database Schema Codemap](docs/CODEMAPS/database.md)
+
+---
+
+## Strategy Rules (0–100 Weighted Model)
 
 ### Entry
-- Market Regime = Risk-On
-- Stock Score ≥ 4 out of 5
+- Market Regime = **Risk-On** (Score > 60)
+- Stock Trend Score ≥ **75 / 100**
 - Select Top 10 highest scoring stocks
 - Equal weight allocation (10% per stock)
-- Stock Score ≥ 2 (out of 3)
+- **Neutral Regime Grace**: Entries permitted if Score > 85.
 
 ### Exit
-- Stock Score drops to ≤ 2, OR
-- Market Regime shifts to Risk-Off, OR
+- Stock Trend Score drops to **≤ 40**, OR
+- Market Regime shifts to **Risk-Off** (Score < 40), OR
 - 20% trailing stop is hit
-- Stock Score drops to 0
-
-
-### Assumptions
-- Transaction cost: 0.4% round-trip
-- No leverage
-- No shorting
-- Rebalance on end-of-day basis
+- Stock Trend Score drops to **0** (Immediate Flush)
 
 ---
 
