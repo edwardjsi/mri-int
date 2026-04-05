@@ -260,7 +260,14 @@ Decision: Implement a persistent `client_external_holdings` table to store user-
 Reason: Evolution from one-off CSV uploads to a persistent monitoring tool. Enables users to track their actual holdings against MRI intelligence permanently, fulfilling the "another layer" requirement.
 Status: IMPLEMENTING.
 
-<!-- Append new decisions below. Never delete or modify old ones. -->
+## Decision 078 — Python Code Hardening & Security Audit
+Date: 2026-04-05  
+Decision:  
+1. **SQL Injection Remediation**: Transitioned all dynamic table/column identifiers in `src/db.py` and `src/ingestion_engine.py` to use `psycopg2.sql.Identifier`. Manual f-string interpolation into queries is now strictly forbidden.
+2. **Strict Connection Management**: Refactored all database-interacting functions to use Python's `with` context managers for cursors and `try...finally` blocks for connections. This ensures that every database connection is closed immediately after its task, even if a runtime error occurs.
+3. **Audit Documentation**: Created `PYTHON_REVIEW_REPORT.md` to document all security and stability findings for future audits.
+Reason: A comprehensive `python-reviewer` audit identified critical vulnerabilities in raw SQL generation and high-risk connection handling patterns that could cause "Too many connections" errors on Neon/RDS during heavy ingestion tasks.
+Status: FINAL.
 ## Decision 037 — Retain Render for Daily Pipeline (No GitHub Actions)
 Date: 2026-03-16
 Decision: Keep the daily data pipeline (`data_loader.py`) executing within the Render environment using reduced data lookback windows (5 days for existing stocks, ~3 years for newly uploaded user stocks) rather than offloading to external cron services like GitHub Actions.

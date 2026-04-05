@@ -16,22 +16,25 @@ from src.db import get_connection, create_tables, insert_daily_prices
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+from psycopg2 import sql
+
 def get_last_date(table_name="daily_prices") -> str:
     """Queries the DB for the latest record date to allow incremental top-up."""
     from src.db import get_connection
     conn = get_connection()
-    cur = conn.cursor()
     try:
-        cur.execute(f"SELECT MAX(date) FROM {table_name}")
-        last_date = cur.fetchone()[0]
-        if last_date:
-            # Shift back 3 days to catch any weekend/holiday gaps or data corrections
-            start_date = (last_date - timedelta(days=3)).strftime("%Y-%m-%d")
-            return start_date
-    except Exception:
-        pass
+        with conn.cursor() as cur:
+            # Using sql.Identifier to safely inject the table name
+            query = sql.SQL("SELECT MAX(date) FROM {}").format(sql.Identifier(table_name))
+            cur.execute(query)
+            last_date = cur.fetchone()[0]
+            if last_date:
+                # Shift back 3 days to catch any weekend/holiday gaps or data corrections
+                start_date = (last_date - timedelta(days=3)).strftime("%Y-%m-%d")
+                return start_date
+    except Exception as e:
+        logger.error(f"Error fetching last date for {table_name}: {e}")
     finally:
-        cur.close()
         conn.close()
     return (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d") # Default fallback 2 years
 
@@ -113,37 +116,39 @@ def sync_universe():
     logger.info("📡 Syncing Master Stock Universe (BSE + NSE)...")
     translator = build_symbol_translator()
     from src.db import get_connection
+    from psycopg2.extras import execute_batch
     conn = get_connection()
-    cur = conn.cursor()
     try:
-        cur.execute("CREATE TABLE IF NOT EXISTS universe (symbol TEXT PRIMARY KEY, company_name TEXT, isin TEXT, bse_code TEXT)")
-        # Clear old data (optional, but keep it fresh)
-        # cur.execute("TRUNCATE universe") 
-        
-        # We use a greedy approach to find all active names
-        headers = {"User-Agent": "Mozilla/5.0"}
-        nse_res = requests.get("https://archives.nseindia.com/content/equities/EQUITY_L.csv", headers=headers, timeout=15)
-        nse_df = pd.read_csv(io.StringIO(nse_res.text))
-        nse_df.columns = [c.upper().strip() for c in nse_df.columns]
-        
-        for _, row in nse_df.iterrows():
-            sym = str(row.get('SYMBOL', '')).strip().upper()
-            name = str(row.get('NAME OF COMPANY', row.get('COMPANY', ''))).strip()
-            isin = str(row.get('ISIN NUMBER', row.get('ISIN', ''))).strip()
-            if not sym or sym == 'NAN': continue
+        with conn.cursor() as cur:
+            cur.execute("CREATE TABLE IF NOT EXISTS universe (symbol TEXT PRIMARY KEY, company_name TEXT, isin TEXT, bse_code TEXT)")
             
-            cur.execute("""
-                INSERT INTO universe (symbol, company_name, isin, bse_code)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (symbol) DO UPDATE SET company_name = EXCLUDED.company_name
-            """, (sym, name, isin, translator.get(sym)))
+            # We use a greedy approach to find all active names
+            headers = {"User-Agent": "Mozilla/5.0"}
+            nse_res = requests.get("https://archives.nseindia.com/content/equities/EQUITY_L.csv", headers=headers, timeout=15)
+            nse_df = pd.read_csv(io.StringIO(nse_res.text))
+            nse_df.columns = [c.upper().strip() for c in nse_df.columns]
             
-        conn.commit()
-        logger.info(f"✅ Master Universe Synced. {len(nse_df)} NSE stocks verified.")
+            universe_records = []
+            for _, row in nse_df.iterrows():
+                sym = str(row.get('SYMBOL', '')).strip().upper()
+                name = str(row.get('NAME OF COMPANY', row.get('COMPANY', ''))).strip()
+                isin = str(row.get('ISIN NUMBER', row.get('ISIN', ''))).strip()
+                if not sym or sym == 'NAN': continue
+                universe_records.append((sym, name, isin, translator.get(sym)))
+            
+            if universe_records:
+                sql_query = """
+                    INSERT INTO universe (symbol, company_name, isin, bse_code)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (symbol) DO UPDATE SET company_name = EXCLUDED.company_name
+                """
+                execute_batch(cur, sql_query, universe_records, page_size=500)
+                conn.commit()
+                logger.info(f"✅ Master Universe Synced. {len(universe_records)} NSE stocks verified.")
     except Exception as e:
         logger.error(f"Universe Sync failed: {e}")
+        conn.rollback()
     finally:
-        cur.close()
         conn.close()
 
 def load_stocks(symbols: list, period: str = None):
@@ -181,11 +186,12 @@ def load_stocks(symbols: list, period: str = None):
                     # We check if the most recent symbol in our batch exists in DB
                     from src.db import get_connection
                     conn_check = get_connection()
-                    cur_check = conn_check.cursor()
-                    cur_check.execute("SELECT COUNT(*) FROM daily_prices WHERE symbol = ANY(%s)", (batch,))
-                    has_any = cur_check.fetchone()[0] > 0
-                    cur_check.close()
-                    conn_check.close()
+                    try:
+                        with conn_check.cursor() as cur_check:
+                            cur_check.execute("SELECT COUNT(*) FROM daily_prices WHERE symbol = ANY(%s)", (batch,))
+                            has_any = cur_check.fetchone()[0] > 0
+                    finally:
+                        conn_check.close()
 
                     if not has_any:
                         logger.info(f"  New symbols detected in batch. Forcing 2y history download.")
