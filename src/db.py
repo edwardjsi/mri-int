@@ -42,7 +42,7 @@ def create_tables():
         with conn.cursor() as cur:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS daily_prices (
-                    id              SERIAL PRIMARY KEY,
+                    id              BIGSERIAL PRIMARY KEY,
                     symbol          VARCHAR(20)  NOT NULL,
                     date            DATE         NOT NULL,
                     open            NUMERIC(12,4),
@@ -51,8 +51,8 @@ def create_tables():
                     close           NUMERIC(12,4),
                     adjusted_close  NUMERIC(12,4),
                     volume          BIGINT,
-                    created_at      TIMESTAMP DEFAULT NOW(),
-                    updated_at      TIMESTAMP DEFAULT NOW(),
+                    created_at      TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at      TIMESTAMPTZ DEFAULT NOW(),
                     UNIQUE(symbol, date)
                 );
 
@@ -60,9 +60,12 @@ def create_tables():
                 BEGIN 
                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                                    WHERE table_name='daily_prices' AND column_name='updated_at') THEN 
-                        ALTER TABLE daily_prices ADD COLUMN updated_at TIMESTAMP DEFAULT NOW(); 
+                        ALTER TABLE daily_prices ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW(); 
                     END IF; 
                 END $$;
+
+                ALTER TABLE daily_prices ALTER COLUMN created_at TYPE TIMESTAMPTZ;
+                ALTER TABLE daily_prices ALTER COLUMN updated_at TYPE TIMESTAMPTZ;
 
                 CREATE INDEX IF NOT EXISTS idx_daily_prices_symbol_date
                     ON daily_prices(symbol, date);
@@ -71,7 +74,7 @@ def create_tables():
                     ON daily_prices(date);
 
                 CREATE TABLE IF NOT EXISTS index_prices (
-                    id          SERIAL PRIMARY KEY,
+                    id          BIGSERIAL PRIMARY KEY,
                     symbol      VARCHAR(20)  NOT NULL,
                     date        DATE         NOT NULL,
                     open        NUMERIC(12,4),
@@ -79,9 +82,11 @@ def create_tables():
                     low         NUMERIC(12,4),
                     close       NUMERIC(12,4),
                     volume      BIGINT,
-                    created_at  TIMESTAMP DEFAULT NOW(),
+                    created_at  TIMESTAMPTZ DEFAULT NOW(),
                     UNIQUE(symbol, date)
                 );
+
+                ALTER TABLE index_prices ALTER COLUMN created_at TYPE TIMESTAMPTZ;
 
                 CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date
                     ON index_prices(symbol, date);
@@ -127,10 +132,10 @@ def create_tables():
             # Add client_watchlist table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS client_watchlist (
-                    id          SERIAL PRIMARY KEY,
+                    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     client_id   UUID REFERENCES clients(id) ON DELETE CASCADE,
                     symbol      VARCHAR(20) NOT NULL,
-                    created_at  TIMESTAMP DEFAULT NOW(),
+                    created_at  TIMESTAMPTZ DEFAULT NOW(),
                     UNIQUE(client_id, symbol)
                 );
 

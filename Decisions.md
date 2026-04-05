@@ -507,3 +507,21 @@ Decision:
 7. Added **step-level logging** across all engines to make zero-output conditions visible.
 Reason: Dashboard was repeatedly going stale despite the pipeline "completing successfully" and emails being sent. The root cause was a pattern of graceful fallbacks that silently produced zero output instead of crashing. See `docs/pipeline_silent_failure_audit.md` for full analysis.
 Status: FINAL.
+
+## Decision 078 — Python Code Hardening & Security Audit
+Date: 2026-04-05  
+Decision:  
+1. **SQL Injection Remediation**: Transitioned all dynamic table/column identifiers in `src/db.py` and `src/ingestion_engine.py` to use `psycopg2.sql.Identifier`. Manual f-string interpolation into queries is now strictly forbidden.
+2. **Strict Connection Management**: Refactored all database-interacting functions to use Python's `with` context managers for cursors and `try...finally` blocks for connections. This ensures that every database connection is closed immediately after its task, even if a runtime error occurs.
+3. **Audit Documentation**: Created `PYTHON_REVIEW_REPORT.md` to document all security and stability findings for future audits.
+Reason: A comprehensive `python-reviewer` audit identified critical vulnerabilities in raw SQL generation and high-risk connection handling patterns that could cause "Too many connections" errors on Neon/RDS during heavy ingestion tasks.
+Status: FINAL.
+
+## Decision 079 — Database Hardening & Multi-Tenant Isolation
+Date: 2026-04-05  
+Decision:  
+1. **Row Level Security (RLS)**: Enabled RLS on all `client_*` tables. Access is strictly controlled via a PostgreSQL policy checking the `app.current_client_id` session variable. This prevents cross-user data leakage at the database level.
+2. **Standardized Temporal Data**: Converted all `TIMESTAMP` columns to `TIMESTAMPTZ` (Timestamp with Timezone). This ensures absolute temporal consistency across AWS/Railway servers and local WSL development.
+3. **64-bit Architecture for Big Data**: Migrated `daily_prices` and `index_prices` primary keys from `SERIAL` to `BIGSERIAL` to support billions of rows.
+Reason: A `database-reviewer` audit identified several high-risk patterns: potential cross-tenant data leakage due to lack of RLS, and potential numeric overflow in the long-term price history data.
+Status: FINAL.

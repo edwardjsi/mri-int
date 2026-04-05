@@ -31,18 +31,17 @@ def ensure_required_tables(conn) -> None:
             is_active BOOLEAN DEFAULT TRUE,
             is_admin BOOLEAN DEFAULT FALSE,
             initial_capital NUMERIC(15,2) DEFAULT 100000,
-            created_at TIMESTAMP DEFAULT NOW()
+            created_at TIMESTAMPTZ DEFAULT NOW()
         );
         """
     )
     
     # 1. Clients Table Refinements
-    # Note: ADD COLUMN IF NOT EXISTS is fine, but we've combined it above. 
-    # Still keeping it for existing installs.
     cur.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;")
     cur.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
+    cur.execute("ALTER TABLE clients ALTER COLUMN created_at TYPE TIMESTAMPTZ;")
 
-    # 2. Digital Twin (External Holdings) - Fixes missing ID and Unique constraint
+    # 2. Digital Twin (External Holdings)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS client_external_holdings (
@@ -51,8 +50,8 @@ def ensure_required_tables(conn) -> None:
             symbol VARCHAR(20) NOT NULL,
             quantity NUMERIC(15,4) DEFAULT 0,
             avg_cost NUMERIC(12,4) DEFAULT 0,
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, symbol)
         );
         """
@@ -65,7 +64,7 @@ def ensure_required_tables(conn) -> None:
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
             symbol VARCHAR(20) NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW(),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, symbol)
         );
         """
@@ -85,7 +84,7 @@ def ensure_required_tables(conn) -> None:
             regime VARCHAR(20),
             reason TEXT,
             email_sent BOOLEAN DEFAULT false,
-            created_at TIMESTAMP DEFAULT NOW(),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, date, symbol, action)
         );
         """
@@ -102,7 +101,7 @@ def ensure_required_tables(conn) -> None:
             actual_price NUMERIC(12,4),
             quantity INT,
             notes TEXT,
-            recorded_at TIMESTAMP DEFAULT NOW()
+            recorded_at TIMESTAMPTZ DEFAULT NOW()
         );
         """
     )
@@ -178,18 +177,36 @@ def ensure_required_tables(conn) -> None:
             service VARCHAR(20),
             subject VARCHAR(255),
             status VARCHAR(20),
-            sent_at TIMESTAMP DEFAULT NOW()
+            sent_at TIMESTAMPTZ DEFAULT NOW()
         );
         """
     )
 
-    # 11. Indexes
+    # 11. Security - Enable RLS & Policies
+    client_tables = [
+        "client_external_holdings", "client_watchlist", "client_signals", 
+        "client_actions", "client_portfolio", "client_equity", "capital_additions"
+    ]
+    for table in client_tables:
+        # Enable RLS
+        cur.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;")
+        # Standard Policy: restrict to app.current_client_id session variable
+        # Note: In production, the API must run `SET app.current_client_id = '...'` in each connection.
+        policy_name = f"policy_{table}_client_isolation"
+        cur.execute(f"DROP POLICY IF EXISTS {policy_name} ON {table};")
+        cur.execute(f"""
+            CREATE POLICY {policy_name} ON {table}
+            FOR ALL
+            USING (client_id::text = current_setting('app.current_client_id', true));
+        """)
+
+    # 12. Indexes
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_external_holdings_client ON client_external_holdings(client_id);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_portfolio_client_open ON client_portfolio(client_id, is_open);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_client_signals_client_date ON client_signals(client_id, date);")
     
-    # Core performance indexes (added for Digital Twin/Dashboard speed)
+    # Core performance indexes
     cur.execute("CREATE INDEX IF NOT EXISTS idx_daily_prices_symbol_date ON daily_prices(symbol, date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_daily_prices_date ON daily_prices(date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_symbol_date ON stock_scores(symbol, date DESC);")
