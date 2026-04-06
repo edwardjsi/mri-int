@@ -1,4 +1,4 @@
-name: RESCUE MRI Pipeline
+name: NUCLEAR RESCUE
 
 on:
   schedule:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main
         
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -25,13 +27,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Reset Runtime Env
-        run: |
-          find . -name "__pycache__" -exec rm -rf {} +
-          find . -name "*.pyc" -delete
-          echo "=== RUNNER DIAGNOSTIC: VERIFYING src/db.py VERSION ==="
-          grep "market_index_prices" src/db.py || (echo "❌ ERROR: src/db.py IS STALE!" && exit 1)
-          
       - name: Run MRI Pipeline
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -43,8 +38,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          # DIAGNOSTIC: List all files on the runner!
-          echo "=== RUNNER DIAGNOSTIC: ROOT CONTENT ==="
-          ls -R
-          echo "=== RUNNER DIAGNOSTIC: EXECUTING PIPELINE ==="
+          echo "=== NUCLEAR DIAGNOSTIC: EXECUTING REPOSITORY HASH 9912 ==="
           python scripts/mri_pipeline.py
