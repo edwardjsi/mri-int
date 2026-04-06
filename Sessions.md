@@ -640,7 +640,17 @@ ender.yaml so the Render blueprint deploy no longer asks for a credit card.
 - All 5 bugs fixed. Pipeline now self-validates output at every stage.
 - Ready to re-trigger pipeline to backfill stale data.
 
+## [Session 030] — April 6, 2026
+### **Objective**: Fix Ingestion Schema Crash (`index_prices`)
+- **Resolved**: Fixed `column "created_at" of relation "index_prices" does not exist` error which was crashing the daily pipeline.
+- **Root Cause**: Diverged `db.py` files and lack of non-destructive schema checks for the `index_prices` table.
+- **Resolution**:
+  - Implemented Idempotent Schema Hardening using Postgres `DO` blocks for all Price tables.
+  - Synchronized `db.py` (root) and `src/db.py`.
+  - Fixed syntax issue in `create_tables` function.
+- **Verification**: Pipeline run confirmed `MAX(date) = 2026-04-06` across all stages with a 0-day spread (HEALTHY).
+
 ### Next Session Must Start With
-> - Re-trigger the pipeline (GitHub Actions workflow_dispatch or manual run).
-> - Verify the health check output shows all dates aligned.
-> - Confirm dashboard reflects the latest market day data.
+> - Monitor automated Daily Pipeline run (AWS EventBridge).
+> - Verify AWS SES email delivery in GitHub Actions run history.
+> - Finalize SaaS Dashboard UI for the portfolio/holdings section.
