@@ -45,7 +45,7 @@ def load_indices(period: str = None):
         logger.info(f"Forcing {period} index download...")
         idx_raw = yf.download("^NSEI", period=period, progress=False, auto_adjust=True)
     else:
-        start_date = get_last_date("index_prices")
+        start_date = get_last_date("market_index_prices")
         logger.info(f"Fetching NIFTY 50 Index data since {start_date}...")
         idx_raw = yf.download("^NSEI", start=start_date, progress=False, auto_adjust=True)
     

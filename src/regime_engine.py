@@ -60,8 +60,8 @@ def compute_market_regime():
     conn = get_connection()
     # Fetch last 255 days of Nifty to compute 200 SMA
     idx_df = pd.read_sql(
-        "SELECT date, close FROM index_prices WHERE symbol = 'NIFTY50' "
-        "AND date >= (SELECT MAX(date) FROM index_prices) - INTERVAL '255 days' ORDER BY date",
+        "SELECT date, close FROM market_index_prices WHERE symbol = 'NIFTY50' "
+        "AND date >= (SELECT MAX(date) FROM market_index_prices) - INTERVAL '255 days' ORDER BY date",
         conn
     )
     

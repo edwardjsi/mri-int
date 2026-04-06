@@ -20,10 +20,16 @@
 10. **Fixed Ingestion Crash**: Resolved `index_prices` schema missing `created_at` which was causing pipeline failures. All schema management now uses safe `DO` blocks.
 
 ## 🚀 Final Status (April 6)
--   **Security**: ✅ **HARDENED**. RLS and parameterized queries are active.
--   **Signals**: ✅ **LIVE**. 0 signals produced today (Market Condition Neutral/Risk-Off).
--   **Emails**: ✅ **VERIFIED**. GitHub Actions will dispatch correctly.
--   **Pipeline**: ✅ **STABLE**. All tables synchronized to **2026-04-06** (0-day spread).
+-   **Security**: ✅ **HARDENED**
+### **1. Ingestion & Core Pipeline** [STABLE & PRODUCTION-READY]
+- **Status**: ✅ **ACTIVE & REINFORCED** (2026-04-06)
+- **Key Features**:
+  - **Master Universe Sync**: Robust NSE/BSE ISIN bridging logic.
+  - **Schema Guardrails**: Atomic, schema-prefixed DDL migrations with forced `commit()` calls for cloud DB stability.
+  - **Ambiguity Prevention**: Migrated core index relation to `market_index_prices` to avoid naming collisions with internal DB views/objects.
+  - **Import Discovery**: Implemented discovery tracing (`DEBUG: LOADING ...`) to prevent root/package shadowing on CI/CD runners.
+- **Data Latency**: Last Sync → `2026-04-06` 
+- **Next-Day Execution**: Active (Buy on next day OPEN if signal triggers on close).
 
 ---
 **Current Status**: **STABLE & PRODUCTION-READY**
