@@ -73,6 +73,19 @@ def create_tables():
                 CREATE INDEX IF NOT EXISTS idx_daily_prices_date
                     ON daily_prices(date);
 
+        with conn.cursor() as cur:
+            # NUCLEAR OPTION: Detect if index_prices is a VIEW (which prevents ADD COLUMN)
+            cur.execute("""
+                SELECT table_type FROM information_schema.tables 
+                WHERE table_name = 'index_prices' AND table_schema = 'public';
+            """)
+            res = cur.fetchone()
+            if res and res[0] == 'VIEW':
+                logger.warning("⚠️ Ghost VIEW 'index_prices' detected! Dropping to recreate as TABLE.")
+                cur.execute("DROP VIEW IF EXISTS public.index_prices CASCADE;")
+                conn.commit()
+
+            cur.execute("""
                 CREATE TABLE IF NOT EXISTS public.index_prices (
                     id          BIGSERIAL PRIMARY KEY,
                     symbol      VARCHAR(20)  NOT NULL,
@@ -87,7 +100,7 @@ def create_tables():
                 );
             """)
 
-            # Nuclear Migration: Schema-prefixed, Atomically committed
+            # Multi-try migration for index_prices
             migrations = [
                 "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
                 "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
