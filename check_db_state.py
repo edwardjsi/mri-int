@@ -1,10 +1,10 @@
 import psycopg2
 import os
 import sys
-# Path setup so we can import src.db
+# Path setup so we can import engine_core.db
 sys.path.append(os.getcwd())
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def check():
     print("--- Database Health Check ---")

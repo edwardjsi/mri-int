@@ -3,7 +3,7 @@ import os
 # Add parent directory to sys.path to find src module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def deep_audit():
     conn = get_connection()

@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def run():
     print("\n" + "=" * 55)

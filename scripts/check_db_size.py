@@ -1,4 +1,4 @@
-from src.db import get_connection
+from engine_core.db import get_connection
 import os
 
 def check_db_size():

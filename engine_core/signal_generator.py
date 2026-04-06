@@ -7,7 +7,7 @@ from psycopg2.extras import RealDictCursor, execute_batch
 import logging
 import os
 from datetime import date
-from src.db import get_connection as _get_raw_connection
+from engine_core.db import get_connection as _get_raw_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

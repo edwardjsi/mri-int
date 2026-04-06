@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import execute_batch
-from src.config import get_db_credentials, DB_SSL
+from engine_core.config import get_db_credentials, DB_SSL
 import logging
 import time
 import os

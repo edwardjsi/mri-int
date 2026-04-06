@@ -5,8 +5,8 @@ import os
 sys.path.append(os.getcwd())
 
 try:
-    from src.ingestion_engine import load_indices
-    print("SUCCESS: load_indices imported successfully from src.ingestion_engine")
+    from engine_core.ingestion_engine import load_indices
+    print("SUCCESS: load_indices imported successfully from engine_core.ingestion_engine")
     print(f"Function object: {load_indices}")
 except ImportError as e:
     print(f"IMPORT ERROR: {e}")
@@ -15,7 +15,7 @@ except ImportError as e:
 
 # Inspect the module
 try:
-    import src.ingestion_engine
+    import engine_core.ingestion_engine
     print(f"Module file: {src.ingestion_engine.__file__}")
     print(f"Module members: {[m for m in dir(src.ingestion_engine) if not m.startswith('__')]}")
 except Exception as e:

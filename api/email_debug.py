@@ -2,7 +2,7 @@ import os
 
 from fastapi import APIRouter
 
-from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
+from engine_core.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
 
 router = APIRouter(prefix="/api/email", tags=["email"])
 

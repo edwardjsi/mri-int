@@ -8,8 +8,8 @@ import os
 # Ensure project root is in path
 sys.path.append(os.getcwd())
 
-from src.ingestion_engine import load_stocks
-from src.db import get_connection
+from engine_core.ingestion_engine import load_stocks
+from engine_core.db import get_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("bse_history")

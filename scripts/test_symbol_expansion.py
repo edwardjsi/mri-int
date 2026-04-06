@@ -34,7 +34,7 @@ def test_symbol_gathering():
         n500_isins = set()
 
     # 2. Fetch User-tracked holdings (Digital Twin)
-    from src.db import get_connection
+    from engine_core.db import get_connection
     user_symbols = []
     try:
         conn = get_connection()

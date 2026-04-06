@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from psycopg2.extras import RealDictCursor
 from api.deps import get_db, get_current_client
 from api.schema import ensure_required_tables
-from src.portfolio_review_engine import analyze_portfolio
+from engine_core.portfolio_review_engine import analyze_portfolio
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 

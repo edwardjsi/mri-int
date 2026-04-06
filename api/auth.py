@@ -14,8 +14,8 @@ import logging
 
 from api.deps import get_db, create_access_token, get_current_client
 from api.schema import ensure_required_tables
-from src.email_service import send_password_reset_email_detailed
-from src.mailerlite import add_subscriber
+from engine_core.email_service import send_password_reset_email_detailed
+from engine_core.mailerlite import add_subscriber
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 logger = logging.getLogger("mri_api.auth")

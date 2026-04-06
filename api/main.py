@@ -22,7 +22,7 @@ from api.email_debug import router as email_debug_router
 from api.watchlist import router as watchlist_router
 from api.admin import router as admin_router
 from api.schema import ensure_required_tables
-from src.db import get_connection
+from engine_core.db import get_connection
 
 load_dotenv()
 

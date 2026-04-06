@@ -18,13 +18,13 @@ print(f"DEBUG: LOADING scripts/mri_pipeline.py V15 from {os.path.abspath(__file_
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # IMPORT FROM THE BRAND NEW FILE
-from src.db_v15 import initialize_core_schema_v15, insert_index_prices, insert_daily_prices
+from engine_core.db_v15 import initialize_core_schema_v15, insert_index_prices, insert_daily_prices
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("pipeline")
 
 def get_full_symbol_list() -> Tuple[List[str], List[dict]]:
-    from src.db_v15 import get_connection
+    from engine_core.db_v15 import get_connection
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT symbol FROM client_watchlist")

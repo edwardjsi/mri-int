@@ -2,10 +2,10 @@ import psycopg2
 import os
 import sys
 import pandas as pd
-# Path setup so we can import src.db
+# Path setup so we can import engine_core.db
 sys.path.append(os.getcwd())
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def diagnose_volume():
     print("--- 🔍 Initiating Volume Integrity Diagnostic ---")

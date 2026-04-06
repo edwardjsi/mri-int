@@ -26,7 +26,7 @@ import os
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-from src.db import get_connection, insert_daily_prices
+from engine_core.db import get_connection, insert_daily_prices
 
 logging.basicConfig(
     level=logging.INFO,

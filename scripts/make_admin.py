@@ -5,7 +5,7 @@ import argparse
 # Ensure src modules can be imported
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def make_admin(email: str):
     conn = get_connection()

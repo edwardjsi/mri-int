@@ -8,7 +8,7 @@ Uses existing tables: market_regime, stock_scores, daily_prices. No new tables n
 """
 import logging
 from datetime import date
-from src.db import get_connection
+from engine_core.db import get_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

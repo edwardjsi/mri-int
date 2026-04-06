@@ -6,7 +6,7 @@ import pandas as pd
 # Ensure project root is in path
 sys.path.append(os.getcwd())
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def run_query(query):
     print(f"Executing query: {query}")

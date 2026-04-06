@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 # SUPER DEBUG: Trace loader path
 print(f"DEBUG: LOADING ingestion_engine.py from {os.path.abspath(__file__)}")
 
-from src.db import get_connection, initialize_core_schema_v12, insert_daily_prices
+from engine_core.db import get_connection, initialize_core_schema_v12, insert_daily_prices
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ from psycopg2 import sql
 
 def get_last_date(table_name="daily_prices") -> str:
     """Queries the DB for the latest record."""
-    from src.db import get_connection
+    from engine_core.db import get_connection
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -55,7 +55,7 @@ def load_indices(period: str = None):
     idx_df['symbol'] = 'NIFTY50'
     idx_df['date'] = pd.to_datetime(idx_df['date']).dt.date
     
-    from src.db import insert_index_prices
+    from engine_core.db import insert_index_prices
     records = idx_df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
     logger.info(f"📊 Inserting {len(records)} index rows for NIFTY50 into market_index_prices")
     insert_index_prices(records)

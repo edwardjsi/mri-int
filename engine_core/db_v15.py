@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_connection():
-    from src.config import get_db_credentials, DB_SSL
+    from engine_core.config import get_db_credentials, DB_SSL
     creds = get_db_credentials()
     connect_kwargs = dict(
         host=creds["host"], port=creds.get("port", 5432),

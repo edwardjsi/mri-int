@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import logging
-from src.db import get_connection
+from engine_core.db import get_connection
 from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)

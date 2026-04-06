@@ -7,8 +7,8 @@ from psycopg2.extras import RealDictCursor, execute_batch
 import logging
 import os
 from datetime import date
-from src.db import get_connection as _get_raw_connection
-from src.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
+from engine_core.db import get_connection as _get_raw_connection
+from engine_core.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
 from botocore.exceptions import ClientError
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

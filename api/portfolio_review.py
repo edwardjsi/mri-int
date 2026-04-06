@@ -9,8 +9,8 @@ from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.db import get_connection
-from src.on_demand_ingest import ingest_missing_symbols_sync
+from engine_core.db import get_connection
+from engine_core.on_demand_ingest import ingest_missing_symbols_sync
 from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
 
@@ -57,7 +57,7 @@ async def get_holdings(
         # Enrich with analysis if we have holdings
         enriched_holdings = []
         if holdings_list:
-            from src.portfolio_review_engine import analyze_portfolio
+            from engine_core.portfolio_review_engine import analyze_portfolio
             try:
                 is_dict_holdings = not holdings_list or isinstance(holdings_list[0], dict)
                 raw_list = []
@@ -264,7 +264,7 @@ async def upload_csv(
         )
         
         # Analyze and return instantly
-        from src.portfolio_review_engine import analyze_portfolio
+        from engine_core.portfolio_review_engine import analyze_portfolio
         analysis = analyze_portfolio(processed_holdings, conn)
         analysis["storage_ready"] = True
         analysis["digital_twin_saved"] = True
@@ -343,11 +343,11 @@ async def regrade_holdings_sync(
         cur.execute("SELECT symbol, quantity, avg_cost FROM client_external_holdings WHERE client_id = %s", (client_id,))
         holdings = cur.fetchall()
         
-        from src.portfolio_review_engine import analyze_portfolio
+        from engine_core.portfolio_review_engine import analyze_portfolio
         results = analyze_portfolio(holdings, conn)
         
         if send_email:
-            from src.email_service import send_portfolio_review
+            from engine_core.email_service import send_portfolio_review
             send_portfolio_review(client["email"], client["name"], results)
             
         return results

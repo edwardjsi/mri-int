@@ -6,7 +6,7 @@ import os
 import logging
 import requests
 
-from src.config import get_mailerlite_credentials
+from engine_core.config import get_mailerlite_credentials
 
 logger = logging.getLogger(__name__)
 

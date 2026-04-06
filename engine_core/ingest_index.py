@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Ensure we're reading the local DB
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-from src.db import insert_index_prices
+from engine_core.db import insert_index_prices
 
 START_DATE = "2003-01-01"
 END_DATE = datetime.datetime.today().strftime("%Y-%m-%d")

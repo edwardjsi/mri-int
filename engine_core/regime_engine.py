@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.extras import execute_batch
 from scipy.stats import linregress
 import logging
-from src.db import get_connection
+from engine_core.db import get_connection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
 import asyncio
-from src.on_demand_ingest import ingest_missing_symbols_async
+from engine_core.on_demand_ingest import ingest_missing_symbols_async
 
 async def main():
     missing = ['SMLMAH']

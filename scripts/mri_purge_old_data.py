@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 # Add parent directory to sys.path to find src module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.db import get_connection
+from engine_core.db import get_connection
 
 def purge_old_data():
     """Removes data older than 2 years from daily_prices and stock_scores."""

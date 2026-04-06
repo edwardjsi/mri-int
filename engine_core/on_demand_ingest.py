@@ -2,9 +2,9 @@ import pandas as pd
 import yfinance as yf
 import logging
 from datetime import datetime
-from src.db import get_connection, insert_daily_prices
-from src.indicator_engine import compute_indicators_for_symbols
-from src.regime_engine import compute_stock_scores_for_symbols
+from engine_core.db import get_connection, insert_daily_prices
+from engine_core.indicator_engine import compute_indicators_for_symbols
+from engine_core.regime_engine import compute_stock_scores_for_symbols
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ def ingest_missing_symbols_sync(symbols, user_id='admin', user_email=None, user_
     
     # Send Notification Email
     if user_email:
-        from src.email_service import send_on_demand_risk_audit_report
+        from engine_core.email_service import send_on_demand_risk_audit_report
         send_on_demand_risk_audit_report(user_email, user_name, successful_symbols, pending_symbols)
 
 def process_and_save_yf_df(df, symbol):

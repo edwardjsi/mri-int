@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 import io
 import requests
-from src.ingestion_engine import load_stocks, load_indices
+from engine_core.ingestion_engine import load_stocks, load_indices
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
