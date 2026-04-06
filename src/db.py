@@ -5,7 +5,7 @@ import logging
 import time
 import os
 
-# TRACING: This is THE version that will finally fix the pipeline
+# TRACING: Final Version 12
 print(f"DEBUG: LOADING src/db.py from {os.path.abspath(__file__)}")
 
 logging.basicConfig(level=logging.INFO)
@@ -15,36 +15,28 @@ logger = logging.getLogger(__name__)
 def get_connection(retries=3, delay=5):
     creds = get_db_credentials()
     connect_kwargs = dict(
-        host=creds["host"],
-        port=creds.get("port", 5432),
-        dbname=creds["dbname"],
-        user=creds["username"],
-        password=creds["password"],
-        connect_timeout=30,
+        host=creds["host"], port=creds.get("port", 5432),
+        dbname=creds["dbname"], user=creds["username"],
+        password=creds["password"], connect_timeout=30,
     )
-    if DB_SSL:
-        connect_kwargs["sslmode"] = "require"
+    if DB_SSL: connect_kwargs["sslmode"] = "require"
     for attempt in range(retries):
         try:
-            conn = psycopg2.connect(**connect_kwargs)
-            return conn
-        except psycopg2.OperationalError as e:
+            return psycopg2.connect(**connect_kwargs)
+        except Exception as e:
             if attempt < retries - 1:
-                logger.warning(f"Database connection failed, retrying in {delay} seconds... ({e})")
                 time.sleep(delay)
-            else:
-                logger.error("Failed to connect to the database after multiple attempts.")
-                raise
+            else: raise
 
 
 from psycopg2 import sql
 
-def create_tables():
-    """Create all required tables if they don't exist."""
+def initialize_core_schema_v12():
+    """Create the fresh market_index_prices relation (Version 12)."""
+    logger.info("🛠️ [src/db.py] INITIALIZING SCHEMA (Version 12 - Mandatory Rename)")
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            # 1. Standard Price Table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS public.daily_prices (
                     id              BIGSERIAL PRIMARY KEY,
@@ -57,13 +49,8 @@ def create_tables():
                     adjusted_close  NUMERIC(12,4),
                     volume          BIGINT,
                     created_at      TIMESTAMPTZ DEFAULT NOW(),
-                    updated_at      TIMESTAMPTZ DEFAULT NOW(),
                     UNIQUE(symbol, date)
                 );
-            """)
-
-            # 2. Market Index Prices (Renamed from index_prices to avoid collision)
-            cur.execute("""
                 CREATE TABLE IF NOT EXISTS public.market_index_prices (
                     id          BIGSERIAL PRIMARY KEY,
                     symbol      VARCHAR(20)  NOT NULL,
@@ -77,28 +64,10 @@ def create_tables():
                     UNIQUE(symbol, date)
                 );
             """)
-
-            # Atomic Commit loop for OHLCV columns (Fresh Start)
-            migrations = [
-                "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
-                "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS high NUMERIC(12,4);",
-                "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS low NUMERIC(12,4);",
-                "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS volume BIGINT;",
-                "CREATE INDEX IF NOT EXISTS idx_market_index_prices_symbol_date ON public.market_index_prices(symbol, date);"
-            ]
-            
-            for cmd in migrations:
-                try:
-                    cur.execute(cmd)
-                    conn.commit()
-                except Exception as e:
-                    logger.warning(f"Note: {e}")
-                    conn.rollback()
-
             conn.commit()
             logger.info("Tables checked/created successfully.")
     except Exception as e:
-        logger.error(f"Error during create_tables: {e}")
+        logger.error(f"Error during initialize_core_schema_v12: {e}")
         conn.rollback()
         raise
     finally:
@@ -106,7 +75,7 @@ def create_tables():
 
 
 def insert_index_prices(records):
-    """Bulk insert index price records into the new market_index_prices table."""
+    """Bulk insert index price records into market_index_prices."""
     if not records: return
     conn = get_connection()
     try:
@@ -122,14 +91,14 @@ def insert_index_prices(records):
             execute_batch(cur, sql_query, records, page_size=1000)
             conn.commit()
     except Exception as e:
-        logger.error(f"Error inserting market index prices: {e}")
+        logger.error(f"Error inserting index prices: {e}")
         conn.rollback()
         raise
     finally:
         conn.close()
 
 def insert_daily_prices(records):
-    """Bulk insert price records. Skips duplicates."""
+    """Bulk insert daily prices."""
     if not records: return
     conn = get_connection()
     try:
@@ -141,13 +110,7 @@ def insert_daily_prices(records):
                     (%(symbol)s, %(date)s, %(open)s, %(high)s,
                      %(low)s, %(close)s, %(adjusted_close)s, %(volume)s)
                 ON CONFLICT (symbol, date) DO UPDATE SET
-                    open = EXCLUDED.open,
-                    high = EXCLUDED.high,
-                    low = EXCLUDED.low,
-                    close = EXCLUDED.close,
-                    adjusted_close = EXCLUDED.adjusted_close,
-                    volume = EXCLUDED.volume,
-                    updated_at = NOW();
+                    close = EXCLUDED.close, volume = EXCLUDED.volume;
             """
             execute_batch(cur, sql_query, records, page_size=1000)
             conn.commit()
@@ -159,28 +122,19 @@ def insert_daily_prices(records):
         conn.close()
 
 def run_quality_checks():
-    """Run basic data quality checks and print report."""
+    """Basic checks."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
             checks = {}
             cur.execute("SELECT COUNT(*) FROM daily_prices;")
             checks["total_stock_rows"] = cur.fetchone()[0]
-            
             cur.execute("SELECT COUNT(*) FROM market_index_prices;")
             checks["total_index_rows"] = cur.fetchone()[0]
-            
-            cur.execute("SELECT MIN(date), MAX(date) FROM market_index_prices;")
-            row = cur.fetchone()
-            checks["index_date_from"] = str(row[0])
-            checks["index_date_to"]   = str(row[1])
-            
-            print("\n========== DATA QUALITY REPORT ==========")
-            for key, val in checks.items():
-                print(f"  {key}: {val}")
+            print(f"REPORT: {checks}")
             return checks
     except Exception as e:
-        logger.error(f"Error during run_quality_checks: {e}")
+        logger.error(f"Error: {e}")
         conn.rollback()
         raise
     finally:
