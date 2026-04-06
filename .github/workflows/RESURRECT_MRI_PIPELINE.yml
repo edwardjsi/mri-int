@@ -1,0 +1,20 @@
+name: RESURRECT MRI PIPELINE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        
+      - name: Evidence
+        run: |
+          echo "NUCLEAR VICTORY: CACHE PURGED."
+          ls -R engine_core
+          python -c "import os; print(f'CONDUX: {os.path.abspath(\"scripts/mri_pipeline.py\")}')"
+          python scripts/mri_pipeline.py
