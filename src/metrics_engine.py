@@ -86,7 +86,7 @@ def run_metrics_engine(input_prefix=""):
     # Get benchmark prices aligned to our strategy's dates
     sql = """
         SELECT date, close 
-        FROM index_prices 
+        FROM market_index_prices 
         WHERE symbol = 'NIFTY50' 
         AND date >= %s AND date <= %s
         ORDER BY date

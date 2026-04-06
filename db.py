@@ -40,8 +40,8 @@ def get_connection(retries=3, delay=5):
 from psycopg2 import sql
 
 def create_tables():
-    """Create all required tables if they don't exist."""
-    logger.info("🛠️ [ROOT/db.py] INITIALIZING SCHEMA (Version 10.0)")
+    """Create the fresh market_index_prices relation."""
+    logger.info("🛠️ [ROOT/db.py] INITIALIZING SCHEMA (Version 11.0 - Final)")
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -63,7 +63,7 @@ def create_tables():
                 );
             """)
 
-            # 2. Market Index Prices (Renamed from index_prices to avoid collision)
+            # 2. Market Index Prices (Final Renaming)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS public.market_index_prices (
                     id          BIGSERIAL PRIMARY KEY,
@@ -79,9 +79,8 @@ def create_tables():
                 );
             """)
 
-            # Migration loop for any missing columns
+            # Migration for OHLCV
             migrations = [
-                "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
                 "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
                 "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS high NUMERIC(12,4);",
                 "ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS low NUMERIC(12,4);",
