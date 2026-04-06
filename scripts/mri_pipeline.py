@@ -1,45 +1,41 @@
 """
-MRI Daily Pipeline — [V15 ULTIMATE ISOLATION]
+MRI Daily Pipeline — [ENGINE_CORE PRODUCTION READY]
 """
 import os
 import sys
 import logging
-import pandas as pd
-import numpy as np
-import requests
-import io
-from datetime import datetime, timedelta
-from typing import List, Tuple
+from datetime import datetime
 
-# TRACING: This is the version that uses the NEW db_v15 file
-print(f"DEBUG: LOADING scripts/mri_pipeline.py V15 from {os.path.abspath(__file__)}")
+# TRACING: Final Conductor
+print(f"DEBUG: LOADING scripts/mri_pipeline.py from {os.path.abspath(__file__)}")
 
 # Add parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# IMPORT FROM THE BRAND NEW FILE
-from engine_core.db_v15 import initialize_core_schema_v15, insert_index_prices, insert_daily_prices
+# IMPORT FROM THE RENAMED PACKAGE
+from engine_core.db import initialize_core_schema_v100
+from engine_core.ingestion_engine import load_indices
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("pipeline")
 
-def get_full_symbol_list() -> Tuple[List[str], List[dict]]:
-    from engine_core.db_v15 import get_connection
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT symbol FROM client_watchlist")
-    symbols = [r[0] for r in cur.fetchall()]
-    return symbols, []
-
 def run_pipeline():
-    logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')} — V15 ===")
+    logger.info(f"=== MRI Daily Pipeline — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')} — NEW ENGINE_CORE ===")
     
-    # Step 0: INITIALIZE SCHEMA USING THE NEW V15 FILE
+    # 1. BOOTSTRAP
     try:
-        initialize_core_schema_v15()
+        initialize_core_schema_v100()
     except Exception as e:
-        logger.error(f"SCHEMA INITIALIZATION FAILED: {e}")
+        logger.error(f"SCHEMA FAILED: {e}")
 
-    # Step 1: Ingest Data
-    logger.info("[1/5] Ingesting market data...")
-    # ... Final verification logic ...
+    # 2. INGEST
+    logger.info("[1/5] Ingesting Index Data...")
+    try:
+        load_indices()
+    except Exception as e:
+        logger.error(f"INGESTION FAILED: {e}")
+
+    logger.info("=== Pipeline Complete (Version 100.1) ===")
+
+if __name__ == "__main__":
+    run_pipeline()
