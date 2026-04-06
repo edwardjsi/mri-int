@@ -3,6 +3,10 @@ from psycopg2.extras import execute_batch
 from src.config import get_db_credentials, DB_SSL
 import logging
 import time
+import os
+
+# TRACING: Detect which db.py is being loaded
+print(f"DEBUG: LOADING root db.py from {os.path.abspath(__file__)}")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,7 +41,7 @@ from psycopg2 import sql
 
 def create_tables():
     """Create all required tables if they don't exist."""
-    logger.info("🛠️ [ROOT/db.py] INITIALIZING SCHEMA (Version 8 - Identical)")
+    logger.info("🛠️ [ROOT/db.py] INITIALIZING SCHEMA (Version 8.1 - Identical)")
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -82,7 +86,7 @@ def create_tables():
             """)
             res = cur.fetchone()
             if res and res[0] == 'VIEW':
-                logger.warning("⚠️ Ghost VIEW 'index_prices' detected! Dropping to recreate as TABLE.")
+                logger.warning("⚠️ Ghost VIEW detected! Dropping to recreate as TABLE.")
                 cur.execute("DROP VIEW IF EXISTS public.index_prices CASCADE;")
                 conn.commit()
 
