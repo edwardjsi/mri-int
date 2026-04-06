@@ -86,22 +86,13 @@ def create_tables():
                     UNIQUE(symbol, date)
                 );
 
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                                   WHERE table_name='index_prices' AND column_name='created_at') THEN 
-                        ALTER TABLE index_prices ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW(); 
-                    END IF; 
-                END $$;
-
-                ALTER TABLE index_prices ALTER COLUMN created_at TYPE TIMESTAMPTZ;
-
                 CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date
                     ON index_prices(symbol, date);
             """)
 
-            # Ensure index_prices has the remaining missing columns if it already existed
+            # Ensure index_prices has the missing columns if it already existed
             cols_to_add = [
+                ("created_at", "TIMESTAMPTZ DEFAULT NOW()"),
                 ("open", "NUMERIC(12,4)"), 
                 ("high", "NUMERIC(12,4)"), 
                 ("low", "NUMERIC(12,4)"),
