@@ -25,6 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
+      - name: Reset Runtime Env
+        run: |
+          find . -name "__pycache__" -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+          echo "=== RUNNER DIAGNOSTIC: VERIFYING src/db.py VERSION ==="
+          grep "market_index_prices" src/db.py || (echo "❌ ERROR: src/db.py IS STALE!" && exit 1)
+          
       - name: Run MRI Pipeline
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
