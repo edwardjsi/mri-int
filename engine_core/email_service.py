@@ -443,6 +443,42 @@ def send_on_demand_risk_audit_report(email, name, successful, failed):
         logger.error(f"❌ Failed to send risk audit email: {e}")
         return False
 
+def send_portfolio_review(email: str, name: str, results: dict):
+    if not email or not aws_credentials_present():
+        return False
+        
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+        
+        subject = f"MRI Portfolio Regrade Complete"
+        html_body = f"""
+        <html>
+        <body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;color:#333">
+            <h2 style="color:#111827">📊 MRI Portfolio Regrade</h2>
+            <p>Hi {name or 'User'},</p>
+            <p>Your portfolio has been manually regraded. The new risk score is <b>{results.get('risk_level', 'UNKNOWN')}</b>.</p>
+            <p>Log in to your dashboard to see the latest trend grades for your stocks.</p>
+            <hr style="border:1px solid #eee;margin:20px 0">
+            <p style="font-size:12px;color:#999;text-align:center">Market Regime Intelligence</p>
+        </body>
+        </html>
+        """
+        
+        ses.send_email(
+            Source=SENDER_EMAIL,
+            Destination={"ToAddresses": [email]},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+            },
+        )
+        logger.info(f"✅ Portfolio review report sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send portfolio review email: {e}")
+        return False
+
 
 if __name__ == "__main__":
     send_signal_emails()
