@@ -1,20 +1,35 @@
 name: RESURRECT MRI PIPELINE
 
 on:
+  schedule:
+    - cron: '30 10 * * 1-5'
+  
   workflow_dispatch:
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
         
-      - name: Evidence
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Dependencies
         run: |
-          echo "NUCLEAR VICTORY: CACHE PURGED."
-          ls -R engine_core
-          python -c "import os; print(f'CONDUX: {os.path.abspath(\"scripts/mri_pipeline.py\")}')"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install yfinance psycopg2-binary
+          
+      - name: RUN REAL PIPELINE (ENGINE_CORE)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_SSL: "true"
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          # Fresh Run
           python scripts/mri_pipeline.py
