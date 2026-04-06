@@ -99,16 +99,21 @@ def create_tables():
                 ("volume", "BIGINT")
             ]
             for col_name, col_type in cols_to_add:
+                logger.info(f"Checking column {col_name} on index_prices...")
                 # Use parameterized query for DO block logic via sql.SQL
                 query = sql.SQL("""
                     DO $$ 
                     BEGIN 
                         IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                                       WHERE table_name='index_prices' AND column_name={}) THEN 
+                                       WHERE table_name='index_prices' 
+                                       AND (table_schema='public' OR table_schema='current_schema()')
+                                       AND column_name={}) THEN 
+                             RAISE NOTICE 'Adding column % to index_prices', {};
                              ALTER TABLE index_prices ADD COLUMN {} {}; 
                         END IF; 
                     END $$;
                 """).format(
+                    sql.Literal(col_name),
                     sql.Literal(col_name),
                     sql.Identifier(col_name),
                     sql.SQL(col_type)
