@@ -88,39 +88,38 @@ def create_tables():
             """)
 
             # Robust column migration for index_prices
-            # Using ADD COLUMN IF NOT EXISTS (Postgres 9.6+)
+            # Using individual commits to force metadata synchronization
             migrations = [
                 "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
-                "ALTER TABLE index_prices ALTER COLUMN created_at SET DEFAULT NOW();",
                 "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
                 "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS high NUMERIC(12,4);",
                 "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS low NUMERIC(12,4);",
                 "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS volume BIGINT;",
-                "CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date ON index_prices(symbol, date);",
-                "ALTER TABLE index_prices ADD CONSTRAINT index_prices_symbol_date_key UNIQUE (symbol, date);"
+                "CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date ON index_prices(symbol, date);"
             ]
             
             for cmd in migrations:
                 try:
                     cur.execute(cmd)
+                    conn.commit()  # SYNC METADATA
                 except Exception as e:
-                    # Ignore "already exists" errors
                     if "already exists" not in str(e).lower():
                         logger.warning(f"Note on index_prices migration step: {e}")
+                    conn.rollback()
 
             # Add client_watchlist table
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS client_watchlist (
-                    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    client_id   UUID REFERENCES clients(id) ON DELETE CASCADE,
-                    symbol      VARCHAR(20) NOT NULL,
-                    created_at  TIMESTAMPTZ DEFAULT NOW(),
-                    UNIQUE(client_id, symbol)
-                );
-                CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);
-            """)
-
-            conn.commit()
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS client_watchlist (
+                        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        client_id   UUID REFERENCES clients(id) ON DELETE CASCADE,
+                        symbol      VARCHAR(20) NOT NULL,
+                        created_at  TIMESTAMPTZ DEFAULT NOW(),
+                        UNIQUE(client_id, symbol)
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);
+                """)
+                conn.commit()
             logger.info("Tables checked/created successfully.")
     except Exception as e:
         logger.error(f"Error during create_tables: {e}")
