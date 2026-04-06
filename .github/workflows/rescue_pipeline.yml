@@ -20,23 +20,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
           
-      - name: Install dependencies
+      - name: NUCLEAR TRACER EXECUTION
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: NUCLEAR RESCUE EXECUTION
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DB_SSL: "true"
-          PYTHONPATH: ${{ github.workspace }}
-          SES_SENDER_EMAIL: "edwardjsi@gmail.com"
-          SES_REGION: "ap-southeast-1"
-          AWS_REGION: "ap-south-1"
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          # DIAGNOSTIC: EXECUTING INLINE NUCLEAR SCRIPT
-          python scripts/mri_rescue_final.py
+          echo "=== NUCLEAR TRACER EXECUTING... ==="
+          python scripts/FINAL_TRUTH.py
