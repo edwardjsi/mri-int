@@ -21,7 +21,16 @@ jobs:
         with:
           python-version: '3.11'
           
-      - name: NUCLEAR TRACER EXECUTION
+      - name: Install dependencies
         run: |
-          echo "=== NUCLEAR TRACER EXECUTING... ==="
-          python scripts/FINAL_TRUTH.py
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: RUN REAL PIPELINE (ENGINE_CORE)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_SSL: "true"
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          # The directory src/ is gone. We use engine_core/
+          python scripts/mri_pipeline.py
