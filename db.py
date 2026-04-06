@@ -37,6 +37,7 @@ from psycopg2 import sql
 
 def create_tables():
     """Create all required tables if they don't exist."""
+    logger.info("🛠️ [ROOT/db.py] INITIALIZING SCHEMA (Version 8 - Identical)")
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -74,7 +75,6 @@ def create_tables():
                     ON daily_prices(date);
             """)
 
-        with conn.cursor() as cur:
             # Detect if index_prices is a VIEW (preventing ADD COLUMN)
             cur.execute("""
                 SELECT table_type FROM information_schema.tables 
@@ -120,18 +120,18 @@ def create_tables():
                     conn.rollback()
 
             # Add client_watchlist table
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS public.client_watchlist (
-                        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                        client_id   UUID REFERENCES public.clients(id) ON DELETE CASCADE,
-                        symbol      VARCHAR(20) NOT NULL,
-                        created_at  TIMESTAMPTZ DEFAULT NOW(),
-                        UNIQUE(client_id, symbol)
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON public.client_watchlist(client_id);
-                """)
-                conn.commit()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.client_watchlist (
+                    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    client_id   UUID REFERENCES public.clients(id) ON DELETE CASCADE,
+                    symbol      VARCHAR(20) NOT NULL,
+                    created_at  TIMESTAMPTZ DEFAULT NOW(),
+                    UNIQUE(client_id, symbol)
+                );
+                CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);
+            """)
+
+            conn.commit()
             logger.info("Tables checked/created successfully.")
     except Exception as e:
         logger.error(f"Error during create_tables: {e}")

@@ -37,11 +37,12 @@ from psycopg2 import sql
 
 def create_tables():
     """Create all required tables if they don't exist."""
+    logger.info("🛠️ [src/db.py] INITIALIZING SCHEMA (Version 8 - View Detection Active)")
     conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS daily_prices (
+                CREATE TABLE IF NOT EXISTS public.daily_prices (
                     id              BIGSERIAL PRIMARY KEY,
                     symbol          VARCHAR(20)  NOT NULL,
                     date            DATE         NOT NULL,
@@ -72,9 +73,9 @@ def create_tables():
 
                 CREATE INDEX IF NOT EXISTS idx_daily_prices_date
                     ON daily_prices(date);
+            """)
 
-        with conn.cursor() as cur:
-            # NUCLEAR OPTION: Detect if index_prices is a VIEW (which prevents ADD COLUMN)
+            # Detect if index_prices is a VIEW (preventing ADD COLUMN)
             cur.execute("""
                 SELECT table_type FROM information_schema.tables 
                 WHERE table_name = 'index_prices' AND table_schema = 'public';
@@ -119,18 +120,18 @@ def create_tables():
                     conn.rollback()
 
             # Add client_watchlist table
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS public.client_watchlist (
-                        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                        client_id   UUID REFERENCES public.clients(id) ON DELETE CASCADE,
-                        symbol      VARCHAR(20) NOT NULL,
-                        created_at  TIMESTAMPTZ DEFAULT NOW(),
-                        UNIQUE(client_id, symbol)
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON public.client_watchlist(client_id);
-                """)
-                conn.commit()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.client_watchlist (
+                    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    client_id   UUID REFERENCES public.clients(id) ON DELETE CASCADE,
+                    symbol      VARCHAR(20) NOT NULL,
+                    created_at  TIMESTAMPTZ DEFAULT NOW(),
+                    UNIQUE(client_id, symbol)
+                );
+                CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON public.client_watchlist(client_id);
+            """)
+
+            conn.commit()
             logger.info("Tables checked/created successfully.")
     except Exception as e:
         logger.error(f"Error during create_tables: {e}")
