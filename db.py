@@ -41,7 +41,7 @@ def create_tables():
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS daily_prices (
+                CREATE TABLE IF NOT EXISTS public.daily_prices (
                     id              BIGSERIAL PRIMARY KEY,
                     symbol          VARCHAR(20)  NOT NULL,
                     date            DATE         NOT NULL,
@@ -73,7 +73,7 @@ def create_tables():
                 CREATE INDEX IF NOT EXISTS idx_daily_prices_date
                     ON daily_prices(date);
 
-                CREATE TABLE IF NOT EXISTS index_prices (
+                CREATE TABLE IF NOT EXISTS public.index_prices (
                     id          BIGSERIAL PRIMARY KEY,
                     symbol      VARCHAR(20)  NOT NULL,
                     date        DATE         NOT NULL,
@@ -87,37 +87,35 @@ def create_tables():
                 );
             """)
 
-            # Robust column migration for index_prices
-            # Using individual commits to force metadata synchronization
+            # Atomic Migration
             migrations = [
-                "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
-                "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
-                "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS high NUMERIC(12,4);",
-                "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS low NUMERIC(12,4);",
-                "ALTER TABLE index_prices ADD COLUMN IF NOT EXISTS volume BIGINT;",
-                "CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date ON index_prices(symbol, date);"
+                "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();",
+                "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS open NUMERIC(12,4);",
+                "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS high NUMERIC(12,4);",
+                "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS low NUMERIC(12,4);",
+                "ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS volume BIGINT;",
+                "CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date ON public.index_prices(symbol, date);"
             ]
             
             for cmd in migrations:
                 try:
                     cur.execute(cmd)
-                    conn.commit()  # SYNC METADATA
+                    conn.commit()
                 except Exception as e:
-                    if "already exists" not in str(e).lower():
-                        logger.warning(f"Note on index_prices migration step: {e}")
+                    logger.warning(f"Note: {e}")
                     conn.rollback()
 
             # Add client_watchlist table
             with conn.cursor() as cur:
                 cur.execute("""
-                    CREATE TABLE IF NOT EXISTS client_watchlist (
+                    CREATE TABLE IF NOT EXISTS public.client_watchlist (
                         id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                        client_id   UUID REFERENCES clients(id) ON DELETE CASCADE,
+                        client_id   UUID REFERENCES public.clients(id) ON DELETE CASCADE,
                         symbol      VARCHAR(20) NOT NULL,
                         created_at  TIMESTAMPTZ DEFAULT NOW(),
                         UNIQUE(client_id, symbol)
                     );
-                    CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON client_watchlist(client_id);
+                    CREATE INDEX IF NOT EXISTS idx_client_watchlist_client ON public.client_watchlist(client_id);
                 """)
                 conn.commit()
             logger.info("Tables checked/created successfully.")

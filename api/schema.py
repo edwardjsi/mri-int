@@ -213,5 +213,26 @@ def ensure_required_tables(conn) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_date_desc ON stock_scores(date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_market_regime_date ON market_regime(date DESC);")
 
+    # 13. Index Prices (Core Operational Table)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.index_prices (
+            id          BIGSERIAL PRIMARY KEY,
+            symbol      VARCHAR(20)  NOT NULL,
+            date        DATE         NOT NULL,
+            open        NUMERIC(12,4),
+            high        NUMERIC(12,4),
+            low         NUMERIC(12,4),
+            close       NUMERIC(12,4),
+            volume      BIGINT,
+            created_at  TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, date)
+        );
+        """
+    )
+    # Ensure created_at exists for older versions of the table
+    cur.execute("ALTER TABLE public.index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_index_prices_symbol_date ON public.index_prices(symbol, date);")
+
     conn.commit()
     cur.close()
