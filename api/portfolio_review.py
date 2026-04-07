@@ -214,7 +214,7 @@ async def upload_csv(
         
         # WISE GUARD: Pre-fetch universe for bulk check
         cur.execute("SELECT symbol FROM market_index_prices")
-        universe_map = {r[0]: r[1] for r in cur.fetchall()}
+        universe_map = {r[0] for r in cur.fetchall()}
 
         processed_holdings = []
 
