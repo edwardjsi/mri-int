@@ -55,3 +55,21 @@ def insert_index_prices(records):
             conn.commit()
     finally:
         conn.close()
+
+def insert_daily_prices(records):
+    """Bulk insert price rows; safe on conflict."""
+    if not records:
+        return
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            execute_batch(
+                cur,
+                "INSERT INTO daily_prices (symbol, date, open, high, low, close, volume) " +
+                "VALUES (%(symbol)s, %(date)s, %(open)s, %(high)s, %(low)s, %(close)s, %(volume)s) " +
+                "ON CONFLICT (symbol, date) DO NOTHING;",
+                records,
+            )
+            conn.commit()
+    finally:
+        conn.close()

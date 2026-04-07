@@ -31,14 +31,16 @@ app = FastAPI(title="MRI-Int API")
 @app.on_event("startup")
 def on_startup():
     logger.info("Syncing Database Schema...")
-    conn = get_connection()
+    conn = None
     try:
+        conn = get_connection()
         ensure_required_tables(conn)
         logger.info("✅ Database Schema Synced")
     except Exception as e:
         logger.error(f"❌ Database Schema Sync FAILED: {e}")
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 # Custom Exception Handler to log validation errors
 @app.exception_handler(RequestValidationError)
