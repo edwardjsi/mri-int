@@ -16,7 +16,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 security = HTTPBearer()
 
-
 # ── Database ────────────────────────────────────────────────
 def get_db():
     """Yield a psycopg2 connection with RealDictCursor."""
@@ -48,7 +47,6 @@ def get_db():
     finally:
         conn.close()
 
-
 # ── JWT Helpers ─────────────────────────────────────────────
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -75,4 +73,8 @@ def get_current_client(
     client = cur.fetchone()
     if not client or not client["is_active"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Client not found or inactive")
+
+    # Set session-level client id for RLS policies that rely on app.current_client_id
+    cur.execute("SELECT set_config('app.current_client_id', %s, true);", (client_id,))
+
     return client

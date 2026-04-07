@@ -139,40 +139,20 @@ async def add_single_holding(
 @router.post("/upload_csv")
 async def upload_csv(
     background_tasks: BackgroundTasks,
-    email: Optional[str] = Form(None),
-    name: Optional[str] = Form(None),
     file: UploadFile = File(...),
     conn=Depends(get_db),
-    auth: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
+    client=Depends(get_current_client),
+    email: Optional[str] = Form(None),
+    name: Optional[str] = Form(None),
 ):
     """Universal Unbreakable CSV Parser for Portfolios."""
     try:
-        # Resolve identity
-        client = None
-        current_email = email
-        if auth:
-            try:
-                from jose import jwt
-                from api.deps import SECRET_KEY, ALGORITHM
-                payload = jwt.decode(auth.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-                uid = payload.get("sub")
-                if uid:
-                    cur_auth = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-                    cur_auth.execute("SELECT id, email, name FROM clients WHERE id = %s", (uid,))
-                    client = cur_auth.fetchone()
-                    cur_auth.close()
-            except: pass
-
-        if not client and email:
-            cur_find = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur_find.execute("SELECT id, email FROM clients WHERE LOWER(email) = %s", (email.lower().strip(),))
-            client = cur_find.fetchone()
-            cur_find.close()
-
-        if not client:
-             raise HTTPException(status_code=403, detail="Session expired. Please log in again to upload.")
-
         client_id = client["id"]
+        current_email = email or client.get("email")
+        # Ensure RLS policies see the current client on this connection
+        cur_rls = conn.cursor()
+        cur_rls.execute("SELECT set_config('app.current_client_id', %s, true);", (client_id,))
+        cur_rls.close()
         contents = await file.read()
         
         # Resilient Reading
