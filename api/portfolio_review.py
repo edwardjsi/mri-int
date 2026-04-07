@@ -113,89 +113,18 @@ async def add_single_holding(
     """Save a single stock holding (Watchlist-style functionality for Portfolio)."""
     try:
         cur = conn.cursor()
-        sym = req.symbol.upper().strip()
-        client_id = str(client["id"])
-
-        cur.execute("""
-            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
-            VALUES (%s::uuid, %s, %s, %s)
-            ON CONFLICT (client_id, symbol) 
-            DO UPDATE SET 
-                quantity = EXCLUDED.quantity,
-                avg_cost = EXCLUDED.avg_cost,
-                updated_at = NOW()
-        """, (client_id, sym, req.quantity, req.avg_cost))
-        
-        conn.commit()
-        cur.close()
-        
-        background_tasks.add_task(ingest_missing_symbols_sync, [req.symbol.upper()], client_id)
-        return {"message": f"Successfully added {req.symbol.upper()}."}
-    except Exception as e:
-        conn.rollback()
-        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/upload-csv")
-@router.post("/upload_csv")
-async def upload_csv(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    conn=Depends(get_db),
-    client=Depends(get_current_client),
-    email: Optional[str] = Form(None),
-    name: Optional[str] = Form(None),
-):
-    """Universal Unbreakable CSV Parser for Portfolios."""
-    try:
-        client_id = client["id"]
-        current_email = email or client.get("email")
-        # Ensure RLS policies see the current client on this connection
-        cur_rls = conn.cursor()
-        cur_rls.execute("SELECT set_config('app.current_client_id', %s::text, true);", (str(client_id),))
-        cur_rls.close()
-        contents = await file.read()
-        
-        # Resilient Reading
-        sep = ','
-        try:
-            snippet = contents.decode('utf-8', errors='ignore')[:1024]
-            dialect = csv.Sniffer().sniff(snippet, delimiters=',;\t|')
-            sep = dialect.delimiter
-        except: pass
-
-        df = None
-        for enc in ['utf-8', 'latin-1', 'utf-8-sig']:
-            try:
-                df = pd.read_csv(io.StringIO(contents.decode(enc, errors='ignore')), sep=sep)
-                break
-            except: continue
-        
-        if df is None:
-            raise HTTPException(status_code=400, detail="Invalid CSV format.")
-
-        df.columns = [c.lower().strip() for c in df.columns]
-        symbol_aliases = ('symbol', 'ticker', 'instrument', 'stock', 'isin', 'tradingsymbol', 'trading symbol', 'holding', 'asset', 'script')
-        qty_aliases = ('quantity', 'shares', 'qty', 'qty.', 'available quantity', 'vol', 'volume', 'current qty', 'net qty')
-        cost_aliases = ('avg_cost', 'avg cost', 'cost', 'avg_buy_price', 'avg. cost', 'average price', 'buy price', 'average buy price', 'purchase price', 'avg price', 'avg. price')
-        
-        sym_col = next((c for c in df.columns if c in symbol_aliases), None)
-        qty_col = next((c for c in df.columns if c in qty_aliases), None)
-        cst_col = next((c for c in df.columns if c in cost_aliases), None)
-        
-        if not sym_col:
-             sym_col = df.select_dtypes(include=['object']).columns[0] if not df.select_dtypes(include=['object']).empty else None
-        
-        if not sym_col:
-            raise HTTPException(status_code=400, detail="Could not find a Symbol column.")
-
-        cur = conn.cursor()
         processed_symbols = []
         skipped_symbols = []
-        
         # WISE GUARD: Pre-fetch universe for bulk check
         cur.execute("SELECT symbol FROM market_index_prices")
-        universe_map = {r[0] for r in cur.fetchall()}
+        rows = cur.fetchall()
+        universe_map = set()
+        for r in rows:
+            if isinstance(r, dict):
+                universe_map.add(r.get('symbol'))
+            elif len(r) > 0:
+                universe_map.add(r[0])
+        universe_map.discard(None)
 
         processed_holdings = []
 

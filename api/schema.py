@@ -106,6 +106,10 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
+    # 5a. Client Actions refinements (ensure columns exist for legacy tables)
+    cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS action_taken VARCHAR(20);""")
+    cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS actual_price NUMERIC(12,4);""")
+    cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS quantity INT;""")
     # 6. Client Portfolio (Open Positions)
     cur.execute(
         """
