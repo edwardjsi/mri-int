@@ -224,7 +224,7 @@ async def upload_csv(
             
             # Wise Filtering: We want to accept most stocks during bulk upload for 'Trust & Track'
             # Only skip if it's truly broken or empty.
-            if universe_map and sym not in universe_map and sym not in universe_map.values():
+            if universe_map and sym not in universe_map and sym not in universe_map:
                 # Check price DB as secondary validation
                 cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
                 if not cur.fetchone():
