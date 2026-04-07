@@ -265,3 +265,104 @@ async def regrade_holdings_sync(
     finally:
         cur.close()
 
+
+@router.post("/upload-csv")
+@router.post("/upload_csv")
+async def upload_csv(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    conn=Depends(get_db),
+    client=Depends(get_current_client),
+    email: Optional[str] = Form(None),
+    name: Optional[str] = Form(None),
+):
+    """Universal CSV ingest -> save holdings -> analyze and return."""
+    try:
+        client_id = str(client["id"])
+        cur_rls = conn.cursor()
+        cur_rls.execute("SELECT set_config('app.current_client_id', %s::text, true);", (client_id,))
+        cur_rls.close()
+
+        contents = await file.read()
+        sep = ','
+        try:
+            snippet = contents.decode('utf-8', errors='ignore')[:1024]
+            dialect = csv.Sniffer().sniff(snippet, delimiters=',;\t|')
+            sep = dialect.delimiter
+        except Exception:
+            pass
+
+        df = None
+        for enc in ['utf-8', 'latin-1', 'utf-8-sig']:
+            try:
+                df = pd.read_csv(io.StringIO(contents.decode(enc, errors='ignore')), sep=sep)
+                break
+            except Exception:
+                continue
+        if df is None:
+            raise HTTPException(status_code=400, detail="Invalid CSV format.")
+
+        df.columns = [c.lower().strip() for c in df.columns]
+        symbol_aliases = ('symbol','ticker','instrument','stock','isin','tradingsymbol','trading symbol','holding','asset','script')
+        qty_aliases = ('quantity','shares','qty','qty.','available quantity','vol','volume','current qty','net qty')
+        cost_aliases = ('avg_cost','avg cost','cost','avg_buy_price','avg. cost','average price','buy price','average buy price','purchase price','avg price','avg. price')
+
+        sym_col = next((c for c in df.columns if c in symbol_aliases), None)
+        qty_col = next((c for c in df.columns if c in qty_aliases), None)
+        cst_col = next((c for c in df.columns if c in cost_aliases), None)
+        if not sym_col:
+            obj_cols = df.select_dtypes(include=['object'])
+            sym_col = obj_cols.columns[0] if not obj_cols.empty else None
+        if not sym_col:
+            raise HTTPException(status_code=400, detail="Could not find a Symbol column.")
+
+        cur = conn.cursor()
+        processed_symbols = []
+        skipped_symbols = []
+        cur.execute("SELECT symbol FROM market_index_prices")
+        rows = cur.fetchall()
+        universe_map = set()
+        for r in rows:
+            if isinstance(r, dict):
+                universe_map.add(r.get('symbol'))
+            elif len(r) > 0:
+                universe_map.add(r[0])
+        universe_map.discard(None)
+
+        processed_holdings = []
+        for _, row in df.iterrows():
+            sym = str(row[sym_col]).upper().strip()
+            if not sym or sym == 'NAN':
+                continue
+            if universe_map and sym not in universe_map:
+                cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
+                if not cur.fetchone():
+                    pass
+            qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
+            cost = float(row[cst_col]) if cst_col and pd.notna(row[cst_col]) else 0.0
+            processed_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
+            processed_symbols.append(sym)
+            cur.execute(
+                """
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
+                VALUES (%s::uuid, %s, %s, %s)
+                ON CONFLICT (client_id, symbol)
+                DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
+                """,
+                (client_id, sym, qty, cost),
+            )
+        conn.commit()
+        cur.close()
+
+        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id, client.get("email"), client.get("name"))
+
+        from engine_core.portfolio_review_engine import analyze_portfolio
+        analysis = analyze_portfolio(processed_holdings, conn)
+        analysis["storage_ready"] = True
+        analysis["digital_twin_saved"] = True
+        analysis["digital_twin_row_count"] = len(processed_symbols)
+        analysis["skipped_symbols"] = skipped_symbols
+        return analysis
+    except Exception as e:
+        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
+        raise HTTPException(status_code=500, detail=str(e))
