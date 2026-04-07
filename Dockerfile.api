@@ -14,7 +14,7 @@ COPY api/requirements.txt ./api-requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt -r api-requirements.txt
 
 # Copy source code
-COPY src/ ./src/
+COPY engine_core/ ./engine_core/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
 

@@ -133,6 +133,7 @@ async def add_single_holding(
         return {"message": f"Successfully added {req.symbol.upper()}."}
     except Exception as e:
         conn.rollback()
+        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload-csv")
@@ -253,7 +254,7 @@ async def upload_csv(
         return analysis
 
     except Exception as e:
-        logger.error(f"UPLOAD ERROR: {e}")
+        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/save-bulk")
@@ -279,6 +280,7 @@ async def save_holdings_bulk(
         return {"status": "success", "count": len(holdings)}
     except Exception as e:
         conn.rollback()
+        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close()
@@ -333,3 +335,4 @@ async def regrade_holdings_sync(
         return results
     finally:
         cur.close()
+
