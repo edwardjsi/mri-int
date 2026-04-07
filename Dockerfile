@@ -23,7 +23,8 @@ COPY api/requirements.txt ./api-requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt -r api-requirements.txt
 
 # Copy backend source code
-COPY src/ ./src/
+# Note: code now lives in engine_core/ (legacy src/ was removed)
+COPY engine_core/ ./engine_core/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
 
