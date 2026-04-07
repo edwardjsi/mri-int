@@ -182,12 +182,15 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
-    # 11. Security - Enable RLS & Policies
+    # 11. Security - Ensure client_id column exists, then enable RLS & Policies
     client_tables = [
-        "client_external_holdings", "client_watchlist", "client_signals", 
+        "client_external_holdings", "client_watchlist", "client_signals",
         "client_actions", "client_portfolio", "client_equity", "capital_additions"
     ]
     for table in client_tables:
+        # Ensure client_id exists for legacy tables
+        cur.execute("""ALTER TABLE """ + table + """ ADD COLUMN IF NOT EXISTS client_id UUID;""")
+
         # Enable RLS
         cur.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;")
         # Standard Policy: restrict to app.current_client_id session variable
