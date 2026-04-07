@@ -69,12 +69,12 @@ def get_current_client(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired or invalid")
 
     cur = conn.cursor()
-    cur.execute("SELECT id, email, name, is_active, initial_capital, created_at FROM clients WHERE id = %s", (client_id,))
+    cur.execute("SELECT id, email, name, is_active, initial_capital, created_at FROM clients WHERE id = %s", (str(client_id),))
     client = cur.fetchone()
     if not client or not client["is_active"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Client not found or inactive")
 
     # Set session-level client id for RLS policies that rely on app.current_client_id
-    cur.execute("SELECT set_config('app.current_client_id', %s, true);", (client_id,))
+    cur.execute("SELECT set_config('app.current_client_id', %s::text, true);", (str(client_id),))
 
     return client

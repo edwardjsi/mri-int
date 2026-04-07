@@ -34,7 +34,7 @@ async def get_holdings(
             SELECT symbol, quantity, avg_cost 
             FROM client_external_holdings 
             WHERE client_id = %s::uuid
-        """, (client_id,))
+        """, (str(client_id),))
         holdings_list = cur.fetchall()
         
         # Fallback to legacy table if it exists and we found nothing yet
@@ -152,7 +152,7 @@ async def upload_csv(
         current_email = email or client.get("email")
         # Ensure RLS policies see the current client on this connection
         cur_rls = conn.cursor()
-        cur_rls.execute("SELECT set_config('app.current_client_id', %s, true);", (client_id,))
+        cur_rls.execute("SELECT set_config('app.current_client_id', %s::text, true);", (str(client_id),))
         cur_rls.close()
         contents = await file.read()
         
@@ -322,7 +322,7 @@ async def regrade_holdings_sync(
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         client_id = str(client["id"])
-        cur.execute("SELECT symbol, quantity, avg_cost FROM client_external_holdings WHERE client_id = %s", (client_id,))
+        cur.execute("SELECT symbol, quantity, avg_cost FROM client_external_holdings WHERE client_id = %s", (str(client_id),))
         holdings = cur.fetchall()
         
         from engine_core.portfolio_review_engine import analyze_portfolio
