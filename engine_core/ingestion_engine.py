@@ -18,6 +18,8 @@ def load_indices():
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
             df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+            # yfinance sometimes emits duplicate column names (e.g., adj close). Deduplicate to avoid pandas warning.
+            df = df.loc[:, ~df.columns.duplicated()]
             df['symbol'] = 'NIFTY50' if ticker == "^NSEI" else 'SENSEX'
             records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
             insert_index_prices(records)
@@ -42,6 +44,7 @@ def load_stocks(symbols):
                 df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
             
             df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+            df = df.loc[:, ~df.columns.duplicated()]
             df['symbol'] = symbol
             
             records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
