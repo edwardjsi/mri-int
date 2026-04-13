@@ -175,3 +175,15 @@ def compute_indicators_for_symbols(symbols: list):
     data_df, idx_df = fetch_data(symbols)
     updates = compute_indicators(data_df, idx_df)
     update_db_with_indicators(updates)
+
+
+def compute_indicators_all():
+    """Entry point used by the daily pipeline to backfill any missing indicators."""
+    add_indicator_columns_if_missing()
+    data_df, idx_df = fetch_data()
+    updates = compute_indicators(data_df, idx_df)
+    update_db_with_indicators(updates)
+
+
+if __name__ == "__main__":
+    compute_indicators_all()
