@@ -29,3 +29,7 @@ jobs:
           SES_REGION: ${{ secrets.SES_REGION }}
           SES_SENDER_EMAIL: ${{ secrets.SES_SENDER_EMAIL }}
         run: bash scripts/pipeline_cloud.sh
+      - name: DB Freshness Check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/db_freshness_check.py
