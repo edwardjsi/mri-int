@@ -178,9 +178,18 @@ def compute_indicators_for_symbols(symbols: list):
 
 
 def compute_indicators_all():
-    """Entry point used by the daily pipeline to backfill any missing indicators."""
+    """Entry point used by the daily pipeline to recompute indicators for all symbols."""
     add_indicator_columns_if_missing()
-    data_df, idx_df = fetch_data()
+    # Fetch all symbols to avoid stale NULL indicators if detection misses new rows
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT symbol FROM daily_prices")
+        symbols = [r[0] for r in cur.fetchall()]
+        cur.close()
+    finally:
+        conn.close()
+    data_df, idx_df = fetch_data(symbols)
     updates = compute_indicators(data_df, idx_df)
     update_db_with_indicators(updates)
 
