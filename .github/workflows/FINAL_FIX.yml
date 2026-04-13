@@ -14,6 +14,10 @@ jobs:
           python-version: '3.11'
       - name: Install Dependencies
         run: pip install -r requirements.txt
+      - name: Show revision and pipeline script
+        run: |
+          git rev-parse HEAD
+          sed -n '1,80p' scripts/pipeline_cloud.sh
       - name: RUN REAL PIPELINE (ENGINE_CORE)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
