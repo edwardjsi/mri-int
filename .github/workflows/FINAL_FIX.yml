@@ -19,4 +19,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_SSL: "true"
           PYTHONPATH: ${{ github.workspace }}
-        run: python scripts/mri_pipeline.py
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SES_REGION: ${{ secrets.SES_REGION }}
+          SES_SENDER_EMAIL: ${{ secrets.SES_SENDER_EMAIL }}
+        run: bash scripts/pipeline_cloud.sh
