@@ -29,11 +29,11 @@ mkdir -p "$PROJECT_DIR/logs"
 
 echo "=== MRI Cloud Pipeline — $(date) ===" | tee -a "$LOG_FILE"
 
-# Step 1: Ingest today's data
+# Step 1: Ingest today's data (indices + Nifty 500 symbols)
 echo "[1/5] Ingesting today's market data..." | tee -a "$LOG_FILE"
-python -c "
-from src.ingestion_engine import load_indices, load_stocks
+python - <<'PY' 2>&1 | tee -a "$LOG_FILE"
 import pandas as pd, requests, io
+from engine_core.ingestion_engine import load_indices, load_stocks
 
 load_indices()
 
@@ -43,22 +43,22 @@ response = requests.get(url, headers=headers, timeout=30)
 df = pd.read_csv(io.StringIO(response.text))
 symbols = df['Symbol'].dropna().unique().tolist()
 load_stocks(symbols)
-" 2>&1 | tee -a "$LOG_FILE"
+PY
 
 # Step 2: Compute indicators
 echo "[2/5] Running Indicator Engine..." | tee -a "$LOG_FILE"
-python src/indicator_engine.py 2>&1 | tee -a "$LOG_FILE"
+python engine_core/indicator_engine.py 2>&1 | tee -a "$LOG_FILE"
 
 # Step 3: Compute regime + scores
 echo "[3/5] Running Regime Engine..." | tee -a "$LOG_FILE"
-python src/regime_engine.py 2>&1 | tee -a "$LOG_FILE"
+python engine_core/regime_engine.py 2>&1 | tee -a "$LOG_FILE"
 
 # Step 4: Generate client signals
 echo "[4/5] Generating client signals..." | tee -a "$LOG_FILE"
-python src/signal_generator.py 2>&1 | tee -a "$LOG_FILE"
+python engine_core/signal_generator.py 2>&1 | tee -a "$LOG_FILE"
 
 # Step 5: Send email notifications
 echo "[5/5] Sending signal emails via SES..." | tee -a "$LOG_FILE"
-python src/email_service.py 2>&1 | tee -a "$LOG_FILE"
+python engine_core/email_service.py 2>&1 | tee -a "$LOG_FILE"
 
 echo "=== Cloud Pipeline Complete — $(date) ===" | tee -a "$LOG_FILE"
