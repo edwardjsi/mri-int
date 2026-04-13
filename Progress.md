@@ -1,5 +1,8 @@
 # MRI Platform - Progress Report (April 5, 2026 - Evening Update)
 
+## ✅ Pipeline Automation Restore (April 13, 2026)
+- Added weekday cron schedule (10:30 UTC / 4:00 PM IST) to `.github/workflows/FINAL_FIX.yml` so the ingestion pipeline runs automatically; manual dispatch remains available.
+
 ## ✅ Python Security & Hardened Audit (April 5 Update)
 8.  **Automated Security Hardening** (Decision 078):
     - **SQL Injection Fixed**: Eliminated f-string identifier interpolation in `src/db.py` and `src/ingestion_engine.py`.

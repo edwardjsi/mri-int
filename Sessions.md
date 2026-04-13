@@ -1,5 +1,10 @@
 # **MRI Sessions Log**
 
+## **April 13, 2026: Pipeline Scheduler Restore**
+- **Issue**: Frontend data stopped updating after Apr 7 because the GitHub Actions pipeline had no schedule (manual dispatch only).
+- **Fix**: Added a weekday cron trigger (10:30 UTC / 4:00 PM IST) to `.github/workflows/FINAL_FIX.yml` so the ingestion pipeline runs automatically.
+- **Next Step**: Verify the next scheduled run completes and the dashboard reflects fresh data; rerun manually via workflow_dispatch if needed.
+
 ## **April 6, 2026: The "Madness of the Ghost Relation"**
 - **Objective**: Resolve persistent `index_prices` schema crash on GitHub Actions.
 - **Root Cause**: Naming collision and shadowing.

@@ -1,5 +1,9 @@
 name: FINAL FIX
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  schedule:
+    # 4:00 PM IST / 10:30 AM UTC, Monday–Friday
+    - cron: "30 10 * * 1-5"
 jobs:
   run:
     runs-on: ubuntu-latest
