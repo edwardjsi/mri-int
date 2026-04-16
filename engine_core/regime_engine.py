@@ -128,20 +128,44 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
     conn = get_connection()
     
     try:
-        # 1. Fetch data - Incremental: Only fetch last 10 days since indicators are already stored
+        # 1. Fetch data - use a long enough window to compute ADX/RSI and score components
         sql = """
             SELECT dp.symbol, dp.date, dp.close, dp.volume, dp.ema_50, dp.ema_200,
                    dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d
             FROM daily_prices dp
             WHERE dp.symbol = ANY(%s)
-            AND dp.date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '10 days'
+            AND dp.date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '255 days'
             ORDER BY dp.symbol, dp.date
         """
-        df = pd.read_sql(sql, conn, params=(symbols_clean,))
+        with conn.cursor() as cur:
+            cur.execute(sql, (symbols_clean,))
+            rows = cur.fetchall()
+        df = pd.DataFrame([dict(r) for r in rows])
 
         if df.empty:
             logger.warning("⚠️ No rows found for targeted scoring.")
             return
+
+        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+        df = df[df["date"].notna()].copy()
+        df["symbol"] = df["symbol"].astype(str)
+        df = df[df["symbol"].str.lower() != "symbol"].copy()
+
+        numeric_cols = [
+            "high",
+            "low",
+            "close",
+            "volume",
+            "ema_50",
+            "ema_200",
+            "ema_200_slope_20",
+            "rolling_high_6m",
+            "avg_volume_20d",
+            "rs_90d",
+        ]
+        for col in numeric_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
 
         # HEALTH CHECK: Detect when indicators are mostly NULL
         # This catches the case where ingestion ran but indicators didn't compute
@@ -193,7 +217,13 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
             ) VALUES (
                 %(date)s, %(symbol)s, %(total_score)s, %(condition_ema_50_200)s,
                 %(condition_ema_200_slope)s, %(condition_6m_high)s, %(condition_volume)s, %(condition_rs)s
-            ) ON CONFLICT (date, symbol) DO UPDATE SET total_score = EXCLUDED.total_score;
+            ) ON CONFLICT (date, symbol) DO UPDATE SET
+                total_score = EXCLUDED.total_score,
+                condition_ema_50_200 = EXCLUDED.condition_ema_50_200,
+                condition_ema_200_slope = EXCLUDED.condition_ema_200_slope,
+                condition_6m_high = EXCLUDED.condition_6m_high,
+                condition_volume = EXCLUDED.condition_volume,
+                condition_rs = EXCLUDED.condition_rs;
         """
         execute_batch(cur, insert_sql, update_data, page_size=5000)
         conn.commit()
@@ -210,7 +240,8 @@ def compute_stock_scores():
     try:
         cur = conn.cursor()
         cur.execute("SELECT DISTINCT symbol FROM daily_prices")
-        symbols = [r[0] for r in cur.fetchall()]
+        rows = cur.fetchall()
+        symbols = [r["symbol"] if isinstance(r, dict) else r[0] for r in rows]
         cur.close()
         
         if not symbols:
@@ -226,4 +257,4 @@ if __name__ == "__main__":
     create_market_regime_and_scores_tables()
     compute_market_regime()
     compute_stock_scores()
-
+

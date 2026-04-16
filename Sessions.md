@@ -8,6 +8,23 @@
   - Marked the EMA-50 diagnostic task complete in the fix task list and progress report.
 - **Next Step**: Fix the indicator engine validation/write path and then rerun the diagnostic to confirm the null rate drops below the threshold.
 
+## **April 17, 2026: Indicator Engine Hardening**
+- **Objective**: Fix the actual EMA-50 write/validation path in the live engine.
+- **Actions**:
+  - Replaced the live `engine_core/indicator_engine.py` path with a validated recomputation flow.
+  - Added write verification plus post-update NULL-rate validation that blocks the pipeline when coverage is still above threshold.
+  - Kept the public entrypoints intact so the existing pipeline continues to call the same module.
+- **Actions Continued**:
+  - Updated the stock-score recompute path so `stock_scores` refreshes both `total_score` and the underlying condition columns on conflict.
+  - Reran the live recompute against the configured database and refreshed 145,055 score rows for 892 symbols.
+- **Verification**: Live diagnostic on 2026-04-16 showed EMA-50 NULL rate at 0.2% (1/500 symbols), which is below the 20% threshold.
+- **Live Proof**: Ran a 10-batch recompute pass against the live database; it completed in 76s, wrote 5,000 indicator rows, verification passed at 100%, and the post-update NULL rate remained 0.2%.
+- **Runtime Fix**: Added an `MRI_INDICATOR_MAX_BATCHES` guard so the recompute can exit cleanly in bounded passes instead of hitting the runtime ceiling.
+- **Golden Path**: Added `scripts/golden_path_check.py`; the latest BULL regime day is 2026-02-26 and it currently has 7 stocks with `total_score >= 75`, so the golden-path check still fails but the scoring path is now materially closer to the target.
+- **Backtest Reality Check**: After fixing the SQL fetch path and numeric coercion in the backtest engines, the live same-day run produced `-18.39% CAGR` versus `+3.43%` for NIFTY on the aligned window, and the live next-day run produced `-16.74% CAGR` versus `+3.43%` for NIFTY.
+- **Frozen Snapshot Rebuild**: Rebuilt the strategy from the frozen CSV snapshot (`backups/20260304/daily_prices.csv` + `/home/edwar/index_prices.csv`). The snapshot backtest returned `26.8% CAGR` same-day and `26.36% CAGR` next-day, both above the `10.08%` NIFTY baseline over `4,237` trading days.
+- **Next Step**: If the project continues, lock the snapshot backtest as the reproducible source of truth; otherwise retire the live CAGR claim and treat it as not supported by current live data. The detailed write-up is in `docs/backtest_reality_check_2026-04-17.md`.
+
 ## **April 13, 2026: Pipeline Scheduler Restore**
 - **Issue**: Frontend data stopped updating after Apr 7 because the GitHub Actions pipeline had no schedule (manual dispatch only).
 - **Fix**: Added a weekday cron trigger (10:30 UTC / 4:00 PM IST) to `.github/workflows/FINAL_FIX.yml` so the ingestion pipeline runs automatically.

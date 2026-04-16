@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import os
-from engine_core.db import get_connection
+from engine_core.db import fetch_df
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -78,8 +78,6 @@ def run_metrics_engine(input_prefix=""):
     
     # 2. Load Benchmark Data (NIFTY50)
     logger.info("Fetching NIFTY50 benchmark from DB...")
-    conn = get_connection()
-    
     start_date = strategy_dates[0]
     end_date = strategy_dates[-1]
     
@@ -91,8 +89,9 @@ def run_metrics_engine(input_prefix=""):
         AND date >= %s AND date <= %s
         ORDER BY date
     """
-    bench_df = pd.read_sql(sql, conn, params=(start_date, end_date))
-    conn.close()
+    bench_df = fetch_df(sql, (start_date, end_date))
+    bench_df['date'] = pd.to_datetime(bench_df['date'], errors='coerce').dt.date
+    bench_df['close'] = pd.to_numeric(bench_df['close'], errors='coerce')
     
     # Align dates (just in case there are missing index days, we merge)
     bench_df['date'] = bench_df['date'].astype(str)
@@ -146,3 +145,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     run_metrics_engine(input_prefix=args.input_prefix)
+

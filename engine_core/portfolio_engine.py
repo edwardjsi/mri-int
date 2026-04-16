@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import os
-from engine_core.db import get_connection
+from engine_core.db import fetch_df, get_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -20,7 +20,8 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
     
     # 1. Fetch entire market regime history
     logger.info("Loading market regime history...")
-    regime_df = pd.read_sql("SELECT date, classification FROM market_regime WHERE classification IS NOT NULL ORDER BY date", conn)
+    regime_df = fetch_df("SELECT date, classification FROM market_regime WHERE classification IS NOT NULL ORDER BY date")
+    regime_df["date"] = pd.to_datetime(regime_df["date"], errors="coerce").dt.date
     
     if start_date:
         regime_df = regime_df[regime_df['date'] >= pd.to_datetime(start_date).date()]
@@ -38,12 +39,17 @@ def run_portfolio_simulation(start_date=None, end_date=None, tx_cost=0.004, outp
     # 2. Fetch stock scores
     logger.info("Loading stock scores...")
     scores_query = "SELECT date, symbol, total_score FROM stock_scores WHERE total_score IS NOT NULL"
-    scores_df = pd.read_sql(scores_query, conn)
+    scores_df = fetch_df(scores_query)
+    scores_df["date"] = pd.to_datetime(scores_df["date"], errors="coerce").dt.date
+    scores_df["total_score"] = pd.to_numeric(scores_df["total_score"], errors="coerce")
     
     # 3. Fetch pricing (need both close for tracking and open for next-day execution)
     logger.info("Loading price data...")
     prices_query = "SELECT date, symbol, close, open FROM daily_prices"
-    prices_df = pd.read_sql(prices_query, conn)
+    prices_df = fetch_df(prices_query)
+    prices_df["date"] = pd.to_datetime(prices_df["date"], errors="coerce").dt.date
+    prices_df["close"] = pd.to_numeric(prices_df["close"], errors="coerce")
+    prices_df["open"] = pd.to_numeric(prices_df["open"], errors="coerce")
     
     conn.close()
     
@@ -207,3 +213,4 @@ if __name__ == "__main__":
         tx_cost=args.tx_cost,
         output_prefix=args.output_prefix
     )
+

@@ -1,7 +1,7 @@
 # Market Regime Intelligence (MRI) — Web App MVP
 
 ## What This Is
-This project successfully passed its 10-day viability prototype phase, proving that a Market Regime Filter + Stock Trend Score model generates significant statistical edge over Nifty buy-and-hold (34% CAGR vs 10% CAGR over 17 years).
+Earlier prototype reports suggested a strong edge for a Market Regime Filter + Stock Trend Score model versus Nifty buy-and-hold, but the current live rerun does not reproduce that headline result. Treat the historical claim as unverified until the backtest is rebuilt from a frozen, reproducible data snapshot.
 
 We are now actively building Phase 2: A minimal viable SaaS React/Vite dashboard to interactively visualize the backtests and display the live daily portfolio.
 

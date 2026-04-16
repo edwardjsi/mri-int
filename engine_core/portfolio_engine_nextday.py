@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import os
-from engine_core.db import get_connection
+from engine_core.db import fetch_df, get_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def run_portfolio_simulation_nextday(start_date=None, end_date=None, tx_cost=0.0
     
     # 1. Fetch market regime history
     logger.info("Loading market regime history...")
-    regime_df = pd.read_sql("SELECT date, classification FROM market_regime WHERE classification IS NOT NULL ORDER BY date", conn)
+    regime_df = fetch_df("SELECT date, classification FROM market_regime WHERE classification IS NOT NULL ORDER BY date")
     
     if start_date:
         regime_df = regime_df[regime_df['date'] >= pd.to_datetime(start_date).date()]
@@ -42,12 +42,16 @@ def run_portfolio_simulation_nextday(start_date=None, end_date=None, tx_cost=0.0
         
     # 2. Fetch stock scores
     logger.info("Loading stock scores...")
-    scores_df = pd.read_sql("SELECT date, symbol, total_score FROM stock_scores WHERE total_score IS NOT NULL", conn)
-    
+    scores_df = fetch_df("SELECT date, symbol, total_score FROM stock_scores WHERE total_score IS NOT NULL")
+    scores_df["date"] = pd.to_datetime(scores_df["date"], errors="coerce").dt.date
+    scores_df["total_score"] = pd.to_numeric(scores_df["total_score"], errors="coerce")
+
     # 3. Fetch pricing — need BOTH close (for signals) and open (for execution)
     logger.info("Loading price data (close + open)...")
-    prices_df = pd.read_sql("SELECT date, symbol, open, close FROM daily_prices", conn)
-    
+    prices_df = fetch_df("SELECT date, symbol, open, close FROM daily_prices")
+    prices_df["date"] = pd.to_datetime(prices_df["date"], errors="coerce").dt.date
+    prices_df["open"] = pd.to_numeric(prices_df["open"], errors="coerce")
+    prices_df["close"] = pd.to_numeric(prices_df["close"], errors="coerce")
     conn.close()
     
     logger.info("Pre-processing data arrays for fast simulation...")
@@ -248,3 +252,4 @@ if __name__ == "__main__":
         tx_cost=args.tx_cost,
         output_prefix=args.output_prefix
     )
+
