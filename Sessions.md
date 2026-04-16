@@ -1,5 +1,13 @@
 # **MRI Sessions Log**
 
+## **April 17, 2026: EMA-50 Diagnostic Refresh**
+- **Objective**: Bring the diagnostic entrypoint up to date for the EMA-50 null-indicator incident.
+- **Actions**:
+  - Rewrote `scripts/diagnose_ema_issue.py` to report latest-date coverage, indicator null counts, sample affected symbols, and detection-logic coverage.
+  - Added threshold-driven exit codes so the diagnostic can act as a pipeline gate.
+  - Marked the EMA-50 diagnostic task complete in the fix task list and progress report.
+- **Next Step**: Fix the indicator engine validation/write path and then rerun the diagnostic to confirm the null rate drops below the threshold.
+
 ## **April 13, 2026: Pipeline Scheduler Restore**
 - **Issue**: Frontend data stopped updating after Apr 7 because the GitHub Actions pipeline had no schedule (manual dispatch only).
 - **Fix**: Added a weekday cron trigger (10:30 UTC / 4:00 PM IST) to `.github/workflows/FINAL_FIX.yml` so the ingestion pipeline runs automatically.
