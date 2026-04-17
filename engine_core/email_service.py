@@ -480,5 +480,43 @@ def send_portfolio_review(email: str, name: str, results: dict):
         return False
 
 
+def send_alert_email(subject: str, message_html: str):
+    """Generic alert email for pipeline failures or data quality warnings."""
+    if not SENDER_EMAIL or not aws_credentials_present():
+        logger.warning("Email alerts disabled: credentials or SENDER_EMAIL missing.")
+        return False
+        
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+        
+        html_body = f"""
+        <html>
+        <body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;color:#333;border:2px solid #ef4444;border-radius:12px;">
+            <h2 style="color:#ef4444">🚨 MRI Pipeline Alert</h2>
+            <p style="font-size:16px;font-weight:bold">{subject}</p>
+            <div style="background:#fef2f2;padding:15px;border-radius:4px;margin:20px 0">
+                {message_html}
+            </div>
+            <p style="font-size:12px;color:#999;text-align:center">This is an automated system alert from Market Regime Intelligence.</p>
+        </body>
+        </html>
+        """
+        
+        ses.send_email(
+            Source=SENDER_EMAIL,
+            Destination={"ToAddresses": [SENDER_EMAIL]}, # Send to admin
+            Message={
+                "Subject": {"Data": f"MRI ALERT: {subject}", "Charset": "UTF-8"},
+                "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+            },
+        )
+        logger.info(f"✅ Alert email sent: {subject}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send alert email: {e}")
+        return False
+
+
 if __name__ == "__main__":
     send_signal_emails()

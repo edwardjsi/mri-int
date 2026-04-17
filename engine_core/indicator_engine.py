@@ -5,6 +5,7 @@ import pandas as pd
 from psycopg2.extras import execute_batch
 
 from engine_core.db import get_connection
+from engine_core.email_service import send_alert_email
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,10 +27,10 @@ INDICATOR_COLUMNS = (
     ("rs_90d", "NUMERIC"),
 )
 
-# Persist only the recent rows for each symbol.
 # The daily pipeline needs current and near-current indicators, while writing
 # the entire history every run is too expensive for the runtime budget.
-PERSIST_ROWS = 20
+# PERSIST_ROWS=60 provides approx 3 months of buffer for the dashboard history.
+PERSIST_ROWS = 60
 
 
 def add_indicator_columns_if_missing():
@@ -114,7 +115,7 @@ def fetch_data(symbols=None):
             cur.execute(
                 """
                 SELECT date, close AS idx_close
-                FROM index_prices
+                FROM market_index_prices
                 WHERE symbol = 'NIFTY50'
                 ORDER BY date
                 """
@@ -327,9 +328,12 @@ def validate_indicators_after_update():
             )
 
             if null_rate > 20:
-                raise IndicatorComputationError(
-                    f"CRITICAL: {null_rate:.1f}% symbols still have NULL EMA-50"
+                error_msg = f"CRITICAL: {null_rate:.1f}% symbols still have NULL EMA-50"
+                send_alert_email(
+                    "Indicator Validation Failure",
+                    f"<p>{error_msg}</p><p>Total symbols: {total_symbols}<br>NULL EMA-50: {null_ema_count}</p>"
                 )
+                raise IndicatorComputationError(error_msg)
 
             cur.execute(
                 """

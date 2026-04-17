@@ -66,9 +66,13 @@ def compute_market_regime():
     )
     
     if idx_df.empty:
-        logger.warning("⚠️ No index data for regime computation.")
+        logger.warning("No index data for regime computation.")
         conn.close()
         return
+
+    # Force numeric conversion for pandas
+    idx_df['close'] = pd.to_numeric(idx_df['close'], errors='coerce')
+    idx_df = idx_df.dropna(subset=['close'])
 
     # SMA & Slope logic
     idx_df['sma_200'] = idx_df['close'].rolling(window=200, min_periods=1).mean()
@@ -110,7 +114,7 @@ def compute_market_regime():
     # Health check: log what we computed
     latest = recent.iloc[-1] if not recent.empty else None
     if latest is not None:
-        logger.info(f"✅ Regime updated through {latest['date']} → {latest['classification']}")
+        logger.info(f"✅ Regime updated through {latest['date']} -> {latest['classification']}")
     
     cur.close()
     conn.close()
@@ -257,4 +261,3 @@ if __name__ == "__main__":
     create_market_regime_and_scores_tables()
     compute_market_regime()
     compute_stock_scores()
-

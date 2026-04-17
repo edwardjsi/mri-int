@@ -525,3 +525,31 @@ Decision:
 3. **64-bit Architecture for Big Data**: Migrated `daily_prices` and `index_prices` primary keys from `SERIAL` to `BIGSERIAL` to support billions of rows.
 Reason: A `database-reviewer` audit identified several high-risk patterns: potential cross-tenant data leakage due to lack of RLS, and potential numeric overflow in the long-term price history data.
 Status: FINAL.
+
+## Decision 080 — EMA-50 NULL Indicator Critical Issue & Validation-First Fix
+Date: 2026-04-15
+Context: Discovery that 481/514 symbols (94%) have NULL EMA-50 values on latest date (2026-04-07), rendering core quantitative logic unusable. This is a recurrence of the "silent failure" pattern identified in Decision 077 (April 1, 2026), proving that previous fixes were insufficient.
+
+Root Causes:
+1. **Silent Failure Anti-Pattern**: Indicator engine accepts zero updates as "normal" instead of critical failure
+2. **Over-Optimization**: Incremental logic (Decision 030) contains bugs that prevent indicator writes
+3. **Missing Validation**: No verification that computed indicators are actually written to database
+4. **Graceful Degradation**: `fillna()` and fallbacks hide problems instead of exposing them
+
+Decision: Implement a **validation-first fix** with these principles:
+1. **Fail Loud Principle**: Critical failures must block pipeline, not just log warnings
+2. **Write-Verify-Read Pattern**: Always verify database writes match computed values  
+3. **Data Quality SLAs**: Enforce minimum quality thresholds (≥90% non-NULL EMA-50)
+4. **Circuit Breaker Pattern**: Block pipeline when core logic fails
+5. **Golden Path Testing**: Create automated test that verifies end-to-end functionality
+
+Implementation Plan:
+1. Create diagnostic script to measure exact scope of NULL indicator problem
+2. Fix indicator engine with verification layer
+3. Add pipeline-blocking validation for data quality
+4. Create "golden path" integration test
+5. Document incident in `docs/CRITICAL_EMA_50_NULL_ISSUE_2026-04-15.md`
+
+Reason: A quantitative platform's core value is accurate calculations. If calculations are wrong, the platform has negative value (misleads users). This fix shifts priority from "don't crash" to "be correct".
+
+Status: IMPLEMENTING

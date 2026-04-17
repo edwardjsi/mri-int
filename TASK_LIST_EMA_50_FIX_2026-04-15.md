@@ -31,18 +31,19 @@ This task list outlines the step-by-step plan to fix the EMA-50 NULL indicator i
 ## 🛠️ Phase 2: Core Fix Implementation
 
 ### Task 2.1: Fix Indicator Engine Logic
-- [ ] Examine `engine_core/indicator_engine.py` for bugs
-- [ ] Fix symbol detection logic in `fetch_data()`
-- [ ] Fix update logic in `compute_indicators()`
-- [ ] Ensure ALL rows with NULL indicators get updated
-- [ ] Add verification that updates were written
+- [x] Examine `engine_core/indicator_engine.py` for bugs
+- [x] Fix symbol detection logic in `fetch_data()`
+- [x] Fix update logic in `compute_indicators()`
+- [x] Ensure ALL rows with NULL indicators get updated
+- [x] Add verification that updates were written
+- [x] Add post-update NULL-rate validation gate
 
 ### Task 2.2: Add Validation Layer
 - [ ] Create `engine_core/validation.py` module
 - [ ] Add `validate_indicators()` function
-- [ ] Check: NULL EMA-50 rate < 20%
-- [ ] Check: EMA values are reasonable (not all zeros)
-- [ ] Add circuit breaker: raise exception if validation fails
+- [x] Check: NULL EMA-50 rate < 20%
+- [x] Check: EMA values are reasonable (not all zeros)
+- [x] Add circuit breaker: raise exception if validation fails
 
 ### Task 2.3: Create Golden Path Test
 - [ ] Create `tests/test_golden_path.py`
