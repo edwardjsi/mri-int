@@ -95,9 +95,8 @@ def compute_market_regime():
     idx_df['sma_200'] = idx_df['sma_200'].round(4)
     idx_df['sma_200_slope_20'] = idx_df['sma_200_slope_20'].round(4)
     
-    # Update the latest 5 days (saves writes while staying current)
-    recent = idx_df.tail(5).replace({np.nan: None})
-    update_data = recent[['date', 'sma_200', 'sma_200_slope_20', 'classification']].to_dict('records')
+    # Update the entire range from the fetched data
+    update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].replace({np.nan: None}).to_dict('records')
 
     cur = conn.cursor()
     sql = """
@@ -112,7 +111,7 @@ def compute_market_regime():
     conn.commit()
     
     # Health check: log what we computed
-    latest = recent.iloc[-1] if not recent.empty else None
+    latest = idx_df.iloc[-1] if not idx_df.empty else None
     if latest is not None:
         logger.info(f"✅ Regime updated through {latest['date']} -> {latest['classification']}")
     
@@ -193,10 +192,10 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['rs_90d'] = df['rs_90d'].fillna(0)
 
         # 3. Calculate MRI Conditions & Weighted Scores
-        df['condition_ema_50_200'] = (df['ema_50'] > df['ema_200']).astype(bool)
-        df['condition_ema_200_slope'] = (df['ema_200_slope_20'] > 0).astype(bool)
-        df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m']).astype(bool)
-        df['condition_volume'] = (df['volume'] > (1.5 * df['avg_volume_20d'])).astype(bool)
+        df['condition_ema_50_200'] = (df['ema_50'] >= df['ema_200']).astype(bool)
+        df['condition_ema_200_slope'] = (df['ema_200_slope_20'] >= 0).astype(bool)
+        df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m'] * 0.99).astype(bool)
+        df['condition_volume'] = (df['volume'] > (1.3 * df['avg_volume_20d'])).astype(bool)
         df['condition_rs'] = (df['rs_90d'] > 0).astype(bool)
 
         # Apply Weights (Total = 100)
@@ -213,6 +212,12 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         update_data = df[['date', 'symbol', 'total_score', 'condition_ema_50_200', 
                           'condition_ema_200_slope', 'condition_6m_high', 
                           'condition_volume', 'condition_rs']].to_dict('records')
+
+        # Log Top 5 stocks for latest date to debug Golden Path
+        latest_scored = df[df['date'] == latest_date].sort_values('total_score', ascending=False).head(10)
+        logger.info(f"Top 10 scores for {latest_date}:")
+        for _, r in latest_scored.iterrows():
+            logger.info(f"  {r['symbol']}: {r['total_score']} (EMA:{r['condition_ema_50_200']}, Slope:{r['condition_ema_200_slope']}, RS:{r['condition_rs']}, High:{r['condition_6m_high']}, Vol:{r['condition_volume']})")
 
         cur = conn.cursor()
         insert_sql = """

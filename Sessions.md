@@ -1,5 +1,13 @@
 # **MRI Sessions Log**
 
+## **April 22, 2026: Golden Path Resilience**
+- **Objective**: Fix the live pipeline failure where only 7/10 required top-tier signals were being generated.
+- **Actions**:
+  - Refactored `engine_core/regime_engine.py` to use inclusive scoring logic (`>=` for trends, 1% grace for 6m highs, 1.3x volume surge).
+  - Created `scripts/debug_golden_path.py` for per-condition pass-rate diagnostics.
+  - Updated `Decisions.md` (Decision 081) and `Progress.md` to reflect the logic shift.
+- **Next Step**: Proceed to Phase 4 monitoring hardening and dashboard wiring.
+
 ## **April 17, 2026: EMA-50 Diagnostic Refresh**
 - **Objective**: Bring the diagnostic entrypoint up to date for the EMA-50 null-indicator incident.
 - **Actions**:

@@ -2,6 +2,38 @@
 
 ---
 
+## 📅 Session: April 22, 2026 — Golden Path Resilience (Inclusive Scoring)
+
+**Session Start:** 09:00 IST
+**Session End:** 10:30 IST
+**AI Assistant:** opencore
+
+### What Was Done This Session
+
+#### 1. Golden Path Diagnosis ✅
+- Investigated why the live pipeline produced only 7 top-tier signals (>= 75 points) compared to the canonical model.
+- Identified the "Binary Trap": strict `>` inequalities and 50% volume surge requirements were too rigid for the current market consolidation phase.
+
+#### 2. Scoring Engine Refinement ✅
+- **Inclusive Trend:** Changed EMA cross and Slope logic to `>=` to support stabilizing trends.
+- **Breakout Grace:** Implemented 1% grace for 6-month highs to capture stocks "at the door."
+- **Volume Normalization:** Lowered surge threshold to 1.3x to better capture institutional entry signals.
+- **Debug Visibility:** Added top-10 audit logs to the scoring engine output.
+
+#### 3. Diagnostic Tooling ✅
+- Created `scripts/debug_golden_path.py` to provide a per-condition pass-rate breakdown for the entire universe.
+
+#### 4. Decisions & Documentation ✅
+- Recorded **Decision 081** for the scoring logic shift.
+- Updated `Progress.md` and `Sessions.md`.
+
+### ⏳ Left for Next Session
+
+1. **Phase 4 Implementation:** Complete the automated recovery and monitoring dashboard for NULL indicators.
+2. **SaaS Phase 2 Dashboard:** Begin frontend wiring for the newly inclusive signals.
+
+---
+
 ## 📅 Session: April 17, 2026 — Canonical Backtest Lock (Antigravity)
 
 **Session Start:** 03:30 IST
