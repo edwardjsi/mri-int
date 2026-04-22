@@ -58,10 +58,10 @@ def compute_market_regime():
     """Calculates market regime (NIFTY 50) incrementally."""
     logger.info("Computing Market Regime based on Nifty 50...")
     conn = get_connection()
-    # Fetch last 255 days of Nifty to compute 200 SMA
+    # Fetch enough history to compute 200 SMA accurately for the entire recent period
     idx_df = pd.read_sql(
         "SELECT date, close FROM market_index_prices WHERE symbol = 'NIFTY50' "
-        "AND date >= (SELECT MAX(date) FROM market_index_prices) - INTERVAL '255 days' ORDER BY date",
+        "ORDER BY date",
         conn
     )
     
