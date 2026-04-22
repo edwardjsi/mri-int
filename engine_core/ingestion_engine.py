@@ -15,9 +15,16 @@ def load_indices():
     for ticker in tickers:
         try:
             df = yf.download(ticker, period="300d", auto_adjust=True, progress=False).reset_index()
+            # Robust flattening for yfinance multi-index
             if isinstance(df.columns, pd.MultiIndex):
-                df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
-            df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+                df.columns = [
+                    c[0] if (isinstance(c, tuple) and c[0]) else (c[1] if isinstance(c, tuple) else c) 
+                    for c in df.columns
+                ]
+            df.columns = [str(c).lower().replace(" ", "_").strip() for c in df.columns]
+            # Ensure 'date' column exists even if named 'index' or 'level_0'
+            if 'date' not in df.columns and 'index' in df.columns:
+                df = df.rename(columns={'index': 'date'})
             # yfinance sometimes emits duplicate column names (e.g., adj close). Deduplicate to avoid pandas warning.
             df = df.loc[:, ~df.columns.duplicated()]
             df['symbol'] = 'NIFTY50' if ticker == "^NSEI" else 'SENSEX'
@@ -39,11 +46,16 @@ def load_stocks(symbols):
             df = yf.download(ticker, period="300d", auto_adjust=True, progress=False).reset_index()
             if df.empty: return False
             
-            # Flatten columns for yfinance v1.2.0 compatibility
+            # Robust flattening for yfinance multi-index
             if isinstance(df.columns, pd.MultiIndex):
-                df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
+                df.columns = [
+                    c[0] if (isinstance(c, tuple) and c[0]) else (c[1] if isinstance(c, tuple) else c) 
+                    for c in df.columns
+                ]
             
-            df.columns = [str(c).lower().replace(" ", "_") for c in df.columns]
+            df.columns = [str(c).lower().replace(" ", "_").strip() for c in df.columns]
+            if 'date' not in df.columns and 'index' in df.columns:
+                df = df.rename(columns={'index': 'date'})
             df = df.loc[:, ~df.columns.duplicated()]
             df['symbol'] = symbol
             
