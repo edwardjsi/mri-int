@@ -13,12 +13,20 @@ router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 class WatchlistAddRequest(BaseModel):
     symbol: str
 
+class ScoreConditions(BaseModel):
+    ema_50_above_200: bool
+    ema_200_slope_positive: bool
+    at_6m_high: bool
+    volume_surge: bool
+    relative_strength: bool
+
 class WatchlistItem(BaseModel):
     symbol: str
     price: Optional[float] = None
     score: Optional[int] = None
     regime: Optional[str] = None
     trend_alignment: Optional[str] = None
+    conditions: Optional[ScoreConditions] = None
     is_not_found: bool = False
     is_pending: bool = False
 
@@ -73,6 +81,11 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
         SELECT 
             cw.symbol,
             ss.score,
+            ss.condition_ema_50_200,
+            ss.condition_ema_200_slope,
+            ss.condition_6m_high,
+            ss.condition_volume,
+            ss.condition_rs,
             dp.close as current_price,
             CASE 
                 WHEN dp.close > dp.ema_200 THEN 'BULL'
@@ -82,7 +95,10 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found
         FROM client_watchlist cw
         LEFT JOIN (
-            SELECT DISTINCT ON (symbol) symbol, total_score as score, date 
+            SELECT DISTINCT ON (symbol) 
+                symbol, total_score as score, date,
+                condition_ema_50_200, condition_ema_200_slope,
+                condition_6m_high, condition_volume, condition_rs
             FROM stock_scores 
             ORDER BY symbol, date DESC
         ) ss ON ss.symbol = cw.symbol
@@ -106,14 +122,26 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
         price = None
         score = None
         trend = None
+        conditions = None
         
         if row:
             try:
-                price_raw = row["current_price"] if is_dict else row[2]
+                price_raw = row["current_price"] if is_dict else row[7]
                 price = float(price_raw) if price_raw is not None else None
                 
                 score = row["score"] if is_dict else row[1]
-                trend = row["trend_alignment"] if is_dict else row[3]
+                trend = row["trend_alignment"] if is_dict else row[8]
+
+                # Extract conditions
+                has_conditions = (row["condition_ema_50_200"] is not None) if is_dict else (row[2] is not None)
+                if has_conditions:
+                    conditions = {
+                        "ema_50_above_200": bool(row["condition_ema_50_200"] if is_dict else row[2]),
+                        "ema_200_slope_positive": bool(row["condition_ema_200_slope"] if is_dict else row[3]),
+                        "at_6m_high": bool(row["condition_6m_high"] if is_dict else row[4]),
+                        "volume_surge": bool(row["condition_volume"] if is_dict else row[5]),
+                        "relative_strength": bool(row["condition_rs"] if is_dict else row[6]),
+                    }
             except (IndexError, KeyError, TypeError):
                 pass
 
@@ -122,6 +150,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             price=price,
             score=score,
             trend_alignment=trend,
+            conditions=conditions,
             is_not_found=row["is_not_found"] if is_dict else False
         ))
         

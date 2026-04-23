@@ -31,6 +31,33 @@ def verify_admin(client=Depends(get_current_client), conn=Depends(get_db)):
         logger.error(f"ADMIN VERIFY CRASH: {e}")
         raise HTTPException(status_code=500, detail=f"Admin verification failed: {e}")
 
+@router.get("/daily-leaderboard")
+def get_daily_leaderboard(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch the top scoring stocks for the most recent date with component breakdown."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT ss.symbol, ss.total_score, ss.date,
+                   ss.condition_ema_50_200, ss.condition_ema_200_slope,
+                   ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+                   dp.close, dp.volume
+            FROM stock_scores ss
+            JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
+            WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
+            ORDER BY ss.total_score DESC, ss.symbol ASC
+            LIMIT 20
+        """)
+        rows = cur.fetchall()
+        return {
+            "date": str(rows[0]["date"]) if rows else None,
+            "top_stocks": [dict(r) for r in rows]
+        }
+    except Exception as e:
+        logger.error(f"LEADERBOARD ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
 @router.get("/metrics")
 def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Get 30,000 foot view metrics of the MRI platform."""

@@ -169,6 +169,7 @@ export const api = {
     getAdminGlobalUniverse: () => apiFetch('/admin/global-universe'),
     getAdminClients: () => apiFetch('/admin/clients'),
     getAdminClientPortfolio: (id: string) => apiFetch(`/admin/clients/${id}/portfolio`),
+    getAdminDailyLeaderboard: () => apiFetch('/admin/daily-leaderboard'),
 
     // Signals
     getRegime: () => apiFetch('/signals/regime'),

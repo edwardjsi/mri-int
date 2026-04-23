@@ -45,9 +45,18 @@ def get_todays_signals(
     cur.execute("""
         SELECT cs.id, cs.date, cs.symbol, cs.action, cs.recommended_price,
                cs.score, cs.regime, cs.reason,
-               ca.action_taken, ca.actual_price, ca.quantity
+               ca.action_taken, ca.actual_price, ca.quantity,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+        LEFT JOIN LATERAL (
+            SELECT condition_ema_50_200, condition_ema_200_slope,
+                   condition_6m_high, condition_volume, condition_rs
+            FROM stock_scores
+            WHERE symbol = cs.symbol AND date = cs.date
+            LIMIT 1
+        ) ss ON true
         WHERE cs.client_id = %s
           AND cs.date = (SELECT MAX(date) FROM client_signals WHERE client_id = %s)
         ORDER BY cs.action, cs.score DESC
@@ -71,6 +80,13 @@ def get_todays_signals(
                 "client_action": s["action_taken"] if is_dict else s[8],
                 "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
                 "quantity": s["quantity"] if is_dict else s[10],
+                "conditions": {
+                    "ema_50_above_200": bool(s["condition_ema_50_200"] if is_dict else s[11]),
+                    "ema_200_slope_positive": bool(s["condition_ema_200_slope"] if is_dict else s[12]),
+                    "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[13]),
+                    "volume_surge": bool(s["condition_volume"] if is_dict else s[14]),
+                    "relative_strength": bool(s["condition_rs"] if is_dict else s[15]),
+                } if (s["condition_ema_50_200"] if is_dict else s[11]) is not None else None
             }
             for s in signals
         ],
@@ -86,9 +102,18 @@ def get_pending_signals(
     cur = conn.cursor()
     cur.execute("""
         SELECT cs.id, cs.date, cs.symbol, cs.action, cs.recommended_price,
-               cs.score, cs.regime, cs.reason
+               cs.score, cs.regime, cs.reason,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+        LEFT JOIN LATERAL (
+            SELECT condition_ema_50_200, condition_ema_200_slope,
+                   condition_6m_high, condition_volume, condition_rs
+            FROM stock_scores
+            WHERE symbol = cs.symbol AND date = cs.date
+            LIMIT 1
+        ) ss ON true
         WHERE cs.client_id = %s
           AND ca.id IS NULL
         ORDER BY cs.date DESC, cs.action, cs.score DESC
@@ -108,6 +133,13 @@ def get_pending_signals(
             "score": s["score"] if is_dict else s[5],
             "regime": s["regime"] if is_dict else s[6],
             "reason": s["reason"] if is_dict else s[7],
+            "conditions": {
+                "ema_50_above_200": bool(s["condition_ema_50_200"] if is_dict else s[8]),
+                "ema_200_slope_positive": bool(s["condition_ema_200_slope"] if is_dict else s[9]),
+                "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[10]),
+                "volume_surge": bool(s["condition_volume"] if is_dict else s[11]),
+                "relative_strength": bool(s["condition_rs"] if is_dict else s[12]),
+            } if (s["condition_ema_50_200"] if is_dict else s[8]) is not None else None
         }
         for s in signals
     ]
@@ -124,9 +156,18 @@ def get_signal_history(
     cur.execute("""
         SELECT cs.id, cs.date, cs.symbol, cs.action, cs.recommended_price,
                cs.score, cs.regime, cs.reason,
-               ca.action_taken, ca.actual_price, ca.quantity
+               ca.action_taken, ca.actual_price, ca.quantity,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
+        LEFT JOIN LATERAL (
+            SELECT condition_ema_50_200, condition_ema_200_slope,
+                   condition_6m_high, condition_volume, condition_rs
+            FROM stock_scores
+            WHERE symbol = cs.symbol AND date = cs.date
+            LIMIT 1
+        ) ss ON true
         WHERE cs.client_id = %s
           AND cs.date >= CURRENT_DATE - INTERVAL '%s days'
         ORDER BY cs.date DESC, cs.action, cs.symbol
@@ -149,6 +190,13 @@ def get_signal_history(
             "client_action": s["action_taken"] if is_dict else s[8],
             "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
             "quantity": s["quantity"] if is_dict else s[10],
+            "conditions": {
+                "ema_50_above_200": bool(s["condition_ema_50_200"] if is_dict else s[11]),
+                "ema_200_slope_positive": bool(s["condition_ema_200_slope"] if is_dict else s[12]),
+                "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[13]),
+                "volume_surge": bool(s["condition_volume"] if is_dict else s[14]),
+                "relative_strength": bool(s["condition_rs"] if is_dict else s[15]),
+            } if (s["condition_ema_50_200"] if is_dict else s[11]) is not None else None
         }
         for s in signals
     ]

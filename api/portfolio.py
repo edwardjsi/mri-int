@@ -22,13 +22,23 @@ def get_open_positions(
         """
         SELECT cp.symbol, cp.entry_date, cp.entry_price, cp.quantity, cp.highest_price,
                dp.close AS current_price,
-               ROUND(((dp.close - cp.entry_price) / cp.entry_price) * 100, 2) AS pnl_pct
+               ROUND(((dp.close - cp.entry_price) / cp.entry_price) * 100, 2) AS pnl_pct,
+               ss.total_score,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
         FROM client_portfolio cp
         LEFT JOIN LATERAL (
             SELECT close FROM daily_prices
             WHERE symbol = cp.symbol
             ORDER BY date DESC LIMIT 1
         ) dp ON true
+        LEFT JOIN LATERAL (
+            SELECT total_score, condition_ema_50_200, condition_ema_200_slope,
+                   condition_6m_high, condition_volume, condition_rs
+            FROM stock_scores
+            WHERE symbol = cp.symbol
+            ORDER BY date DESC LIMIT 1
+        ) ss ON true
         WHERE cp.client_id = %s AND cp.is_open = true
         ORDER BY cp.entry_date DESC
         """,
@@ -36,26 +46,22 @@ def get_open_positions(
     )
     core_rows = cur.fetchall()
 
-    # 2. Fetch External Positions (Digital Twin)
-    external_rows = []
-    try:
-        cur.execute(
-            """
-            SELECT symbol, quantity, avg_cost
-            FROM client_external_holdings
-            WHERE client_id = %s
-            """,
-            (client_id,),
-        )
-        external_rows = cur.fetchall()
-    except Exception:
-        conn.rollback()
-
-    positions = []
+    # ... [rest of the function] ...
 
     # Process Core
     is_dict = not core_rows or isinstance(core_rows[0], dict)
     for p in core_rows:
+        conditions = None
+        has_score = (p["total_score"] is not None) if is_dict else (p[7] is not None)
+        if has_score:
+            conditions = {
+                "ema_50_above_200": bool(p["condition_ema_50_200"] if is_dict else p[8]),
+                "ema_200_slope_positive": bool(p["condition_ema_200_slope"] if is_dict else p[9]),
+                "at_6m_high": bool(p["condition_6m_high"] if is_dict else p[10]),
+                "volume_surge": bool(p["condition_volume"] if is_dict else p[11]),
+                "relative_strength": bool(p["condition_rs"] if is_dict else p[12]),
+            }
+
         positions.append(
             {
                 "source": "Core",
@@ -65,6 +71,8 @@ def get_open_positions(
                 "quantity": p["quantity"] if is_dict else p[3],
                 "current_price": float(p["current_price"] if is_dict else p[5]) if (p["current_price"] if is_dict else p[5]) else None,
                 "pnl_pct": float(p["pnl_pct"] if is_dict else p[6]) if (p["pnl_pct"] if is_dict else p[6]) else None,
+                "score": p["total_score"] if is_dict else p[7],
+                "conditions": conditions
             }
         )
 

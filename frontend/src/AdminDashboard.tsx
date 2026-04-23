@@ -16,9 +16,10 @@ interface SymbolGrade {
   interest_count: number; // How many users track/hold this
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<{ date: string | null, top_stocks: any[] }>({ date: null, top_stocks: [] });
   const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,8 +42,12 @@ export default function AdminDashboard() {
       try { const data = await api.getAdminGlobalUniverse(); setGlobalUniverse(data); }
       catch (e) { console.error('Global universe failed', e); setError('Global list is taking longer than expected...'); }
     };
+    const fetchLeaderboard = async () => {
+      try { const data = await api.getAdminDailyLeaderboard(); setDailyLeaderboard(data); }
+      catch (e) { console.error('Leaderboard failed', e); }
+    };
 
-    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal()]);
+    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard()]);
     setLoading(false);
   };
 
@@ -77,6 +82,53 @@ export default function AdminDashboard() {
       </div>
 
       {error && <div className="error-alert">{error}</div>}
+
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">🏆 Daily Leaderboard ({dailyLeaderboard.date})</h3>
+        <p className="section-subtitle">Top scoring stocks from today's quantitative analysis.</p>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Score</th>
+                        <th>Price</th>
+                        <th>Breakdown (EMA | Slope | RS | High | Vol)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {dailyLeaderboard.top_stocks.map(s => {
+                        const conditions = {
+                            ema_50_above_200: s.condition_ema_50_200,
+                            ema_200_slope_positive: s.condition_ema_200_slope,
+                            at_6m_high: s.condition_6m_high,
+                            volume_surge: s.condition_volume,
+                            relative_strength: s.condition_rs
+                        };
+                        return (
+                            <tr key={s.symbol} onClick={() => onSelectStock({ ...s, conditions, score: s.total_score, price: s.close })} className="clickable-row">
+                                <td className="font-bold">{s.symbol}</td>
+                                <td><span className="score-badge">{s.total_score}</span></td>
+                                <td>₹{s.close?.toLocaleString()}</td>
+                                <td>
+                                    <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
+                                        <span style={{ color: s.condition_ema_50_200 ? '#22c55e' : '#64748b' }}>{s.condition_ema_50_200 ? '✅' : '❌'}</span>
+                                        <span style={{ color: s.condition_ema_200_slope ? '#22c55e' : '#64748b' }}>{s.condition_ema_200_slope ? '✅' : '❌'}</span>
+                                        <span style={{ color: s.condition_rs ? '#22c55e' : '#64748b' }}>{s.condition_rs ? '✅' : '❌'}</span>
+                                        <span style={{ color: s.condition_6m_high ? '#22c55e' : '#64748b' }}>{s.condition_6m_high ? '✅' : '❌'}</span>
+                                        <span style={{ color: s.condition_volume ? '#22c55e' : '#64748b' }}>{s.condition_volume ? '✅' : '❌'}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                    {(!dailyLeaderboard.top_stocks.length) && (
+                        <tr><td colSpan={4} className="empty-state">No leaderboard data found for today.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
 
       <section className="section" style={{ marginTop: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

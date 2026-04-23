@@ -6,6 +6,80 @@ import AdminDashboard from './AdminDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
+/* ─── Score Breakdown Component ─── */
+function ScoreBreakdown({ conditions, score }: { conditions: any, score: number }) {
+  if (!conditions) return <div className="empty-state">No breakdown available for this score.</div>;
+
+  const items = [
+    { label: 'Trend Integrity (EMA 50 > 200)', value: conditions.ema_50_above_200, weight: '25%' },
+    { label: 'Long-term Bias (200 EMA Slope > 0)', value: conditions.ema_200_slope_positive, weight: '25%' },
+    { label: 'Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '20%' },
+    { label: 'Alpha-Strength (Near 6m High)', value: conditions.at_6m_high, weight: '20%' },
+    { label: 'Liquidity Gate (Volume Surge)', value: conditions.volume_surge, weight: '10%' },
+  ];
+
+  return (
+    <div className="score-breakdown">
+      <div className="summary-stat" style={{ marginBottom: '1rem', textAlign: 'center' }}>
+        <span className="summary-label">Total MRI Score</span>
+        <div className="stat-value" style={{ fontSize: '2rem', color: '#60a5fa' }}>{score}/100</div>
+      </div>
+      {items.map((item, idx) => (
+        <div key={idx} className="condition-item">
+          <div className="condition-label">
+            {item.label}
+            <div style={{ fontSize: '10px', color: '#64748b' }}>Weight: {item.weight}</div>
+          </div>
+          <div className={`condition-value ${item.value ? 'condition-pass' : 'condition-fail'}`}>
+            {item.value ? '✅ PASS' : '❌ FAIL'}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Stock Details Modal ────────────────────────────────── */
+function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h3 className="modal-title" style={{ marginBottom: '4px' }}>{stock.symbol}</h3>
+            <div className="card-meta">Detailed MRI Intelligence Report</div>
+          </div>
+          <button className="link-btn" onClick={onClose} style={{ fontSize: '24px' }}>&times;</button>
+        </div>
+        
+        <div className="modal-info" style={{ marginTop: '1.5rem' }}>
+          <div className="info-row">
+            <span>Current Price:</span>
+            <span className="font-bold">₹{stock.current_price?.toLocaleString() || stock.price?.toLocaleString() || 'N/A'}</span>
+          </div>
+          {stock.pnl_pct !== undefined && (
+            <div className="info-row">
+              <span>Your P&L:</span>
+              <span className="font-bold" style={{ color: stock.pnl_pct >= 0 ? '#22c55e' : '#ef4444' }}>
+                {stock.pnl_pct >= 0 ? '+' : ''}{stock.pnl_pct}%
+              </span>
+            </div>
+          )}
+        </div>
+
+        <ScoreBreakdown 
+          score={stock.score || stock.total_score} 
+          conditions={stock.conditions} 
+        />
+
+        <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
+          <button className="btn-primary" onClick={onClose}>Close Report</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Login Page ─────────────────────────────────────────── */
 function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () => void }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -403,10 +477,11 @@ function ExecutionDialog({ signal, totalCapital, onConfirm, onCancel }: {
 }
 
 /* ─── Signal Card ────────────────────────────────────────── */
-function SignalCard({ signal, totalCapital, onAction }: {
+function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
   signal: any;
   totalCapital: number;
   onAction: (id: string, action: string, price?: number, qty?: number) => void;
+  onSelectStock: (stock: any) => void;
 }) {
   const [showDialog, setShowDialog] = useState(false);
   const isBuy = signal.action === 'BUY';
@@ -415,7 +490,10 @@ function SignalCard({ signal, totalCapital, onAction }: {
 
   return (
     <>
-      <div className={`signal-card ${isBuy ? 'signal-buy' : 'signal-sell'}`}>
+      <div 
+        className={`signal-card ${isBuy ? 'signal-buy' : 'signal-sell'} clickable-row`}
+        onClick={() => onSelectStock(signal)}
+      >
         <div className="signal-header">
           <span className="signal-symbol">{signal.symbol}</span>
           <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
@@ -480,7 +558,7 @@ function AddCapitalDialog({ onConfirm, onCancel }: {
 }
 
 /* ─── Dashboard Page ─────────────────────────────────────── */
-function DashboardPage() {
+function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [regime, setRegime] = useState<any>(null);
   const [signals, setSignals] = useState<any>(null);
   const [pending, setPending] = useState<any[]>([]);
@@ -574,7 +652,7 @@ function DashboardPage() {
               </thead>
               <tbody>
                 {positions.positions.map((p: any) => (
-                  <tr key={`${p.source}-${p.symbol}`}>
+                  <tr key={`${p.source}-${p.symbol}`} onClick={() => onSelectStock(p)} className="clickable-row">
                     <td className="font-bold">{p.symbol}</td>
                     <td>
                       <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
@@ -585,7 +663,10 @@ function DashboardPage() {
                     <td>{p.quantity}</td>
                     <td className="font-medium">₹{((p.current_price || 0) * (p.quantity || 0)).toLocaleString()}</td>
                     <td style={{ color: (p.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {p.pnl_pct}%
+                      <div className="score-cell">
+                        {p.score !== undefined && <span className="score-badge">{p.score}</span>}
+                        {p.pnl_pct}%
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -612,7 +693,7 @@ function DashboardPage() {
           </p>
           <div className="signals-grid">
             {pendingOlder.map((s: any) => (
-              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} />
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
             ))}
           </div>
         </section>
@@ -629,7 +710,7 @@ function DashboardPage() {
         {todaySignals.length > 0 ? (
           <div className="signals-grid">
             {todaySignals.map((s: any) => (
-              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} />
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
             ))}
           </div>
         ) : (
@@ -645,7 +726,7 @@ function DashboardPage() {
 }
 
 /* ─── History Page ────────────────────────────────────────── */
-function HistoryPage() {
+function HistoryPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [actions, setActions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -679,7 +760,7 @@ function HistoryPage() {
             </thead>
             <tbody>
               {actions.map((a: any) => (
-                <tr key={a.id}>
+                <tr key={a.id} onClick={() => onSelectStock(a)} className="clickable-row">
                   <td>{a.signal_date}</td>
                   <td className="font-bold">{a.symbol}</td>
                   <td><span className={`signal-badge-sm ${a.signal_action === 'BUY' ? 'badge-buy' : 'badge-sell'}`}>{a.signal_action}</span></td>
@@ -801,7 +882,7 @@ function PerformancePage() {
 }
 
 /* ─── Risk Audit Page ────────────────────────────────────── */
-function RiskAuditPage() {
+function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -1404,7 +1485,7 @@ function RiskAuditPage() {
                 </thead>
                 <tbody>
                   {sortedHoldings.map((h: any) => (
-                    <tr key={h.symbol}>
+                    <tr key={h.symbol} onClick={() => onSelectStock(h)} className="clickable-row">
                       <td className="font-bold">{h.symbol}</td>
                       <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
                       <td>
@@ -1475,7 +1556,7 @@ function RiskAuditPage() {
 	}
 
 /* ─── Watchlist Page ─────────────────────────────────────── */
-function WatchlistPage() {
+function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newSymbol, setNewSymbol] = useState('');
@@ -1636,9 +1717,9 @@ function WatchlistPage() {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+             <tbody>
               {watchlist.map(item => (
-                <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}}>
+                <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}} onClick={() => !item.is_pending && onSelectStock(item)} className={item.is_pending ? '' : 'clickable-row'}>
                   <td className="font-bold">{item.symbol}</td>
                   <td>{item.price ? `₹${item.price.toLocaleString()}` : (item.is_pending ? 'Saving...' : 'N/A')}</td>
                   <td>
@@ -1652,6 +1733,7 @@ function WatchlistPage() {
                       <span className="badge-pending">🔄 Tracking...</span>
                     )}
                   </td>
+
                   <td>
                     {item.is_pending ? '...' : (item.trend_alignment ? (
                       <span className={`action-badge ${item.trend_alignment === 'BULL' ? 'badge-executed' : 'badge-skipped'}`}>
@@ -1681,8 +1763,9 @@ function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
   const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin'>('dashboard');
+  const [selectedStock, setSelectedStock] = useState<any>(null);
 
-  // Custom simple routing for password reset link
+  // ... rest of the component
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('reset_token');
   const [isResetFlow, setIsResetFlow] = useState(!!resetToken);
@@ -1749,14 +1832,21 @@ function App() {
           </h1>
         </header>
         <div className="content-body">
-          {page === 'dashboard' && <DashboardPage />}
-          {page === 'history' && <HistoryPage />}
+          {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
+          {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}
           {page === 'performance' && <PerformancePage />}
-          {page === 'riskaudit' && <RiskAuditPage />}
-          {page === 'watchlist' && <WatchlistPage />}
-          {page === 'admin' && <AdminDashboard />}
+          {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
+          {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
+          {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
       </main>
+
+      {selectedStock && (
+        <StockDetailsModal 
+          stock={selectedStock} 
+          onClose={() => setSelectedStock(null)} 
+        />
+      )}
 
       {/* Mobile Bottom Navigation */}
       <nav className="mobile-nav">

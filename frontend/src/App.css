@@ -1126,6 +1126,55 @@
 }
 
 
+/* ─── Score Breakdown Component ─── */
+.score-breakdown {
+  margin-top: 1rem;
+}
+
+.condition-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #1e293b;
+  font-size: 13px;
+}
+
+.condition-label {
+  color: #94a3b8;
+}
+
+.condition-value {
+  font-weight: 600;
+}
+
+.condition-pass {
+  color: #22c55e;
+}
+
+.condition-fail {
+  color: #ef4444;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.clickable-row:hover {
+  background: #1e293b !important;
+}
+
+.score-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-trend-indicator {
+  font-size: 10px;
+}
+
 /* Landing page + hero section */
 .landing-shell {
   min-height: 100vh;
