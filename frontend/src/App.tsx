@@ -487,6 +487,7 @@ function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
   const isBuy = signal.action === 'BUY';
   const allocation = totalCapital * 0.1;
   const suggestedQty = signal.recommended_price ? Math.floor(allocation / signal.recommended_price) : 0;
+  const isBreakout = signal.conditions?.at_6m_high && signal.conditions?.volume_surge;
 
   return (
     <>
@@ -495,7 +496,10 @@ function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
         onClick={() => onSelectStock(signal)}
       >
         <div className="signal-header">
-          <span className="signal-symbol">{signal.symbol}</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="signal-symbol">{signal.symbol}</span>
+            {isBreakout && <span className="score-trend-indicator" style={{ fontSize: '9px', marginTop: '2px' }}>🚀 BREAKOUT</span>}
+          </div>
           <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
         </div>
         <div className="signal-details">
@@ -552,6 +556,85 @@ function AddCapitalDialog({ onConfirm, onCancel }: {
             Add ₹{amount ? parseFloat(amount).toLocaleString() : '0'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Shadow Momentum Page ────────────────────────────────── */
+function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getShadowSignals()
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="loading">Detecting market momentum...</div>;
+
+  const stocks = data?.stocks || [];
+
+  return (
+    <div className="shadow-momentum">
+      <h2 className="section-title">🚀 Swing Momentum (Shadow Picks)</h2>
+      <p className="section-subtitle">
+        The Top 10 highest-scoring stocks today. These ignore the Market Regime filter to help you identify 
+        active momentum even in Bear markets.
+      </p>
+
+      <div className="card" style={{ backgroundColor: '#1e3a8a30', borderColor: '#3b82f640', marginBottom: '24px' }}>
+        <h4 style={{ margin: '0 0 8px 0', color: '#60a5fa' }}>💡 Trading Rule</h4>
+        <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: 1.4 }}>
+          In a <strong>BEAR</strong> market, only consider entering stocks tagged with <strong>🚀 BREAKOUT</strong>. 
+          This ensures the stock is actively clearing a ceiling with high volume before you jump in.
+        </p>
+      </div>
+
+      <div className="signals-grid">
+        {stocks.map((s: any) => {
+          const conditions = {
+            ema_50_above_200: s.condition_ema_50_200,
+            ema_200_slope_positive: s.condition_ema_200_slope,
+            at_6m_high: s.condition_6m_high,
+            volume_surge: s.condition_volume,
+            relative_strength: s.condition_rs
+          };
+          const stockWithConditions = { ...s, score: s.total_score, price: s.close, conditions };
+          
+          return (
+            <div 
+              key={s.symbol} 
+              className={`signal-card ${s.is_breakout ? 'signal-buy' : ''} clickable-row`}
+              style={{ borderLeftWidth: s.is_breakout ? '4px' : '1px' }}
+              onClick={() => onSelectStock(stockWithConditions)}
+            >
+              <div className="signal-header">
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span className="signal-symbol">{s.symbol}</span>
+                  {s.is_breakout && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#22c55e', fontWeight: 800 }}>🚀 BREAKOUT</span>}
+                </div>
+                <span className="score-badge" style={{ fontSize: '14px', padding: '4px 10px' }}>{s.total_score}</span>
+              </div>
+              <div className="signal-details">
+                <div className="signal-detail"><span className="detail-label">Price</span><span className="detail-value">₹{s.close?.toLocaleString()}</span></div>
+                <div className="signal-detail">
+                    <span className="detail-label">V-Surge</span>
+                    <span className="detail-value" style={{ color: s.condition_volume ? '#22c55e' : '#94a3b8' }}>
+                        {s.condition_volume ? 'YES' : 'No'}
+                    </span>
+                </div>
+              </div>
+              <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                <span style={{ fontSize: '10px', color: s.condition_ema_50_200 ? '#22c55e' : '#475569' }}>EMA {s.condition_ema_50_200 ? '✅' : '○'}</span>
+                <span style={{ fontSize: '10px', color: s.condition_ema_200_slope ? '#22c55e' : '#475569' }}>Slope {s.condition_ema_200_slope ? '✅' : '○'}</span>
+                <span style={{ fontSize: '10px', color: s.condition_rs ? '#22c55e' : '#475569' }}>RS {s.condition_rs ? '✅' : '○'}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -653,7 +736,12 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
               <tbody>
                 {positions.positions.map((p: any) => (
                   <tr key={`${p.source}-${p.symbol}`} onClick={() => onSelectStock(p)} className="clickable-row">
-                    <td className="font-bold">{p.symbol}</td>
+                    <td className="font-bold">
+                      {p.symbol}
+                      {p.conditions?.at_6m_high && p.conditions?.volume_surge && (
+                        <div className="score-trend-indicator" style={{ fontSize: '9px', fontWeight: 'normal' }}>🚀 BREAKOUT</div>
+                      )}
+                    </td>
                     <td>
                       <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
                         {p.source}
@@ -1762,7 +1850,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   // ... rest of the component
@@ -1798,6 +1886,9 @@ function App() {
           <button className={`nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
             <span className="nav-icon">🏠</span> Dashboard
           </button>
+          <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
+            <span className="nav-icon">🚀</span> Swing Momentum
+          </button>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
             <span className="nav-icon">📋</span> History
           </button>
@@ -1825,6 +1916,7 @@ function App() {
         <header className="content-header">
           <h1 className="page-title">
             {page === 'dashboard' ? 'Signal Dashboard' : 
+             page === 'shadow' ? 'Swing Momentum' : 
              page === 'history' ? 'Trade History' : 
              page === 'riskaudit' ? 'Portfolio Risk Audit' : 
              page === 'watchlist' ? 'Stock Watchlist' : 
@@ -1833,6 +1925,7 @@ function App() {
         </header>
         <div className="content-body">
           {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
+          {page === 'shadow' && <ShadowMomentumPage onSelectStock={setSelectedStock} />}
           {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
@@ -1851,8 +1944,15 @@ function App() {
       {/* Mobile Bottom Navigation */}
       <nav className="mobile-nav">
         <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-          <span className="nav-icon">🏠</span> Dashboard
+          <span className="nav-icon">🏠</span> Dash
         </button>
+        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
+          <span className="nav-icon">🚀</span> Swing
+        </button>
+        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
+          <span className="nav-icon">🛡️</span> Audit
+        </button>
+
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
           <span className="nav-icon">👀</span> Watchlist
         </button>

@@ -9,6 +9,34 @@ from api.deps import get_db, get_current_client
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
 
+@router.get("/shadow")
+def get_shadow_signals(conn=Depends(get_db)):
+    """Top 10 stocks regardless of regime, specifically for swing trade audit."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT ss.symbol, ss.total_score, ss.date,
+                   ss.condition_ema_50_200, ss.condition_ema_200_slope,
+                   ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+                   dp.close, dp.volume,
+                   (ss.condition_6m_high AND ss.condition_volume) as is_breakout
+            FROM stock_scores ss
+            JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
+            WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
+              AND COALESCE(dp.avg_volume_20d * dp.close, 0) >= 100000000 -- ₹10 Cr Liquidity Gate
+            ORDER BY ss.total_score DESC, dp.rs_90d DESC NULLS LAST
+            LIMIT 10
+        """)
+        rows = cur.fetchall()
+        return {
+            "date": str(rows[0]["date"]) if rows else None,
+            "stocks": [dict(r) for r in rows]
+        }
+    except Exception as e:
+        return {"error": str(e), "stocks": []}
+    finally:
+        cur.close()
+
 @router.get("/regime")
 def get_current_regime(conn=Depends(get_db)):
     """Current market regime (latest date in market_regime)."""

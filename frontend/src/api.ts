@@ -176,6 +176,7 @@ export const api = {
     // Signals
     getRegime: () => apiFetch('/signals/regime'),
     getTodaySignals: () => apiFetch('/signals/today'),
+    getShadowSignals: () => apiFetch('/signals/shadow'),
     getPendingSignals: () => apiFetch('/signals/pending'),
     getSignalHistory: (days: number = 30) => apiFetch(`/signals/history?days=${days}`),
     getScreener: (minScore: number = 4) => apiFetch(`/signals/screener?min_score=${minScore}`),
