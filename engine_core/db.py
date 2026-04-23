@@ -55,25 +55,36 @@ def fetch_df(query, params=None):
 
 
 def initialize_core_schema_v100():
-    """Initialize core schema"""
+    """Initialize core schema (Unified with api/schema.py)"""
     conn = get_connection()
     try:
         cur = conn.cursor()
 
-        # Create market_index_prices table if it doesn't exist
+        # Create market_index_prices table with full schema if it doesn't exist
         cur.execute("""
             CREATE TABLE IF NOT EXISTS market_index_prices (
-                id SERIAL PRIMARY KEY,
-                symbol VARCHAR(50) NOT NULL,
-                date DATE NOT NULL,
-                close NUMERIC(10,2),
-                created_at TIMESTAMPTZ DEFAULT NOW(),
+                id          BIGSERIAL PRIMARY KEY,
+                symbol      VARCHAR(20)  NOT NULL,
+                date        DATE         NOT NULL,
+                open        NUMERIC(12,4),
+                high        NUMERIC(12,4),
+                low         NUMERIC(12,4),
+                close       NUMERIC(12,4),
+                volume      BIGINT,
+                created_at  TIMESTAMPTZ DEFAULT NOW(),
                 UNIQUE(symbol, date)
             )
         """)
+        
+        # Ensure all columns exist for existing tables (Migration path)
+        for col, col_type in [("open", "NUMERIC(12,4)"), ("high", "NUMERIC(12,4)"), 
+                             ("low", "NUMERIC(12,4)"), ("volume", "BIGINT")]:
+            cur.execute(f"ALTER TABLE market_index_prices ADD COLUMN IF NOT EXISTS {col} {col_type};")
+        
+        cur.execute("ALTER TABLE market_index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();")
 
         conn.commit()
-        logger.info("✅ Core schema initialized")
+        logger.info("✅ Core schema initialized (market_index_prices hardened)")
 
     finally:
         conn.close()

@@ -27,10 +27,16 @@ def load_indices():
                 df = df.rename(columns={'index': 'date'})
             # yfinance sometimes emits duplicate column names (e.g., adj close). Deduplicate to avoid pandas warning.
             df = df.loc[:, ~df.columns.duplicated()]
+            # Ensure symbol and date are present, fill missing OHLC with close, volume with 0
             df['symbol'] = 'NIFTY50' if ticker == "^NSEI" else 'SENSEX'
-            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
+            df['volume'] = df.get('volume', 0).fillna(0)
+            for col in ['open', 'high', 'low']:
+                if col in df.columns:
+                    df[col] = df[col].fillna(df['close'])
+            
+            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna(subset=['date', 'close']).to_dict('records')
             insert_index_prices(records)
-            logger.info(f"  ✅ {df['symbol'].iloc[0]} synced.")
+            logger.info(f"  ✅ {df['symbol'].iloc[0]} synced ({len(records)} rows).")
         except Exception as e:
             logger.error(f"  ❌ {ticker} failed: {e}")
 
@@ -59,7 +65,13 @@ def load_stocks(symbols):
             df = df.loc[:, ~df.columns.duplicated()]
             df['symbol'] = symbol
             
-            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna().to_dict('records')
+            # Ensure missing data doesn't drop the whole row
+            df['volume'] = df.get('volume', 0).fillna(0)
+            for col in ['open', 'high', 'low']:
+                if col in df.columns:
+                    df[col] = df[col].fillna(df['close'])
+
+            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna(subset=['date', 'close']).to_dict('records')
             
             # Use dedicated stock insertion
             conn = get_connection()
