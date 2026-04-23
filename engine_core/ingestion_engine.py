@@ -27,16 +27,31 @@ def load_indices():
                 df = df.rename(columns={'index': 'date'})
             # yfinance sometimes emits duplicate column names (e.g., adj close). Deduplicate to avoid pandas warning.
             df = df.loc[:, ~df.columns.duplicated()]
-            # Ensure symbol and date are present, fill missing OHLC with close, volume with 0
-            df['symbol'] = 'NIFTY50' if ticker == "^NSEI" else 'SENSEX'
-            df['volume'] = df.get('volume', 0).fillna(0)
-            for col in ['open', 'high', 'low']:
-                if col in df.columns:
-                    df[col] = df[col].fillna(df['close'])
+            # Flexible column mapping to handle yfinance variations
+            col_map = {
+                'date': 'date', 'close': 'close', 'adj_close': 'close', 
+                'open': 'open', 'high': 'high', 'low': 'low', 'volume': 'volume'
+            }
+            final_df = pd.DataFrame()
+            final_df['symbol'] = ['NIFTY50' if ticker == "^NSEI" else 'SENSEX'] * len(df)
             
-            records = df[['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']].dropna(subset=['date', 'close']).to_dict('records')
-            insert_index_prices(records)
-            logger.info(f"  ✅ {df['symbol'].iloc[0]} synced ({len(records)} rows).")
+            for src, dest in col_map.items():
+                if src in df.columns:
+                    final_df[dest] = df[src]
+            
+            # Fill missing prices with available close price
+            for p in ['open', 'high', 'low']:
+                if p in final_df.columns:
+                    final_df[p] = final_df[p].fillna(final_df['close'])
+            
+            final_df['volume'] = final_df.get('volume', 0).fillna(0)
+            records = final_df.dropna(subset=['date', 'close']).to_dict('records')
+            
+            if not records:
+                logger.error(f"  ❌ {ticker}: Produced 0 records after filtering. Check columns: {df.columns.tolist()}")
+            else:
+                insert_index_prices(records)
+                logger.info(f"  ✅ {final_df['symbol'].iloc[0]} synced ({len(records)} rows).")
         except Exception as e:
             logger.error(f"  ❌ {ticker} failed: {e}")
 

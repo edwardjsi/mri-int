@@ -98,6 +98,10 @@ def compute_market_regime():
     # Update the entire range from the fetched data
     update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].replace({np.nan: None}).to_dict('records')
 
+    if not update_data:
+        logger.warning("No regime data to write.")
+        return
+
     cur = conn.cursor()
     sql = """
         INSERT INTO market_regime (date, sma_200, sma_200_slope_20, classification)
@@ -109,6 +113,7 @@ def compute_market_regime():
     """
     execute_batch(cur, sql, update_data, page_size=100)
     conn.commit()
+    logger.info(f"Wrote {len(update_data)} rows to market_regime.")
     
     # Health check: log what we computed
     latest = idx_df.iloc[-1] if not idx_df.empty else None
