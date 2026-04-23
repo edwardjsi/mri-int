@@ -58,17 +58,27 @@ def compute_market_regime():
     """Calculates market regime (NIFTY 50) incrementally."""
     logger.info("Computing Market Regime based on Nifty 50...")
     conn = get_connection()
-    # Fetch enough history to compute 200 SMA accurately for the entire recent period
-    idx_df = pd.read_sql(
-        "SELECT date, close FROM market_index_prices WHERE symbol = 'NIFTY50' "
-        "ORDER BY date",
-        conn
-    )
     
-    if idx_df.empty:
-        logger.warning("No index data for regime computation.")
+    # Direct fetch to avoid pd.read_sql / RealDictCursor incompatibility
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT date, close 
+            FROM public.market_index_prices 
+            WHERE symbol = 'NIFTY50' 
+            ORDER BY date
+        """)
+        rows = cur.fetchall()
+    
+    if not rows:
+        logger.warning("No index data found in public.market_index_prices for NIFTY50.")
         conn.close()
         return
+        
+    idx_df = pd.DataFrame([dict(r) for r in rows])
+    
+    # Force numeric conversion for pandas
+    idx_df['close'] = pd.to_numeric(idx_df['close'], errors='coerce')
+    idx_df = idx_df.dropna(subset=['close'])
 
     # Force numeric conversion for pandas
     idx_df['close'] = pd.to_numeric(idx_df['close'], errors='coerce')
@@ -104,7 +114,7 @@ def compute_market_regime():
 
     cur = conn.cursor()
     sql = """
-        INSERT INTO market_regime (date, sma_200, sma_200_slope_20, classification)
+        INSERT INTO public.market_regime (date, sma_200, sma_200_slope_20, classification)
         VALUES (%(date)s, %(sma_200)s, %(sma_200_slope_20)s, %(classification)s)
         ON CONFLICT (date) DO UPDATE SET 
             sma_200 = EXCLUDED.sma_200,
@@ -113,7 +123,7 @@ def compute_market_regime():
     """
     execute_batch(cur, sql, update_data, page_size=100)
     conn.commit()
-    logger.info(f"Wrote {len(update_data)} rows to market_regime.")
+    logger.info(f"✅ Wrote {len(update_data)} rows to public.market_regime.")
     
     # Health check: log what we computed
     latest = idx_df.iloc[-1] if not idx_df.empty else None
