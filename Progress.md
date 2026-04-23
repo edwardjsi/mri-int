@@ -2,29 +2,30 @@
 
 ---
 
-## 📅 Session: April 22, 2026 — Golden Path Resilience (Inclusive Scoring)
+## 📅 Session: April 23, 2026 — Drift Resolution & Pipeline Hardening
 
 **Session Start:** 09:00 IST
-**Session End:** 10:30 IST
+**Session End:** 11:30 IST
 **AI Assistant:** opencore
 
 ### What Was Done This Session
 
-#### 1. Golden Path Diagnosis ✅
-- Investigated why the live pipeline produced only 7 top-tier signals (>= 75 points) compared to the canonical model.
-- Identified the "Binary Trap": strict `>` inequalities and 50% volume surge requirements were too rigid for the current market consolidation phase.
+#### 1. Drift & Gap Resolution ✅
+- Bridged a critical 6-day data drift in the `market_regime` table.
+- Resolved a "silent failure" where Nifty 50 data was being discarded due to `yfinance` MultiIndex formatting changes.
+- Updated the dashboard to **April 23, 2026**.
 
-#### 2. Scoring Engine Refinement ✅
-- **Inclusive Trend:** Changed EMA cross and Slope logic to `>=` to support stabilizing trends.
-- **Breakout Grace:** Implemented 1% grace for 6-month highs to capture stocks "at the door."
-- **Volume Normalization:** Lowered surge threshold to 1.3x to better capture institutional entry signals.
-- **Debug Visibility:** Added top-10 audit logs to the scoring engine output.
+#### 2. Pipeline Hardening ✅
+- **Inclusive Scoring:** Fixed the "Golden Path" failure by implementing `>=` trend logic, 1% breakout grace, and 1.3x volume normalization.
+- **Direct Fetch:** Bypassed `pd.read_sql` compatibility issues by switching to direct cursor fetching in the regime engine.
+- **Robust Ingestion:** Added a definitive column flattener to `ingestion_engine.py`.
 
-#### 3. Diagnostic Tooling ✅
-- Created `scripts/debug_golden_path.py` to provide a per-condition pass-rate breakdown for the entire universe.
+#### 3. New Tools Created ✅
+- `scripts/debug_golden_path.py`: Audit tool for per-condition pass rates.
+- `scripts/force_sync_regime.py`: Local recovery tool for future ingestion gaps.
 
 #### 4. Decisions & Documentation ✅
-- Recorded **Decision 081** for the scoring logic shift.
+- Recorded **Decisions 081, 082, and 083**.
 - Updated `Progress.md` and `Sessions.md`.
 
 ### ⏳ Left for Next Session

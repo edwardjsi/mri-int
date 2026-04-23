@@ -527,10 +527,22 @@ Reason: A `database-reviewer` audit identified several high-risk patterns: poten
 Status: FINAL.
 
 ## Decision 081 — Inclusive Scoring for Golden Path Resilience
-Date: 2026-04-22
+Date: 2026-04-23
 Decision: 
 1. Switched trend conditions (EMA 50/200 cross and 200 EMA slope) from strict `>` to inclusive `>=`.
 2. Added a 1% grace threshold to the 6-month high condition (`close >= rolling_high_6m * 0.99`).
 3. Lowered the volume surge trigger from 1.5x to 1.3x 20-day average.
-Reason: The "Golden Path" validation was failing (only 7 stocks >= 75) due to a "Binary Trap." Recent listings and stocks in healthy consolidation were being penalized 25-55 points for minor rounding differences or volume spikes that didn't hit an arbitrary 50% threshold. These changes align the engine with realistic institutional accumulation patterns while maintaining the 75-point "High Conviction" gate.
+Reason: The "Golden Path" validation was failing (only 7 stocks >= 75) due to a "Binary Trap." These changes align the engine with realistic institutional accumulation patterns while maintaining the 75-point "High Conviction" gate.
+Status: FINAL.
+
+## Decision 082 — Robust yfinance Column Normalization
+Date: 2026-04-23
+Decision: Implemented a robust column flattener and mapper in `ingestion_engine.py` to handle yfinance v0.2.50+ MultiIndex return formats.
+Reason: A library update caused index ingestion to fail silently because the 'Date' column was nested in a tuple, leading to the 5-day drift error.
+Status: FINAL.
+
+## Decision 083 — Direct DB Fetch for Regime Engine
+Date: 2026-04-23
+Decision: Replaced `pd.read_sql` with a direct `cur.execute` fetch in `regime_engine.py`.
+Reason: A compatibility warning between `pandas` and `psycopg2.extras.RealDictCursor` was causing the engine to return empty dataframes silently in the GitHub Actions environment.
 Status: FINAL.
