@@ -149,27 +149,35 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 <thead>
                     <tr>
                         <th>Symbol</th>
+                        <th>Score</th>
                         <th>Watchers</th>
                         <th>Holders</th>
                         <th>Total Interest</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredSymbols.length > 0 ? filteredSymbols.map(s => (
-                        <tr key={s.symbol}>
-                            <td className="font-bold">
-                                {s.symbol}
-                                {!s.has_data && <span className="action-badge badge-skipped" style={{ padding: '2px 4px', fontSize: '10px', marginLeft: '8px', background: '#faad14' }}>⏳ PENDING</span>}
-                            </td>
-                            <td>{s.watchers}</td>
-                            <td>{s.holders}</td>
-                            <td style={{ fontWeight: 800 }}>{s.total_interest}</td>
-                            <td>
-                                <button className="link-btn" onClick={() => (window as any).location.search = `?q=${s.symbol}`}>Analytics (Soon)</button>
-                            </td>
-                        </tr>
-                    )) : (
+                    {filteredSymbols.length > 0 ? filteredSymbols.map(s => {
+                        const conditions = {
+                            ema_50_above_200: s.condition_ema_50_200,
+                            ema_200_slope_positive: s.condition_ema_200_slope,
+                            at_6m_high: s.condition_6m_high,
+                            volume_surge: s.condition_volume,
+                            relative_strength: s.condition_rs
+                        };
+                        return (
+                            <tr key={s.symbol} onClick={() => onSelectStock({ ...s, conditions, price: s.current_price })} className="clickable-row">
+                                <td className="font-bold">
+                                    {s.symbol}
+                                    {s.is_breakout && <span className="score-trend-indicator" style={{ marginLeft: '8px' }}>🚀 BREAKOUT</span>}
+                                    {s.score === null && <span className="action-badge badge-skipped" style={{ padding: '2px 4px', fontSize: '10px', marginLeft: '8px', background: '#faad14' }}>⏳ PENDING</span>}
+                                </td>
+                                <td>{s.score !== null ? <span className="score-badge">{s.score}</span> : '-'}</td>
+                                <td>{s.watchers}</td>
+                                <td>{s.holders}</td>
+                                <td style={{ fontWeight: 800 }}>{s.total_interest}</td>
+                            </tr>
+                        );
+                    }) : (
                         <tr>
                             <td colSpan={5} className="empty-state">No symbols matching "{searchTerm}" found.</td>
                         </tr>

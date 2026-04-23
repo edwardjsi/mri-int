@@ -86,10 +86,10 @@ def get_metrics(conn=Depends(get_db), admin=Depends(verify_admin)):
 
 @router.get("/global-universe")
 def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
-    """Unified master list of every unique symbol tracked/owned across all users."""
+    """Unified master list of every unique symbol tracked/owned across all users, with latest scores."""
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        # Full join on interested counts from both tables
+        # Get interest counts and join with latest scores/prices
         cur.execute("""
             WITH watch_counts AS (
                 SELECT symbol, COUNT(DISTINCT client_id) as watchers
@@ -98,16 +98,38 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
             hold_counts AS (
                 SELECT symbol, COUNT(DISTINCT client_id) as holders
                 FROM client_external_holdings GROUP BY symbol
+            ),
+            interest AS (
+                SELECT 
+                    COALESCE(w.symbol, h.symbol) as symbol,
+                    COALESCE(w.watchers, 0) as watchers,
+                    COALESCE(h.holders, 0) as holders,
+                    (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest
+                FROM watch_counts w
+                FULL OUTER JOIN hold_counts h ON h.symbol = w.symbol
             )
             SELECT 
-                COALESCE(w.symbol, h.symbol) as symbol,
-                COALESCE(w.watchers, 0) as watchers,
-                COALESCE(h.holders, 0) as holders,
-                (COALESCE(w.watchers, 0) + COALESCE(h.holders, 0)) as total_interest,
-                EXISTS (SELECT 1 FROM daily_prices dp WHERE dp.symbol = COALESCE(w.symbol, h.symbol)) as has_data
-            FROM watch_counts w
-            FULL OUTER JOIN hold_counts h ON h.symbol = w.symbol
-            ORDER BY total_interest DESC, symbol ASC
+                i.*,
+                ss.total_score as score,
+                ss.condition_ema_50_200, ss.condition_ema_200_slope,
+                ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+                dp.close as current_price,
+                (ss.condition_6m_high AND ss.condition_volume) as is_breakout
+            FROM interest i
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) 
+                    symbol, total_score, date,
+                    condition_ema_50_200, condition_ema_200_slope,
+                    condition_6m_high, condition_volume, condition_rs
+                FROM stock_scores 
+                ORDER BY symbol, date DESC
+            ) ss ON ss.symbol = i.symbol
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, close, date
+                FROM daily_prices
+                ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = i.symbol
+            ORDER BY i.total_interest DESC, i.symbol ASC
         """)
         return cur.fetchall()
     except Exception as e:
