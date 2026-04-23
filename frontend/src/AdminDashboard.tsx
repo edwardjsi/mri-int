@@ -25,6 +25,47 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sorting states
+  const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
+  const [explorerSort, setGlobalSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_interest', direction: 'desc' });
+
+  const handleLeaderboardSort = (key: string) => {
+    setLeaderboardSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleExplorerSort = (key: string) => {
+    setGlobalSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const sortedLeaderboard = [...dailyLeaderboard.top_stocks].sort((a, b) => {
+    const { key, direction } = leaderboardSort;
+    let aVal = a[key];
+    let bVal = b[key];
+    if (key === 'close') { aVal = a.close; bVal = b.close; }
+    
+    if (aVal === bVal) return 0;
+    const res = aVal < bVal ? -1 : 1;
+    return direction === 'asc' ? res : -res;
+  });
+
+  const sortedExplorer = globalUniverse
+    .filter(s => s.symbol.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      const { key, direction } = explorerSort;
+      let aVal = a[key];
+      let bVal = b[key];
+      
+      if (aVal === bVal) return 0;
+      const res = aVal < bVal ? -1 : 1;
+      return direction === 'asc' ? res : -res;
+    });
+
   const loadAdminIntel = async () => {
     setLoading(true);
     setError('');
@@ -90,14 +131,14 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
             <table className="data-table">
                 <thead>
                     <tr>
-                        <th>Symbol</th>
-                        <th>Score</th>
-                        <th>Price</th>
+                        <th onClick={() => handleLeaderboardSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {leaderboardSort.key === 'symbol' ? (leaderboardSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleLeaderboardSort('total_score')} style={{ cursor: 'pointer' }}>Score {leaderboardSort.key === 'total_score' ? (leaderboardSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleLeaderboardSort('close')} style={{ cursor: 'pointer' }}>Price {leaderboardSort.key === 'close' ? (leaderboardSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                         <th>Breakdown (EMA | Slope | RS | High | Vol)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {dailyLeaderboard.top_stocks.map(s => {
+                    {sortedLeaderboard.map(s => {
                         const conditions = {
                             ema_50_above_200: s.condition_ema_50_200,
                             ema_200_slope_positive: s.condition_ema_200_slope,
@@ -148,15 +189,16 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
             <table className="data-table">
                 <thead>
                     <tr>
-                        <th>Symbol</th>
-                        <th>Score</th>
-                        <th>Watchers</th>
-                        <th>Holders</th>
-                        <th>Total Interest</th>
+                        <th onClick={() => handleExplorerSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {explorerSort.key === 'symbol' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleExplorerSort('score')} style={{ cursor: 'pointer' }}>Score {explorerSort.key === 'score' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th>Price</th>
+                        <th onClick={() => handleExplorerSort('watchers')} style={{ cursor: 'pointer' }}>Watchers {explorerSort.key === 'watchers' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleExplorerSort('holders')} style={{ cursor: 'pointer' }}>Holders {explorerSort.key === 'holders' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleExplorerSort('total_interest')} style={{ cursor: 'pointer' }}>Total Interest {explorerSort.key === 'total_interest' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredSymbols.length > 0 ? filteredSymbols.map(s => {
+                    {sortedExplorer.length > 0 ? sortedExplorer.map(s => {
                         const conditions = {
                             ema_50_above_200: s.condition_ema_50_200,
                             ema_200_slope_positive: s.condition_ema_200_slope,
@@ -172,6 +214,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                                     {s.score === null && <span className="action-badge badge-skipped" style={{ padding: '2px 4px', fontSize: '10px', marginLeft: '8px', background: '#faad14' }}>⏳ PENDING</span>}
                                 </td>
                                 <td>{s.score !== null ? <span className="score-badge">{s.score}</span> : '-'}</td>
+                                <td>₹{s.current_price?.toLocaleString() || '-'}</td>
                                 <td>{s.watchers}</td>
                                 <td>{s.holders}</td>
                                 <td style={{ fontWeight: 800 }}>{s.total_interest}</td>
