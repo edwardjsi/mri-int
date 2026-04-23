@@ -12,29 +12,30 @@ router = APIRouter(prefix="/api/signals", tags=["signals"])
 @router.get("/shadow")
 def get_shadow_signals(conn=Depends(get_db)):
     """Top 10 stocks regardless of regime, specifically for swing trade audit."""
-    cur = conn.cursor() # Removed RealDictCursor for absolute reliability
+    cur = conn.cursor()
     try:
-        # Simplest possible query: just get the top 10 from stock_scores
+        # Fetching top 20 to find breakout candidates in the lead group
         cur.execute("""
             SELECT s.symbol, s.total_score, s.date,
                    s.condition_ema_50_200, s.condition_ema_200_slope,
                    s.condition_6m_high, s.condition_volume, s.condition_rs
             FROM public.stock_scores s
             WHERE s.date = (SELECT MAX(date) FROM public.stock_scores)
-            ORDER BY s.total_score DESC, s.symbol ASC
+            ORDER BY s.total_score DESC, (s.condition_6m_high AND s.condition_volume) DESC, s.symbol ASC
             LIMIT 10
         """)
         rows = cur.fetchall()
         
-        # Manual mapping for absolute reliability across all cursor types
         stocks = []
         for r in rows:
-            # Handle tuple (default) or dict (RealDict)
             if isinstance(r, dict):
                 sym, score, dt = r['symbol'], r['total_score'], r['date']
                 c_ema, c_slope, c_high, c_vol, c_rs = r['condition_ema_50_200'], r['condition_ema_200_slope'], r['condition_6m_high'], r['condition_volume'], r['condition_rs']
             else:
                 sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs = r
+            
+            # Explicitly force breakout detection
+            is_breakout = bool(c_high and c_vol)
             
             stocks.append({
                 "symbol": sym,
@@ -44,8 +45,8 @@ def get_shadow_signals(conn=Depends(get_db)):
                 "condition_6m_high": bool(c_high),
                 "condition_volume": bool(c_vol),
                 "condition_rs": bool(c_rs),
-                "close": 0, # Price fetch removed to ensure results return even if pricing is slow
-                "is_breakout": bool(c_high and c_vol)
+                "close": 0,
+                "is_breakout": is_breakout
             })
             
         return {
