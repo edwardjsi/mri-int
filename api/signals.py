@@ -14,25 +14,58 @@ def get_shadow_signals(conn=Depends(get_db)):
     """Top 10 stocks regardless of regime, specifically for swing trade audit."""
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
+        # Use a more resilient join that gets the latest score AND latest price data
         cur.execute("""
-            SELECT ss.symbol, ss.total_score, ss.date,
-                   ss.condition_ema_50_200, ss.condition_ema_200_slope,
-                   ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
-                   dp.close, dp.volume,
-                   (ss.condition_6m_high AND ss.condition_volume) as is_breakout
-            FROM stock_scores ss
-            JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
-            WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
-              AND COALESCE(dp.avg_volume_20d * dp.close, 0) >= 100000000 -- ₹10 Cr Liquidity Gate
-            ORDER BY ss.total_score DESC, dp.rs_90d DESC NULLS LAST
+            WITH latest_scores AS (
+                SELECT DISTINCT ON (symbol) 
+                       symbol, total_score, date,
+                       condition_ema_50_200, condition_ema_200_slope,
+                       condition_6m_high, condition_volume, condition_rs
+                FROM public.stock_scores
+                ORDER BY symbol, date DESC
+            ),
+            latest_prices AS (
+                SELECT DISTINCT ON (symbol) 
+                       symbol, close, volume, rs_90d, avg_volume_20d, date
+                FROM public.daily_prices
+                ORDER BY symbol, date DESC
+            )
+            SELECT s.symbol, s.total_score, s.date as score_date,
+                   s.condition_ema_50_200, s.condition_ema_200_slope,
+                   s.condition_6m_high, s.condition_volume, s.condition_rs,
+                   p.close, p.volume,
+                   (s.condition_6m_high AND s.condition_volume) as is_breakout
+            FROM latest_scores s
+            JOIN latest_prices p ON p.symbol = s.symbol
+            WHERE (p.avg_volume_20d * p.close >= 100000000 OR p.avg_volume_20d IS NULL)
+            ORDER BY s.total_score DESC, p.rs_90d DESC NULLS LAST
             LIMIT 10
         """)
         rows = cur.fetchall()
+        
+        # Tuple-safe normalization
+        stocks = []
+        for r in rows:
+            is_dict = isinstance(r, dict)
+            stocks.append({
+                "symbol": r["symbol"] if is_dict else r[0],
+                "total_score": r["total_score"] if is_dict else r[1],
+                "condition_ema_50_200": r["condition_ema_50_200"] if is_dict else r[3],
+                "condition_ema_200_slope": r["condition_ema_200_slope"] if is_dict else r[4],
+                "condition_6m_high": r["condition_6m_high"] if is_dict else r[5],
+                "condition_volume": r["condition_volume"] if is_dict else r[6],
+                "condition_rs": r["condition_rs"] if is_dict else r[7],
+                "close": float(r["close"]) if (r["close"] if is_dict else r[8]) else None,
+                "is_breakout": bool(r["is_breakout"] if is_dict else r[10])
+            })
+            
         return {
-            "date": str(rows[0]["date"]) if rows else None,
-            "stocks": [dict(r) for r in rows]
+            "date": str(rows[0]["score_date"] if isinstance(rows[0], dict) else rows[0][2]) if rows else None,
+            "stocks": stocks
         }
     except Exception as e:
+        import logging
+        logging.getLogger("mri_api").error(f"SHADOW_API_ERROR: {e}")
         return {"error": str(e), "stocks": []}
     finally:
         cur.close()
