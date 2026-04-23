@@ -2,10 +2,10 @@
 
 ---
 
-## 📅 Session: April 23, 2026 — Drift Resolution & Pipeline Hardening
+## 📅 Session: April 23, 2026 — Intelligence UI & Admin Leaderboard
 
 **Session Start:** 09:00 IST
-**Session End:** 11:30 IST
+**Session End:** 12:30 IST
 **AI Assistant:** opencore
 
 ### What Was Done This Session
@@ -18,20 +18,26 @@
 #### 2. Pipeline Hardening ✅
 - **Inclusive Scoring:** Fixed the "Golden Path" failure by implementing `>=` trend logic, 1% breakout grace, and 1.3x volume normalization.
 - **Direct Fetch:** Bypassed `pd.read_sql` compatibility issues by switching to direct cursor fetching in the regime engine.
-- **Robust Ingestion:** Added a definitive column flattener to `ingestion_engine.py`.
+- **Robust Ingestion:** Added a definitive column flattener and hardened schema initialization for index prices.
 
-#### 3. New Tools Created ✅
+#### 3. Intelligence UI (Glass Box) ✅
+- **Numerical Score Badges:** Added 0-100 score visibility to Portfolio, Watchlist, and Admin views.
+- **Detailed MRI Reports:** Implemented a "Click-to-Analyze" modal showing the 5-point technical checklist (EMA, Slope, RS, High, Volume).
+- **Breakout Discovery:** Added a "🚀 BREAKOUT" tag to identify high-probability entries (High + Volume aligned).
+
+#### 4. Admin Command Center ✅
+- **Daily Leaderboard:** Created a new admin page showing top scoring stocks in India for the current date.
+- **Global Explorer Enhancements:** Added scores, prices, and interactive sorting to the universal symbol list.
+- **Interactive Sorting:** Enabled instant sorting by Symbol, Score, Price, Watchers, and Interest.
+
+#### 5. New Tools Created ✅
 - `scripts/debug_golden_path.py`: Audit tool for per-condition pass rates.
 - `scripts/force_sync_regime.py`: Local recovery tool for future ingestion gaps.
-
-#### 4. Decisions & Documentation ✅
-- Recorded **Decisions 081, 082, and 083**.
-- Updated `Progress.md` and `Sessions.md`.
 
 ### ⏳ Left for Next Session
 
 1. **Phase 4 Implementation:** Complete the automated recovery and monitoring dashboard for NULL indicators.
-2. **SaaS Phase 2 Dashboard:** Begin frontend wiring for the newly inclusive signals.
+2. **SaaS Phase 2 Dashboard:** Begin final frontend wiring for the newly inclusive signals.
 
 ---
 

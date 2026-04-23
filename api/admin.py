@@ -31,6 +31,24 @@ def verify_admin(client=Depends(get_current_client), conn=Depends(get_db)):
         logger.error(f"ADMIN VERIFY CRASH: {e}")
         raise HTTPException(status_code=500, detail=f"Admin verification failed: {e}")
 
+@router.get("/hall-of-fame")
+def get_hall_of_fame(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch all-time top performers and their performance from first appearance."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT *,
+                   ROUND(((latest_price - entry_price) / entry_price) * 100, 2) as perf_pct
+            FROM public.top_score_tracking
+            ORDER BY first_appeared_date DESC, symbol ASC
+        """)
+        return cur.fetchall()
+    except Exception as e:
+        logger.error(f"HALL OF FAME ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
 @router.get("/daily-leaderboard")
 def get_daily_leaderboard(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Fetch the top scoring stocks for the most recent date with component breakdown."""

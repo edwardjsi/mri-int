@@ -20,6 +20,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<{ date: string | null, top_stocks: any[] }>({ date: null, top_stocks: [] });
+  const [hallOfFame, setHallOfFame] = useState<any[]>([]);
   const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -87,8 +88,12 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminDailyLeaderboard(); setDailyLeaderboard(data); }
       catch (e) { console.error('Leaderboard failed', e); }
     };
+    const fetchHallOfFame = async () => {
+      try { const data = await api.getAdminHallOfFame(); setHallOfFame(data); }
+      catch (e) { console.error('Hall of Fame failed', e); }
+    };
 
-    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard()]);
+    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame()]);
     setLoading(false);
   };
 
@@ -165,6 +170,42 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                     })}
                     {(!dailyLeaderboard.top_stocks.length) && (
                         <tr><td colSpan={4} className="empty-state">No leaderboard data found for today.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
+
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">🏛️ Hall of Fame (High Score Performance)</h3>
+        <p className="section-subtitle">Tracking stocks from their first 75+ score appearance in MRI.</p>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>First Seen</th>
+                        <th>Entry Price</th>
+                        <th>Current Price</th>
+                        <th>Perf %</th>
+                        <th>Max Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {hallOfFame.map(s => (
+                        <tr key={s.symbol}>
+                            <td className="font-bold">{s.symbol}</td>
+                            <td>{new Date(s.first_appeared_date).toLocaleDateString()}</td>
+                            <td>₹{s.entry_price?.toLocaleString()}</td>
+                            <td>₹{s.latest_price?.toLocaleString()}</td>
+                            <td style={{ color: (s.perf_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                                {s.perf_pct >= 0 ? '+' : ''}{s.perf_pct}%
+                            </td>
+                            <td><span className="score-badge">{s.max_score}</span></td>
+                        </tr>
+                    ))}
+                    {(!hallOfFame.length) && (
+                        <tr><td colSpan={6} className="empty-state">No Hall of Fame data yet.</td></tr>
                     )}
                 </tbody>
             </table>

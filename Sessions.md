@@ -1,15 +1,14 @@
 # **MRI Sessions Log**
 
-## **April 23, 2026: Drift Resolution & Pipeline Hardening**
-- **Objective**: Fix the persistent 6-day drift in the Market Regime and resolve the "stuck dashboard" issue.
+## **April 23, 2026: Intelligence UI & Pipeline Hardening**
+- **Objective**: Resolve data drift, harden the ingestion pipeline, and transition the UI from a "Black Box" to a "Glass Box" with numerical scores.
 - **Actions**:
-  - Bridged the data gap by force-syncing the `market_regime` table to April 23, 2026.
-  - Implemented robust `yfinance` column flattening to handle MultiIndex formatting changes.
-  - Replaced `pd.read_sql` with direct DB fetch in `regime_engine.py` to fix silent empty-set returns.
-  - Refined scoring logic to resolve the "Golden Path" bottleneck (now 10+ stocks >= 75).
-  - Created `scripts/force_sync_regime.py` as a fail-safe recovery tool.
-  - Logged Decisions 081, 082, and 083.
-- **Result**: Dashboard updated, drift error cleared, and pipeline hardened against future gaps.
+  - **Pipeline:** Bridged the 6-day drift, fixed `yfinance` MultiIndex formatting, and bypassed `pd.read_sql` compatibility issues.
+  - **Intelligence:** Implemented numerical 0-100 score badges and a 5-point technical checklist modal (Click-to-Analyze).
+  - **Breakout Discovery:** Added a "🚀 BREAKOUT" tag for high-probability High/Volume entries.
+  - **Admin Panel:** Created a sortable Daily Leaderboard and enhanced the Global Explorer with scores and prices.
+  - **Hardening:** Logged Decisions 081-083 and created `force_sync_regime.py` for emergency recovery.
+- **Result**: Dashboard synchronized to April 23, 2026, with full quantitative visibility.
 - **Next Step**: Phase 4 monitoring dashboard and frontend signal wiring.
 
 ## **April 22, 2026: Golden Path Resilience**

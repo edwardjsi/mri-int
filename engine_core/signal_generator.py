@@ -193,6 +193,43 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
     return signals
 
 
+def update_top_score_tracking(cur, scores, prices, signal_date):
+    """
+    Update the Hall of Fame table. 
+    Stocks with score >= 75 are tracked to monitor long-term performance.
+    """
+    top_performers = [s for s in scores if s["total_score"] >= 75]
+    if not top_performers:
+        return
+
+    for s in top_performers:
+        sym = s["symbol"]
+        score = s["total_score"]
+        price_data = prices.get(sym, {})
+        current_price = price_data.get("close")
+        
+        if current_price is None:
+            continue
+
+        # Upsert logic:
+        # If new: set first_appeared_date, entry_price, entry_score.
+        # If exists: update latest_price, max_score, last_seen_date.
+        cur.execute("""
+            INSERT INTO public.top_score_tracking (
+                symbol, first_appeared_date, entry_price, entry_score, 
+                latest_price, max_score, last_seen_date, updated_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            ON CONFLICT (symbol) DO UPDATE SET
+                latest_price = EXCLUDED.latest_price,
+                max_score = GREATEST(top_score_tracking.max_score, EXCLUDED.max_score),
+                last_seen_date = EXCLUDED.last_seen_date,
+                updated_at = NOW();
+        """, (sym, signal_date, current_price, score, current_price, score, signal_date))
+
+    logger.info(f"Updated Hall of Fame tracking for {len(top_performers)} top-scoring stocks.")
+
+
 def run_signal_generator():
     """Main entry: generate signals for all active clients."""
     conn = get_connection()
@@ -210,6 +247,13 @@ def run_signal_generator():
 
     prices = get_next_day_open_prices(cur)
     logger.info(f"Prices available: {len(prices)}")
+
+    # Update Hall of Fame tracking
+    try:
+        update_top_score_tracking(cur, scores, prices, signal_date)
+    except Exception as e:
+        logger.error(f"Failed to update Top Score Tracking: {e}")
+        conn.rollback()
 
     # Get all active clients
     cur.execute("SELECT id FROM clients WHERE is_active = true")

@@ -241,5 +241,21 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE public.market_index_prices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_market_index_prices_symbol_date ON public.market_index_prices(symbol, date);")
 
+    # 14. Top Score Tracking (Hall of Fame)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.top_score_tracking (
+            symbol              VARCHAR(20) PRIMARY KEY,
+            first_appeared_date DATE NOT NULL,
+            entry_price         NUMERIC(12,4),
+            entry_score         INT,
+            latest_price        NUMERIC(12,4),
+            max_score           INT,
+            last_seen_date      DATE,
+            updated_at          TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
     conn.commit()
     cur.close()
