@@ -230,6 +230,50 @@ def update_top_score_tracking(cur, scores, prices, signal_date):
     logger.info(f"Updated Hall of Fame tracking for {len(top_performers)} top-scoring stocks.")
 
 
+def update_strategy_shadow_tracking(cur, scores, prices, signal_date):
+    """
+    Update the Strategy Shadow Portfolio.
+    Tracks the Top 10 stocks by score regardless of market regime.
+    This helps audit if the regime filter is saving money or skipping alpha.
+    """
+    # Top 10 purely by score and liquidity (same as strategy, but ignoring regime)
+    top_10 = scores[:10]
+    if not top_10:
+        return
+
+    top_symbols = [s["symbol"] for s in top_10]
+
+    # 1. Mark existing stocks as inactive if they are no longer in the Top 10
+    cur.execute("""
+        UPDATE public.strategy_shadow_portfolio 
+        SET is_active = FALSE 
+        WHERE symbol NOT IN %s AND is_active = TRUE
+    """, (tuple(top_symbols),))
+
+    # 2. Add or Update the current Top 10
+    for s in top_10:
+        sym = s["symbol"]
+        price_data = prices.get(sym, {})
+        current_price = price_data.get("close")
+        if current_price is None:
+            continue
+
+        cur.execute("""
+            INSERT INTO public.strategy_shadow_portfolio (
+                symbol, first_entry_date, entry_price, 
+                latest_price, is_active, last_seen_date, updated_at
+            )
+            VALUES (%s, %s, %s, %s, TRUE, %s, NOW())
+            ON CONFLICT (symbol) DO UPDATE SET
+                latest_price = EXCLUDED.latest_price,
+                is_active = TRUE,
+                last_seen_date = EXCLUDED.last_seen_date,
+                updated_at = NOW();
+        """, (sym, signal_date, current_price, current_price, signal_date))
+
+    logger.info(f"Updated Strategy Shadow Tracker for {len(top_10)} current candidates.")
+
+
 def run_signal_generator():
     """Main entry: generate signals for all active clients."""
     conn = get_connection()
@@ -251,8 +295,9 @@ def run_signal_generator():
     # Update Hall of Fame tracking
     try:
         update_top_score_tracking(cur, scores, prices, signal_date)
+        update_strategy_shadow_tracking(cur, scores, prices, signal_date)
     except Exception as e:
-        logger.error(f"Failed to update Top Score Tracking: {e}")
+        logger.error(f"Failed to update Tracking Tables: {e}")
         conn.rollback()
 
     # Get all active clients

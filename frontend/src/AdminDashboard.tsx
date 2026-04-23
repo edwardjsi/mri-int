@@ -21,6 +21,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<{ date: string | null, top_stocks: any[] }>({ date: null, top_stocks: [] });
   const [hallOfFame, setHallOfFame] = useState<any[]>([]);
+  const [strategyShadow, setStrategyShadow] = useState<any[]>([]);
   const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -92,8 +93,12 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminHallOfFame(); setHallOfFame(data); }
       catch (e) { console.error('Hall of Fame failed', e); }
     };
+    const fetchShadow = async () => {
+      try { const data = await api.getAdminStrategyShadow(); setStrategyShadow(data); }
+      catch (e) { console.error('Strategy Shadow failed', e); }
+    };
 
-    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame()]);
+    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame(), fetchShadow()]);
     setLoading(false);
   };
 
@@ -170,6 +175,46 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                     })}
                     {(!dailyLeaderboard.top_stocks.length) && (
                         <tr><td colSpan={4} className="empty-state">No leaderboard data found for today.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
+
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">🕵️ Strategy Shadow Tracker</h3>
+        <p className="section-subtitle">What the Top 10 looks like today (ignores Market Regime filters).</p>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>First Entered Top 10</th>
+                        <th>Status</th>
+                        <th>Entry Price</th>
+                        <th>Current Price</th>
+                        <th>Total Return %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {strategyShadow.map(s => (
+                        <tr key={s.symbol} style={!s.is_active ? { opacity: 0.6 } : {}}>
+                            <td className="font-bold">{s.symbol}</td>
+                            <td>{new Date(s.first_entry_date).toLocaleDateString()}</td>
+                            <td>
+                                <span className={`action-badge ${s.is_active ? 'badge-executed' : 'badge-skipped'}`}>
+                                    {s.is_active ? 'ACTIVE' : 'DROPPED'}
+                                </span>
+                            </td>
+                            <td>₹{s.entry_price?.toLocaleString()}</td>
+                            <td>₹{s.latest_price?.toLocaleString()}</td>
+                            <td style={{ color: (s.perf_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                                {s.perf_pct >= 0 ? '+' : ''}{s.perf_pct}%
+                            </td>
+                        </tr>
+                    ))}
+                    {(!strategyShadow.length) && (
+                        <tr><td colSpan={6} className="empty-state">No shadow strategy data yet.</td></tr>
                     )}
                 </tbody>
             </table>

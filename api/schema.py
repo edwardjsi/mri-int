@@ -257,5 +257,20 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
+    # 15. Strategy Shadow Tracking (Top 10 Picks regardless of Regime)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.strategy_shadow_portfolio (
+            symbol              VARCHAR(20) PRIMARY KEY,
+            first_entry_date    DATE NOT NULL,
+            entry_price         NUMERIC(12,4),
+            latest_price        NUMERIC(12,4),
+            is_active           BOOLEAN DEFAULT TRUE,
+            last_seen_date      DATE,
+            updated_at          TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
     conn.commit()
     cur.close()

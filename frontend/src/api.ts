@@ -171,6 +171,7 @@ export const api = {
     getAdminClientPortfolio: (id: string) => apiFetch(`/admin/clients/${id}/portfolio`),
     getAdminDailyLeaderboard: () => apiFetch('/admin/daily-leaderboard'),
     getAdminHallOfFame: () => apiFetch('/admin/hall-of-fame'),
+    getAdminStrategyShadow: () => apiFetch('/admin/strategy-shadow'),
 
     // Signals
     getRegime: () => apiFetch('/signals/regime'),
