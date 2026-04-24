@@ -11,10 +11,10 @@ interface AdminMetrics {
 }
 
 interface DataHealth {
-  total_symbols: int;
-  null_indicators: int;
-  suspicious_rs: int;
-  stale_indicators: int;
+  total_symbols: number;
+  null_indicators: number;
+  suspicious_rs: number;
+  stale_indicators: number;
   coverage_pct: number;
   last_price_date: string | null;
   last_score_date: string | null;
@@ -535,7 +535,8 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 </tbody>
              </table>
            </div>
-      </section>
+        </section>
+      </div>
 
       <section className="section" style={{ marginTop: '32px', borderTop: '1px solid #333', paddingTop: '24px' }}>
         <h3 className="section-title">⚖️ System Audit Trail (Compliance & Health)</h3>
