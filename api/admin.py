@@ -67,6 +67,51 @@ def get_strategy_shadow(conn=Depends(get_db), admin=Depends(verify_admin)):
     finally:
         cur.close()
 
+@router.get("/swing-trades")
+def get_swing_trades(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch all swing trades across all clients with performance metrics."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT 
+                st.*,
+                c.name as client_name,
+                dp.close as current_price,
+                ROUND(((COALESCE(st.exit_price, dp.close) - st.entry_price) / st.entry_price) * 100, 2) as perf_pct,
+                ROUND((COALESCE(st.exit_price, dp.close) - st.entry_price) * st.quantity, 2) as pnl_abs
+            FROM public.swing_trades st
+            JOIN public.clients c ON c.id = st.client_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, close 
+                FROM daily_prices ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = st.symbol
+            ORDER BY st.entry_date DESC, st.symbol ASC
+        """)
+        return cur.fetchall()
+    except Exception as e:
+        logger.error(f"SWING TRADES ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
+@router.get("/audit-logs")
+def get_audit_logs(limit: int = 50, conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Fetch latest system audit logs for compliance monitoring."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT id, timestamp, event_type, severity, message, metadata
+            FROM public.system_audit_logs
+            ORDER BY timestamp DESC
+            LIMIT %s
+        """, (limit,))
+        return cur.fetchall()
+    except Exception as e:
+        logger.error(f"AUDIT LOGS ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
 @router.get("/hall-of-fame")
 def get_hall_of_fame(conn=Depends(get_db), admin=Depends(verify_admin)):
     """Fetch all-time top performers and their performance from first appearance."""

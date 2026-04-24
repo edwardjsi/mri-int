@@ -37,11 +37,13 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [hallOfFame, setHallOfFame] = useState<any[]>([]);
   const [strategyShadow, setStrategyShadow] = useState<any[]>([]);
   const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
+  const [swingTrades, setSwingTrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRecovering, setIsRecovering] = useState(false);
   const [newSymbol, setNewSymbol] = useState('');
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -113,12 +115,20 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminStrategyShadow(); setStrategyShadow(data); }
       catch (e) { console.error('Strategy Shadow failed', e); }
     };
-    const fetchHealth = async () => {
-      try { const data = await api.getAdminDataHealth(); setHealth(data); }
-      catch (e) { console.error('Health metrics failed', e); }
+    const fetchSwingTrades = async () => {
+      try { const data = await api.getAdminSwingTrades(); setSwingTrades(data); }
+      catch (e) { console.error('Swing trades failed', e); }
+    };
+    const fetchAuditLogs = async () => {
+      try { const data = await api.getAdminAuditLogs(); setAuditLogs(data); }
+      catch (e) { console.error('Audit logs failed', e); }
     };
 
-    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame(), fetchShadow(), fetchHealth()]);
+    await Promise.allSettled([
+      fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), 
+      fetchHallOfFame(), fetchShadow(), fetchHealth(), fetchSwingTrades(),
+      fetchAuditLogs()
+    ]);
     setLoading(false);
   };
 
@@ -310,6 +320,56 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       </section>
 
       <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">🚀 STEE Active Swing Trades</h3>
+        <p className="section-subtitle">Real-time tracking of automated momentum breakout trades.</p>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Symbol</th>
+                        <th>Entry Date</th>
+                        <th>Entry Price</th>
+                        <th>Stop Loss</th>
+                        <th>Current Price</th>
+                        <th>Qty</th>
+                        <th>PnL (₹)</th>
+                        <th>Perf %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {swingTrades.map(t => (
+                        <tr key={t.id}>
+                            <td className="text-xs opacity-70">{t.client_name}</td>
+                            <td className="font-bold">{t.symbol}</td>
+                            <td>{new Date(t.entry_date).toLocaleDateString()}</td>
+                            <td>₹{t.entry_price?.toLocaleString()}</td>
+                            <td style={{ color: '#ef4444' }}>₹{t.stop_loss?.toLocaleString()}</td>
+                            <td>₹{t.current_price?.toLocaleString()}</td>
+                            <td>{t.quantity}</td>
+                            <td style={{ color: (t.pnl_abs || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                                ₹{t.pnl_abs?.toLocaleString()}
+                            </td>
+                            <td style={{ color: (t.perf_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                                {t.perf_pct >= 0 ? '+' : ''}{t.perf_pct}%
+                            </td>
+                            <td>
+                                <span className={`action-badge ${t.status === 'OPEN' ? 'badge-executed' : t.status === 'PARTIAL_EXIT' ? 'badge-skipped' : ''}`}>
+                                    {t.status}
+                                </span>
+                            </td>
+                        </tr>
+                    ))}
+                    {(!swingTrades.length) && (
+                        <tr><td colSpan={10} className="empty-state">No active swing trades found.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
+
+      <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">🏛️ Hall of Fame (High Score Performance)</h3>
         <p className="section-subtitle">Tracking stocks from their first 75+ score appearance in MRI.</p>
         <div className="table-container" style={{ marginTop: '16px' }}>
@@ -475,8 +535,55 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 </tbody>
              </table>
            </div>
-        </section>
-      </div>
+      </section>
+
+      <section className="section" style={{ marginTop: '32px', borderTop: '1px solid #333', paddingTop: '24px' }}>
+        <h3 className="section-title">⚖️ System Audit Trail (Compliance & Health)</h3>
+        <p className="section-subtitle">Chronological record of all engine triggers, data validation events, and risk checks.</p>
+        <div className="table-container" style={{ marginTop: '16px', maxHeight: '400px', overflowY: 'auto' }}>
+            <table className="data-table audit-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Event</th>
+                        <th>Severity</th>
+                        <th>Message</th>
+                        <th>Metadata</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {auditLogs.map(log => (
+                        <tr key={log.id} style={{ background: log.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.05)' : 'transparent' }}>
+                            <td className="text-xs opacity-70 mono">{new Date(log.timestamp).toLocaleString()}</td>
+                            <td><span className="action-badge badge-executed">{log.event_type}</span></td>
+                            <td>
+                                <span className={`severity-tag ${log.severity.toLowerCase()}`} style={{ 
+                                    padding: '2px 6px', borderRadius: '3px', fontSize: '0.7rem', fontWeight: 'bold',
+                                    background: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'WARNING' ? '#f59e0b' : '#22c55e',
+                                    color: 'white'
+                                }}>
+                                    {log.severity}
+                                </span>
+                            </td>
+                            <td style={{ fontSize: '0.85rem', maxWidth: '300px' }}>{log.message}</td>
+                            <td className="text-xs opacity-50">
+                                <pre style={{ margin: 0, fontSize: '0.65rem' }}>{JSON.stringify(log.metadata, null, 2)}</pre>
+                            </td>
+                        </tr>
+                    ))}
+                    {(!auditLogs.length) && (
+                        <tr><td colSpan={5} className="empty-state">No audit logs found.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </section>
+
+      <style>{`
+        .mono { font-family: monospace; }
+        .empty-state { text-align: center; padding: 40px; color: #666; font-style: italic; }
+        .clickable-row:hover { background: rgba(255,255,255,0.02); cursor: pointer; }
+      `}</style>
     </div>
   );
 }

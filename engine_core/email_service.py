@@ -169,6 +169,64 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
     return html
 
 
+def build_stee_signal_email_html(client_name, trades, regime):
+    """Build HTML email body for STEE swing trading signals."""
+    regime_color = {"BULLISH": "#22c55e", "BEARISH": "#ef4444", "SIDEWAYS": "#f59e0b"}.get(regime, "#6b7280")
+    
+    trade_rows = ""
+    for t in trades:
+        trade_rows += f"""
+        <tr>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:600">{t['symbol']}</td>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb">₹{t['entry_price']:,.2f}</td>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#ef4444;font-weight:600">₹{t['stop_loss']:,.2f}</td>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:700">{t['quantity']}</td>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#3b82f6">₹{t['risk_amount']:,.0f}</td>
+        </tr>"""
+
+    html = f"""
+    <html>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb">
+        <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border-top:4px solid #3b82f6">
+            <h1 style="margin:0 0 4px;font-size:20px;color:#111827">🚀 STEE Swing Trade Signals</h1>
+            <p style="margin:0 0 16px;color:#6b7280;font-size:14px">{date.today().strftime('%A, %B %d, %Y')}</p>
+
+            <div style="background:{regime_color}15;border-left:4px solid {regime_color};padding:12px;border-radius:4px;margin-bottom:20px">
+                <span style="font-size:13px;color:#6b7280">STEE Market Regime</span>
+                <div style="font-size:18px;font-weight:700;color:{regime_color}">{regime}</div>
+            </div>
+
+            <p style="color:#374151">Hi {client_name},</p>
+            <p style="color:#374151">The <b>Momentum Swing Trading Execution Engine (STEE)</b> has identified new breakout opportunities. Follow the risk parameters strictly.</p>
+            
+            <h2 style="color:#3b82f6;font-size:16px;margin:24px 0 8px">📈 New Trade Entries</h2>
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+                <tr style="background:#f8fafc">
+                    <th style="padding:12px;text-align:left">Symbol</th>
+                    <th style="padding:12px;text-align:left">Entry</th>
+                    <th style="padding:12px;text-align:left">Stop Loss</th>
+                    <th style="padding:12px;text-align:left">Qty</th>
+                    <th style="padding:12px;text-align:left">Risk</th>
+                </tr>
+                {trade_rows}
+            </table>
+
+            <div style="margin-top:24px;padding:16px;background:#fff7ed;border-radius:8px;border:1px solid #ffedd5">
+                <p style="margin:0;font-size:13px;color:#9a3412;font-weight:600">⚠️ Risk Management Rule:</p>
+                <p style="margin:4px 0 0;font-size:12px;color:#c2410c">Exit 50% at 2R Profit Target. Exit remaining 50% on a Close below EMA-10.</p>
+            </div>
+
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0 20px">
+            <p style="font-size:12px;color:#9ca3af;text-align:center">
+                Market Regime Intelligence — STEE Automated Execution
+            </p>
+        </div>
+    </body>
+    </html>"""
+
+    return html
+
+
 def send_password_reset_email(email: str, name: str, token: str):
     ok, err = send_password_reset_email_detailed(email=email, name=name, token=token)
     if not ok:
@@ -382,6 +440,71 @@ def send_signal_emails():
 
     logger.info(f"=== Email Service Complete: {sent_count}/{len(active_clients)} emails sent ===")
     return sent_count
+
+
+def send_stee_signal_emails():
+    """Send STEE-specific swing trade signals to active clients."""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if not aws_credentials_present():
+        logger.error("❌ AWS credentials missing for STEE emails.")
+        conn.close()
+        return 0
+
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+
+        # 1. Get Regime
+        cur.execute("SELECT classification, date FROM market_regime ORDER BY date DESC LIMIT 1")
+        reg_row = cur.fetchone()
+        if not reg_row: return 0
+        regime = reg_row["classification"]
+        latest_date = reg_row["date"]
+
+        # 2. Get active clients
+        cur.execute("SELECT id, email, name FROM clients WHERE is_active = true")
+        clients = cur.fetchall()
+
+        sent_count = 0
+        for client in clients:
+            client_id = str(client["id"])
+            email = client["email"]
+            name = client["name"] or "Investor"
+
+            # 3. Fetch new STEE trades for today
+            cur.execute("""
+                SELECT symbol, entry_price, stop_loss, quantity, risk_amount 
+                FROM swing_trades
+                WHERE client_id = %s AND entry_date = %s AND status = 'OPEN'
+            """, (client_id, latest_date))
+            trades = cur.fetchall()
+
+            if not trades:
+                continue
+
+            subject = f"🚀 STEE Trade Alert: {len(trades)} New Breakouts — {regime} Market"
+            html_body = build_stee_signal_email_html(name, trades, regime)
+
+            try:
+                ses.send_email(
+                    Source=SENDER_EMAIL,
+                    Destination={"ToAddresses": [email]},
+                    Message={
+                        "Subject": {"Data": subject, "Charset": "UTF-8"},
+                        "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+                    },
+                )
+                sent_count += 1
+                logger.info(f"  🚀 STEE Email sent to {email}")
+            except Exception as e:
+                logger.error(f"  ❌ Failed to send STEE email to {email}: {e}")
+
+        conn.commit()
+        return sent_count
+    finally:
+        conn.close()
 
 
 def send_on_demand_risk_audit_report(email, name, successful, failed):

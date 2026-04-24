@@ -55,6 +55,33 @@ def load_indices():
         except Exception as e:
             logger.error(f"  ❌ {ticker} failed: {e}")
 
+def validate_data(symbol, df):
+    """
+    Sanity check for Yahoo Finance data.
+    Returns (is_valid, reason)
+    """
+    if df.empty:
+        return False, "Empty DataFrame"
+    
+    # 1. Check for missing critical columns
+    required = ['open', 'high', 'low', 'close', 'volume']
+    for col in required:
+        if col not in df.columns:
+            return False, f"Missing column: {col}"
+            
+    # 2. Check for zero or negative prices
+    if (df['close'] <= 0).any():
+        return False, "Detected zero or negative close prices"
+        
+    # 3. Check for impossible price spikes (>50% in one day for non-penny stocks)
+    if len(df) > 1:
+        pct_change = df['close'].pct_change().abs()
+        # If price > 50 and change > 50% in one day, it's likely a data error or split not handled
+        if ((df['close'] > 50) & (pct_change > 0.50)).any():
+            return False, "Detected suspicious >50% price spike"
+            
+    return True, "OK"
+
 def load_stocks(symbols):
     """Full Stock Ingestion for CSV list (v100.4)."""
     if not symbols: return
@@ -65,19 +92,24 @@ def load_stocks(symbols):
             # Suffix handle for NSE
             ticker = symbol if symbol.endswith(".NS") or symbol.endswith(".BO") or "^" in symbol else f"{symbol}.NS"
             df = yf.download(ticker, period="300d", auto_adjust=True, progress=False).reset_index()
-            if df.empty: return False
             
-            # Robust flattening for yfinance multi-index
+            # Normalize columns first
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = [
                     c[0] if (isinstance(c, tuple) and c[0]) else (c[1] if isinstance(c, tuple) else c) 
                     for c in df.columns
                 ]
-            
             df.columns = [str(c).lower().replace(" ", "_").strip() for c in df.columns]
             if 'date' not in df.columns and 'index' in df.columns:
                 df = df.rename(columns={'index': 'date'})
             df = df.loc[:, ~df.columns.duplicated()]
+
+            # AUDIT: Validate before processing
+            is_valid, reason = validate_data(symbol, df)
+            if not is_valid:
+                logger.warning(f"  ⚠️ {symbol} rejected by Audit: {reason}")
+                return False
+            
             df['symbol'] = symbol
             
             # Ensure missing data doesn't drop the whole row

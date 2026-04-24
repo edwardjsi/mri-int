@@ -29,11 +29,11 @@ def get_connection():
             raise
 
     connection_params = {
-        "host": "localhost",
-        "port": 5432,
-        "user": "mri_admin",
-        "password": "zlA3kVf9KiciHOkM",
-        "database": "mri_db",
+        "host": os.environ.get("DB_HOST", "localhost"),
+        "port": int(os.environ.get("DB_PORT", 5432)),
+        "user": os.environ.get("DB_USER", "mri_admin"),
+        "password": os.environ.get("DB_PASSWORD", "zlA3kVf9KiciHOkM"),
+        "database": os.environ.get("DB_NAME", "mri_db"),
         "cursor_factory": RealDictCursor,
     }
     logger.debug("Connecting with direct parameters")

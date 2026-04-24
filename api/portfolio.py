@@ -46,7 +46,36 @@ def get_open_positions(
     )
     core_rows = cur.fetchall()
 
-    # ... [rest of the function] ...
+    # 2. Fetch STEE Swing Trades
+    cur.execute(
+        """
+        SELECT st.symbol, st.entry_date, st.entry_price, st.quantity,
+               dp.close AS current_price,
+               ROUND(((dp.close - st.entry_price) / st.entry_price) * 100, 2) AS pnl_pct,
+               ss.total_score,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+        FROM swing_trades st
+        LEFT JOIN LATERAL (
+            SELECT close FROM daily_prices
+            WHERE symbol = st.symbol
+            ORDER BY date DESC LIMIT 1
+        ) dp ON true
+        LEFT JOIN LATERAL (
+            SELECT total_score, condition_ema_50_200, condition_ema_200_slope,
+                   condition_6m_high, condition_volume, condition_rs
+            FROM stock_scores
+            WHERE symbol = st.symbol
+            ORDER BY date DESC LIMIT 1
+        ) ss ON true
+        WHERE st.client_id = %s AND st.status IN ('OPEN', 'PARTIAL_EXIT')
+        ORDER BY st.entry_date DESC
+        """,
+        (client_id,),
+    )
+    swing_rows = cur.fetchall()
+
+    positions = []
 
     # Process Core
     is_dict = not core_rows or isinstance(core_rows[0], dict)
@@ -72,6 +101,34 @@ def get_open_positions(
                 "current_price": float(p["current_price"] if is_dict else p[5]) if (p["current_price"] if is_dict else p[5]) else None,
                 "pnl_pct": float(p["pnl_pct"] if is_dict else p[6]) if (p["pnl_pct"] if is_dict else p[6]) else None,
                 "score": p["total_score"] if is_dict else p[7],
+                "conditions": conditions
+            }
+        )
+
+    # Process Swing
+    is_dict_sw = not swing_rows or isinstance(swing_rows[0], dict)
+    for p in swing_rows:
+        conditions = None
+        has_score = (p["total_score"] is not None) if is_dict_sw else (p[7] is not None)
+        if has_score:
+            conditions = {
+                "ema_50_above_200": bool(p["condition_ema_50_200"] if is_dict_sw else p[8]),
+                "ema_200_slope_positive": bool(p["condition_ema_200_slope"] if is_dict_sw else p[9]),
+                "at_6m_high": bool(p["condition_6m_high"] if is_dict_sw else p[10]),
+                "volume_surge": bool(p["condition_volume"] if is_dict_sw else p[11]),
+                "relative_strength": bool(p["condition_rs"] if is_dict_sw else p[12]),
+            }
+
+        positions.append(
+            {
+                "source": "Swing",
+                "symbol": p["symbol"] if is_dict_sw else p[0],
+                "entry_date": str(p["entry_date"] if is_dict_sw else p[1]),
+                "entry_price": float(p["entry_price"] if is_dict_sw else p[2]) if (p["entry_price"] if is_dict_sw else p[2]) else None,
+                "quantity": p["quantity"] if is_dict_sw else p[3],
+                "current_price": float(p["current_price"] if is_dict_sw else p[5]) if (p["current_price"] if is_dict_sw else p[5]) else None,
+                "pnl_pct": float(p["pnl_pct"] if is_dict_sw else p[6]) if (p["pnl_pct"] if is_dict_sw else p[6]) else None,
+                "score": p["total_score"] if is_dict_sw else p[7],
                 "conditions": conditions
             }
         )

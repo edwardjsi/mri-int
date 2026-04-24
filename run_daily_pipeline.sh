@@ -23,8 +23,8 @@ echo "=== MRI Daily Pipeline — $(date) ===" | tee -a $LOG_FILE
 # Step 1: Ingest today's data (Nifty 500 + User added stocks)
 echo "[1/5] Ingesting today's market data..." | tee -a $LOG_FILE
 python -c "
-from src.ingestion_engine import load_indices, load_stocks
-from src.db import get_connection
+from engine_core.ingestion_engine import load_indices, load_stocks
+from engine_core.db import get_connection
 import pandas as pd, requests, io
 
 # Load indices
@@ -53,18 +53,28 @@ load_stocks(list(symbols))
 
 # Step 2: Compute indicators
 echo "[2/5] Running Indicator Engine..." | tee -a $LOG_FILE
-python src/indicator_engine.py 2>&1 | tee -a $LOG_FILE
+python engine_core/indicator_engine.py 2>&1 | tee -a $LOG_FILE
 
 # Step 3: Compute regime + scores
 echo "[3/5] Running Regime Engine..." | tee -a $LOG_FILE
-python src/regime_engine.py 2>&1 | tee -a $LOG_FILE
+python engine_core/regime_engine.py 2>&1 | tee -a $LOG_FILE
 
 # Step 4: Generate client signals
-echo "[4/5] Generating client signals..." | tee -a $LOG_FILE
-python src/signal_generator.py 2>&1 | tee -a $LOG_FILE
+echo "[4/5] Generating general MRI signals..." | tee -a $LOG_FILE
+python engine_core/signal_generator.py 2>&1 | tee -a $LOG_FILE
+
+echo "[4b] Running Swing Execution Engine (STEE)..." | tee -a $LOG_FILE
+python engine_core/swing_execution_engine.py 2>&1 | tee -a $LOG_FILE
 
 # Step 5: Send email notifications
 echo "[5/5] Sending signal emails via SES..." | tee -a $LOG_FILE
-python src/email_service.py 2>&1 | tee -a $LOG_FILE
+python engine_core/email_service.py 2>&1 | tee -a $LOG_FILE
+
+echo "[5b] Sending STEE Swing Trade Alerts..." | tee -a $LOG_FILE
+python -c "from engine_core.email_service import send_stee_signal_emails; send_stee_signal_emails()" 2>&1 | tee -a $LOG_FILE
+
+# Step 6: Final Health & Integrity Audit
+echo "[6/6] Running Pipeline Health Audit..." | tee -a $LOG_FILE
+python scripts/pipeline_health_monitor.py 2>&1 | tee -a $LOG_FILE
 
 echo "=== Pipeline Complete — $(date) ===" | tee -a $LOG_FILE

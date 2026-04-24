@@ -17,6 +17,7 @@ class IndicatorComputationError(Exception):
 
 
 INDICATOR_COLUMNS = (
+    ("ema_10", "NUMERIC"),
     ("ema_20", "NUMERIC"),
     ("ema_50", "NUMERIC"),
     ("ema_200", "NUMERIC"),
@@ -26,6 +27,9 @@ INDICATOR_COLUMNS = (
     ("rolling_high_6m", "NUMERIC"),
     ("avg_volume_20d", "NUMERIC"),
     ("rs_90d", "NUMERIC"),
+    ("high_10d", "NUMERIC"),
+    ("low_5d", "NUMERIC"),
+    ("atr_14", "NUMERIC"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing
@@ -123,7 +127,7 @@ def fetch_data(symbols=None):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT symbol, date, high, close, volume, ema_20, ema_50, ema_200
+                SELECT symbol, date, open, high, low, close, volume, ema_10, ema_20, ema_50, ema_200
                 FROM daily_prices
                 WHERE symbol = ANY(%s)
                 ORDER BY symbol, date
@@ -151,7 +155,7 @@ def fetch_data(symbols=None):
         df["high"] = pd.to_numeric(df["high"])
         df["volume"] = pd.to_numeric(df["volume"])
 
-        for column in ("ema_20", "ema_50", "ema_200"):
+        for column in ("open", "high", "low", "close", "volume", "ema_10", "ema_20", "ema_50", "ema_200"):
             if column in df.columns:
                 df[column] = pd.to_numeric(df[column], errors="coerce")
 
@@ -177,6 +181,7 @@ def compute_indicators(df, idx_df):
             logger.warning("Symbol %s has insufficient data: %d rows", symbol, len(s_df))
             continue
 
+        s_df["ema_10"] = s_df["close"].ewm(span=10, adjust=False).mean()
         s_df["ema_20"] = s_df["close"].ewm(span=20, adjust=False).mean()
         s_df["ema_50"] = s_df["close"].ewm(span=50, adjust=False).mean()
         s_df["ema_200"] = (
@@ -196,6 +201,17 @@ def compute_indicators(df, idx_df):
         s_df["below_200ema"] = s_df["close"] < s_df["ema_200"]
         s_df["rolling_high_6m"] = s_df["close"].rolling(window=126, min_periods=20).max()
         s_df["avg_volume_20d"] = s_df["volume"].rolling(window=20).mean()
+
+        # STEE Indicators
+        s_df["high_10d"] = s_df["high"].rolling(window=10).max().shift(1)
+        s_df["low_5d"] = s_df["low"].rolling(window=5).min().shift(1)
+        
+        # ATR Calculation
+        tr1 = s_df["high"] - s_df["low"]
+        tr2 = (s_df["high"] - s_df["close"].shift(1)).abs()
+        tr3 = (s_df["low"] - s_df["close"].shift(1)).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        s_df["atr_14"] = tr.rolling(window=14).mean()
 
         if not idx_df.empty:
             merged = pd.merge(
@@ -217,6 +233,7 @@ def compute_indicators(df, idx_df):
                 {
                     "symbol": row["symbol"],
                     "date": row["date"],
+                    "ema_10": row.get("ema_10"),
                     "ema_20": row.get("ema_20"),
                     "ema_50": row.get("ema_50"),
                     "ema_200": row.get("ema_200"),
@@ -226,6 +243,9 @@ def compute_indicators(df, idx_df):
                     "rolling_high_6m": row.get("rolling_high_6m"),
                     "avg_volume_20d": row.get("avg_volume_20d"),
                     "rs_90d": row.get("rs_90d"),
+                    "high_10d": row.get("high_10d"),
+                    "low_5d": row.get("low_5d"),
+                    "atr_14": row.get("atr_14"),
                 }
             )
 
@@ -296,7 +316,8 @@ def update_db_with_indicators(updates):
         with conn.cursor() as cur:
             sql = """
                 UPDATE daily_prices
-                SET ema_20 = %(ema_20)s,
+                SET ema_10 = %(ema_10)s,
+                    ema_20 = %(ema_20)s,
                     ema_50 = %(ema_50)s,
                     ema_200 = %(ema_200)s,
                     rsi_14 = %(rsi_14)s,
@@ -304,7 +325,10 @@ def update_db_with_indicators(updates):
                     ema_200_slope_20 = %(ema_200_slope_20)s,
                     rolling_high_6m = %(rolling_high_6m)s,
                     avg_volume_20d = %(avg_volume_20d)s,
-                    rs_90d = %(rs_90d)s
+                    rs_90d = %(rs_90d)s,
+                    high_10d = %(high_10d)s,
+                    low_5d = %(low_5d)s,
+                    atr_14 = %(atr_14)s
                 WHERE symbol = %(symbol)s AND date = %(date)s
             """
             execute_batch(cur, sql, updates, page_size=2000)

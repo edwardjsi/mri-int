@@ -770,6 +770,34 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         </section>
       )}
 
+      {/* ── SECTION 0.5: STEE Swing Breakouts (High Priority) ── */}
+      {positions?.positions?.some(p => p.source === 'Swing' && p.entry_date === todayDate) && (
+        <section className="section breakout-alert-section" style={{ border: '2px solid #22c55e', background: 'rgba(34, 197, 94, 0.05)' }}>
+          <h2 className="section-title" style={{ color: '#22c55e' }}>
+            🚀 STEE Execution: New Breakouts Detected
+          </h2>
+          <p className="section-subtitle">
+            The automated engine has initiated {positions.positions.filter(p => p.source === 'Swing' && p.entry_date === todayDate).length} new momentum trades based on today's price action.
+          </p>
+          <div className="signals-grid">
+            {positions.positions
+              .filter(p => p.source === 'Swing' && p.entry_date === todayDate)
+              .map(p => (
+                <div key={p.symbol} className="signal-card signal-buy" onClick={() => onSelectStock(p)}>
+                  <div className="signal-header">
+                    <span className="signal-symbol">{p.symbol}</span>
+                    <span className="badge-buy">STEE ENTRY</span>
+                  </div>
+                  <div className="signal-details">
+                    <div className="signal-detail"><span className="detail-label">Entry</span><span className="detail-value">₹{p.entry_price?.toLocaleString()}</span></div>
+                    <div className="signal-detail"><span className="detail-label">Qty</span><span className="detail-value">{p.quantity}</span></div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </section>
+      )}
+
       {/* ── SECTION 1: Pending Trades (from previous days) ── */}
       {pendingOlder.length > 0 && (
         <section className="section pending-section">

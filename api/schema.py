@@ -272,5 +272,38 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
+    # 16. Momentum Swing Trades (STEE)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.swing_trades (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id           UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol              VARCHAR(20) NOT NULL,
+            entry_date          DATE NOT NULL,
+            entry_price         NUMERIC(12,4) NOT NULL,
+            stop_loss           NUMERIC(12,4) NOT NULL,
+            take_profit_2r      NUMERIC(12,4),
+            quantity            INT NOT NULL,
+            risk_amount         NUMERIC(15,2),
+            status              VARCHAR(20) DEFAULT 'OPEN', -- 'OPEN', 'PARTIAL_EXIT', 'CLOSED'
+            exit_date           DATE,
+            exit_price          NUMERIC(12,4),
+            exit_reason         VARCHAR(50),
+            created_at          TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_swing_trades_client_status ON public.swing_trades(client_id, status);")
+
+    # 17. Daily Prices Indicator Expansion
+    indicator_cols = [
+        ("ema_10", "NUMERIC(12,4)"),
+        ("high_10d", "NUMERIC(12,4)"),
+        ("low_5d", "NUMERIC(12,4)"),
+        ("atr_14", "NUMERIC(12,4)")
+    ]
+    for col, col_type in indicator_cols:
+        cur.execute(f"ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS {col} {col_type};")
+
     conn.commit()
     cur.close()

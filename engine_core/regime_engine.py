@@ -19,8 +19,8 @@ def create_market_regime_and_scores_tables():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS market_regime (
             date DATE PRIMARY KEY,
-            sma_200 NUMERIC(12,4),
-            sma_200_slope_20 NUMERIC(12,4),
+            ema_50 NUMERIC(12,4),
+            ema_200 NUMERIC(12,4),
             classification VARCHAR(20)
         );
 
@@ -86,29 +86,34 @@ def compute_market_regime():
     idx_df['close'] = pd.to_numeric(idx_df['close'], errors='coerce')
     idx_df = idx_df.dropna(subset=['close'])
 
-    # SMA & Slope logic
-    idx_df['sma_200'] = idx_df['close'].rolling(window=200, min_periods=1).mean()
-    idx_df['sma_200_slope_20'] = idx_df['sma_200'].diff(20)
+    # EMA logic as per STEE PRD
+    idx_df['ema_50'] = idx_df['close'].ewm(span=50, adjust=False).mean()
+    idx_df['ema_200'] = idx_df['close'].ewm(span=200, adjust=False).mean()
     
     def classify(row):
-        # Safety: if SMA is missing, we can't determine a trend
-        if pd.isna(row['sma_200']) or pd.isna(row['sma_200_slope_20']):
-            return 'NEUTRAL'
-        
         close = float(row['close'])
-        sma = float(row['sma_200'])
-        slope = float(row['sma_200_slope_20'])
+        ema_50 = float(row['ema_50'])
+        ema_200 = float(row['ema_200'])
         
-        if close > sma and slope > 0: return 'BULL'
-        elif close < sma and slope < 0: return 'BEAR'
-        else: return 'NEUTRAL'
+        # 1. BULLISH: Close > EMA 200 AND EMA 50 > EMA 200
+        if close > ema_200 and ema_50 > ema_200:
+            return 'BULLISH'
+        # 2. BEARISH: Close < EMA 200 AND EMA 50 < EMA 200
+        elif close < ema_200 and ema_50 < ema_200:
+            return 'BEARISH'
+        # 3. SIDEWAYS: Price around EMA 200 (+/- 2%)
+        elif abs(close - ema_200) / ema_200 <= 0.02:
+            return 'SIDEWAYS'
+        # 4. NEUTRAL: Fallback
+        else:
+            return 'NEUTRAL'
             
     idx_df['classification'] = idx_df.apply(classify, axis=1)
-    idx_df['sma_200'] = idx_df['sma_200'].round(4)
-    idx_df['sma_200_slope_20'] = idx_df['sma_200_slope_20'].round(4)
+    idx_df['ema_50'] = idx_df['ema_50'].round(4)
+    idx_df['ema_200'] = idx_df['ema_200'].round(4)
     
     # Update the entire range from the fetched data
-    update_data = idx_df[['date', 'sma_200', 'sma_200_slope_20', 'classification']].replace({np.nan: None}).to_dict('records')
+    update_data = idx_df[['date', 'ema_50', 'ema_200', 'classification']].replace({np.nan: None}).to_dict('records')
 
     if not update_data:
         logger.warning("No regime data to write.")
@@ -116,11 +121,11 @@ def compute_market_regime():
 
     cur = conn.cursor()
     sql = """
-        INSERT INTO public.market_regime (date, sma_200, sma_200_slope_20, classification)
-        VALUES (%(date)s, %(sma_200)s, %(sma_200_slope_20)s, %(classification)s)
+        INSERT INTO public.market_regime (date, ema_50, ema_200, classification)
+        VALUES (%(date)s, %(ema_50)s, %(ema_200)s, %(classification)s)
         ON CONFLICT (date) DO UPDATE SET 
-            sma_200 = EXCLUDED.sma_200,
-            sma_200_slope_20 = EXCLUDED.sma_200_slope_20,
+            ema_50 = EXCLUDED.ema_50,
+            ema_200 = EXCLUDED.ema_200,
             classification = EXCLUDED.classification;
     """
     execute_batch(cur, sql, update_data, page_size=100)
