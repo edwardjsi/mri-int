@@ -1,3 +1,4 @@
+// Updated: 2026-04-24
 // Parse API base safely to support separate frontend/backend deployments
 function resolveApiBase(): string {
     const rawEnv = (import.meta.env.VITE_API_URL || '').replace(/['"]/g, '').trim();
@@ -172,6 +173,10 @@ export const api = {
     getAdminDailyLeaderboard: () => apiFetch('/admin/daily-leaderboard'),
     getAdminHallOfFame: () => apiFetch('/admin/hall-of-fame'),
     getAdminStrategyShadow: () => apiFetch('/admin/strategy-shadow'),
+    getAdminDataHealth: () => apiFetch('/admin/data-health'),
+    triggerAdminRecovery: () => apiFetch('/admin/trigger-recovery', { method: 'POST' }),
+    addGlobalSymbol: (symbol: string) => apiFetch('/admin/global-universe/add', { method: 'POST', body: JSON.stringify({ symbol }) }),
+    repairSymbol: (symbol: string) => apiFetch('/admin/symbol/repair', { method: 'POST', body: JSON.stringify({ symbol }) }),
 
     // Signals
     getRegime: () => apiFetch('/signals/regime'),

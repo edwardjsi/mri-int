@@ -1,3 +1,4 @@
+# Updated: 2026-04-24
 import logging
 
 import numpy as np
@@ -59,20 +60,39 @@ def add_indicator_columns_if_missing():
         conn.close()
 
 
-def fetch_all_symbols_with_null_indicators():
-    """Return every symbol that still has any NULL core indicator."""
+def fetch_symbols_needing_repair():
+    """Return symbols that have NULL indicators, RS gaps, or stale data."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
+            # 1. Fetch NULLs
+            # 2. Fetch RS Gaps (RS=0 usually means merge failure)
+            # 3. Fetch Stale Indicators (no change vs prev day)
             cur.execute(
                 """
+                WITH latest_date AS (SELECT MAX(date) FROM daily_prices),
+                prev_date AS (SELECT DISTINCT date FROM daily_prices WHERE date < (SELECT MAX(date) FROM daily_prices) ORDER BY date DESC LIMIT 1)
                 SELECT DISTINCT symbol
                 FROM daily_prices
-                WHERE ema_50 IS NULL
-                   OR ema_200 IS NULL
-                   OR rs_90d IS NULL
-                   OR avg_volume_20d IS NULL
-                   OR rolling_high_6m IS NULL
+                WHERE (
+                    ema_50 IS NULL
+                    OR ema_200 IS NULL
+                    OR rs_90d IS NULL
+                    OR rs_90d = 0
+                    OR avg_volume_20d IS NULL
+                    OR rolling_high_6m IS NULL
+                )
+                OR (
+                    date = (SELECT * FROM latest_date)
+                    AND symbol IN (
+                        SELECT curr.symbol
+                        FROM daily_prices curr
+                        JOIN daily_prices prev ON curr.symbol = prev.symbol AND prev.date = (SELECT * FROM prev_date)
+                        WHERE curr.date = (SELECT * FROM latest_date)
+                          AND curr.ema_50 = prev.ema_50
+                          AND curr.volume > 0
+                    )
+                )
                 ORDER BY symbol
                 """
             )
@@ -92,7 +112,7 @@ def fetch_data(symbols=None):
     conn = get_connection()
     try:
         if not symbols:
-            symbols = fetch_all_symbols_with_null_indicators()
+            symbols = fetch_symbols_needing_repair()
 
         if not symbols:
             logger.info("All symbols already have indicators computed.")
@@ -371,7 +391,7 @@ def compute_indicators_all(symbol_batch_size=25, max_batches=None):
     logger.info("Starting validated indicator recomputation")
     try:
         add_indicator_columns_if_missing()
-        symbols = fetch_all_symbols_with_null_indicators()
+        symbols = fetch_symbols_needing_repair()
 
         if not symbols:
             logger.info("All symbols already have indicators computed")

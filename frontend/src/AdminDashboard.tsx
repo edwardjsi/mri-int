@@ -1,3 +1,4 @@
+// Updated: 2026-04-24
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { api } from './api';
@@ -9,6 +10,18 @@ interface AdminMetrics {
   last_ingestion: string | null;
 }
 
+interface DataHealth {
+  total_symbols: int;
+  null_indicators: int;
+  suspicious_rs: int;
+  stale_indicators: int;
+  coverage_pct: number;
+  last_price_date: string | null;
+  last_score_date: string | null;
+  last_regime_date: string | null;
+  drift_days: number;
+}
+
 interface SymbolGrade {
   symbol: string;
   total_score: number | null;
@@ -18,12 +31,15 @@ interface SymbolGrade {
 
 export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+  const [health, setHealth] = useState<DataHealth | null>(null);
   const [topStocks, setTopStocks] = useState<{ top_watched: any[], top_held: any[] } | null>(null);
   const [dailyLeaderboard, setDailyLeaderboard] = useState<{ date: string | null, top_stocks: any[] }>({ date: null, top_stocks: [] });
   const [hallOfFame, setHallOfFame] = useState<any[]>([]);
   const [strategyShadow, setStrategyShadow] = useState<any[]>([]);
   const [globalUniverse, setGlobalUniverse] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [newSymbol, setNewSymbol] = useState('');
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -97,9 +113,50 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminStrategyShadow(); setStrategyShadow(data); }
       catch (e) { console.error('Strategy Shadow failed', e); }
     };
+    const fetchHealth = async () => {
+      try { const data = await api.getAdminDataHealth(); setHealth(data); }
+      catch (e) { console.error('Health metrics failed', e); }
+    };
 
-    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame(), fetchShadow()]);
+    await Promise.allSettled([fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), fetchHallOfFame(), fetchShadow(), fetchHealth()]);
     setLoading(false);
+  };
+
+  const handleTriggerRecovery = async () => {
+    if (!confirm('This will trigger a background indicator recompute for all missing symbols. Proceed?')) return;
+    setIsRecovering(true);
+    try {
+      await api.triggerAdminRecovery();
+      alert('Recovery task started. Check back in a few minutes.');
+    } catch (e) {
+      alert('Failed to trigger recovery: ' + e.message);
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const handleAddGlobalSymbol = async () => {
+    if (!newSymbol) return;
+    try {
+      await api.addGlobalSymbol(newSymbol);
+      alert(`${newSymbol} added to global tracking.`);
+      setNewSymbol('');
+      loadAdminIntel(); // Refresh explorer
+    } catch (e) {
+      alert('Failed to add symbol: ' + e.message);
+    }
+  };
+
+  const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
+    e.stopPropagation(); // Don't trigger row click/select
+    if (!confirm(`SURGICAL REPAIR: This will DELETE all price/score history for ${symbol} and re-fetch it fresh. Proceed?`)) return;
+    try {
+      await api.repairSymbol(symbol);
+      alert(`${symbol} data cleared. It will re-appear after the next background ingestion cycle.`);
+      loadAdminIntel();
+    } catch (e) {
+      alert('Failed to trigger repair: ' + e.message);
+    }
   };
 
   useEffect(() => {
@@ -125,10 +182,41 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
           <div className="stat-value">{metrics?.active_portfolios || 0}</div>
         </div>
         <div className="stat-card">
-            <div className="stat-label">Market Freshness</div>
-            <div className={`stat-value ${metrics?.last_ingestion && (new Date().getTime() - new Date(metrics.last_ingestion).getTime() > 86400000) ? 'status-critical' : ''}`} style={{ fontSize: '1.2rem' }}>
-                {metrics?.last_ingestion ? new Date(metrics.last_ingestion).toLocaleDateString() : 'Pending'}
+            <div className="stat-label">Indicator Coverage</div>
+            <div className={`stat-value ${(health?.coverage_pct || 100) < 95 ? 'status-critical' : ''}`} style={{ fontSize: '1.2rem' }}>
+                {health ? `${health.coverage_pct}%` : '...'}
             </div>
+            <div className="stat-subtitle" style={{ fontSize: '10px', opacity: 0.7 }}>
+                {health?.null_indicators} missing
+            </div>
+        </div>
+        <div className="stat-card">
+            <div className="stat-label">Market Freshness</div>
+            <div className={`stat-value ${health?.drift_days && health.drift_days > 1 ? 'status-critical' : ''}`} style={{ fontSize: '1.2rem' }}>
+                {health?.last_price_date || 'Pending'}
+            </div>
+            <div className="stat-subtitle" style={{ fontSize: '10px', opacity: 0.7 }}>
+                Drift: {health?.drift_days || 0}d
+            </div>
+        </div>
+        <div className="stat-card">
+            <div className="stat-label">Data Integrity</div>
+            <div className={`stat-value ${(health?.suspicious_rs || 0) > 0 || (health?.stale_indicators || 0) > 0 ? 'status-critical' : ''}`} style={{ fontSize: '1.2rem' }}>
+                {health ? `${health.suspicious_rs + health.stale_indicators === 0 ? 'CLEAN' : 'WARNING'}` : '...'}
+            </div>
+            <div className="stat-subtitle" style={{ fontSize: '10px', opacity: 0.7 }}>
+                {health?.suspicious_rs} RS gaps | {health?.stale_indicators} stale
+            </div>
+        </div>
+        <div className="stat-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button 
+                onClick={handleTriggerRecovery} 
+                disabled={isRecovering}
+                className="action-btn btn-primary"
+                style={{ width: '100%', height: '100%', fontSize: '0.9rem' }}
+            >
+                {isRecovering ? '⏳ Repairing...' : '🛠️ Force Repair'}
+            </button>
         </div>
       </div>
 
@@ -276,11 +364,14 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 <thead>
                     <tr>
                         <th onClick={() => handleExplorerSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {explorerSort.key === 'symbol' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleExplorerSort('is_breakout')} style={{ cursor: 'pointer' }}>Breakout {explorerSort.key === 'is_breakout' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                         <th onClick={() => handleExplorerSort('score')} style={{ cursor: 'pointer' }}>Score {explorerSort.key === 'score' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th onClick={() => handleExplorerSort('rs_90d')} style={{ cursor: 'pointer' }}>RS {explorerSort.key === 'rs_90d' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                         <th>Price</th>
                         <th onClick={() => handleExplorerSort('watchers')} style={{ cursor: 'pointer' }}>Watchers {explorerSort.key === 'watchers' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                         <th onClick={() => handleExplorerSort('holders')} style={{ cursor: 'pointer' }}>Holders {explorerSort.key === 'holders' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
                         <th onClick={() => handleExplorerSort('total_interest')} style={{ cursor: 'pointer' }}>Total Interest {explorerSort.key === 'total_interest' ? (explorerSort.direction === 'asc' ? '🔼' : '🔽') : '↕️'}</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -295,15 +386,31 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                         return (
                             <tr key={s.symbol} onClick={() => onSelectStock({ ...s, conditions, price: s.current_price })} className="clickable-row">
                                 <td className="font-bold">
-                                    {s.symbol}
-                                    {s.is_breakout && <span className="score-trend-indicator" style={{ marginLeft: '8px' }}>🚀 BREAKOUT</span>}
-                                    {s.score === null && <span className="action-badge badge-skipped" style={{ padding: '2px 4px', fontSize: '10px', marginLeft: '8px', background: '#faad14' }}>⏳ PENDING</span>}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {s.is_breakout && <span title="🚀 BREAKOUT DETECTED" style={{ fontSize: '1.2rem' }}>🚀</span>}
+                                        {s.symbol}
+                                    </div>
                                 </td>
+                                <td>{s.is_breakout ? 'YES' : 'NO'}</td>
                                 <td>{s.score !== null ? <span className="score-badge">{s.score}</span> : '-'}</td>
+                                <td style={{ color: (s.rs_90d === 0 || s.rs_90d === null) ? '#ff4d4f' : 'inherit' }}>
+                                    {s.rs_90d !== null ? s.rs_90d.toFixed(1) : '-'}
+                                    {(s.rs_90d === 0 || s.rs_90d === null) && <span title="SUSPICIOUS RS: Calculation may have failed" style={{ marginLeft: '4px', cursor: 'help' }}>⚠️</span>}
+                                </td>
                                 <td>₹{s.current_price?.toLocaleString() || '-'}</td>
                                 <td>{s.watchers}</td>
                                 <td>{s.holders}</td>
                                 <td style={{ fontWeight: 800 }}>{s.total_interest}</td>
+                                <td>
+                                    <button 
+                                        onClick={(e) => handleRepairSymbol(e, s.symbol)}
+                                        className="action-badge badge-skipped"
+                                        style={{ background: '#ff4d4f', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 8px', borderRadius: '4px' }}
+                                        title="Surgical Repair: Reset all data and re-ingest"
+                                    >
+                                        🔄 Reset
+                                    </button>
+                                </td>
                             </tr>
                         );
                     }) : (
@@ -313,6 +420,19 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                     )}
                 </tbody>
             </table>
+        </div>
+
+        <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', opacity: 0.8 }}>Add Global Symbol:</span>
+            <input 
+                type="text" 
+                placeholder="RELIANCE.NS" 
+                value={newSymbol}
+                onChange={e => setNewSymbol(e.target.value.toUpperCase())}
+                className="form-input"
+                style={{ width: '150px', margin: 0, padding: '4px 8px' }}
+            />
+            <button onClick={handleAddGlobalSymbol} className="action-btn btn-executed" style={{ padding: '4px 12px' }}>Add</button>
         </div>
       </section>
 

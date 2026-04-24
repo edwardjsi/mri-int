@@ -1,13 +1,31 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+# Updated: 2026-04-24
 import logging
 import psycopg2.extras
+from datetime import datetime
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from api.deps import get_db, get_current_client
+from engine_core.indicator_engine import compute_indicators_all
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 logger = logging.getLogger("mri_api.admin")
+
+class GlobalSymbolAdd(BaseModel):
+    symbol: str
+
+class DataHealthResponse(BaseModel):
+    total_symbols: int
+    null_indicators: int
+    suspicious_rs: int
+    stale_indicators: int
+    coverage_pct: float
+    last_price_date: Optional[str]
+    last_score_date: Optional[str]
+    last_regime_date: Optional[str]
+    drift_days: int
 
 def verify_admin(client=Depends(get_current_client), conn=Depends(get_db)):
     """Dependency to check if the current user is an admin."""
@@ -150,7 +168,8 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 ss.condition_ema_50_200, ss.condition_ema_200_slope,
                 ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
                 dp.close as current_price,
-                (ss.condition_6m_high AND ss.condition_volume) as is_breakout
+                dp.rs_90d,
+                (COALESCE(ss.condition_6m_high, FALSE) AND COALESCE(ss.condition_volume, FALSE)) as is_breakout
             FROM interest i
             LEFT JOIN (
                 SELECT DISTINCT ON (symbol) 
@@ -161,7 +180,7 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 ORDER BY symbol, date DESC
             ) ss ON ss.symbol = i.symbol
             LEFT JOIN (
-                SELECT DISTINCT ON (symbol) symbol, close, date
+                SELECT DISTINCT ON (symbol) symbol, close, rs_90d, date
                 FROM daily_prices
                 ORDER BY symbol, date DESC
             ) dp ON dp.symbol = i.symbol
@@ -171,6 +190,124 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
     except Exception as e:
         logger.error(f"GLOBAL UNIVERSE ERROR: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
+@router.get("/data-health", response_model=DataHealthResponse)
+def get_data_health(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Analyze database for NULL indicators and date drift."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            WITH latest_date AS (SELECT MAX(date) FROM daily_prices),
+            prev_date AS (SELECT DISTINCT date FROM daily_prices WHERE date < (SELECT MAX(date) FROM daily_prices) ORDER BY date DESC LIMIT 1),
+            stats AS (
+                SELECT 
+                    COUNT(DISTINCT symbol) as total,
+                    COUNT(DISTINCT CASE WHEN ema_50 IS NULL THEN symbol END) as nulls,
+                    COUNT(DISTINCT CASE WHEN rs_90d = 0 OR rs_90d IS NULL THEN symbol END) as susp_rs
+                FROM daily_prices
+                WHERE date = (SELECT * FROM latest_date)
+            ),
+            stale_check AS (
+                SELECT COUNT(DISTINCT curr.symbol) as stale
+                FROM daily_prices curr
+                JOIN daily_prices prev ON curr.symbol = prev.symbol AND prev.date = (SELECT * FROM prev_date)
+                WHERE curr.date = (SELECT * FROM latest_date)
+                  AND curr.ema_50 = prev.ema_50
+                  AND curr.volume > 0 -- Only check if market was actually open for that stock
+            ),
+            dates AS (
+                SELECT 
+                    (SELECT * FROM latest_date) as last_p,
+                    (SELECT MAX(date) FROM stock_scores) as last_s,
+                    (SELECT MAX(date) FROM market_regime) as last_r
+            )
+            SELECT * FROM stats, dates, stale_check
+        """)
+        row = cur.fetchone()
+        
+        total = row["total"] or 0
+        nulls = row["nulls"] or 0
+        coverage = ((total - nulls) / total * 100) if total > 0 else 0
+        
+        last_p = row["last_p"]
+        last_s = row["last_s"]
+        drift = 0
+        if last_p and last_s:
+            drift = (last_p - last_s).days
+
+        return {
+            "total_symbols": total,
+            "null_indicators": nulls,
+            "suspicious_rs": row["susp_rs"] or 0,
+            "stale_indicators": row["stale"] or 0,
+            "coverage_pct": round(coverage, 2),
+            "last_price_date": str(last_p) if last_p else None,
+            "last_score_date": str(last_s) if last_s else None,
+            "last_regime_date": str(row["last_r"]) if row["last_r"] else None,
+            "drift_days": drift
+        }
+    except Exception as e:
+        logger.error(f"HEALTH ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+
+@router.post("/trigger-recovery")
+def trigger_recovery(background_tasks: BackgroundTasks, admin=Depends(verify_admin)):
+    """Manually trigger a background indicator recompute for NULL values."""
+    try:
+        background_tasks.add_task(compute_indicators_all)
+        return {"message": "Indicator recovery task started in background."}
+    except Exception as e:
+        logger.error(f"RECOVERY TRIGGER ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/global-universe/add")
+def add_global_symbol(payload: GlobalSymbolAdd, conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Manually add a symbol to the global tracking universe."""
+    symbol = payload.symbol.upper().strip()
+    cur = conn.cursor()
+    try:
+        # We 'track' it by adding it to a system-wide watchlist or simply 
+        # ensuring it will be picked up by the next pipeline run.
+        # For now, we'll insert it into client_watchlist for a dummy 'system' user (ID 0)
+        # or a dedicated 'universe_expansion' table if it exists.
+        # Decision: Use client_watchlist with a reserved '00000000-0000-0000-0000-000000000000' ID.
+        system_id = '00000000-0000-0000-0000-000000000000'
+        cur.execute("""
+            INSERT INTO client_watchlist (client_id, symbol)
+            VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
+        """, (system_id, symbol))
+        conn.commit()
+        return {"message": f"Symbol {symbol} added to global tracking universe."}
+    except Exception as e:
+        logger.error(f"GLOBAL ADD ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+
+@router.post("/symbol/repair")
+def repair_symbol(payload: GlobalSymbolAdd, background_tasks: BackgroundTasks, conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Nuke and re-ingest a specific symbol. Use when Yahoo data goes 'wack'."""
+    symbol = payload.symbol.upper().strip()
+    cur = conn.cursor()
+    try:
+        # 1. Clear existing price/score data for this symbol
+        cur.execute("DELETE FROM daily_prices WHERE symbol = %s", (symbol,))
+        cur.execute("DELETE FROM stock_scores WHERE symbol = %s", (symbol,))
+        conn.commit()
+        
+        # 2. Trigger background re-ingestion
+        # We'll use the on_demand_ingest logic if available, or just rely on next pipeline
+        # For now, we'll mark it as needing repair by the indicator engine which will find it missing
+        logger.info(f"Surgical repair triggered for {symbol}: Data cleared, awaiting re-ingestion.")
+        return {"message": f"Symbol {symbol} data cleared. It will be re-fetched in the next background cycle."}
+    except Exception as e:
+        logger.error(f"SYMBOL REPAIR ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close()
 

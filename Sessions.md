@@ -1,5 +1,15 @@
 # **MRI Sessions Log**
 
+## **April 24, 2026: Data Health Monitoring & Explorer Enhancements**
+- **Objective**: Implement administrative data health monitoring and enhance the Global Explorer with breakout visibility and manual symbol tracking.
+- **Actions**:
+  - **Backend:** Added `/admin/data-health`, `/admin/trigger-recovery`, and `/admin/global-universe/add` endpoints to `api/admin.py`.
+  - **Health Dashboard:** Integrated indicator coverage and date drift metrics into the Admin Dashboard with a "Force Repair" trigger.
+  - **Global Explorer:** Added sortable Breakout column, Rocket icon placement (adjacent to symbols), and manual symbol addition.
+  - **Hardening:** Ensured breakout logic uses inclusive criteria (>=) and robustly handles NULL values.
+- **Result**: Admins can now monitor and repair data gaps directly from the dashboard.
+- **Next Step**: Expand monitoring to include automated alerting for coverage drops below 90%.
+
 ## **April 23, 2026: Intelligence UI & Pipeline Hardening**
 - **Objective**: Resolve data drift, harden the ingestion pipeline, and transition the UI from a "Black Box" to a "Glass Box" with numerical scores.
 - **Actions**:
