@@ -1,5 +1,13 @@
 # **MRI Sessions Log**
 
+## **April 25, 2026: PRDE Infrastructure Planning**
+- **Objective**: Review the PRDE PE Re-Rating Discovery Engine PRD and map it onto the existing MRI infrastructure.
+- **Actions**:
+  - Reviewed the PRD against the current FastAPI/Railway/Neon monolith, pipeline, SES email, audit logging, admin dashboard, and MRI scoring layers.
+  - Created `docs/PRDE_INFRASTRUCTURE_PLAN.md` documenting reusable infrastructure, missing capabilities, recommended schema, implementation phases, risks, and the next smallest implementation step.
+- **Result**: PRDE is positioned as a fundamentals intelligence layer inside the existing MRI architecture, reusing MRI for price data, regime/trend overlay, scheduling, email delivery, audit logs, and admin visibility.
+- **Next Step**: Build the PRDE data foundation first: schema bootstrap, CSV import contract, import script, and a small 10-20 company data quality validation run.
+
 ## **April 24, 2026 (Evening): STEE Production Audit & Visibility**
 - **Objective**: Finalize the production integration of the STEE engine with a robust audit system and dashboard visibility.
 - **Actions**:

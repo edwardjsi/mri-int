@@ -2,6 +2,34 @@
 
 ---
 
+## 📅 Session: April 25, 2026 — PRDE Infrastructure Planning
+
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. PRDE PRD Review ✅
+- Reviewed the PE Re-Rating Discovery Engine PRD against the existing MRI platform architecture.
+- Confirmed PRDE can reuse the current FastAPI monolith, Neon PostgreSQL, Railway deployment, scheduled pipeline pattern, SES email service, audit logs, admin dashboard, and MRI trend/regime overlays.
+
+#### 2. Infrastructure Plan Document ✅
+- Created `docs/PRDE_INFRASTRUCTURE_PLAN.md`.
+- Document covers:
+  - Existing infrastructure PRDE can reuse
+  - Missing data, schema, LLM, reporting, scheduling, and cost-control pieces
+  - Recommended MVP scope
+  - Implementation phases and done criteria
+  - Risks and mitigations
+  - Next smallest logical implementation step
+
+### ⏳ Left for Next Session
+1. Add PRDE schema bootstrap tables.
+2. Define the annual financials/ratios CSV import contract.
+3. Create `scripts/import_prde_financials.py`.
+4. Validate with a small 10-20 company test universe before adding LLM agents.
+
+---
+
 ## 📅 Session: April 24, 2026 — Data Health Monitoring & Explorer Upgrades
 
 **Session Start:** 09:40 IST
