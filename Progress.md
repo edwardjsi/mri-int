@@ -22,11 +22,41 @@
   - Risks and mitigations
   - Next smallest logical implementation step
 
+#### 3. PRDE Data Foundation Started ✅
+- Added idempotent PRDE schema bootstrap tables in `api/schema.py`.
+- Created `docs/PRDE_CSV_IMPORT_CONTRACT.md` for annual financial and ratio imports.
+- Created `scripts/import_prde_financials.py` with validation, dry-run mode, and idempotent upserts for company/year rows.
+- Logged Decision 084 to keep PRDE inside the existing MRI monolith and defer LLM agents until financial data is reliable.
+
+#### 4. PRDE Implementation Checklist ✅
+- Created `docs/PRDE_IMPLEMENTATION_CHECKLIST.md`.
+- Ticked off completed planning, schema, CSV contract, and importer tasks.
+- Documented remaining phases from seed CSV validation through feature engine, deterministic scoring, LLM agents, reports, API, scheduler/email, and UI.
+
+#### 5. PRDE Seed Import Readiness ✅
+- Added `docs/prde_financials_template.csv` as the blank seed-data template.
+- Added `scripts/verify_prde_import.py` to validate post-import row counts, duplicate company/year groups, missing required values, and short company histories.
+- Updated the CSV contract and implementation checklist with the template and verification commands.
+- Verified Python syntax and CLI help for the importer/verifier; ran a dry-run against the blank template with no DB writes.
+
+#### 6. PRDE Deterministic Feature Engine ✅
+- Created `engine_core/prde_feature_engine.py`.
+- Computes revenue/EBITDA/PAT CAGRs, recent growth acceleration, EBITDA/PAT margin trends, ROCE trend, asset turnover, capex intensity, employee-cost percentage, valuation ratio trend, and debt/equity risk features.
+- Generates canonical feature JSON per company and SHA-256 feature hashes for reproducibility.
+- Persists feature JSON into `prde_feature_snapshots` when run without `--dry-run`.
+- Added CLI support for `--symbol`, `--limit`, `--min-years`, and `--dry-run`.
+- Verified syntax and CLI help.
+
+#### 7. Tomorrow TODO Created ✅
+- Created `docs/PRDE_TOMORROW_TODO.md` with a focused next-session checklist for seed CSV creation, dry-run validation, DB import, import verification, feature generation, and documentation updates.
+
 ### ⏳ Left for Next Session
-1. Add PRDE schema bootstrap tables.
-2. Define the annual financials/ratios CSV import contract.
-3. Create `scripts/import_prde_financials.py`.
-4. Validate with a small 10-20 company test universe before adding LLM agents.
+1. Prepare a small 10-20 company annual financials CSV.
+2. Run `python scripts/import_prde_financials.py <file> --dry-run`.
+3. Import into the configured database after validation passes.
+4. Run `python scripts/verify_prde_import.py --min-companies 10 --min-years 5`.
+5. Run `python engine_core/prde_feature_engine.py --limit 20 --dry-run`.
+6. Persist deterministic PRDE feature snapshots before adding LLM agents.
 
 ---
 

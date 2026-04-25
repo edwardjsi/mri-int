@@ -11,6 +11,144 @@ objects and never DROP/ALTER existing schema.
 from __future__ import annotations
 
 
+def ensure_prde_tables(cur) -> None:
+    """Ensure PRDE fundamentals and report tables exist."""
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_companies (
+            id                  BIGSERIAL PRIMARY KEY,
+            ticker              VARCHAR(20) NOT NULL UNIQUE,
+            name                TEXT,
+            country             VARCHAR(10) DEFAULT 'IN',
+            sector              TEXT,
+            industry            TEXT,
+            is_active           BOOLEAN DEFAULT TRUE,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            updated_at          TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_financials_annual (
+            id                  BIGSERIAL PRIMARY KEY,
+            company_id          BIGINT NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            fiscal_year         INT NOT NULL,
+            revenue             NUMERIC,
+            ebitda              NUMERIC,
+            pat                 NUMERIC,
+            roce                NUMERIC,
+            capex               NUMERIC,
+            employee_cost       NUMERIC,
+            total_assets        NUMERIC,
+            source              TEXT,
+            imported_at         TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(company_id, fiscal_year)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_ratios_annual (
+            id                  BIGSERIAL PRIMARY KEY,
+            company_id          BIGINT NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            fiscal_year         INT NOT NULL,
+            pe                  NUMERIC,
+            ev_ebitda           NUMERIC,
+            pb                  NUMERIC,
+            debt_equity         NUMERIC,
+            source              TEXT,
+            imported_at         TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(company_id, fiscal_year)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_feature_snapshots (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            company_id          BIGINT NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            run_id              UUID NOT NULL DEFAULT gen_random_uuid(),
+            feature_hash        VARCHAR(64) NOT NULL,
+            features            JSONB NOT NULL,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(company_id, feature_hash)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_agent_scores (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            feature_snapshot_id UUID NOT NULL REFERENCES public.prde_feature_snapshots(id) ON DELETE CASCADE,
+            company_id          BIGINT NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            agent_name          TEXT NOT NULL,
+            score               NUMERIC,
+            confidence          NUMERIC,
+            reasoning           TEXT,
+            flags               JSONB DEFAULT '[]'::jsonb,
+            model               TEXT,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(feature_snapshot_id, agent_name)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_final_scores (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            feature_snapshot_id UUID NOT NULL REFERENCES public.prde_feature_snapshots(id) ON DELETE CASCADE,
+            company_id          BIGINT NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            total_score         NUMERIC,
+            classification      TEXT,
+            report              JSONB,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(feature_snapshot_id)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_report_events (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            final_score_id      UUID REFERENCES public.prde_final_scores(id) ON DELETE CASCADE,
+            company_id          BIGINT REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            event_type          TEXT NOT NULL,
+            description         TEXT,
+            created_at          TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_jobs (
+            id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            job_type            TEXT NOT NULL,
+            status              TEXT NOT NULL,
+            started_at          TIMESTAMPTZ DEFAULT NOW(),
+            completed_at        TIMESTAMPTZ,
+            metadata            JSONB DEFAULT '{}'::jsonb,
+            error_message       TEXT
+        );
+        """
+    )
+
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_companies_ticker ON public.prde_companies(ticker);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_financials_company_year ON public.prde_financials_annual(company_id, fiscal_year DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_ratios_company_year ON public.prde_ratios_annual(company_id, fiscal_year DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_feature_snapshots_company ON public.prde_feature_snapshots(company_id, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_agent_scores_company ON public.prde_agent_scores(company_id, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_final_scores_score ON public.prde_final_scores(total_score DESC, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_jobs_status ON public.prde_jobs(status, started_at DESC);")
+
+
 def ensure_required_tables(conn) -> None:
     """Ensure all client-specific and operational tables exist.
     
@@ -304,6 +442,9 @@ def ensure_required_tables(conn) -> None:
     ]
     for col, col_type in indicator_cols:
         cur.execute(f"ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS {col} {col_type};")
+
+    # 18. PRDE - PE Re-Rating Discovery Engine
+    ensure_prde_tables(cur)
 
     conn.commit()
     cur.close()

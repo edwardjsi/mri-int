@@ -546,3 +546,13 @@ Date: 2026-04-23
 Decision: Replaced `pd.read_sql` with a direct `cur.execute` fetch in `regime_engine.py`.
 Reason: A compatibility warning between `pandas` and `psycopg2.extras.RealDictCursor` was causing the engine to return empty dataframes silently in the GitHub Actions environment.
 Status: FINAL.
+
+## Decision 084 — PRDE as Fundamentals Intelligence Layer
+Date: 2026-04-25
+Decision:
+1. Implement PRDE (PE Re-Rating Discovery Engine) as a fundamentals intelligence layer inside the existing MRI FastAPI monolith, not as a separate service.
+2. Reuse Neon PostgreSQL, Railway deployment, existing scheduler patterns, SES email delivery, audit logging, and MRI trend/regime overlays.
+3. Start with an idempotent PRDE data foundation: `prde_*` tables in `api/schema.py`, a documented CSV import contract, and `scripts/import_prde_financials.py`.
+4. Defer LLM agents until annual financial and ratio data can be imported, validated, and reproduced from stable source rows.
+Reason: PRDE depends on trusted 5-10 year financial statement data. Building the schema and import path first prevents the agent layer from producing convincing but unsupported analysis.
+Status: FINAL.

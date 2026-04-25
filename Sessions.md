@@ -5,8 +5,18 @@
 - **Actions**:
   - Reviewed the PRD against the current FastAPI/Railway/Neon monolith, pipeline, SES email, audit logging, admin dashboard, and MRI scoring layers.
   - Created `docs/PRDE_INFRASTRUCTURE_PLAN.md` documenting reusable infrastructure, missing capabilities, recommended schema, implementation phases, risks, and the next smallest implementation step.
+- **Implementation Started**:
+  - Added PRDE schema bootstrap tables to `api/schema.py`.
+  - Created `docs/PRDE_CSV_IMPORT_CONTRACT.md` for the annual financials/ratios MVP data format.
+  - Created `scripts/import_prde_financials.py` with CSV validation, dry-run support, and idempotent company/year upserts.
+  - Logged Decision 084 to fix PRDE as an in-monolith fundamentals intelligence layer.
+  - Created `docs/PRDE_IMPLEMENTATION_CHECKLIST.md` with completed work checked off and the remaining step-by-step rollout path.
+  - Added `docs/prde_financials_template.csv` and `scripts/verify_prde_import.py` so real seed data can be validated and audited after import.
+  - Created `engine_core/prde_feature_engine.py` for deterministic feature snapshots before LLM scoring.
+  - Created `docs/PRDE_TOMORROW_TODO.md` as the next-session execution checklist.
 - **Result**: PRDE is positioned as a fundamentals intelligence layer inside the existing MRI architecture, reusing MRI for price data, regime/trend overlay, scheduling, email delivery, audit logs, and admin visibility.
-- **Next Step**: Build the PRDE data foundation first: schema bootstrap, CSV import contract, import script, and a small 10-20 company data quality validation run.
+- **Verification**: `py_compile` passed for PRDE scripts/schema, importer/verifier/feature-engine help commands work, and the blank template dry-run completed with zero DB writes.
+- **Next Step**: Prepare a small 10-20 company CSV, import and verify it, then run `python engine_core/prde_feature_engine.py --limit 20 --dry-run` before persisting feature snapshots.
 
 ## **April 24, 2026 (Evening): STEE Production Audit & Visibility**
 - **Objective**: Finalize the production integration of the STEE engine with a robust audit system and dashboard visibility.
