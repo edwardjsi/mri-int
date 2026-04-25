@@ -4,6 +4,16 @@
 
 PRDE - PE Re-Rating Discovery Engine
 
+## Relationship to AAE
+
+AAE - Amritkaal Alpha Engine - is the broader product vision for an event-driven, multi-agent Indian equity research platform. PRDE is the current implementation foundation inside AAE: the deterministic financial fingerprint layer that must work before document sourcing, structural signal, macro, risk, orchestrator, or analyst-console agents are added.
+
+See:
+
+- `docs/AAE_PRD.md`
+- `docs/AAE_IMPLEMENTATION_ROADMAP.md`
+- `Decisions.md` - Decision 085
+
 ## Current Milestone
 
 Build PRDE as a fundamentals intelligence layer inside the existing MRI monolith.

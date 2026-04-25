@@ -8,6 +8,12 @@
 
 ### What Was Done This Session
 
+#### 0. AAE Product Vision Incorporated ✅
+- Added `docs/AAE_PRD.md` for the Amritkaal Alpha Engine product requirements.
+- Added `docs/AAE_IMPLEMENTATION_ROADMAP.md` to map AAE phases onto the current MRI/PRDE architecture.
+- Logged Decision 085: AAE is the long-term event-driven multi-agent product, while PRDE remains the immediate financial fingerprint foundation.
+- Confirmed implementation sequence: complete PRDE data import and deterministic scoring before document RAG, event agents, macro/risk agents, orchestrator, or analyst console work.
+
 #### 1. PRDE PRD Review ✅
 - Reviewed the PE Re-Rating Discovery Engine PRD against the existing MRI platform architecture.
 - Confirmed PRDE can reuse the current FastAPI monolith, Neon PostgreSQL, Railway deployment, scheduled pipeline pattern, SES email service, audit logs, admin dashboard, and MRI trend/regime overlays.
@@ -57,6 +63,7 @@
 4. Run `python scripts/verify_prde_import.py --min-companies 10 --min-years 5`.
 5. Run `python engine_core/prde_feature_engine.py --limit 20 --dry-run`.
 6. Persist deterministic PRDE feature snapshots before adding LLM agents.
+7. After PRDE features are stable, implement deterministic PRDE/AAE financial fingerprint scoring before starting event-driven agents.
 
 ---
 

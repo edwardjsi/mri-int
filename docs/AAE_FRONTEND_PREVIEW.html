@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amritkaal Alpha Engine Preview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #64707d;
+      --line: #dbe1e7;
+      --panel: #ffffff;
+      --page: #f4f6f8;
+      --soft: #eef3f7;
+      --blue: #255e9c;
+      --teal: #0f766e;
+      --green: #16803d;
+      --amber: #a15c00;
+      --red: #b42318;
+      --violet: #6251a3;
+      --shadow: 0 14px 35px rgba(28, 39, 49, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #14222f;
+      color: #dfe8ef;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: grid;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .brand-subtitle {
+      color: #98a9b6;
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #bfccd6;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      padding: 10px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: #213446;
+      color: #ffffff;
+    }
+
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 760;
+      color: #dbe7ef;
+    }
+
+    .nav-count {
+      color: #94a7b7;
+      font-size: 12px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: #b9c8d3;
+      font-size: 12px;
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      height: 70px;
+      background: rgba(255,255,255,0.92);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      padding: 0 26px;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      backdrop-filter: blur(12px);
+    }
+
+    .search {
+      max-width: 560px;
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      align-items: center;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px 12px;
+      color: var(--muted);
+    }
+
+    .search input {
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      min-width: 0;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .primary-button,
+    .quiet-button {
+      border: 1px solid transparent;
+      min-height: 36px;
+      border-radius: 7px;
+      padding: 0 12px;
+      font-weight: 680;
+      cursor: pointer;
+    }
+
+    .primary-button {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .quiet-button {
+      background: #fff;
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .content {
+      padding: 24px 26px 34px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .page-head {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 25px;
+      letter-spacing: 0;
+      line-height: 1.2;
+    }
+
+    .subtle {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .select {
+      border: 1px solid var(--line);
+      background: #fff;
+      min-height: 36px;
+      border-radius: 7px;
+      padding: 0 10px;
+      color: var(--ink);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .panel,
+    .metric,
+    .candidate,
+    .event-row,
+    .risk-row {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      min-height: 108px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .warning {
+      color: var(--amber);
+    }
+
+    .danger {
+      color: var(--red);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(520px, 1.28fr) minmax(360px, 0.72fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      min-height: 58px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .panel-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .panel-title h2 {
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .tabs button {
+      border: 0;
+      background: transparent;
+      padding: 8px 11px;
+      cursor: pointer;
+      color: var(--muted);
+      min-height: 34px;
+    }
+
+    .tabs button.active {
+      color: var(--ink);
+      background: var(--soft);
+      font-weight: 720;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .candidate {
+      box-shadow: none;
+      display: grid;
+      grid-template-columns: 54px minmax(160px, 1fr) repeat(4, minmax(82px, 0.45fr)) 112px;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .rank {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #eef6f3;
+      color: var(--teal);
+      font-weight: 820;
+    }
+
+    .company-cell {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .ticker {
+      font-weight: 820;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .company-name {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-cell {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 680;
+    }
+
+    .score-number {
+      font-size: 18px;
+      font-weight: 820;
+    }
+
+    .bar {
+      width: 100%;
+      height: 7px;
+      border-radius: 999px;
+      background: #e8edf2;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--teal);
+    }
+
+    .bar.blue span {
+      background: var(--blue);
+    }
+
+    .bar.amber span {
+      background: var(--amber);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: 12px;
+      font-weight: 760;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      color: #0f5d2e;
+      background: #e8f6ee;
+      border-color: #c8e7d3;
+    }
+
+    .badge.blue {
+      color: #174d82;
+      background: #e8f1fa;
+      border-color: #c9dbec;
+    }
+
+    .badge.amber {
+      color: #875000;
+      background: #fff3df;
+      border-color: #f3d7a5;
+    }
+
+    .badge.red {
+      color: #9b1c14;
+      background: #fdecea;
+      border-color: #f5c8c3;
+    }
+
+    .badge.gray {
+      color: #52606d;
+      background: #edf1f4;
+      border-color: #dae2e8;
+    }
+
+    .company-layout {
+      display: grid;
+      grid-template-columns: minmax(420px, 0.92fr) minmax(520px, 1.08fr);
+      gap: 16px;
+    }
+
+    .thesis {
+      display: grid;
+      gap: 14px;
+    }
+
+    .thesis-head {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .big-score {
+      width: 82px;
+      height: 82px;
+      border: 8px solid #d5ebe4;
+      border-top-color: var(--teal);
+      border-right-color: var(--teal);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 23px;
+      font-weight: 850;
+    }
+
+    .thesis-title {
+      display: grid;
+      gap: 6px;
+    }
+
+    .thesis-title h2 {
+      font-size: 20px;
+      line-height: 1.22;
+    }
+
+    .evidence-list,
+    .signal-list,
+    .risk-list,
+    .event-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .evidence {
+      border-left: 3px solid var(--teal);
+      background: #f7fbfa;
+      padding: 10px 12px;
+      border-radius: 0 7px 7px 0;
+      color: #34414d;
+      line-height: 1.45;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .signal {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      display: grid;
+      gap: 9px;
+      min-height: 94px;
+      background: #fff;
+    }
+
+    .signal-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 760;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .chart {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 178px;
+      padding: 12px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 760;
+    }
+
+    .spark {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      min-height: 100px;
+      border-bottom: 1px solid var(--line);
+      padding: 6px 0 0;
+    }
+
+    .spark span {
+      flex: 1;
+      min-width: 10px;
+      border-radius: 5px 5px 0 0;
+      background: #9bc2db;
+    }
+
+    .spark.green span {
+      background: #89c9a1;
+    }
+
+    .spark.amber span {
+      background: #e8b76d;
+    }
+
+    .chart-foot {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+      gap: 16px;
+    }
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .sector {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      min-height: 118px;
+    }
+
+    .sector h3 {
+      font-size: 14px;
+    }
+
+    .sector-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      gap: 8px;
+    }
+
+    .risk-row,
+    .event-row {
+      box-shadow: none;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .risk-row {
+      grid-template-columns: 110px 1fr auto;
+      align-items: center;
+    }
+
+    .event-row {
+      grid-template-columns: 112px minmax(0, 1fr) 96px;
+      align-items: start;
+    }
+
+    .event-time,
+    .risk-type {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+
+    .event-main {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .event-main strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .workflow-step {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      min-height: 126px;
+    }
+
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: #eaf1f7;
+      color: var(--blue);
+      display: grid;
+      place-items: center;
+      font-weight: 820;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 11px 10px;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: #f8fafb;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    @media (max-width: 1180px) {
+      .metric-grid {
+        grid-template-columns: repeat(3, minmax(150px, 1fr));
+      }
+
+      .dashboard-grid,
+      .company-layout,
+      .section-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .candidate {
+        grid-template-columns: 44px minmax(180px, 1fr) repeat(2, minmax(88px, 0.45fr));
+      }
+
+      .candidate .score-cell:nth-of-type(n+5),
+      .candidate .badge:last-child {
+        display: none;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        height: auto;
+        position: static;
+      }
+
+      .nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .topbar,
+      .page-head {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        height: auto;
+        padding: 14px;
+      }
+
+      .content {
+        padding: 16px 14px 28px;
+      }
+
+      .filters,
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .metric-grid,
+      .signal-grid,
+      .charts,
+      .heatmap,
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+
+      .candidate {
+        grid-template-columns: 40px minmax(0, 1fr);
+      }
+
+      .candidate .score-cell,
+      .candidate .badge {
+        grid-column: 2;
+      }
+
+      .risk-row,
+      .event-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Amritkaal Alpha Engine</div>
+        <div class="brand-subtitle">AAE analyst console preview</div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="active" type="button"><span class="nav-icon">D</span><span>Dashboard</span><span class="nav-count">24</span></button>
+        <button type="button"><span class="nav-icon">C</span><span>Candidates</span><span class="nav-count">118</span></button>
+        <button type="button"><span class="nav-icon">T</span><span>Theses</span><span class="nav-count">42</span></button>
+        <button type="button"><span class="nav-icon">E</span><span>Events</span><span class="nav-count">9</span></button>
+        <button type="button"><span class="nav-icon">S</span><span>Sectors</span><span class="nav-count">18</span></button>
+        <button type="button"><span class="nav-icon">R</span><span>Risk</span><span class="nav-count">7</span></button>
+        <button type="button"><span class="nav-icon">P</span><span>PRDE</span><span class="nav-count">20</span></button>
+        <button type="button"><span class="nav-icon">A</span><span>Audit</span><span class="nav-count">31</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-line"><span>Data foundation</span><strong>PRDE</strong></div>
+        <div class="status-line"><span>Pipeline state</span><strong>Seed phase</strong></div>
+        <div class="status-line"><span>LLM agents</span><strong>Locked</strong></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <label class="search" aria-label="Search companies">
+          <span>⌕</span>
+          <input value="YATHARTH" aria-label="Search input">
+        </label>
+
+        <div class="top-actions">
+          <button class="quiet-button" type="button">Run Scan</button>
+          <button class="quiet-button" type="button">Import CSV</button>
+          <button class="icon-button" type="button" aria-label="Alerts">A</button>
+          <button class="primary-button" type="button">Review Queue</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="page-head">
+          <div>
+            <h1>AAE Research Dashboard</h1>
+            <p class="subtle">Ranked re-rating candidates, financial fingerprints, structural signals, macro context, and thesis-risk monitoring.</p>
+          </div>
+          <div class="filters">
+            <select class="select" aria-label="Universe">
+              <option>India seed universe</option>
+              <option>Nifty 500</option>
+              <option>User watchlists</option>
+            </select>
+            <select class="select" aria-label="Period">
+              <option>As of latest close</option>
+              <option>Quarterly events</option>
+              <option>Weekly scan</option>
+            </select>
+          </div>
+        </div>
+
+        <section class="metric-grid" aria-label="Summary metrics">
+          <div class="metric">
+            <div class="metric-label">Strong Candidates</div>
+            <div class="metric-value">18</div>
+            <div class="metric-foot"><span>Score above 80</span><strong class="positive">+5 wk</strong></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Structural Alerts</div>
+            <div class="metric-value">9</div>
+            <div class="metric-foot"><span>4 of 6 signals active</span><strong class="warning">3 new</strong></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">PRDE Coverage</div>
+            <div class="metric-value">20</div>
+            <div class="metric-foot"><span>Seed companies</span><strong class="positive">ready</strong></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Thesis At Risk</div>
+            <div class="metric-value">4</div>
+            <div class="metric-foot"><span>Persistent red flags</span><strong class="danger">review</strong></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">MRI Confirmed</div>
+            <div class="metric-value">62%</div>
+            <div class="metric-foot"><span>Trend plus regime</span><strong class="positive">risk-on</strong></div>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Ranked Re-Rating Candidates</h2>
+                <p class="subtle">AAE score combines PRDE, structural signals, macro context, risk state, and MRI timing.</p>
+              </div>
+              <div class="tabs" role="tablist" aria-label="Candidate filters">
+                <button class="active" type="button">Strong</button>
+                <button type="button">Emerging</button>
+                <button type="button">Watch</button>
+              </div>
+            </div>
+            <div class="panel-body candidate-list">
+              <article class="candidate">
+                <div class="rank">1</div>
+                <div class="company-cell">
+                  <div class="ticker">YATHARTH</div>
+                  <div class="company-name">Yatharth Hospital · Healthcare</div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">AAE</span>
+                  <span class="score-number">91</span>
+                  <div class="bar"><span style="width:91%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">PRDE</span>
+                  <span class="score-number">88</span>
+                  <div class="bar blue"><span style="width:88%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Struct</span>
+                  <span class="score-number">84</span>
+                  <div class="bar"><span style="width:84%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Risk</span>
+                  <span class="score-number warning">A</span>
+                  <div class="bar amber"><span style="width:42%"></span></div>
+                </div>
+                <span class="badge green">Strong</span>
+              </article>
+
+              <article class="candidate">
+                <div class="rank">2</div>
+                <div class="company-cell">
+                  <div class="ticker">PARAGMILK</div>
+                  <div class="company-name">Parag Milk Foods · Dairy VAP</div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">AAE</span>
+                  <span class="score-number">87</span>
+                  <div class="bar"><span style="width:87%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">PRDE</span>
+                  <span class="score-number">82</span>
+                  <div class="bar blue"><span style="width:82%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Struct</span>
+                  <span class="score-number">89</span>
+                  <div class="bar"><span style="width:89%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Risk</span>
+                  <span class="score-number positive">G</span>
+                  <div class="bar"><span style="width:22%"></span></div>
+                </div>
+                <span class="badge green">Strong</span>
+              </article>
+
+              <article class="candidate">
+                <div class="rank">3</div>
+                <div class="company-cell">
+                  <div class="ticker">ANTONY</div>
+                  <div class="company-name">Antony Waste · Circular Economy</div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">AAE</span>
+                  <span class="score-number">83</span>
+                  <div class="bar"><span style="width:83%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">PRDE</span>
+                  <span class="score-number">79</span>
+                  <div class="bar blue"><span style="width:79%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Struct</span>
+                  <span class="score-number">81</span>
+                  <div class="bar"><span style="width:81%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Risk</span>
+                  <span class="score-number warning">A</span>
+                  <div class="bar amber"><span style="width:38%"></span></div>
+                </div>
+                <span class="badge blue">Emerging</span>
+              </article>
+
+              <article class="candidate">
+                <div class="rank">4</div>
+                <div class="company-cell">
+                  <div class="ticker">NETWEB</div>
+                  <div class="company-name">Netweb Tech · AI Infrastructure</div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">AAE</span>
+                  <span class="score-number">80</span>
+                  <div class="bar"><span style="width:80%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">PRDE</span>
+                  <span class="score-number">74</span>
+                  <div class="bar blue"><span style="width:74%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Struct</span>
+                  <span class="score-number">91</span>
+                  <div class="bar"><span style="width:91%"></span></div>
+                </div>
+                <div class="score-cell">
+                  <span class="score-label">Risk</span>
+                  <span class="score-number danger">R</span>
+                  <div class="bar amber"><span style="width:66%"></span></div>
+                </div>
+                <span class="badge amber">Review</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Event Impact Stream</h2>
+                <p class="subtle">Filings, policy, macro, and market anomalies routed into AAE.</p>
+              </div>
+              <span class="badge gray">Live</span>
+            </div>
+            <div class="panel-body event-list">
+              <div class="event-row">
+                <div class="event-time">09:12</div>
+                <div class="event-main">
+                  <strong>Hospital occupancy expanded across new beds</strong>
+                  <span class="mini-note">Mapped to TAM expansion and operating leverage for YATHARTH.</span>
+                </div>
+                <span class="badge green">+6 score</span>
+              </div>
+              <div class="event-row">
+                <div class="event-time">10:34</div>
+                <div class="event-main">
+                  <strong>Dairy value-added product mix crossed internal threshold</strong>
+                  <span class="mini-note">Margin quality and brand moat signals strengthened for PARAGMILK.</span>
+                </div>
+                <span class="badge green">High</span>
+              </div>
+              <div class="event-row">
+                <div class="event-time">12:08</div>
+                <div class="event-main">
+                  <strong>Receivables days widened above sector band</strong>
+                  <span class="mini-note">Execution monitoring raised amber working-capital flag for ANTONY.</span>
+                </div>
+                <span class="badge amber">Risk</span>
+              </div>
+              <div class="event-row">
+                <div class="event-time">15:52</div>
+                <div class="event-main">
+                  <strong>AI infrastructure policy tailwind refreshed</strong>
+                  <span class="mini-note">Macro correlation score improved for server and data-center suppliers.</span>
+                </div>
+                <span class="badge blue">Sector</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="company-layout">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Company Thesis</h2>
+                <p class="subtle">Versioned research object with evidence and human review state.</p>
+              </div>
+              <span class="badge green">Accepted Draft</span>
+            </div>
+            <div class="panel-body thesis">
+              <div class="thesis-head">
+                <div class="big-score">91</div>
+                <div class="thesis-title">
+                  <h2>Regional hospital platform showing operating leverage and expansion-led re-rating setup</h2>
+                  <p class="subtle">YATHARTH · Healthcare · As of latest quarterly event</p>
+                  <div>
+                    <span class="badge green">Strong Candidate</span>
+                    <span class="badge blue">MRI Confirmed</span>
+                    <span class="badge amber">WC Watch</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="evidence-list">
+                <div class="evidence">Capacity ramp and occupancy improvement align with sales growth acceleration and EBITDA margin expansion.</div>
+                <div class="evidence">ROCE remains above threshold while capex intensity is elevated but controlled.</div>
+                <div class="evidence">Risk dashboard flags receivables monitoring as the main thesis integrity check.</div>
+              </div>
+
+              <div class="workflow">
+                <div class="workflow-step">
+                  <div class="step-number">1</div>
+                  <strong>Machine Thesis</strong>
+                  <span class="mini-note">Generated from PRDE features, structural events, macro context, and MRI overlay.</span>
+                </div>
+                <div class="workflow-step">
+                  <div class="step-number">2</div>
+                  <strong>Analyst Review</strong>
+                  <span class="mini-note">Accept, reject, modify, or override with stored justification.</span>
+                </div>
+                <div class="workflow-step">
+                  <div class="step-number">3</div>
+                  <strong>Watch State</strong>
+                  <span class="mini-note">Ongoing event and risk monitoring updates thesis versions.</span>
+                </div>
+                <div class="workflow-step">
+                  <div class="step-number">4</div>
+                  <strong>Alerting</strong>
+                  <span class="mini-note">Email and dashboard alerts when score or thesis state changes.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Structural Signal Vector</h2>
+                <p class="subtle">Six AAE signals with source-backed conviction.</p>
+              </div>
+              <span class="badge green">4 of 6 active</span>
+            </div>
+            <div class="panel-body signal-grid">
+              <div class="signal">
+                <div class="signal-top"><span>Margin Quality</span><strong>0.88</strong></div>
+                <div class="bar"><span style="width:88%"></span></div>
+                <span class="mini-note">Mix and occupancy improved.</span>
+              </div>
+              <div class="signal">
+                <div class="signal-top"><span>TAM Expansion</span><strong>0.91</strong></div>
+                <div class="bar"><span style="width:91%"></span></div>
+                <span class="mini-note">New beds and geography.</span>
+              </div>
+              <div class="signal">
+                <div class="signal-top"><span>Backward Integration</span><strong>0.32</strong></div>
+                <div class="bar amber"><span style="width:32%"></span></div>
+                <span class="mini-note">Limited current evidence.</span>
+              </div>
+              <div class="signal">
+                <div class="signal-top"><span>Forward Integration</span><strong>0.58</strong></div>
+                <div class="bar blue"><span style="width:58%"></span></div>
+                <span class="mini-note">Patient funnel gains.</span>
+              </div>
+              <div class="signal">
+                <div class="signal-top"><span>Moat Strength</span><strong>0.75</strong></div>
+                <div class="bar"><span style="width:75%"></span></div>
+                <span class="mini-note">Local brand density.</span>
+              </div>
+              <div class="signal">
+                <div class="signal-top"><span>Geo Expansion</span><strong>0.83</strong></div>
+                <div class="bar"><span style="width:83%"></span></div>
+                <span class="mini-note">Cluster expansion active.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Financial Fingerprints</h2>
+                <p class="subtle">Deterministic PRDE features before LLM interpretation.</p>
+              </div>
+              <span class="badge blue">Feature Hash Stable</span>
+            </div>
+            <div class="panel-body charts">
+              <div class="chart">
+                <div class="chart-title"><span>Revenue</span><strong class="positive">18.4% CAGR</strong></div>
+                <div class="spark green">
+                  <span style="height:38%"></span><span style="height:44%"></span><span style="height:51%"></span><span style="height:66%"></span><span style="height:83%"></span>
+                </div>
+                <div class="chart-foot"><span>FY20</span><span>FY24</span></div>
+              </div>
+              <div class="chart">
+                <div class="chart-title"><span>EBITDA</span><strong class="positive">24.7% CAGR</strong></div>
+                <div class="spark green">
+                  <span style="height:31%"></span><span style="height:42%"></span><span style="height:57%"></span><span style="height:76%"></span><span style="height:91%"></span>
+                </div>
+                <div class="chart-foot"><span>DOL strong</span><span>2.1x</span></div>
+              </div>
+              <div class="chart">
+                <div class="chart-title"><span>ROCE</span><strong>18.6%</strong></div>
+                <div class="spark">
+                  <span style="height:52%"></span><span style="height:48%"></span><span style="height:56%"></span><span style="height:65%"></span><span style="height:70%"></span>
+                </div>
+                <div class="chart-foot"><span>Above threshold</span><span>improving</span></div>
+              </div>
+              <div class="chart">
+                <div class="chart-title"><span>FCF / PAT</span><strong class="warning">64%</strong></div>
+                <div class="spark amber">
+                  <span style="height:72%"></span><span style="height:69%"></span><span style="height:62%"></span><span style="height:58%"></span><span style="height:64%"></span>
+                </div>
+                <div class="chart-foot"><span>Monitor</span><span>below ideal</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Risk Dashboard</h2>
+                <p class="subtle">Execution monitoring agent state by thesis integrity category.</p>
+              </div>
+              <span class="badge amber">1 amber</span>
+            </div>
+            <div class="panel-body risk-list">
+              <div class="risk-row">
+                <div class="risk-type">Financial</div>
+                <div>Interest cover and debt ratios remain inside comfort band.</div>
+                <span class="badge green">Green</span>
+              </div>
+              <div class="risk-row">
+                <div class="risk-type">Earnings</div>
+                <div>Cash conversion is acceptable but below ideal quality threshold.</div>
+                <span class="badge amber">Amber</span>
+              </div>
+              <div class="risk-row">
+                <div class="risk-type">Working Cap</div>
+                <div>Receivables trend requires next-quarter confirmation.</div>
+                <span class="badge amber">Amber</span>
+              </div>
+              <div class="risk-row">
+                <div class="risk-type">Governance</div>
+                <div>No active pledge, auditor, or related-party anomaly flag.</div>
+                <span class="badge green">Green</span>
+              </div>
+              <div class="risk-row">
+                <div class="risk-type">Macro</div>
+                <div>Healthcare demand and insurance penetration remain supportive.</div>
+                <span class="badge green">Green</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Sector Lens</h2>
+                <p class="subtle">Macro and structural tailwinds by sector.</p>
+              </div>
+              <span class="badge blue">India V1</span>
+            </div>
+            <div class="panel-body heatmap">
+              <div class="sector">
+                <h3>Healthcare</h3>
+                <div class="bar"><span style="width:86%"></span></div>
+                <div class="sector-meta"><span>Tailwind</span><strong>86</strong></div>
+              </div>
+              <div class="sector">
+                <h3>AI Infrastructure</h3>
+                <div class="bar blue"><span style="width:81%"></span></div>
+                <div class="sector-meta"><span>Policy plus demand</span><strong>81</strong></div>
+              </div>
+              <div class="sector">
+                <h3>Dairy VAP</h3>
+                <div class="bar"><span style="width:78%"></span></div>
+                <div class="sector-meta"><span>Mix shift</span><strong>78</strong></div>
+              </div>
+              <div class="sector">
+                <h3>Defense</h3>
+                <div class="bar amber"><span style="width:69%"></span></div>
+                <div class="sector-meta"><span>Lumpy execution</span><strong>69</strong></div>
+              </div>
+              <div class="sector">
+                <h3>Circular Economy</h3>
+                <div class="bar"><span style="width:74%"></span></div>
+                <div class="sector-meta"><span>Policy tailwind</span><strong>74</strong></div>
+              </div>
+              <div class="sector">
+                <h3>Insurance</h3>
+                <div class="bar blue"><span style="width:67%"></span></div>
+                <div class="sector-meta"><span>Penetration story</span><strong>67</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>PRDE Foundation Status</h2>
+                <p class="subtle">Current implementation sequence from today’s roadmap.</p>
+              </div>
+              <span class="badge gray">Pre-Agent</span>
+            </div>
+            <div class="panel-body table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Layer</th>
+                    <th>Status</th>
+                    <th>Next Proof</th>
+                    <th class="right">Gate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Schema bootstrap</td>
+                    <td><span class="badge green">Done</span></td>
+                    <td>Tables idempotent in startup path</td>
+                    <td class="right">Pass</td>
+                  </tr>
+                  <tr>
+                    <td>CSV contract</td>
+                    <td><span class="badge green">Done</span></td>
+                    <td>Seed file follows template</td>
+                    <td class="right">Pass</td>
+                  </tr>
+                  <tr>
+                    <td>Seed import</td>
+                    <td><span class="badge amber">Next</span></td>
+                    <td>10-20 companies, 5-10 years</td>
+                    <td class="right">Open</td>
+                  </tr>
+                  <tr>
+                    <td>Feature snapshots</td>
+                    <td><span class="badge blue">Ready</span></td>
+                    <td>Stable feature hash</td>
+                    <td class="right">Pending data</td>
+                  </tr>
+                  <tr>
+                    <td>LLM agents</td>
+                    <td><span class="badge gray">Locked</span></td>
+                    <td>Unlock after deterministic scores</td>
+                    <td class="right">Closed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -556,3 +556,14 @@ Decision:
 4. Defer LLM agents until annual financial and ratio data can be imported, validated, and reproduced from stable source rows.
 Reason: PRDE depends on trusted 5-10 year financial statement data. Building the schema and import path first prevents the agent layer from producing convincing but unsupported analysis.
 Status: FINAL.
+
+## Decision 085 — AAE as Product Vision, PRDE as Foundation
+Date: 2026-04-25
+Decision:
+1. Adopt Amritkaal Alpha Engine (AAE) as the long-term product vision: an event-driven, multi-agent Indian equity research platform that produces ranked re-rating candidates, living theses, and risk dashboards.
+2. Treat PRDE as the first implementation layer inside AAE, specifically the deterministic financial fingerprint and re-rating fundamentals foundation.
+3. Keep AAE inside the existing MRI monolith during MVP phases. Reuse FastAPI, Neon PostgreSQL, Railway, current scheduler patterns, SES/email, audit logs, user/watchlist context, MRI trend scores, and market regime overlays.
+4. Sequence implementation conservatively: PRDE import and deterministic features first, deterministic scoring second, then document/event ingestion, structural signal agents, macro/risk agents, orchestrator, and analyst console.
+5. Do not build document RAG, LLM agents, or event orchestration until real financial seed data has been imported, verified, and converted into stable feature snapshots.
+Reason: The new AAE PRD expands the product from a fundamentals-only engine into a full research platform. The safest implementation path is to preserve the current PRDE work as the data foundation and layer event-driven agents only after deterministic financial outputs are reproducible.
+Status: FINAL.

@@ -5,6 +5,9 @@
 - **Actions**:
   - Reviewed the PRD against the current FastAPI/Railway/Neon monolith, pipeline, SES email, audit logging, admin dashboard, and MRI scoring layers.
   - Created `docs/PRDE_INFRASTRUCTURE_PLAN.md` documenting reusable infrastructure, missing capabilities, recommended schema, implementation phases, risks, and the next smallest implementation step.
+  - Incorporated the new Amritkaal Alpha Engine (AAE) PRD as the broader product vision.
+  - Created `docs/AAE_PRD.md` and `docs/AAE_IMPLEMENTATION_ROADMAP.md`.
+  - Logged Decision 085: AAE is the long-term event-driven multi-agent research platform; PRDE is the immediate deterministic financial fingerprint foundation.
 - **Implementation Started**:
   - Added PRDE schema bootstrap tables to `api/schema.py`.
   - Created `docs/PRDE_CSV_IMPORT_CONTRACT.md` for the annual financials/ratios MVP data format.
@@ -15,8 +18,9 @@
   - Created `engine_core/prde_feature_engine.py` for deterministic feature snapshots before LLM scoring.
   - Created `docs/PRDE_TOMORROW_TODO.md` as the next-session execution checklist.
 - **Result**: PRDE is positioned as a fundamentals intelligence layer inside the existing MRI architecture, reusing MRI for price data, regime/trend overlay, scheduling, email delivery, audit logs, and admin visibility.
+- **AAE Result**: The project now has a documented path from PRDE financial fingerprints to event-driven sourcing, structural signal agents, macro/risk agents, orchestrator scoring, thesis versioning, and analyst console workflows.
 - **Verification**: `py_compile` passed for PRDE scripts/schema, importer/verifier/feature-engine help commands work, and the blank template dry-run completed with zero DB writes.
-- **Next Step**: Prepare a small 10-20 company CSV, import and verify it, then run `python engine_core/prde_feature_engine.py --limit 20 --dry-run` before persisting feature snapshots.
+- **Next Step**: Prepare a small 10-20 company CSV, import and verify it, then run `python engine_core/prde_feature_engine.py --limit 20 --dry-run` before persisting feature snapshots. After that, build deterministic financial fingerprint scoring before starting AAE document/event agents.
 
 ## **April 24, 2026 (Evening): STEE Production Audit & Visibility**
 - **Objective**: Finalize the production integration of the STEE engine with a robust audit system and dashboard visibility.
