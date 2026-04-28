@@ -24,3 +24,4 @@ backups/
 .env
 .env
 .venv/
+*.swp
