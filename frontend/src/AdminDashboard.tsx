@@ -282,21 +282,11 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 </tbody>
             </table>
         </div>
+      </section>
+
       <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">💎 Fundamental Quality Leaderboard (QIF)</h3>
         <p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
-        <div className="table-container" style={{ marginTop: '16px' }}>
-            <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Category</th>
-                        <th>Score</th>
-                        <th>Rev/Margin</th>
-                        <th>Lev/WC</th>
-                        <th>ROCE/Evol</th>
-                    </tr>
-                </thead>
         <div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
                 <thead>
