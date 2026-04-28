@@ -9,6 +9,10 @@
   - **Deployment Check:** Confirmed FastAPI serves `api/static`, which is generated from `frontend/dist` during the Docker build; also confirmed this workspace currently lacks `node`/`npm`, so local bundle generation is blocked.
 - **Result**: The frontend source is now aligned for the new landing experience and cleaned up for the new dashboard, with the remaining gap isolated to build/deploy tooling rather than React routing.
 - **Next Step**: Generate the frontend bundle through the Docker path or an installed Node toolchain, then redeploy the monolith so the refreshed UI goes live.
+- **Railway Hotfixes**:
+  - Restored external holdings loading inside `api/portfolio.py` so the positions endpoint stops failing with `NameError: external_rows`.
+  - Hardened `api/actions.py` to tolerate legacy `client_actions` tables that are missing the `notes` column.
+  - Added a schema self-heal for `client_actions.notes` in `api/schema.py` so production can converge on the latest shape automatically.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.

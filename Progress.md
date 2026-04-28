@@ -25,6 +25,11 @@
 1. Install or provide the frontend build toolchain (`node`/`npm`) or run the Docker build path so the updated landing page and dashboard bundle can be generated.
 2. Redeploy the monolith image so `api/static` serves the refreshed frontend in the live environment.
 
+#### 4. Railway Runtime Repairs ✅
+- **Portfolio Fix:** Restored the missing external-holdings fetch in `api/portfolio.py` so `/api/portfolio/positions` no longer crashes on `external_rows`.
+- **Action History Fix:** Hardened `api/actions.py` to work with legacy production databases where `client_actions.notes` has not been added yet.
+- **Schema Refinement:** Added `ALTER TABLE ... ADD COLUMN IF NOT EXISTS notes` to `api/schema.py` so future startups self-heal the missing column.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST

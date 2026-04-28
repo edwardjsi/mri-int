@@ -96,15 +96,31 @@ def get_action_history(
 ):
     """Full audit trail of all client actions."""
     cur = conn.cursor()
-    cur.execute("""
-        SELECT ca.id, ca.action_taken, ca.actual_price, ca.quantity, ca.notes, ca.recorded_at,
+
+    cur.execute(
+        """
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name = 'client_actions' AND column_name = 'notes'
+        ) AS has_notes
+        """
+    )
+    has_notes = bool(cur.fetchone()["has_notes"])
+
+    notes_select = "ca.notes," if has_notes else "NULL::TEXT AS notes,"
+    cur.execute(
+        f"""
+        SELECT ca.id, ca.action_taken, ca.actual_price, ca.quantity, {notes_select} ca.recorded_at,
                cs.date AS signal_date, cs.symbol, cs.action AS signal_action,
                cs.recommended_price, cs.score, cs.regime
         FROM client_actions ca
         JOIN client_signals cs ON cs.id = ca.signal_id
         WHERE ca.client_id = %s
         ORDER BY ca.recorded_at DESC
-    """, (str(client["id"]),))
+        """,
+        (str(client["id"]),),
+    )
     actions = cur.fetchall()
 
     return [

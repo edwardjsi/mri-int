@@ -75,6 +75,22 @@ def get_open_positions(
     )
     swing_rows = cur.fetchall()
 
+    # 3. Fetch External Holdings if the optional table exists
+    external_rows = []
+    try:
+        cur.execute(
+            """
+            SELECT symbol, quantity, avg_cost
+            FROM client_external_holdings
+            WHERE client_id = %s
+            """,
+            (client_id,),
+        )
+        external_rows = cur.fetchall()
+    except Exception:
+        # Older/fresh environments may not have the digital twin table yet.
+        conn.rollback()
+
     positions = []
 
     # Process Core
