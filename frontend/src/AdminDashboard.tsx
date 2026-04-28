@@ -45,6 +45,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [searchTerm, setSearchTerm] = useState('');
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [qualityLeaderboard, setQualityLeaderboard] = useState<any[]>([]);
+  const [topQualityStocks, setTopQualityStocks] = useState<any[]>([]);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -128,11 +129,15 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getTopImprovers(30); setQualityLeaderboard(data); }
       catch (e) { console.error('Quality leaderboard failed', e); }
     };
+    const fetchTopQuality = async () => {
+      try { const data = await api.getTopQualityStocks(6); setTopQualityStocks(data); }
+      catch (e) { console.error('Top quality stocks failed', e); }
+    };
 
     await Promise.allSettled([
       fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), 
       fetchHallOfFame(), fetchShadow(), fetchHealth(), fetchSwingTrades(),
-      fetchAuditLogs(), fetchQualityLeaderboard()
+      fetchAuditLogs(), fetchQualityLeaderboard(), fetchTopQuality()
     ]);
     setLoading(false);
   };
@@ -236,6 +241,105 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       </div>
 
       {error && <div className="error-alert">{error}</div>}
+
+      <section className="section" style={{ marginTop: '24px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.28) 0%, rgba(15, 23, 42, 0.92) 55%, rgba(30, 41, 59, 0.92) 100%)',
+          border: '1px solid rgba(192, 132, 252, 0.22)',
+          borderRadius: '18px',
+          padding: '18px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c084fc', fontWeight: 800 }}>
+                Latest Intelligence Layer
+              </div>
+              <h3 className="section-title" style={{ margin: '6px 0 0 0' }}>QIF + Trajectory Snapshot</h3>
+              <p className="section-subtitle" style={{ marginTop: '8px', maxWidth: '760px' }}>
+                This is the newest admin dashboard layer from the Quality Investor Framework: top compounders on one side, fastest improvers on the other.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(148, 163, 184, 0.16)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Top Quality</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: '#f8fafc' }}>{topQualityStocks.length}</div>
+              </div>
+              <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(148, 163, 184, 0.16)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Fast Improvers</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: '#f8fafc' }}>{qualityLeaderboard.length}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.58)', border: '1px solid rgba(148, 163, 184, 0.14)', borderRadius: '14px', padding: '14px' }}>
+              <div style={{ fontSize: '12px', color: '#e9d5ff', fontWeight: 700, marginBottom: '10px' }}>Top Quality Compounders</div>
+              {topQualityStocks.length > 0 ? (
+                <div style={{ display: 'grid', gap: '10px' }}>
+                  {topQualityStocks.slice(0, 4).map((stock: any) => (
+                    <button
+                      key={`top-quality-${stock.symbol}`}
+                      onClick={() => onSelectStock({ ...stock, symbol: stock.symbol })}
+                      style={{
+                        textAlign: 'left',
+                        background: 'rgba(30, 41, 59, 0.78)',
+                        border: '1px solid rgba(192, 132, 252, 0.18)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        color: '#f8fafc',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                        <span style={{ fontWeight: 800 }}>{stock.symbol}</span>
+                        <span style={{ fontWeight: 800, color: '#86efac' }}>{parseFloat(stock.score || 0).toFixed(1)}</span>
+                      </div>
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: '#cbd5e1' }}>{stock.category || 'HIGH_QUALITY'}</div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state" style={{ padding: '18px 8px' }}>No top-quality data yet. Step 7 needs to populate `quality_verdicts`.</div>
+              )}
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.58)', border: '1px solid rgba(148, 163, 184, 0.14)', borderRadius: '14px', padding: '14px' }}>
+              <div style={{ fontSize: '12px', color: '#e9d5ff', fontWeight: 700, marginBottom: '10px' }}>Fastest Improvers</div>
+              {qualityLeaderboard.length > 0 ? (
+                <div style={{ display: 'grid', gap: '10px' }}>
+                  {qualityLeaderboard.slice(0, 4).map((stock: any) => (
+                    <button
+                      key={`quality-improver-${stock.symbol}`}
+                      onClick={() => onSelectStock({ ...stock, symbol: stock.symbol })}
+                      style={{
+                        textAlign: 'left',
+                        background: 'rgba(30, 41, 59, 0.78)',
+                        border: '1px solid rgba(192, 132, 252, 0.18)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        color: '#f8fafc',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                        <span style={{ fontWeight: 800 }}>{stock.symbol}</span>
+                        <span style={{ fontWeight: 800, color: stock.score_change >= 0 ? '#86efac' : '#fca5a5' }}>
+                          {stock.score_change >= 0 ? '+' : ''}{parseFloat(stock.score_change || 0).toFixed(1)}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: '#cbd5e1' }}>
+                        Velocity {parseFloat(stock.velocity || 0).toFixed(2)} • {stock.category || 'WATCHLIST'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state" style={{ padding: '18px 8px' }}>No improver data yet. The admin page is live, but the newest trajectory feed is still empty.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">🏆 Daily Leaderboard ({dailyLeaderboard.date})</h3>

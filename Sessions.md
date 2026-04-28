@@ -20,6 +20,8 @@
 - **Latest Dashboard Surfacing**:
   - Exposed the new QIF/trajectory layer directly on the default logged-in dashboard in `frontend/src/App.tsx` so the newest intelligence appears immediately instead of staying mostly hidden in the admin page and stock modal.
   - Renamed the admin navigation label to `Platform Intelligence` to match the newer dashboard language.
+- **Admin Visibility Upgrade**:
+  - Added a prominent `Latest Intelligence Layer` snapshot near the top of `frontend/src/AdminDashboard.tsx` so the latest admin-side QIF and trajectory features are visible immediately on page load.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.

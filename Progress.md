@@ -40,6 +40,9 @@
 - **Main Dashboard Upgrade:** Promoted the latest QIF and trajectory intelligence onto the default `DashboardPage` in `frontend/src/App.tsx` so users see quality improvers and live trajectory alerts without needing to discover the admin panel first.
 - **Navigation Language:** Renamed the admin sidebar entry from `Admin Panel` to `Platform Intelligence` to match the newer product framing already used in the page title.
 
+#### 8. Admin Visibility Upgrade ✅
+- **Top-of-Page Admin Snapshot:** Added a prominent `Latest Intelligence Layer` section near the top of `frontend/src/AdminDashboard.tsx` so the newest QIF/trajectory work is immediately visible instead of being buried lower in the admin page.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST
