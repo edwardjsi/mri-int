@@ -22,6 +22,9 @@
   - Renamed the admin navigation label to `Platform Intelligence` to match the newer dashboard language.
 - **Admin Visibility Upgrade**:
   - Added a prominent `Latest Intelligence Layer` snapshot near the top of `frontend/src/AdminDashboard.tsx` so the latest admin-side QIF and trajectory features are visible immediately on page load.
+- **Legacy Action History Fix**:
+  - Hardened `api/actions.py` to work even when `client_actions.recorded_at` is missing in legacy production tables.
+  - Added a schema self-heal for `client_actions.recorded_at` in `api/schema.py` so production converges automatically on startup.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.

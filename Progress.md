@@ -43,6 +43,10 @@
 #### 8. Admin Visibility Upgrade ✅
 - **Top-of-Page Admin Snapshot:** Added a prominent `Latest Intelligence Layer` section near the top of `frontend/src/AdminDashboard.tsx` so the newest QIF/trajectory work is immediately visible instead of being buried lower in the admin page.
 
+#### 9. Action History Legacy Fix ✅
+- **Recorded Timestamp Fallback:** Hardened `api/actions.py` to tolerate legacy `client_actions` tables that are missing `recorded_at`, preventing `/api/actions/history` from crashing in production.
+- **Schema Self-Heal:** Added `ALTER TABLE ... ADD COLUMN IF NOT EXISTS recorded_at` to `api/schema.py` so future startups repair the table automatically.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST

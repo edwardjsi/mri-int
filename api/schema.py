@@ -118,6 +118,7 @@ def ensure_required_tables(conn) -> None:
     cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS actual_price NUMERIC(12,4);""")
     cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS quantity INT;""")
     cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS notes TEXT;""")
+    cur.execute("""ALTER TABLE client_actions ADD COLUMN IF NOT EXISTS recorded_at TIMESTAMPTZ DEFAULT NOW();""")
     # 6. Client Portfolio (Open Positions)
     cur.execute(
         """

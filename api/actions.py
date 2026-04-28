@@ -99,25 +99,35 @@ def get_action_history(
 
     cur.execute(
         """
-        SELECT EXISTS (
-            SELECT 1
-            FROM information_schema.columns
-            WHERE table_name = 'client_actions' AND column_name = 'notes'
-        ) AS has_notes
+        SELECT
+            EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'client_actions' AND column_name = 'notes'
+            ) AS has_notes,
+            EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'client_actions' AND column_name = 'recorded_at'
+            ) AS has_recorded_at
         """
     )
-    has_notes = bool(cur.fetchone()["has_notes"])
+    column_flags = cur.fetchone()
+    has_notes = bool(column_flags["has_notes"])
+    has_recorded_at = bool(column_flags["has_recorded_at"])
 
     notes_select = "ca.notes," if has_notes else "NULL::TEXT AS notes,"
+    recorded_at_select = "ca.recorded_at" if has_recorded_at else "NOW() AS recorded_at"
+    order_by_clause = "ca.recorded_at DESC" if has_recorded_at else "cs.date DESC"
     cur.execute(
         f"""
-        SELECT ca.id, ca.action_taken, ca.actual_price, ca.quantity, {notes_select} ca.recorded_at,
+        SELECT ca.id, ca.action_taken, ca.actual_price, ca.quantity, {notes_select} {recorded_at_select},
                cs.date AS signal_date, cs.symbol, cs.action AS signal_action,
                cs.recommended_price, cs.score, cs.regime
         FROM client_actions ca
         JOIN client_signals cs ON cs.id = ca.signal_id
         WHERE ca.client_id = %s
-        ORDER BY ca.recorded_at DESC
+        ORDER BY {order_by_clause}
         """,
         (str(client["id"]),),
     )
