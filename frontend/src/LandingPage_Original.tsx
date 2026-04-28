@@ -1,15 +1,15 @@
 import { useState } from 'react';
 
 const heroStats = [
-  { label: 'Nifty-beating CAGR', value: '25.4%', detail: 'vs. 11.8% Nifty 50 (17y)' },
-  { label: 'Signals per week', value: '23', detail: 'Delivered at 4:30PM IST weekdays' },
-  { label: 'Accuracy checkpoint', value: '3+ regimes', detail: 'Validated 2008 / 2020 / sideways' },
+  { label: 'System view', value: '3 layers', detail: 'Regime + quality + momentum' },
+  { label: 'Delivery rhythm', value: 'Daily', detail: 'Workflow built for post-market review' },
+  { label: 'Portfolio context', value: 'Live', detail: 'Signals plus holdings visibility' },
 ];
 
 const featureHighlights = [
   {
     title: 'Regime awareness',
-    description: 'Blends SMA-200 regime with 0-100 stock scores to skip Risk-Off stretches.',
+    description: 'Stay selective when the broader tape weakens instead of forcing risk in hostile conditions.',
   },
   {
     title: 'Digital Twin portfolio',
@@ -17,17 +17,17 @@ const featureHighlights = [
   },
   {
     title: 'Automated daily digests',
-    description: 'SES-powered emails keep you updated without opening the dashboard.',
+    description: 'The live experience brings signals, score breakdowns, and holdings context into one operating dashboard.',
   },
 ];
 
 const testimonials = [
   {
-    quote: 'MRI delivered an overnight signal I finally trusted. 14-day free trial made it easy to onboard.',
+    quote: 'The regime filter and score breakdown made it much easier to understand why a setup was worth attention.',
     name: 'Ananya, Retail investor • Bangalore',
   },
   {
-    quote: 'Landing page told the story: regime filter + 0-100 score + persistence. Trial let me backtest real portfolios.',
+    quote: 'I could see portfolio context and timing in one place instead of stitching together multiple tools.',
     name: 'Siddharth, Quant analyst • Mumbai',
   },
 ];
@@ -55,11 +55,11 @@ export function LandingPage_Original({ onRequestAuth }: { onRequestAuth: () => v
       <div className="landing-header">
         <div className="landing-hero-copy">
           <p className="landing-tagline">Market Regime Intelligence</p>
-          <h1>Daily quant signals + portfolio risk visibility for Indian investors.</h1>
-          <p className="landing-subtitle">MRI blends regime filtering, 0-100 trend scores, and persistent holdings to keep you aligned with risk-on opportunities.</p>
+          <h1>Regime-aware momentum for serious Indian investors.</h1>
+          <p className="landing-subtitle">Combine market regime, business quality, and price momentum in one daily workflow so you can focus on strong setups and avoid blind exposure.</p>
           <div className="hero-actions">
-            <button className="btn-primary" onClick={() => onRequestAuth()}>Enter the dashboard</button>
-            <button className="btn-ghost" onClick={() => onRequestAuth()}>Start risk audit</button>
+            <button className="btn-primary" onClick={() => onRequestAuth()}>View Top Opportunities</button>
+            <button className="btn-ghost" onClick={() => onRequestAuth()}>See How It Works</button>
           </div>
           <div className="hero-meta">
             {heroStats.map(stat => (
@@ -72,7 +72,7 @@ export function LandingPage_Original({ onRequestAuth }: { onRequestAuth: () => v
           </div>
         </div>
         <div className="landing-hero-card">
-          <p className="hero-card-title">Reserve your 14-day free trial</p>
+          <p className="hero-card-title">Built for daily decision support</p>
           <form className="landing-trial-form" onSubmit={handleSubmit}>
             <label>
               Work email
@@ -94,10 +94,10 @@ export function LandingPage_Original({ onRequestAuth }: { onRequestAuth: () => v
                 required
               />
             </label>
-            <button type="submit" className="btn-primary">Reserve free trial</button>
+            <button type="submit" className="btn-primary">Open the platform</button>
           </form>
           {status === 'success' && (
-            <p className="landing-form-status">We locked in the trial. Check your inbox — the login panel is ready.</p>
+            <p className="landing-form-status">The login panel is ready. Continue into the platform.</p>
           )}
           {error && (
             <p className="landing-form-error">{error}</p>
