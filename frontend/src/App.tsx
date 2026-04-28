@@ -333,6 +333,11 @@ const features = [
 function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
   return (
     <div className="landing-shell">
+      {/* DEBUG BANNER — remove after confirming deploy */}
+      <div style={{ background: '#7c3aed', color: '#fff', textAlign: 'center', padding: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+        ⚡ Triple-Filter Engine v2.0 — Deployed 2026-04-28
+      </div>
+
       {/* 1) HERO SECTION */}
       <section className="landing-header" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div className="landing-hero-copy">
