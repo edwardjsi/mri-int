@@ -336,7 +336,7 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
       {/* 1) HERO SECTION */}
       <section className="landing-header" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div className="landing-hero-copy">
-          <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Crash-Proof Momentum for Serious Investors</h1>
+          <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Crash-Proof Momentum (v2.0) for Serious Investors</h1>
           <p className="landing-subtitle" style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto 30px' }}>
             Align market regime, business quality, and price momentum—so you enter early, avoid crashes, and compound with conviction.
           </p>
