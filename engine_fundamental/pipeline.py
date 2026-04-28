@@ -139,13 +139,13 @@ def run_quality_pipeline(symbol):
     cur.execute("SELECT score FROM quality_verdicts WHERE symbol = %s", (symbol,))
     row = cur.fetchone()
     if row:
-        prev_score = float(row['score'])
+        prev_score = float(row[0])
         score_change = final_score - prev_score
         
     # Get score history for velocity
     cur.execute("SELECT score FROM quality_verdicts_history WHERE symbol = %s ORDER BY recorded_at DESC LIMIT 5", (symbol,))
     history_rows = cur.fetchall()
-    score_history = [float(r['score']) for r in reversed(history_rows)]
+    score_history = [float(r[0]) for r in reversed(history_rows)]
     score_history.append(final_score)
     
     velocity = compute_score_velocity(score_history)

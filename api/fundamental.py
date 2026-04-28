@@ -1,17 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from engine_core.db import get_db
+from engine_fundamental.pipeline import run_quality_pipeline
+from engine_fundamental.collector import fetch_and_store_financials
 import logging
-
-# Lazy imports to prevent startup crash if engine modules are unavailable
-try:
-    from engine_fundamental.pipeline import run_quality_pipeline
-    from engine_fundamental.collector import fetch_and_store_financials
-    _engines_available = True
-except Exception as _e:
-    _engines_available = False
-    import logging as _log
-    _log.getLogger(__name__).warning(f"engine_fundamental not available: {_e}")
-
 
 router = APIRouter(prefix="/fundamental", tags=["fundamental"])
 logger = logging.getLogger(__name__)

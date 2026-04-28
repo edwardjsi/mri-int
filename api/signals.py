@@ -18,7 +18,8 @@ def get_shadow_signals(conn=Depends(get_db)):
         cur.execute("""
             SELECT s.symbol, s.total_score, s.date,
                    s.condition_ema_50_200, s.condition_ema_200_slope,
-                   s.condition_6m_high, s.condition_volume, s.condition_rs
+                   s.condition_6m_high, s.condition_volume, s.condition_rs,
+                   s.condition_breakout_10d, s.condition_price_quality
             FROM public.stock_scores s
             WHERE s.date = (SELECT MAX(date) FROM public.stock_scores)
             ORDER BY s.total_score DESC, (s.condition_6m_high AND s.condition_volume) DESC, s.symbol ASC
@@ -45,6 +46,8 @@ def get_shadow_signals(conn=Depends(get_db)):
                 "condition_6m_high": bool(c_high),
                 "condition_volume": bool(c_vol),
                 "condition_rs": bool(c_rs),
+                "condition_breakout_10d": bool(r['condition_breakout_10d'] if is_dict else r[8]),
+                "condition_price_quality": bool(r['condition_price_quality'] if is_dict else r[9]),
                 "close": 0,
                 "is_breakout": is_breakout
             })
@@ -98,12 +101,14 @@ def get_todays_signals(
                cs.score, cs.regime, cs.reason,
                ca.action_taken, ca.actual_price, ca.quantity,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
             SELECT condition_ema_50_200, condition_ema_200_slope,
-                   condition_6m_high, condition_volume, condition_rs
+                   condition_6m_high, condition_volume, condition_rs,
+                   condition_breakout_10d, condition_price_quality
             FROM stock_scores
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
@@ -137,6 +142,8 @@ def get_todays_signals(
                     "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[13]),
                     "volume_surge": bool(s["condition_volume"] if is_dict else s[14]),
                     "relative_strength": bool(s["condition_rs"] if is_dict else s[15]),
+                    "breakout_10d": bool(s["condition_breakout_10d"] if is_dict else s[16]),
+                    "price_quality": bool(s["condition_price_quality"] if is_dict else s[17]),
                 } if (s["condition_ema_50_200"] if is_dict else s[11]) is not None else None
             }
             for s in signals
@@ -155,12 +162,14 @@ def get_pending_signals(
         SELECT cs.id, cs.date, cs.symbol, cs.action, cs.recommended_price,
                cs.score, cs.regime, cs.reason,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
             SELECT condition_ema_50_200, condition_ema_200_slope,
-                   condition_6m_high, condition_volume, condition_rs
+                   condition_6m_high, condition_volume, condition_rs,
+                   condition_breakout_10d, condition_price_quality
             FROM stock_scores
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
@@ -190,6 +199,8 @@ def get_pending_signals(
                 "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[10]),
                 "volume_surge": bool(s["condition_volume"] if is_dict else s[11]),
                 "relative_strength": bool(s["condition_rs"] if is_dict else s[12]),
+                "breakout_10d": bool(s["condition_breakout_10d"] if is_dict else s[13]),
+                "price_quality": bool(s["condition_price_quality"] if is_dict else s[14]),
             } if (s["condition_ema_50_200"] if is_dict else s[8]) is not None else None
         }
         for s in signals
@@ -209,12 +220,14 @@ def get_signal_history(
                cs.score, cs.regime, cs.reason,
                ca.action_taken, ca.actual_price, ca.quantity,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
             SELECT condition_ema_50_200, condition_ema_200_slope,
-                   condition_6m_high, condition_volume, condition_rs
+                   condition_6m_high, condition_volume, condition_rs,
+                   condition_breakout_10d, condition_price_quality
             FROM stock_scores
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
@@ -247,6 +260,8 @@ def get_signal_history(
                 "at_6m_high": bool(s["condition_6m_high"] if is_dict else s[13]),
                 "volume_surge": bool(s["condition_volume"] if is_dict else s[14]),
                 "relative_strength": bool(s["condition_rs"] if is_dict else s[15]),
+                "breakout_10d": bool(s["condition_breakout_10d"] if is_dict else s[16]),
+                "price_quality": bool(s["condition_price_quality"] if is_dict else s[17]),
             } if (s["condition_ema_50_200"] if is_dict else s[11]) is not None else None
         }
         for s in signals
@@ -264,6 +279,7 @@ def get_screener(
         SELECT ss.symbol, ss.total_score, ss.date,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
                ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality,
                dp.close, dp.volume
         FROM stock_scores ss
         JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
@@ -291,6 +307,8 @@ def get_screener(
                     "6m_high": s["condition_6m_high"] if is_dict else s[5],
                     "volume": s["condition_volume"] if is_dict else s[6],
                     "relative_strength": s["condition_rs"] if is_dict else s[7],
+                    "breakout_10d": s["condition_breakout_10d"] if is_dict else s[8],
+                    "price_quality": s["condition_price_quality"] if is_dict else s[9],
                 },
             }
             for s in stocks

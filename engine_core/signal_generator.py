@@ -65,6 +65,9 @@ def get_latest_scores(cur, min_score=0):
     """
     cur.execute("""
         SELECT ss.symbol, ss.total_score, ss.date,
+               ss.condition_ema_50_200, ss.condition_ema_200_slope,
+               ss.condition_rs, ss.condition_6m_high, ss.condition_volume,
+               ss.condition_breakout_10d, ss.condition_price_quality,
                COALESCE(dp.rs_90d, 0) AS rs_90d,
                COALESCE(dp.avg_volume_20d * dp.close, 0) AS adtv
         FROM stock_scores ss
@@ -134,6 +137,13 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
                     "score": score,
                     "regime": regime,
                     "reason": f"SCORE_LOW: Score={score} <= {MAX_SELL_SCORE}, trend deteriorating",
+                    "condition_ema_50_200": False,
+                    "condition_ema_200_slope": False,
+                    "condition_rs": False,
+                    "condition_6m_high": False,
+                    "condition_volume": False,
+                    "condition_breakout_10d": False,
+                    "condition_price_quality": False,
                 })
 
     # ── BUY SIGNALS ──
@@ -187,7 +197,14 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
                 "recommended_price": price_data.get("close"),
                 "score": stock["total_score"],
                 "regime": regime,
-                "reason": f"Score={stock['total_score']}, RS={stock.get('rs_90d', 0):.1%}, ADTV=₹{adtv_cr:.0f}Cr, Regime=BULL",
+                "reason": f"7-Step Score={stock['total_score']} {'(Golden Setup 🚀)' if stock['total_score'] == 100 else ''}",
+                "condition_ema_50_200": stock["condition_ema_50_200"],
+                "condition_ema_200_slope": stock["condition_ema_200_slope"],
+                "condition_rs": stock["condition_rs"],
+                "condition_6m_high": stock["condition_6m_high"],
+                "condition_volume": stock["condition_volume"],
+                "condition_breakout_10d": stock["condition_breakout_10d"],
+                "condition_price_quality": stock["condition_price_quality"],
             })
 
     return signals
@@ -317,9 +334,15 @@ def run_signal_generator():
 
         if signals:
             sql = """
-                INSERT INTO client_signals (client_id, date, symbol, action, recommended_price, score, regime, reason)
-                VALUES (%(client_id)s, %(date)s, %(symbol)s, %(action)s, %(recommended_price)s, %(score)s, %(regime)s, %(reason)s)
-                ON CONFLICT (client_id, date, symbol, action) DO NOTHING
+                INSERT INTO client_signals (
+                    client_id, date, symbol, action, recommended_price, score, regime, reason,
+                    condition_ema_50_200, condition_ema_200_slope, condition_rs, 
+                    condition_6m_high, condition_volume, condition_breakout_10d, condition_price_quality
+                ) VALUES (
+                    %(client_id)s, %(date)s, %(symbol)s, %(action)s, %(recommended_price)s, %(score)s, %(regime)s, %(reason)s,
+                    %(condition_ema_50_200)s, %(condition_ema_200_slope)s, %(condition_rs)s,
+                    %(condition_6m_high)s, %(condition_volume)s, %(condition_breakout_10d)s, %(condition_price_quality)s
+                ) ON CONFLICT (client_id, date, symbol, action) DO NOTHING
             """
             execute_batch(cur, sql, signals, page_size=100)
             total_signals += len(signals)

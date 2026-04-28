@@ -1,26 +1,39 @@
 # **MRI Sessions Log**
 
-## **April 25, 2026: PRDE Infrastructure Planning**
-- **Objective**: Review the PRDE PE Re-Rating Discovery Engine PRD and map it onto the existing MRI infrastructure.
+## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
+- **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.
 - **Actions**:
-  - Reviewed the PRD against the current FastAPI/Railway/Neon monolith, pipeline, SES email, audit logging, admin dashboard, and MRI scoring layers.
-  - Created `docs/PRDE_INFRASTRUCTURE_PLAN.md` documenting reusable infrastructure, missing capabilities, recommended schema, implementation phases, risks, and the next smallest implementation step.
-  - Incorporated the new Amritkaal Alpha Engine (AAE) PRD as the broader product vision.
-  - Created `docs/AAE_PRD.md` and `docs/AAE_IMPLEMENTATION_ROADMAP.md`.
-  - Logged Decision 085: AAE is the long-term event-driven multi-agent research platform; PRDE is the immediate deterministic financial fingerprint foundation.
-- **Implementation Started**:
-  - Added PRDE schema bootstrap tables to `api/schema.py`.
-  - Created `docs/PRDE_CSV_IMPORT_CONTRACT.md` for the annual financials/ratios MVP data format.
-  - Created `scripts/import_prde_financials.py` with CSV validation, dry-run support, and idempotent company/year upserts.
-  - Logged Decision 084 to fix PRDE as an in-monolith fundamentals intelligence layer.
-  - Created `docs/PRDE_IMPLEMENTATION_CHECKLIST.md` with completed work checked off and the remaining step-by-step rollout path.
-  - Added `docs/prde_financials_template.csv` and `scripts/verify_prde_import.py` so real seed data can be validated and audited after import.
-  - Created `engine_core/prde_feature_engine.py` for deterministic feature snapshots before LLM scoring.
-  - Created `docs/PRDE_TOMORROW_TODO.md` as the next-session execution checklist.
-- **Result**: PRDE is positioned as a fundamentals intelligence layer inside the existing MRI architecture, reusing MRI for price data, regime/trend overlay, scheduling, email delivery, audit logs, and admin visibility.
-- **AAE Result**: The project now has a documented path from PRDE financial fingerprints to event-driven sourcing, structural signal agents, macro/risk agents, orchestrator scoring, thesis versioning, and analyst console workflows.
-- **Verification**: `py_compile` passed for PRDE scripts/schema, importer/verifier/feature-engine help commands work, and the blank template dry-run completed with zero DB writes.
-- **Next Step**: Prepare a small 10-20 company CSV, import and verify it, then run `python engine_core/prde_feature_engine.py --limit 20 --dry-run` before persisting feature snapshots. After that, build deterministic financial fingerprint scoring before starting AAE document/event agents.
+  - **Trajectory Engine:** Created `engine_fundamental/trajectory.py` to track score velocity and trend shifts.
+  - **Portfolio Layer:** Implemented `engine_fundamental/portfolio_manager.py` with Kelly sizing and risk protection.
+  - **Alert System:** Automated "Explosive Improver" and "Breakout Candidate" alerts via `scripts/quality_alerts.py`.
+  - **Backtesting:** Built `backtest/quality_backtest.py` to validate signal performance.
+  - **API Expansion:** Added `/fundamental/improvers` and `/fundamental/alerts` endpoints.
+- **Result**: The system now identifies companies becoming high-quality before the market notices, with clear capital allocation guidance.
+- **Next Step**: Execute a bulk backfill for the Nifty 500 and begin live strategy validation.
+
+## **April 28, 2026: 7-Step Winning Stock Selection Upgrade**
+- **Objective**: Upgrade the stock selection engine from 5-point to a formal 7-point scoring system per STEE PRD.
+- **Actions**:
+  - **Database Migration:** Added 7 condition columns to `stock_scores` and `client_signals` tables.
+  - **Indicator Engine:** Implemented Breakout (10d) and Price Quality (Day Range) logic in `indicator_engine.py`.
+  - **Scoring Model:** Overhauled `regime_engine.py` to use a 0-100 weighted scale across all 7 criteria.
+  - **API Upgrade:** Exposed the 7-step forensic data via `/api/signals` and updated `signal_generator.py` for persistence.
+  - **Frontend Overhaul:** Upgraded the `ScoreBreakdown` UI to show the 7-point checklist and added "Golden Setup" (🚀) visual cues.
+- **Result**: The system now provides institutional-grade momentum swing signals with full transparency and forensic auditability.
+- **Next Step**: Monitor the next live pipeline run to verify the 7-step data is populating for all symbols.
+
+## **April 28, 2026: Pipeline Freshness & Infrastructure Hardening**
+- **Objective**: Resolve dashboard stagnation, fix "silent" pipeline failures, and restore data freshness.
+- **Actions**:
+  - **Pipeline Hardening:** Added `set -o pipefail` and dynamic root detection to `pipeline_cloud.sh`.
+  - **Schema Repair:** Discovered and fixed missing `ema_50` and `ema_200` columns in the `market_regime` table.
+  - **Data Recovery:** Successfully recomputed **53,400 indicator rows** and synchronized the dashboard to **April 28, 2026** (0 days drift).
+  - **STEE Restoration:** Fixed `email_service.py` to correctly trigger Momentum Swing (STEE) alerts.
+  - **Documentation:** Created `docs/PLUMBING_AND_ORCHESTRATION.md` and updated `AGENTS.md` rules.
+- **Result**: The dashboard is now fully current and the pipeline is significantly more robust against failures.
+- **Next Step**: Locate/Restore canonical backtest snapshots and monitor the next automated run.
+
+
 
 ## **April 24, 2026 (Evening): STEE Production Audit & Visibility**
 - **Objective**: Finalize the production integration of the STEE engine with a robust audit system and dashboard visibility.

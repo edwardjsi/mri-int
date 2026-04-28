@@ -13,7 +13,9 @@ REGION="ap-south-1"
 RDS_INSTANCE="mri-dev-db"
 RDS_ENDPOINT="mri-dev-db.c9a44u2kqcf8.ap-south-1.rds.amazonaws.com"
 LOCAL_DB_PORT="5433"
-PROJECT_DIR="/home/edwar/mri-int"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 TF_DIR="$PROJECT_DIR/terraform/environments/dev"
 LOG_DIR="$PROJECT_DIR/logs"
 

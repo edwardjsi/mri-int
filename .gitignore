@@ -16,6 +16,8 @@ __pycache__/
 *.pyd
 .Python
 
+# OpenAI API (Use .env file instead)
+
 # Terraform state
 *.tfstate
 *.tfstate.backup

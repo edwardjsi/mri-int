@@ -6,6 +6,7 @@ Before writing or modifying any code:
 
 **Read:**
 - `Readme.md` and `.llm-context.md` (Project Context)
+- `docs/PLUMBING_AND_ORCHESTRATION.md` (System Map & Data Flow)
 - `Decisions.md` (Decision Log)
 - `Sessions.md` (Session Summary)
 - `Progress.md` and `Tasks.md` (Milestones and Tasks)

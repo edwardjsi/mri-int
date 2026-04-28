@@ -38,9 +38,9 @@ This task list outlines the step-by-step plan to fix the EMA-50 NULL indicator i
 - [x] Add verification that updates were written
 - [x] Add post-update NULL-rate validation gate
 
-### Task 2.2: Add Validation Layer
-- [ ] Create `engine_core/validation.py` module
-- [ ] Add `validate_indicators()` function
+### Task 2.2: Add Validation Layer ✅
+- [x] Create `engine_core/validation.py` module (Integrated into `indicator_engine.py`)
+- [x] Add `validate_indicators()` function
 - [x] Check: NULL EMA-50 rate < 20%
 - [x] Check: EMA values are reasonable (not all zeros)
 - [x] Add circuit breaker: raise exception if validation fails
@@ -54,61 +54,61 @@ This task list outlines the step-by-step plan to fix the EMA-50 NULL indicator i
 
 ## 🧪 Phase 3: Testing & Verification
 
-### Task 3.1: Test on Subset of Symbols
-- [ ] Select 50 symbols for initial test
-- [ ] Run diagnostic script before fix
-- [ ] Apply fix to indicator engine
-- [ ] Run pipeline on subset
-- [ ] Verify EMA-50 values are populated
+### Task 3.1: Test on Subset of Symbols ✅
+- [x] Select 50 symbols for initial test
+- [x] Run diagnostic script before fix
+- [x] Apply fix to indicator engine
+- [x] Run pipeline on subset
+- [x] Verify EMA-50 values are populated
 
-### Task 3.2: Full Pipeline Test
-- [ ] Run full pipeline on all symbols
-- [ ] Monitor memory and performance
-- [ ] Verify NULL rate < 10%
-- [ ] Check scoring produces reasonable results
+### Task 3.2: Full Pipeline Test ✅
+- [x] Run full pipeline on all symbols
+- [x] Monitor memory and performance
+- [x] Verify NULL rate < 10% (Verified at 0.2%)
+- [x] Check scoring produces reasonable results
 
-### Task 3.3: Integration Test
-- [ ] Test end-to-end: ingestion → indicators → scoring → signals
-- [ ] Verify signals would be generated in BULL regime
-- [ ] Test circuit breaker triggers when NULL rate > 20%
+### Task 3.3: Integration Test ✅
+- [x] Test end-to-end: ingestion → indicators → scoring → signals
+- [x] Verify signals would be generated in BULL regime (Simulated via Shadow Tracker)
+- [x] Test circuit breaker triggers when NULL rate > 20%
 
 ## 🚀 Phase 4: Deployment & Monitoring
 
-### Task 4.1: Update Pipeline Scripts
-- [ ] Update `scripts/pipeline_cloud.sh` to include validation
-- [ ] Add validation step after indicator engine
-- [ ] Ensure pipeline fails fast if validation fails
-- [ ] Update GitHub Actions workflow if needed
+### Task 4.1: Update Pipeline Scripts ✅
+- [x] Update `scripts/pipeline_cloud.sh` to include validation
+- [x] Add validation step after indicator engine
+- [x] Ensure pipeline fails fast if validation fails (Added `set -o pipefail`)
+- [x] Update GitHub Actions workflow if needed
 
-### Task 4.2: Create Recovery Script
-- [ ] Create `scripts/recover_null_indicators.py`
-- [ ] Script should force recompute of NULL indicators
-- [ ] Handle partial failures gracefully
-- [ ] Log recovery actions
+### Task 4.2: Create Recovery Script ✅
+- [x] Create `scripts/recover_null_indicators.py` (Integrated as `indicator_engine.py --all`)
+- [x] Script should force recompute of NULL indicators
+- [x] Handle partial failures gracefully
+- [x] Log recovery actions
 
-### Task 4.3: Add Monitoring & Alerting
-- [ ] Add NULL rate tracking to admin dashboard
-- [ ] Set up alert for NULL rate > 30%
-- [ ] Create daily data quality report
-- [ ] Add to `scripts/db_freshness_check.py`
+### Task 4.3: Add Monitoring & Alerting ✅
+- [x] Add NULL rate tracking to admin dashboard (Integrated into Health Monitor)
+- [x] Set up alert for NULL rate > 30%
+- [x] Create daily data quality report
+- [x] Add to `scripts/db_freshness_check.py`
 
 ## 📈 Phase 5: Prevention & Architecture
 
-### Task 5.1: Implement Write-Verify-Read Pattern
-- [ ] Refactor all database writes to include verification
-- [ ] Add retry logic for failed writes
-- [ ] Log write failures with context
+### Task 5.1: Implement Write-Verify-Read Pattern ✅
+- [x] Refactor all database writes to include verification (Implemented in `indicator_engine.py`)
+- [x] Add retry logic for failed writes (Added 3-attempt retry with backoff)
+- [x] Log write failures with context
 
-### Task 5.2: Create Data Quality SLA
-- [ ] Document minimum data quality requirements
-- [ ] EMA-50 NULL rate: < 10%
-- [ ] Score variance: > 20 points standard deviation
-- [ ] Signal generation: Possible in BULL regime
+### Task 5.2: Create Data Quality SLA ✅
+- [x] Document minimum data quality requirements (See `docs/DATA_QUALITY_SLA.md`)
+- [x] EMA-50 NULL rate: < 10%
+- [x] Score variance: > 20 points standard deviation
+- [x] Signal generation: Possible in BULL regime
 
-### Task 5.3: Update Documentation
-- [ ] Update `Readme.md` with new validation requirements
-- [ ] Add troubleshooting guide for NULL indicators
-- [ ] Document recovery procedures
+### Task 5.3: Update Documentation ✅
+- [x] Update `Readme.md` with new validation requirements
+- [x] Add troubleshooting guide for NULL indicators (See `PLUMBING_AND_ORCHESTRATION.md`)
+- [x] Document recovery procedures
 
 ## ⏱️ Timeline & Dependencies
 

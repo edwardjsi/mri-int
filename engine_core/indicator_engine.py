@@ -30,6 +30,8 @@ INDICATOR_COLUMNS = (
     ("high_10d", "NUMERIC"),
     ("low_5d", "NUMERIC"),
     ("atr_14", "NUMERIC"),
+    ("condition_breakout_10d", "BOOLEAN"),
+    ("condition_price_quality", "NUMERIC"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing
@@ -212,6 +214,12 @@ def compute_indicators(df, idx_df):
         tr3 = (s_df["low"] - s_df["close"].shift(1)).abs()
         tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         s_df["atr_14"] = tr.rolling(window=14).mean()
+        
+        # 7-Step System expansion
+        s_df["condition_breakout_10d"] = (s_df["close"] > s_df["high_10d"]).astype(bool)
+        # Price Quality (Close Range): (Close - Low) / (High - Low)
+        s_df["price_quality"] = (s_df["close"] - s_df["low"]) / (s_df["high"] - s_df["low"] + 1e-9)
+        s_df["condition_price_quality"] = (s_df["price_quality"] >= 0.7).astype(bool)
 
         if not idx_df.empty:
             merged = pd.merge(
@@ -246,6 +254,8 @@ def compute_indicators(df, idx_df):
                     "high_10d": row.get("high_10d"),
                     "low_5d": row.get("low_5d"),
                     "atr_14": row.get("atr_14"),
+                    "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
+                    "condition_price_quality": row.get("price_quality"),
                 }
             )
 
@@ -306,40 +316,50 @@ def verify_updates_written(updates, sample_size=50):
         conn.close()
 
 
-def update_db_with_indicators(updates):
-    """Write computed indicators back to daily_prices."""
+def update_db_with_indicators(updates, max_retries=3):
+    """Write computed indicators back to daily_prices with retry logic."""
     if not updates:
         raise IndicatorComputationError("No indicator updates produced")
 
-    conn = get_connection()
-    try:
-        with conn.cursor() as cur:
-            sql = """
-                UPDATE daily_prices
-                SET ema_10 = %(ema_10)s,
-                    ema_20 = %(ema_20)s,
-                    ema_50 = %(ema_50)s,
-                    ema_200 = %(ema_200)s,
-                    rsi_14 = %(rsi_14)s,
-                    below_200ema = %(below_200ema)s,
-                    ema_200_slope_20 = %(ema_200_slope_20)s,
-                    rolling_high_6m = %(rolling_high_6m)s,
-                    avg_volume_20d = %(avg_volume_20d)s,
-                    rs_90d = %(rs_90d)s,
-                    high_10d = %(high_10d)s,
-                    low_5d = %(low_5d)s,
-                    atr_14 = %(atr_14)s
-                WHERE symbol = %(symbol)s AND date = %(date)s
-            """
-            execute_batch(cur, sql, updates, page_size=2000)
-        conn.commit()
-        logger.info("Wrote %d indicator updates to DB", len(updates))
-        verify_updates_written(updates)
-    except Exception as exc:
-        conn.rollback()
-        raise IndicatorComputationError(f"Failed to update indicators: {exc}") from exc
-    finally:
-        conn.close()
+    for attempt in range(1, max_retries + 1):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                sql = """
+                    UPDATE daily_prices
+                    SET ema_10 = %(ema_10)s,
+                        ema_20 = %(ema_20)s,
+                        ema_50 = %(ema_50)s,
+                        ema_200 = %(ema_200)s,
+                        rsi_14 = %(rsi_14)s,
+                        below_200ema = %(below_200ema)s,
+                        ema_200_slope_20 = %(ema_200_slope_20)s,
+                        rolling_high_6m = %(rolling_high_6m)s,
+                        avg_volume_20d = %(avg_volume_20d)s,
+                        rs_90d = %(rs_90d)s,
+                        high_10d = %(high_10d)s,
+                        low_5d = %(low_5d)s,
+                        atr_14 = %(atr_14)s,
+                        condition_breakout_10d = %(condition_breakout_10d)s,
+                        condition_price_quality = %(condition_price_quality)s
+                    WHERE symbol = %(symbol)s AND date = %(date)s
+                """
+                execute_batch(cur, sql, updates, page_size=2000)
+            conn.commit()
+            logger.info("Wrote %d indicator updates to DB (Attempt %d)", len(updates), attempt)
+            verify_updates_written(updates)
+            return  # Success
+        except Exception as exc:
+            if conn:
+                conn.rollback()
+            logger.warning("Attempt %d failed to update indicators: %s", attempt, exc)
+            if attempt == max_retries:
+                raise IndicatorComputationError(f"Failed to update indicators after {max_retries} attempts: {exc}") from exc
+            import time
+            time.sleep(2 * attempt)  # Exponential backoff
+        finally:
+            if conn:
+                conn.close()
 
 
 def validate_indicators_after_update():

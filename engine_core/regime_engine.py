@@ -24,6 +24,17 @@ def create_market_regime_and_scores_tables():
             classification VARCHAR(20)
         );
 
+        -- Column Migration: Ensure columns exist if table was created in a previous version
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='market_regime' AND column_name='ema_50') THEN
+                ALTER TABLE market_regime ADD COLUMN ema_50 NUMERIC(12,4);
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='market_regime' AND column_name='ema_200') THEN
+                ALTER TABLE market_regime ADD COLUMN ema_200 NUMERIC(12,4);
+            END IF;
+        END $$;
+
         CREATE TABLE IF NOT EXISTS stock_scores (
             date DATE,
             symbol VARCHAR(20),
@@ -33,8 +44,21 @@ def create_market_regime_and_scores_tables():
             condition_6m_high BOOLEAN,
             condition_volume BOOLEAN,
             condition_rs BOOLEAN,
+            condition_breakout_10d BOOLEAN,
+            condition_price_quality BOOLEAN,
             PRIMARY KEY (date, symbol)
         );
+
+        -- Score Table Migration
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stock_scores' AND column_name='condition_breakout_10d') THEN
+                ALTER TABLE stock_scores ADD COLUMN condition_breakout_10d BOOLEAN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stock_scores' AND column_name='condition_price_quality') THEN
+                ALTER TABLE stock_scores ADD COLUMN condition_price_quality BOOLEAN;
+            END IF;
+        END $$;
         
         CREATE INDEX IF NOT EXISTS idx_stock_scores_date ON stock_scores(date);
         CREATE INDEX IF NOT EXISTS idx_stock_scores_symbol_date ON stock_scores(symbol, date DESC);
@@ -155,8 +179,9 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
     try:
         # 1. Fetch data - use a long enough window to compute ADX/RSI and score components
         sql = """
-            SELECT dp.symbol, dp.date, dp.close, dp.volume, dp.ema_50, dp.ema_200,
-                   dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d
+            SELECT dp.symbol, dp.date, dp.high, dp.low, dp.close, dp.volume, dp.ema_50, dp.ema_200,
+                   dp.ema_200_slope_20, dp.rolling_high_6m, dp.avg_volume_20d, dp.rs_90d,
+                   dp.high_10d
             FROM daily_prices dp
             WHERE dp.symbol = ANY(%s)
             AND dp.date >= (SELECT MAX(date) FROM daily_prices) - INTERVAL '255 days'
@@ -217,23 +242,30 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['condition_ema_50_200'] = (df['ema_50'] >= df['ema_200']).astype(bool)
         df['condition_ema_200_slope'] = (df['ema_200_slope_20'] >= 0).astype(bool)
         df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m'] * 0.99).astype(bool)
-        df['condition_volume'] = (df['volume'] > (1.3 * df['avg_volume_20d'])).astype(bool)
+        df['condition_volume'] = (df['volume'] > (1.5 * df['avg_volume_20d'])).astype(bool)
         df['condition_rs'] = (df['rs_90d'] > 0).astype(bool)
+        df['condition_breakout_10d'] = (df['close'] > df['high_10d']).astype(bool)
+        # Price Quality: Top 30% of day's range
+        df['price_range'] = df['high'] - df['low']
+        df['condition_price_quality'] = ((df['close'] - df['low']) / (df['price_range'] + 1e-9) >= 0.7).astype(bool)
 
-        # Apply Weights (Total = 100)
+        # Apply 7-Step Weights (Total = 100)
         df['total_score'] = (
-            df['condition_ema_50_200'].astype(int) * 25 +
-            df['condition_ema_200_slope'].astype(int) * 25 +
-            df['condition_rs'].astype(int) * 20 +
-            df['condition_6m_high'].astype(int) * 20 +
-            df['condition_volume'].astype(int) * 10
+            df['condition_ema_50_200'].astype(int) * 25 +      # 1. Trend
+            df['condition_ema_200_slope'].astype(int) * 25 +   # 2. Slope
+            df['condition_rs'].astype(int) * 15 +             # 3. RS
+            df['condition_6m_high'].astype(int) * 15 +         # 4. Proximity
+            df['condition_breakout_10d'].astype(int) * 10 +   # 5. Breakout
+            df['condition_volume'].astype(int) * 5 +          # 6. Volume
+            df['condition_price_quality'].astype(int) * 5      # 7. Quality
         )
 
         # 4. Write back to DB
         df = df.replace({np.nan: None})
         update_data = df[['date', 'symbol', 'total_score', 'condition_ema_50_200', 
                           'condition_ema_200_slope', 'condition_6m_high', 
-                          'condition_volume', 'condition_rs']].to_dict('records')
+                          'condition_volume', 'condition_rs', 'condition_breakout_10d',
+                          'condition_price_quality']].to_dict('records')
 
         # Log Top 5 stocks for latest date to debug Golden Path
         latest_scored = df[df['date'] == latest_date].sort_values('total_score', ascending=False).head(10)
@@ -244,17 +276,21 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         cur = conn.cursor()
         insert_sql = """
             INSERT INTO stock_scores (date, symbol, total_score, condition_ema_50_200,
-                condition_ema_200_slope, condition_6m_high, condition_volume, condition_rs
+                condition_ema_200_slope, condition_6m_high, condition_volume, condition_rs,
+                condition_breakout_10d, condition_price_quality
             ) VALUES (
                 %(date)s, %(symbol)s, %(total_score)s, %(condition_ema_50_200)s,
-                %(condition_ema_200_slope)s, %(condition_6m_high)s, %(condition_volume)s, %(condition_rs)s
+                %(condition_ema_200_slope)s, %(condition_6m_high)s, %(condition_volume)s, %(condition_rs)s,
+                %(condition_breakout_10d)s, %(condition_price_quality)s
             ) ON CONFLICT (date, symbol) DO UPDATE SET
                 total_score = EXCLUDED.total_score,
                 condition_ema_50_200 = EXCLUDED.condition_ema_50_200,
                 condition_ema_200_slope = EXCLUDED.condition_ema_200_slope,
                 condition_6m_high = EXCLUDED.condition_6m_high,
                 condition_volume = EXCLUDED.condition_volume,
-                condition_rs = EXCLUDED.condition_rs;
+                condition_rs = EXCLUDED.condition_rs,
+                condition_breakout_10d = EXCLUDED.condition_breakout_10d,
+                condition_price_quality = EXCLUDED.condition_price_quality;
         """
         execute_batch(cur, insert_sql, update_data, page_size=5000)
         conn.commit()

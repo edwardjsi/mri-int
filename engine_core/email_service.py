@@ -643,3 +643,4 @@ def send_alert_email(subject: str, message_html: str):
 
 if __name__ == "__main__":
     send_signal_emails()
+    send_stee_signal_emails()
