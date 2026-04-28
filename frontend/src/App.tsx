@@ -835,8 +835,7 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
       <DailySummaryCard summary={summary} />
 
-      {(qualityImprovers.length > 0 || trajectoryAlerts.length > 0) && (
-        <section className="section">
+      <section className="section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <div>
               <h2 className="section-title" style={{ margin: 0 }}>💎 Quality Intelligence</h2>
@@ -851,56 +850,62 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             )}
           </div>
 
-          <div className="signals-grid">
-            {qualityImprovers.map((stock: any) => (
-              <div
-                key={`quality-${stock.symbol}`}
-                className="signal-card clickable-row"
-                style={{ borderLeft: '4px solid #a855f7' }}
-                onClick={() => onSelectStock({ ...stock, symbol: stock.symbol })}
-              >
-                <div className="signal-header">
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span className="signal-symbol">{stock.symbol}</span>
-                    <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#c084fc', fontWeight: 800 }}>
-                      {stock.score_change > 5 ? '🚀 BREAKOUT CANDIDATE' : '📈 QUALITY IMPROVER'}
+          {qualityImprovers.length > 0 ? (
+            <div className="signals-grid">
+              {qualityImprovers.map((stock: any) => (
+                <div
+                  key={`quality-${stock.symbol}`}
+                  className="signal-card clickable-row"
+                  style={{ borderLeft: '4px solid #a855f7' }}
+                  onClick={() => onSelectStock({ ...stock, symbol: stock.symbol })}
+                >
+                  <div className="signal-header">
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="signal-symbol">{stock.symbol}</span>
+                      <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#c084fc', fontWeight: 800 }}>
+                        {stock.score_change > 5 ? '🚀 BREAKOUT CANDIDATE' : '📈 QUALITY IMPROVER'}
+                      </span>
+                    </div>
+                    <span className="score-badge" style={{ fontSize: '13px', padding: '4px 10px' }}>
+                      {parseFloat(stock.score || 0).toFixed(0)}
                     </span>
                   </div>
-                  <span className="score-badge" style={{ fontSize: '13px', padding: '4px 10px' }}>
-                    {parseFloat(stock.score || 0).toFixed(0)}
-                  </span>
-                </div>
-                <div className="signal-details">
-                  <div className="signal-detail">
-                    <span className="detail-label">Change</span>
-                    <span className="detail-value" style={{ color: stock.score_change >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {stock.score_change >= 0 ? '+' : ''}{parseFloat(stock.score_change || 0).toFixed(1)}
+                  <div className="signal-details">
+                    <div className="signal-detail">
+                      <span className="detail-label">Change</span>
+                      <span className="detail-value" style={{ color: stock.score_change >= 0 ? '#22c55e' : '#ef4444' }}>
+                        {stock.score_change >= 0 ? '+' : ''}{parseFloat(stock.score_change || 0).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="signal-detail">
+                      <span className="detail-label">Velocity</span>
+                      <span className="detail-value" style={{ color: '#c084fc' }}>
+                        {parseFloat(stock.velocity || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>Verdict</span>
+                    <span style={{
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      background: 'rgba(168, 85, 247, 0.12)',
+                      border: '1px solid rgba(168, 85, 247, 0.35)',
+                      color: '#e9d5ff'
+                    }}>
+                      {stock.category || 'WATCHLIST'}
                     </span>
                   </div>
-                  <div className="signal-detail">
-                    <span className="detail-label">Velocity</span>
-                    <span className="detail-value" style={{ color: '#c084fc' }}>
-                      {parseFloat(stock.velocity || 0).toFixed(2)}
-                    </span>
-                  </div>
                 </div>
-                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Verdict</span>
-                  <span style={{
-                    padding: '3px 8px',
-                    borderRadius: '999px',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    background: 'rgba(168, 85, 247, 0.12)',
-                    border: '1px solid rgba(168, 85, 247, 0.35)',
-                    color: '#e9d5ff'
-                  }}>
-                    {stock.category || 'WATCHLIST'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state" style={{ marginTop: '8px' }}>
+              The new Quality Intelligence layer is live, but the QIF improver feed is still empty. Once Step 7/backfill data lands in `quality_verdicts`, the newest dashboard cards will populate here.
+            </div>
+          )}
 
           {trajectoryAlerts.length > 0 && (
             <div style={{ marginTop: '16px', display: 'grid', gap: '10px' }}>
@@ -938,7 +943,6 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             </div>
           )}
         </section>
-      )}
 
       {/* ── SECTION 0: My Positions (Core + External) ── */}
       {positions?.positions?.length > 0 ? (

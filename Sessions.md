@@ -25,6 +25,8 @@
 - **Legacy Action History Fix**:
   - Hardened `api/actions.py` to work even when `client_actions.recorded_at` is missing in legacy production tables.
   - Added a schema self-heal for `client_actions.recorded_at` in `api/schema.py` so production converges automatically on startup.
+- **Always-Visible Dashboard Layer**:
+  - Removed the data gate hiding the main `Quality Intelligence` section in `frontend/src/App.tsx`, replacing it with an explicit empty-state so the latest dashboard work is still visible before the quality feeds are populated.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.

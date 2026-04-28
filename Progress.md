@@ -47,6 +47,9 @@
 - **Recorded Timestamp Fallback:** Hardened `api/actions.py` to tolerate legacy `client_actions` tables that are missing `recorded_at`, preventing `/api/actions/history` from crashing in production.
 - **Schema Self-Heal:** Added `ALTER TABLE ... ADD COLUMN IF NOT EXISTS recorded_at` to `api/schema.py` so future startups repair the table automatically.
 
+#### 10. Always-Visible Dashboard Layer ✅
+- **Main Dashboard Visibility:** Removed the data gate around the main `Quality Intelligence` section in `frontend/src/App.tsx`, so the latest dashboard layer now stays visible even when the QIF feeds are empty.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST
