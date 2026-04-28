@@ -2,6 +2,29 @@
 
 ---
 
+## 📅 Session: April 28, 2026 (Late Night) — Landing + Dashboard Activation
+**Session Start:** 22:45 IST
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. Landing Copy Activation ✅
+- **Copy Alignment:** Updated the live unauthenticated landing copy in `frontend/src/App.tsx` to match the current project truth and avoid publishing locked performance numbers before the canonical snapshot is restored.
+- **Messaging:** Reframed the hero, regime-filter explanation, and proof section around the live product experience: regime, momentum, quality, and dashboard workflow.
+
+#### 2. Dashboard Activation Fix ✅
+- **Admin Dashboard Repair:** Fixed a duplicated and malformed `Fundamental Quality Leaderboard` block in `frontend/src/AdminDashboard.tsx` that could break the new dashboard rendering.
+- **Mobile Navigation:** Replaced the duplicate mobile `Audit` tab with the intended `Performance` entry so the shipped dashboard navigation matches the desktop experience.
+
+#### 3. Deployment Readiness Findings ✅
+- **Frontend Serving Check:** Confirmed the monolith serves the frontend from `api/static/`, populated during the Docker build from `frontend/dist`.
+- **Environment Gap:** Verified this workspace currently has no `frontend/dist`, no `api/static`, and no local `node`/`npm`, so local static build verification is blocked until the frontend toolchain is available.
+
+### ⏳ Left for Next Step
+1. Install or provide the frontend build toolchain (`node`/`npm`) or run the Docker build path so the updated landing page and dashboard bundle can be generated.
+2. Redeploy the monolith image so `api/static` serves the refreshed frontend in the live environment.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST

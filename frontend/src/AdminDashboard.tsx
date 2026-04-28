@@ -282,63 +282,6 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 </tbody>
             </table>
         </div>
-      <section className="section" style={{ marginTop: '24px' }}>
-        <h3 className="section-title">💎 Fundamental Quality Leaderboard (QIF)</h3>
-        <p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
-        <div className="table-container" style={{ marginTop: '16px' }}>
-            <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Category</th>
-                        <th>Score</th>
-                        <th>Rev/Margin</th>
-                        <th>Lev/WC</th>
-                        <th>ROCE/Evol</th>
-                    </tr>
-                </thead>
-        <div className="table-container" style={{ marginTop: '16px' }}>
-            <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Verdict</th>
-                        <th>Score</th>
-                        <th>Change</th>
-                        <th>Velocity</th>
-                        <th>Trend</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {qualityLeaderboard.map(s => (
-                        <tr key={s.symbol + '_qif'} onClick={() => onSelectStock({ ...s, symbol: s.symbol })} className="clickable-row">
-                            <td className="font-bold">{s.symbol}</td>
-                            <td>
-                                <span style={{ 
-                                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
-                                    background: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))) + '20',
-                                    color: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))),
-                                    border: `1px solid ${s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))}40`
-                                }}>
-                                    {s.category}
-                                </span>
-                            </td>
-                            <td><span className="score-badge">{parseFloat(s.score).toFixed(1)}</span></td>
-                            <td>
-                                <span style={{ color: s.score_change >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                                    {s.score_change >= 0 ? '+' : ''}{parseFloat(s.score_change).toFixed(1)}
-                                </span>
-                            </td>
-                            <td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
-                            <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
-                        </tr>
-                    ))}
-                    {(!qualityLeaderboard.length) && (
-                        <tr><td colSpan={6} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
       </section>
 
       <section className="section" style={{ marginTop: '24px' }}>

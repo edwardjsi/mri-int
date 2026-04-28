@@ -1,5 +1,15 @@
 # **MRI Sessions Log**
 
+## **April 28, 2026 (Late Night): Landing + Dashboard Activation**
+- **Objective**: Make the new landing copy and new dashboard safe to ship from the current frontend source.
+- **Actions**:
+  - **Landing Copy:** Updated the live unauthenticated landing page in `frontend/src/App.tsx` so its messaging reflects the current product truth without publishing locked backtest figures before snapshot restoration.
+  - **Dashboard Repair:** Removed a duplicated/broken `Fundamental Quality Leaderboard` section from `frontend/src/AdminDashboard.tsx`, leaving one clean QIF leaderboard block for the new admin dashboard.
+  - **Navigation Fix:** Replaced a duplicate mobile `Audit` tab with `Performance` so the dashboard navigation is consistent across form factors.
+  - **Deployment Check:** Confirmed FastAPI serves `api/static`, which is generated from `frontend/dist` during the Docker build; also confirmed this workspace currently lacks `node`/`npm`, so local bundle generation is blocked.
+- **Result**: The frontend source is now aligned for the new landing experience and cleaned up for the new dashboard, with the remaining gap isolated to build/deploy tooling rather than React routing.
+- **Next Step**: Generate the frontend bundle through the Docker path or an installed Node toolchain, then redeploy the monolith so the refreshed UI goes live.
+
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.
 - **Actions**:

@@ -308,15 +308,15 @@ const faqs = [
   },
   {
     q: "Does it avoid crashes?",
-    a: "Yes. The Golden Cross filter keeps you out of weak market regimes."
+    a: "It is designed to stand down in weak market regimes instead of forcing exposure."
   }
 ];
 
 const features = [
   {
     title: "Safety Foundation",
-    subtitle: "Golden Cross",
-    desc: "Skip market crashes. Only invest when the trend is in your favor."
+    subtitle: "Market Regime Filter",
+    desc: "Stay selective when the broader tape weakens instead of forcing risk in hostile conditions."
   },
   {
     title: "Growth Engine",
@@ -336,9 +336,9 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
       {/* 1) HERO SECTION */}
       <section className="landing-header" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div className="landing-hero-copy">
-          <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Crash-Proof Momentum for Serious Investors</h1>
+          <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Regime-aware momentum for serious Indian investors</h1>
           <p className="landing-subtitle" style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto 30px' }}>
-            Align market regime, business quality, and price momentum—so you enter early, avoid crashes, and compound with conviction.
+            Combine market regime, business quality, and price momentum in one daily workflow so you can focus on strong setups and avoid blind exposure.
           </p>
           <div className="hero-actions" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <button className="btn-primary" onClick={onRequestAuth}>View Top Opportunities</button>
@@ -365,7 +365,7 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
       <section className="golden-setup" style={{ padding: '80px 20px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>The Golden Setup 🚀</h2>
         <p style={{ fontSize: '1.2rem', color: '#94a3b8', maxWidth: '700px', margin: '0 auto 40px' }}>
-          When business quality improves and price starts moving, you get a high-conviction opportunity.
+          When business quality strengthens and price confirms the move, the dashboard surfaces a higher-conviction setup.
         </p>
         <div style={{ display: 'inline-block', textAlign: 'left', background: '#1e293b', padding: '30px', borderRadius: '16px', border: '1px solid #334155' }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -384,9 +384,12 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
 
       {/* 4) SOCIAL PROOF / BACKTEST */}
       <section className="proof" style={{ padding: '60px 20px', textAlign: 'center', borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b' }}>
-        <h2 style={{ marginBottom: '16px' }}>Built on 17 Years of Data</h2>
+        <h2 style={{ marginBottom: '16px' }}>Built for daily decision support</h2>
         <p style={{ fontSize: '1.5rem', color: '#22c55e', fontWeight: 'bold' }}>
-          26.8% CAGR using a system that avoids bear markets and focuses on improving businesses.
+          The live experience brings regime, score breakdowns, swing setups, and quality signals into one operating dashboard.
+        </p>
+        <p style={{ marginTop: '12px', color: '#94a3b8' }}>
+          Canonical long-range backtest restoration is still being finalized before locked performance figures are published here.
         </p>
       </section>
 
@@ -2095,8 +2098,8 @@ function App() {
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
           <span className="nav-icon">👀</span> Watchlist
         </button>
-        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
-          <span className="nav-icon">🛡️</span> Audit
+        <button className={`mobile-nav-link ${page === 'performance' ? 'active' : ''}`} onClick={() => setPage('performance')}>
+          <span className="nav-icon">📈</span> Perf
         </button>
         <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
           <span className="nav-icon">📋</span> History
