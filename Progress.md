@@ -33,6 +33,9 @@
 #### 5. Landing Entry Alignment ✅
 - **Fallback Landing Update:** Updated `frontend/src/LandingPage_Original.tsx` to match the new landing messaging so either landing entrypoint now serves the refreshed copy after deploy.
 
+#### 6. Fundamental Router Startup Fix ✅
+- **Import Repair:** Fixed `api/fundamental.py` to import `get_db` from `api.deps` instead of `engine_core.db`, resolving the Railway startup `ImportError` during app boot.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST

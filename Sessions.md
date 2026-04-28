@@ -15,6 +15,8 @@
   - Added a schema self-heal for `client_actions.notes` in `api/schema.py` so production can converge on the latest shape automatically.
 - **Landing Fallback Alignment**:
   - Updated `frontend/src/LandingPage_Original.tsx` after confirming the old live headline text exactly matched that file, so either landing page entry now reflects the new messaging after redeploy.
+- **Startup Import Fix**:
+  - Fixed `api/fundamental.py` to use the FastAPI database dependency from `api.deps`, resolving the Railway boot failure caused by importing a non-existent `get_db` symbol from `engine_core.db`.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.

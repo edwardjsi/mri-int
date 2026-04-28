@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from engine_core.db import get_db
+from api.deps import get_db
 from engine_fundamental.pipeline import run_quality_pipeline
 from engine_fundamental.collector import fetch_and_store_financials
 import logging
