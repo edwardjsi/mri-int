@@ -44,6 +44,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [qualityLeaderboard, setQualityLeaderboard] = useState<any[]>([]);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -123,11 +124,15 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminAuditLogs(); setAuditLogs(data); }
       catch (e) { console.error('Audit logs failed', e); }
     };
+    const fetchQualityLeaderboard = async () => {
+      try { const data = await api.getTopImprovers(30); setQualityLeaderboard(data); }
+      catch (e) { console.error('Quality leaderboard failed', e); }
+    };
 
     await Promise.allSettled([
       fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), 
       fetchHallOfFame(), fetchShadow(), fetchHealth(), fetchSwingTrades(),
-      fetchAuditLogs()
+      fetchAuditLogs(), fetchQualityLeaderboard()
     ]);
     setLoading(false);
   };
@@ -273,6 +278,63 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                     })}
                     {(!dailyLeaderboard.top_stocks.length) && (
                         <tr><td colSpan={4} className="empty-state">No leaderboard data found for today.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h3 className="section-title">💎 Fundamental Quality Leaderboard (QIF)</h3>
+        <p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Category</th>
+                        <th>Score</th>
+                        <th>Rev/Margin</th>
+                        <th>Lev/WC</th>
+                        <th>ROCE/Evol</th>
+                    </tr>
+                </thead>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Verdict</th>
+                        <th>Score</th>
+                        <th>Change</th>
+                        <th>Velocity</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {qualityLeaderboard.map(s => (
+                        <tr key={s.symbol + '_qif'} onClick={() => onSelectStock({ ...s, symbol: s.symbol })} className="clickable-row">
+                            <td className="font-bold">{s.symbol}</td>
+                            <td>
+                                <span style={{ 
+                                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
+                                    background: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))) + '20',
+                                    color: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))),
+                                    border: `1px solid ${s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))}40`
+                                }}>
+                                    {s.category}
+                                </span>
+                            </td>
+                            <td><span className="score-badge">{parseFloat(s.score).toFixed(1)}</span></td>
+                            <td>
+                                <span style={{ color: s.score_change >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                                    {s.score_change >= 0 ? '+' : ''}{parseFloat(s.score_change).toFixed(1)}
+                                </span>
+                            </td>
+                            <td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
+                            <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
+                        </tr>
+                    ))}
+                    {(!qualityLeaderboard.length) && (
+                        <tr><td colSpan={6} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
                     )}
                 </tbody>
             </table>

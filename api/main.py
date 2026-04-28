@@ -21,6 +21,7 @@ from api.portfolio_review import router as portfolio_review_router
 from api.email_debug import router as email_debug_router
 from api.watchlist import router as watchlist_router
 from api.admin import router as admin_router
+from api.fundamental import router as fundamental_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
 
@@ -72,6 +73,7 @@ app.include_router(portfolio_review_router)
 app.include_router(email_debug_router)
 app.include_router(watchlist_router)
 app.include_router(admin_router)
+app.include_router(fundamental_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])

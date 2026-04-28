@@ -11,30 +11,134 @@ function ScoreBreakdown({ conditions, score }: { conditions: any, score: number 
   if (!conditions) return <div className="empty-state">No breakdown available for this score.</div>;
 
   const items = [
-    { label: 'Trend Integrity (EMA 50 > 200)', value: conditions.ema_50_above_200, weight: '25%' },
-    { label: 'Long-term Bias (200 EMA Slope > 0)', value: conditions.ema_200_slope_positive, weight: '25%' },
-    { label: 'Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '20%' },
-    { label: 'Alpha-Strength (Near 6m High)', value: conditions.at_6m_high, weight: '20%' },
-    { label: 'Liquidity Gate (Volume Surge)', value: conditions.volume_surge, weight: '10%' },
+    { label: '1. Trend Integrity (EMA 50 > 200)', value: conditions.ema_50_above_200, weight: '25%' },
+    { label: '2. Long-term Bias (200 EMA Slope > 0)', value: conditions.ema_200_slope_positive, weight: '25%' },
+    { label: '3. Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '15%' },
+    { label: '4. Alpha-Strength (Near 6m High)', value: conditions.at_6m_high, weight: '15%' },
+    { label: '5. Breakout Confirmation (10d High)', value: conditions.breakout_10d, weight: '10%' },
+    { label: '6. Liquidity Gate (Volume Surge)', value: conditions.volume_surge, weight: '5%' },
+    { label: '7. Price Quality (Day Range %)', value: conditions.price_quality, weight: '5%' },
   ];
+
+  const isGoldenSetup = score === 100;
 
   return (
     <div className="score-breakdown">
       <div className="summary-stat" style={{ marginBottom: '1rem', textAlign: 'center' }}>
         <span className="summary-label">Total MRI Score</span>
-        <div className="stat-value" style={{ fontSize: '2rem', color: '#60a5fa' }}>{score}/100</div>
-      </div>
-      {items.map((item, idx) => (
-        <div key={idx} className="condition-item">
-          <div className="condition-label">
-            {item.label}
-            <div style={{ fontSize: '10px', color: '#64748b' }}>Weight: {item.weight}</div>
-          </div>
-          <div className={`condition-value ${item.value ? 'condition-pass' : 'condition-fail'}`}>
-            {item.value ? '✅ PASS' : '❌ FAIL'}
-          </div>
+        <div className="stat-value" style={{ fontSize: '2rem', color: isGoldenSetup ? '#22c55e' : '#60a5fa' }}>
+          {score}/100 {isGoldenSetup && '🚀'}
         </div>
-      ))}
+        {isGoldenSetup && <div style={{ fontSize: '12px', color: '#22c55e', fontWeight: 'bold' }}>THE GOLDEN SETUP</div>}
+      </div>
+      <div className="conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        {items.map((item, idx) => (
+          <div key={idx} className="condition-item" style={{ padding: '8px', border: '1px solid #334155', borderRadius: '4px' }}>
+            <div className="condition-label" style={{ fontSize: '11px' }}>
+              {item.label}
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Weight: {item.weight}</div>
+            </div>
+            <div className={`condition-value ${item.value ? 'condition-pass' : 'condition-fail'}`} style={{ fontSize: '10px', marginTop: '4px' }}>
+              {item.value ? '✅ PASS' : '❌ FAIL'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Quality Verdict Component (Fundamentals) ─── */
+function QualityVerdict({ symbol }: { symbol: string }) {
+  const [verdict, setVerdict] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getQualityVerdict(symbol)
+      .then(setVerdict)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [symbol]);
+
+  if (loading) return <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', padding: '10px' }}>Analyzing business quality...</div>;
+  if (!verdict) return null;
+
+  const categoryColors: any = {
+    'HIGH_QUALITY': '#22c55e',
+    'EARLY_COMPOUNDER': '#a855f7',
+    'WATCHLIST': '#eab308',
+    'REJECT': '#ef4444'
+  };
+
+  const scores = [
+    { label: 'Revenue', val: verdict.revenue_score },
+    { label: 'Margins', val: verdict.margin_score },
+    { label: 'Leverage', val: verdict.leverage_score },
+    { label: 'Working Cap', val: verdict.wc_score },
+    { label: 'ROCE/WACC', val: verdict.roce_score },
+    { label: 'Evolution', val: verdict.evolution_score },
+  ];
+
+  return (
+    <div className="quality-verdict" style={{ marginTop: '1.5rem', padding: '12px', border: '1px solid #334155', borderRadius: '8px', background: '#0f172a' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Fundamental Quality Analysis</span>
+          {verdict.velocity !== undefined && (
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <span style={{ fontSize: '10px', color: verdict.score_change >= 0 ? '#22c55e' : '#ef4444' }}>
+                Change: {verdict.score_change >= 0 ? '+' : ''}{verdict.score_change?.toFixed(1)}
+              </span>
+              <span style={{ fontSize: '10px', color: verdict.velocity >= 2 ? '#a855f7' : '#94a3b8' }}>
+                Velocity: {verdict.velocity?.toFixed(2)}
+              </span>
+            </div>
+          )}
+        </div>
+        <span style={{ 
+          padding: '2px 8px', 
+          borderRadius: '4px', 
+          fontSize: '10px', 
+          fontWeight: 'bold', 
+          background: (categoryColors[verdict.category] || '#475569') + '20',
+          color: categoryColors[verdict.category] || '#94a3b8',
+          border: `1px solid ${categoryColors[verdict.category]}40`
+        }}>
+          {verdict.category}
+        </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+        {scores.map(s => (
+          <div key={s.label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '9px', color: '#64748b' }}>{s.label}</div>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', color: s.val >= 7 ? '#22c55e' : (s.val >= 5 ? '#eab308' : '#ef4444') }}>
+              {s.val}/10
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {verdict.qil_flags && verdict.qil_flags.length > 0 && (
+        <div style={{ marginTop: '8px', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
+           <div style={{ fontSize: '9px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase' }}>Qualitative Intelligence (QIL) Signals</div>
+          {verdict.qil_flags.map((f: string, i: number) => (
+            <div key={i} style={{ fontSize: '10px', color: '#60a5fa', marginBottom: '2px' }}>• {f}</div>
+          ))}
+        </div>
+      )}
+
+      {verdict.flags && verdict.flags.length > 0 && (
+        <div style={{ marginTop: '8px' }}>
+          {verdict.flags.map((f: string, i: number) => (
+            <div key={i} style={{ fontSize: '10px', color: f.includes('🚨') ? '#ef4444' : '#eab308', marginBottom: '2px' }}>{f}</div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: '10px', fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', lineHeight: '1.4', borderTop: '1px solid #1e293b', paddingTop: '8px' }}>
+        "Quality investor framework: {verdict.score?.toFixed(0)}% aligned with structural compounder logic."
+      </div>
     </div>
   );
 }
@@ -71,6 +175,8 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
           score={stock.score || stock.total_score} 
           conditions={stock.conditions} 
         />
+
+        <QualityVerdict symbol={stock.symbol} />
 
         <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
           <button className="btn-primary" onClick={onClose}>Close Report</button>
@@ -187,125 +293,123 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
   );
 }
 
-const heroStats = [
-  { label: 'Nifty-beating CAGR', value: '25.4%', detail: 'vs. 11.8% Nifty 50 (17y)' },
-  { label: 'Signals per week', value: '23', detail: 'Delivered at 4:30PM IST weekdays' },
-  { label: 'Accuracy checkpoint', value: '3+ regimes', detail: 'Validated 2008 / 2020 / sideways' },
+const faqs = [
+  {
+    q: "Is this for trading or investing?",
+    a: "Both. It finds long-term compounders and times entry using momentum."
+  },
+  {
+    q: "How is this different from stock screeners?",
+    a: "Screeners show static data. MRI tracks improvement and timing together."
+  },
+  {
+    q: "Do I need to understand charts?",
+    a: "No. The system translates signals into simple actions."
+  },
+  {
+    q: "Does it avoid crashes?",
+    a: "Yes. The Golden Cross filter keeps you out of weak market regimes."
+  }
 ];
 
-const featureHighlights = [
+const features = [
   {
-    title: 'Regime awareness',
-    description: 'Blends SMA-200 regime with 0-100 stock scores to skip Risk-Off stretches.',
+    title: "Safety Foundation",
+    subtitle: "Golden Cross",
+    desc: "Skip market crashes. Only invest when the trend is in your favor."
   },
   {
-    title: 'Digital Twin portfolio',
-    description: 'Persist your holdings, grade them instantly, and compare risk vs. MRI live signals.',
+    title: "Growth Engine",
+    subtitle: "Quality Velocity",
+    desc: "Detect improving businesses before the market notices."
   },
   {
-    title: 'Automated daily digests',
-    description: 'SES-powered emails keep you updated without opening the dashboard.',
-  },
-];
-
-const testimonials = [
-  {
-    quote: 'MRI delivered an overnight signal I finally trusted. 14-day free trial made it easy to onboard.',
-    name: 'Ananya, Retail investor • Bangalore',
-  },
-  {
-    quote: 'Landing page told the story: regime filter + 0-100 score + persistence. Trial let me backtest real portfolios.',
-    name: 'Siddharth, Quant analyst • Mumbai',
-  },
+    title: "Entry Trigger",
+    subtitle: "Swing Momentum",
+    desc: "Enter precisely when price and volume confirm the move."
+  }
 ];
 
 function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [status, setStatus] = useState<'idle' | 'success'>('idle');
-  const [error, setError] = useState('');
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!email.trim() || !phone.trim()) {
-      setError('Email and phone are required to reserve the trial.');
-      setStatus('idle');
-      return;
-    }
-    setError('');
-    setStatus('success');
-    onRequestAuth();
-  };
-
   return (
     <div className="landing-shell">
-      <div className="landing-header">
+      {/* 1) HERO SECTION */}
+      <section className="landing-header" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div className="landing-hero-copy">
-          <p className="landing-tagline">Market Regime Intelligence</p>
-          <h1>Daily quant signals + portfolio risk visibility for Indian investors.</h1>
-          <p className="landing-subtitle">MRI blends regime filtering, 0-100 trend scores, and persistent holdings to keep you aligned with risk-on opportunities.</p>
-          <div className="hero-actions">
-            <button className="btn-primary" onClick={() => onRequestAuth()}>Enter the dashboard</button>
-            <button className="btn-ghost" onClick={() => onRequestAuth()}>Start risk audit</button>
-          </div>
-          <div className="hero-meta">
-            {heroStats.map(stat => (
-              <div key={stat.label} className="hero-stat">
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-                <small>{stat.detail}</small>
-              </div>
-            ))}
+          <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Crash-Proof Momentum for Serious Investors</h1>
+          <p className="landing-subtitle" style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto 30px' }}>
+            Align market regime, business quality, and price momentum—so you enter early, avoid crashes, and compound with conviction.
+          </p>
+          <div className="hero-actions" style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <button className="btn-primary" onClick={onRequestAuth}>View Top Opportunities</button>
+            <button className="btn-ghost" onClick={onRequestAuth}>See How It Works</button>
           </div>
         </div>
-        <div className="landing-hero-card">
-          <p className="hero-card-title">Reserve your 14-day free trial</p>
-          <form className="landing-trial-form" onSubmit={handleSubmit}>
-            <label>
-              Work email
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@fundelabs.com"
-                required
-              />
-            </label>
-            <label>
-              Phone / WhatsApp
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="+91 98765 43210"
-                required
-              />
-            </label>
-            <button type="submit" className="btn-primary">Reserve free trial</button>
-          </form>
-          {status === 'success' && (
-            <p className="landing-form-status">We locked in the trial. Check your inbox — the login panel is ready.</p>
-          )}
-          {error && (
-            <p className="landing-form-error">{error}</p>
-          )}
-        </div>
-      </div>
-      <section className="landing-features">
-        {featureHighlights.map(feature => (
-          <div key={feature.title} className="feature-card">
-            <h3>{feature.title}</h3>
-            <p>{feature.description}</p>
-          </div>
-        ))}
       </section>
-      <section className="landing-testimonials">
-        {testimonials.map(item => (
-          <div key={item.name} className="testimonial-card">
-            <p className="testimonial-quote">“{item.quote}”</p>
-            <p className="testimonial-name">{item.name}</p>
-          </div>
-        ))}
+
+      {/* 2) FEATURES SECTION (TRIPLE FILTER) */}
+      <section className="landing-features" style={{ padding: '60px 20px', background: '#0f172a' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '40px' }}>The Triple-Filter Edge</h2>
+        <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+          {features.map((f, i) => (
+            <div key={i} className="feature-card" style={{ padding: '24px', border: '1px solid #1e293b', borderRadius: '12px', background: '#1e293b60' }}>
+              <h3 style={{ color: '#60a5fa', marginBottom: '4px' }}>{f.title}</h3>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{f.subtitle}</h4>
+              <p style={{ color: '#94a3b8' }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3) GOLDEN SETUP SECTION */}
+      <section className="golden-setup" style={{ padding: '80px 20px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>The Golden Setup 🚀</h2>
+        <p style={{ fontSize: '1.2rem', color: '#94a3b8', maxWidth: '700px', margin: '0 auto 40px' }}>
+          When business quality improves and price starts moving, you get a high-conviction opportunity.
+        </p>
+        <div style={{ display: 'inline-block', textAlign: 'left', background: '#1e293b', padding: '30px', borderRadius: '16px', border: '1px solid #334155' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <li style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#22c55e' }}>✔</span> Business improving → Early signal
+            </li>
+            <li style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#22c55e' }}>✔</span> Price breakout → Confirmation
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#22c55e' }}>✔</span> Both aligned → Maximum conviction
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* 4) SOCIAL PROOF / BACKTEST */}
+      <section className="proof" style={{ padding: '60px 20px', textAlign: 'center', borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b' }}>
+        <h2 style={{ marginBottom: '16px' }}>Built on 17 Years of Data</h2>
+        <p style={{ fontSize: '1.5rem', color: '#22c55e', fontWeight: 'bold' }}>
+          26.8% CAGR using a system that avoids bear markets and focuses on improving businesses.
+        </p>
+      </section>
+
+      {/* 5) FAQ SECTION */}
+      <section className="faq" style={{ padding: '80px 20px', maxWidth: '800px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '40px' }}>Frequently Asked Questions</h2>
+        <div className="faq-list">
+          {faqs.map((f, i) => (
+            <div key={i} style={{ marginBottom: '24px' }}>
+              <h4 style={{ color: '#60a5fa', marginBottom: '8px' }}>{f.q}</h4>
+              <p style={{ color: '#94a3b8' }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 6) FINAL CTA SECTION */}
+      <section className="cta-final" style={{ padding: '100px 20px', textAlign: 'center', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Stop Guessing. Start Aligning.</h2>
+        <p style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '40px' }}>
+          Let the system show you when quality and momentum align.
+        </p>
+        <button className="btn-primary" style={{ padding: '16px 40px', fontSize: '1.25rem' }} onClick={onRequestAuth}>Get Started</button>
       </section>
     </div>
   );
@@ -487,7 +591,8 @@ function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
   const isBuy = signal.action === 'BUY';
   const allocation = totalCapital * 0.1;
   const suggestedQty = signal.recommended_price ? Math.floor(allocation / signal.recommended_price) : 0;
-  const isBreakout = signal.conditions?.at_6m_high && signal.conditions?.volume_surge;
+  const isGoldenSetup = signal.score === 100;
+  const isBreakout = !!signal.conditions?.breakout_10d;
 
   return (
     <>
@@ -498,7 +603,8 @@ function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
         <div className="signal-header">
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="signal-symbol">{signal.symbol}</span>
-            {isBreakout && <span className="score-trend-indicator" style={{ fontSize: '9px', marginTop: '2px' }}>🚀 BREAKOUT</span>}
+            {isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '9px', marginTop: '2px' }}>🚀 GOLDEN SETUP</span>}
+            {isBreakout && !isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '9px', marginTop: '2px', color: '#60a5fa' }}>✨ BREAKOUT</span>}
           </div>
           <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
         </div>
@@ -600,8 +706,12 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
             ema_200_slope_positive: s.condition_ema_200_slope,
             at_6m_high: s.condition_6m_high,
             volume_surge: s.condition_volume,
-            relative_strength: s.condition_rs
+            relative_strength: s.condition_rs,
+            breakout_10d: s.condition_breakout_10d,
+            price_quality: s.condition_price_quality
           };
+          const isGoldenSetup = s.total_score === 100;
+          const isBreakout = !!s.condition_breakout_10d;
           const stockWithConditions = { ...s, score: s.total_score, price: s.close, conditions };
           
           return (
@@ -614,7 +724,8 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
               <div className="signal-header">
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span className="signal-symbol">{s.symbol}</span>
-                  {s.is_breakout && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#22c55e', fontWeight: 800 }}>🚀 BREAKOUT</span>}
+                  {isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#22c55e', fontWeight: 800 }}>🚀 GOLDEN SETUP</span>}
+                  {isBreakout && !isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#60a5fa', fontWeight: 800 }}>✨ BREAKOUT</span>}
                 </div>
                 <span className="score-badge" style={{ fontSize: '14px', padding: '4px 10px' }}>{s.total_score}</span>
               </div>

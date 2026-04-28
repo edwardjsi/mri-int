@@ -6,6 +6,9 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 

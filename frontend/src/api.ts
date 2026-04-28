@@ -326,6 +326,13 @@ export const api = {
 
     // Health
     getHealth: () => fetch(`${API_BASE}/health`, { mode: 'cors' }).then(r => r.json()),
+
+    // Fundamental Analysis
+    getQualityVerdict: (symbol: string) => apiFetch(`/fundamental/verdict/${symbol}`),
+    getTopQualityStocks: (limit: number = 10) => apiFetch(`/fundamental/top-quality?limit=${limit}`),
+    getTopImprovers: (limit: number = 20) => apiFetch(`/fundamental/improvers?limit=${limit}`),
+    getTrajectoryAlerts: () => apiFetch('/fundamental/alerts'),
+    triggerQualityRecompute: (symbol: string) => apiFetch(`/fundamental/recompute/${symbol}`, { method: 'POST' }),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

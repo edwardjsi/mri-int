@@ -16,3 +16,4 @@ python-jose[cryptography]==3.3.0
 bcrypt==4.1.2
 pydantic[email]==2.5.3
 python-multipart==0.0.6
+openai==1.12.0
