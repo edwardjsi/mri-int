@@ -36,6 +36,10 @@
 #### 6. Fundamental Router Startup Fix ✅
 - **Import Repair:** Fixed `api/fundamental.py` to import `get_db` from `api.deps` instead of `engine_core.db`, resolving the Railway startup `ImportError` during app boot.
 
+#### 7. Latest Dashboard Surfacing ✅
+- **Main Dashboard Upgrade:** Promoted the latest QIF and trajectory intelligence onto the default `DashboardPage` in `frontend/src/App.tsx` so users see quality improvers and live trajectory alerts without needing to discover the admin panel first.
+- **Navigation Language:** Renamed the admin sidebar entry from `Admin Panel` to `Platform Intelligence` to match the newer product framing already used in the page title.
+
 ## 📅 Session: April 28, 2026 (Night) — Quality Investor Framework Integration
 **Session Start:** 14:15 IST
 **Session End:** 15:30 IST

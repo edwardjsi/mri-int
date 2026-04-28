@@ -762,18 +762,22 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [summary, setSummary] = useState<any>(null);
   const [positions, setPositions] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [qualityImprovers, setQualityImprovers] = useState<any[]>([]);
+  const [trajectoryAlerts, setTrajectoryAlerts] = useState<any[]>([]);
   const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
-      const [r, s, p, sum, prof, pos] = await Promise.all([
+      const [r, s, p, sum, prof, pos, improvers, alerts] = await Promise.all([
         api.getRegime(),
         api.getTodaySignals().catch(() => ({ signals: [] })),
         api.getPendingSignals().catch(() => []),
         api.getDailySummary().catch(() => null),
         api.getProfile().catch(() => null),
         api.getPositions().catch(() => ({ positions: [] })),
+        api.getTopImprovers(6).catch(() => []),
+        api.getTrajectoryAlerts().catch(() => []),
       ]);
       setRegime(r);
       setSignals(s);
@@ -781,6 +785,8 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
       setSummary(sum);
       setProfile(prof);
       setPositions(pos);
+      setQualityImprovers(improvers);
+      setTrajectoryAlerts(alerts);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -828,6 +834,111 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
       </div>
 
       <DailySummaryCard summary={summary} />
+
+      {(qualityImprovers.length > 0 || trajectoryAlerts.length > 0) && (
+        <section className="section">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <h2 className="section-title" style={{ margin: 0 }}>💎 Quality Intelligence</h2>
+              <p className="section-subtitle" style={{ marginTop: '6px' }}>
+                The latest QIF and trajectory layer is now surfaced directly on the main dashboard.
+              </p>
+            </div>
+            {trajectoryAlerts.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#cbd5e1', background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.35)', borderRadius: '999px', padding: '8px 12px' }}>
+                {trajectoryAlerts.length} live trajectory alert{trajectoryAlerts.length === 1 ? '' : 's'}
+              </div>
+            )}
+          </div>
+
+          <div className="signals-grid">
+            {qualityImprovers.map((stock: any) => (
+              <div
+                key={`quality-${stock.symbol}`}
+                className="signal-card clickable-row"
+                style={{ borderLeft: '4px solid #a855f7' }}
+                onClick={() => onSelectStock({ ...stock, symbol: stock.symbol })}
+              >
+                <div className="signal-header">
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="signal-symbol">{stock.symbol}</span>
+                    <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#c084fc', fontWeight: 800 }}>
+                      {stock.score_change > 5 ? '🚀 BREAKOUT CANDIDATE' : '📈 QUALITY IMPROVER'}
+                    </span>
+                  </div>
+                  <span className="score-badge" style={{ fontSize: '13px', padding: '4px 10px' }}>
+                    {parseFloat(stock.score || 0).toFixed(0)}
+                  </span>
+                </div>
+                <div className="signal-details">
+                  <div className="signal-detail">
+                    <span className="detail-label">Change</span>
+                    <span className="detail-value" style={{ color: stock.score_change >= 0 ? '#22c55e' : '#ef4444' }}>
+                      {stock.score_change >= 0 ? '+' : ''}{parseFloat(stock.score_change || 0).toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="signal-detail">
+                    <span className="detail-label">Velocity</span>
+                    <span className="detail-value" style={{ color: '#c084fc' }}>
+                      {parseFloat(stock.velocity || 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Verdict</span>
+                  <span style={{
+                    padding: '3px 8px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    background: 'rgba(168, 85, 247, 0.12)',
+                    border: '1px solid rgba(168, 85, 247, 0.35)',
+                    color: '#e9d5ff'
+                  }}>
+                    {stock.category || 'WATCHLIST'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {trajectoryAlerts.length > 0 && (
+            <div style={{ marginTop: '16px', display: 'grid', gap: '10px' }}>
+              {trajectoryAlerts.slice(0, 4).map((alert: any, idx: number) => (
+                <div
+                  key={`trajectory-alert-${alert.symbol || idx}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    alignItems: 'center',
+                    background: 'rgba(15, 23, 42, 0.65)',
+                    border: '1px solid rgba(148, 163, 184, 0.18)',
+                    borderRadius: '12px',
+                    padding: '12px 14px'
+                  }}
+                >
+                  <div>
+                    <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: '14px' }}>
+                      {alert.symbol} {alert.signal ? `• ${alert.signal}` : ''}
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '3px' }}>
+                      Score {parseFloat(alert.score || 0).toFixed(1)} | Change {parseFloat(alert.score_change || 0).toFixed(1)} | Velocity {parseFloat(alert.velocity || 0).toFixed(2)}
+                    </div>
+                  </div>
+                  <button
+                    className="btn-secondary"
+                    style={{ width: 'auto', margin: 0, padding: '8px 12px', fontSize: '12px' }}
+                    onClick={() => onSelectStock({ ...alert, symbol: alert.symbol })}
+                  >
+                    Inspect
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── SECTION 0: My Positions (Core + External) ── */}
       {positions?.positions?.length > 0 ? (
@@ -2045,7 +2156,7 @@ function App() {
           </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
-              <span className="nav-icon">🛡️</span> Admin Panel
+              <span className="nav-icon">🛡️</span> Platform Intelligence
             </button>
           )}
         </div>

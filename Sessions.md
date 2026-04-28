@@ -17,6 +17,9 @@
   - Updated `frontend/src/LandingPage_Original.tsx` after confirming the old live headline text exactly matched that file, so either landing page entry now reflects the new messaging after redeploy.
 - **Startup Import Fix**:
   - Fixed `api/fundamental.py` to use the FastAPI database dependency from `api.deps`, resolving the Railway boot failure caused by importing a non-existent `get_db` symbol from `engine_core.db`.
+- **Latest Dashboard Surfacing**:
+  - Exposed the new QIF/trajectory layer directly on the default logged-in dashboard in `frontend/src/App.tsx` so the newest intelligence appears immediately instead of staying mostly hidden in the admin page and stock modal.
+  - Renamed the admin navigation label to `Platform Intelligence` to match the newer dashboard language.
 
 ## **April 28, 2026 (Night): Quality Investor Framework (QIF) & Portfolio Intelligence**
 - **Objective**: Integrate fundamental analysis and capital allocation logic to transform MRI from a static tool into a forward-looking decision engine.
