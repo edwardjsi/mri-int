@@ -139,6 +139,7 @@ def get_daily_leaderboard(conn=Depends(get_db), admin=Depends(verify_admin)):
             SELECT ss.symbol, ss.total_score, ss.date,
                    ss.condition_ema_50_200, ss.condition_ema_200_slope,
                    ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+                   ss.condition_breakout_10d, ss.condition_price_quality,
                    dp.close, dp.volume
             FROM stock_scores ss
             JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
@@ -212,6 +213,7 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 ss.total_score as score,
                 ss.condition_ema_50_200, ss.condition_ema_200_slope,
                 ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+                ss.condition_breakout_10d, ss.condition_price_quality,
                 dp.close as current_price,
                 dp.rs_90d,
                 (COALESCE(ss.condition_6m_high, FALSE) AND COALESCE(ss.condition_volume, FALSE)) as is_breakout
@@ -220,7 +222,8 @@ def get_global_universe(conn=Depends(get_db), admin=Depends(verify_admin)):
                 SELECT DISTINCT ON (symbol) 
                     symbol, total_score, date,
                     condition_ema_50_200, condition_ema_200_slope,
-                    condition_6m_high, condition_volume, condition_rs
+                    condition_6m_high, condition_volume, condition_rs,
+                    condition_breakout_10d, condition_price_quality
                 FROM stock_scores 
                 ORDER BY symbol, date DESC
             ) ss ON ss.symbol = i.symbol

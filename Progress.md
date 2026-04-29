@@ -2,6 +2,43 @@
 
 ---
 
+## 📅 Session: April 29, 2026 — Swing Trade Execution Path Repair
+**Session Start:** In Progress
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. STEE Pipeline Repair ✅
+- **Execution Restored:** Updated `scripts/pipeline_cloud.sh` so the live cloud pipeline now runs `engine_core/swing_execution_engine.py` after core signal generation and before email delivery.
+- **Operational Impact:** This restores the missing write path into `swing_trades`, which was the main reason swing trades were not appearing in the admin dashboard or user portfolio surfaces.
+
+#### 2. Dashboard Data Shape Repair ✅
+- **Portfolio API Expansion:** Updated `api/portfolio.py` to return `condition_breakout_10d` and `condition_price_quality` for both core and swing positions.
+- **Intelligence Compatibility:** Open-position cards and stock intelligence modals now receive the full 7-step condition set expected by the new dashboard.
+
+#### 3. Shadow Swing Feed Fix ✅
+- **API Bug Repair:** Fixed `/api/signals/shadow` in `api/signals.py` by correctly handling dict/tuple rows and returning the real latest `close` price.
+- **UI Impact:** The shadow momentum / swing discovery view can now render real prices and breakout metadata without relying on broken row parsing.
+
+#### 4. Verification ✅
+- **Python Syntax:** Passed `python -m py_compile` for `api/portfolio.py`, `api/signals.py`, `engine_core/swing_execution_engine.py`, and `engine_core/email_service.py`.
+- **Shell Syntax:** Passed `sh -n scripts/pipeline_cloud.sh`.
+
+#### 5. New Dashboard Load Repair ✅
+- **Frontend Crash Fix:** Repaired `frontend/src/AdminDashboard.tsx` so `loadAdminIntel()` now defines and calls `fetchHealth()` correctly instead of crashing on an undefined function.
+- **Admin Payload Upgrade:** Updated `api/admin.py` to return `condition_breakout_10d` and `condition_price_quality` for the daily leaderboard and global explorer, keeping the new dashboard’s stock modal aligned with the 7-step intelligence model.
+- **Server Verification:** Passed `python -m py_compile api/admin.py`.
+
+#### 6. Swing Momentum Visibility Repair ✅
+- **Silent Blank-State Fix:** Updated `frontend/src/App.tsx` so the `Swing Momentum` page now surfaces API errors and empty-feed states instead of rendering a blank grid when `/api/signals/shadow` has no visible cards to show.
+- **User-Facing Impact:** Clicking the old dashboard `Swing Momentum` link should now show either momentum cards, a real empty state, or a visible error message, rather than “nothing.”
+
+### ⏳ Left for Next Step
+1. Run the updated cloud pipeline against the active database and verify fresh inserts into `swing_trades`.
+2. Build or redeploy the frontend bundle and validate that the repaired admin dashboard now renders the new intelligence layer instead of failing on load.
+3. Validate that the main dashboard now shows same-day STEE breakout cards and that the admin `swing-trades` table populates live rows.
+
 ## 📅 Session: April 28, 2026 (Late Night) — Landing + Dashboard Activation
 **Session Start:** 22:45 IST
 **Session End:** In Progress

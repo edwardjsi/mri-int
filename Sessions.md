@@ -1,5 +1,18 @@
 # **MRI Sessions Log**
 
+## **April 29, 2026: Swing Trade Execution Path Repair**
+- **Objective**: Restore the broken STEE swing-trade flow before addressing the broader dashboard issues.
+- **Actions**:
+  - **Pipeline Orchestration:** Updated `scripts/pipeline_cloud.sh` to run `engine_core/swing_execution_engine.py` after core client signals and before email notifications so swing trades are actually created in `swing_trades`.
+  - **Portfolio API Repair:** Expanded `api/portfolio.py` to include `condition_breakout_10d` and `condition_price_quality` for both core and swing positions so the dashboard intelligence modal can render the full 7-step breakdown for open positions.
+  - **Shadow Swing API Fix:** Repaired `api/signals.py` `/api/signals/shadow` by defining the row-shape guard correctly and returning the real latest `close` price instead of `0`, preventing the swing discovery view from misrendering.
+  - **Dashboard Load Repair:** Fixed `frontend/src/AdminDashboard.tsx` where `loadAdminIntel()` called an undefined `fetchHealth()` function, which would crash the new admin dashboard before render.
+  - **Admin Intelligence Alignment:** Updated `api/admin.py` and `frontend/src/AdminDashboard.tsx` so the daily leaderboard and global explorer now pass the full 7-step condition set (`breakout_10d`, `price_quality` included) into the stock intelligence modal.
+  - **Swing Momentum UX Repair:** Updated `frontend/src/App.tsx` so the old `Swing Momentum` page now shows a visible empty/error state when `/api/signals/shadow` returns no candidates or an error payload, instead of rendering a blank section that looks broken.
+  - **Verification:** Passed `python -m py_compile` for the touched Python modules and `sh -n scripts/pipeline_cloud.sh` for the updated pipeline script.
+- **Result**: The STEE engine is now back in the live execution chain, and the swing-related API responses are aligned with the dashboard’s expected data shape.
+- **Next Step**: Run the cloud pipeline against the target database, confirm new rows appear in `swing_trades`, and verify the repaired admin dashboard renders the new intelligence layer in a built frontend runtime.
+
 ## **April 28, 2026 (Late Night): Landing + Dashboard Activation**
 - **Objective**: Make the new landing copy and new dashboard safe to ship from the current frontend source.
 - **Actions**:

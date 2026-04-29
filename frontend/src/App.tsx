@@ -674,11 +674,22 @@ function AddCapitalDialog({ onConfirm, onCancel }: {
 function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     api.getShadowSignals()
-      .then(setData)
-      .catch(console.error)
+      .then((res: any) => {
+        setData(res);
+        if (res?.error) {
+          setLoadError(typeof res.error === 'string' ? res.error : 'Swing Momentum feed returned an unexpected response.');
+        } else {
+          setLoadError('');
+        }
+      })
+      .catch((err: any) => {
+        console.error(err);
+        setLoadError(err?.message || 'Could not load the Swing Momentum feed.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -701,6 +712,18 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
           This ensures the stock is actively clearing a ceiling with high volume before you jump in.
         </p>
       </div>
+
+      {loadError && (
+        <div className="empty-state" style={{ marginBottom: '20px' }}>
+          ⚠️ Swing Momentum could not load cleanly: {loadError}
+        </div>
+      )}
+
+      {!loadError && stocks.length === 0 && (
+        <div className="empty-state" style={{ marginBottom: '20px' }}>
+          No swing momentum candidates are available right now. This usually means today&apos;s shadow feed is empty or the latest score snapshot has not populated yet.
+        </div>
+      )}
 
       <div className="signals-grid">
         {stocks.map((s: any) => {

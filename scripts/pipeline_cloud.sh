@@ -32,7 +32,7 @@ mkdir -p "$PROJECT_DIR/logs"
 echo "=== MRI Cloud Pipeline — $(date) ===" | tee -a "$LOG_FILE"
 
 # Step 1: Ingest today's data (indices + Nifty 500 symbols)
-echo "[1/7] Ingesting today's market data..." | tee -a "$LOG_FILE"
+echo "[1/8] Ingesting today's market data..." | tee -a "$LOG_FILE"
 python - <<'PY' 2>&1 | tee -a "$LOG_FILE"
 import pandas as pd, requests, io
 from engine_core.ingestion_engine import load_indices, load_stocks
@@ -48,27 +48,31 @@ load_stocks(symbols)
 PY
 
 # Step 2: Compute indicators
-echo "[2/7] Running Indicator Engine..." | tee -a "$LOG_FILE"
+echo "[2/8] Running Indicator Engine..." | tee -a "$LOG_FILE"
 python engine_core/indicator_engine.py 2>&1 | tee -a "$LOG_FILE"
 
 # Step 3: Compute regime + scores
-echo "[3/7] Running Regime Engine..." | tee -a "$LOG_FILE"
+echo "[3/8] Running Regime Engine..." | tee -a "$LOG_FILE"
 python engine_core/regime_engine.py 2>&1 | tee -a "$LOG_FILE"
 
 # Step 4: Generate client signals
-echo "[4/7] Generating client signals..." | tee -a "$LOG_FILE"
+echo "[4/8] Generating client signals..." | tee -a "$LOG_FILE"
 python engine_core/signal_generator.py 2>&1 | tee -a "$LOG_FILE"
 
-# Step 5: Send email notifications (Including STEE)
-echo "[5/7] Sending signal emails via SES..." | tee -a "$LOG_FILE"
+# Step 5: Run swing execution engine before emails so STEE trades exist for notifications/UI
+echo "[5/8] Running STEE swing execution engine..." | tee -a "$LOG_FILE"
+python engine_core/swing_execution_engine.py 2>&1 | tee -a "$LOG_FILE"
+
+# Step 6: Send email notifications (Including STEE)
+echo "[6/8] Sending signal emails via SES..." | tee -a "$LOG_FILE"
 python engine_core/email_service.py 2>&1 | tee -a "$LOG_FILE"
 
-# Step 6: Pipeline Health Monitor (Auto-Alert on Drift)
-echo "[6/7] Running Pipeline Health Monitor..." | tee -a "$LOG_FILE"
+# Step 7: Pipeline Health Monitor (Auto-Alert on Drift)
+echo "[7/8] Running Pipeline Health Monitor..." | tee -a "$LOG_FILE"
 python scripts/pipeline_health_monitor.py 2>&1 | tee -a "$LOG_FILE"
 
-# Step 7: Fundamental Quality analysis (Top 20 candidates)
-echo "[7/7] Running Fundamental Quality Analysis for top candidates..." | tee -a "$LOG_FILE"
+# Step 8: Fundamental Quality analysis (Top 20 candidates)
+echo "[8/8] Running Fundamental Quality Analysis for top candidates..." | tee -a "$LOG_FILE"
 python - <<'PY' 2>&1 | tee -a "$LOG_FILE"
 from engine_core.db import get_connection
 from engine_fundamental.collector import fetch_and_store_financials

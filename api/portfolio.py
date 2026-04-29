@@ -25,7 +25,8 @@ def get_open_positions(
                ROUND(((dp.close - cp.entry_price) / cp.entry_price) * 100, 2) AS pnl_pct,
                ss.total_score,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality
         FROM client_portfolio cp
         LEFT JOIN LATERAL (
             SELECT close FROM daily_prices
@@ -34,7 +35,8 @@ def get_open_positions(
         ) dp ON true
         LEFT JOIN LATERAL (
             SELECT total_score, condition_ema_50_200, condition_ema_200_slope,
-                   condition_6m_high, condition_volume, condition_rs
+                   condition_6m_high, condition_volume, condition_rs,
+                   condition_breakout_10d, condition_price_quality
             FROM stock_scores
             WHERE symbol = cp.symbol
             ORDER BY date DESC LIMIT 1
@@ -54,7 +56,8 @@ def get_open_positions(
                ROUND(((dp.close - st.entry_price) / st.entry_price) * 100, 2) AS pnl_pct,
                ss.total_score,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+               ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+               ss.condition_breakout_10d, ss.condition_price_quality
         FROM swing_trades st
         LEFT JOIN LATERAL (
             SELECT close FROM daily_prices
@@ -63,7 +66,8 @@ def get_open_positions(
         ) dp ON true
         LEFT JOIN LATERAL (
             SELECT total_score, condition_ema_50_200, condition_ema_200_slope,
-                   condition_6m_high, condition_volume, condition_rs
+                   condition_6m_high, condition_volume, condition_rs,
+                   condition_breakout_10d, condition_price_quality
             FROM stock_scores
             WHERE symbol = st.symbol
             ORDER BY date DESC LIMIT 1
@@ -105,6 +109,8 @@ def get_open_positions(
                 "at_6m_high": bool(p["condition_6m_high"] if is_dict else p[10]),
                 "volume_surge": bool(p["condition_volume"] if is_dict else p[11]),
                 "relative_strength": bool(p["condition_rs"] if is_dict else p[12]),
+                "breakout_10d": bool(p["condition_breakout_10d"] if is_dict else p[13]),
+                "price_quality": bool(p["condition_price_quality"] if is_dict else p[14]),
             }
 
         positions.append(
@@ -133,6 +139,8 @@ def get_open_positions(
                 "at_6m_high": bool(p["condition_6m_high"] if is_dict_sw else p[10]),
                 "volume_surge": bool(p["condition_volume"] if is_dict_sw else p[11]),
                 "relative_strength": bool(p["condition_rs"] if is_dict_sw else p[12]),
+                "breakout_10d": bool(p["condition_breakout_10d"] if is_dict_sw else p[13]),
+                "price_quality": bool(p["condition_price_quality"] if is_dict_sw else p[14]),
             }
 
         positions.append(

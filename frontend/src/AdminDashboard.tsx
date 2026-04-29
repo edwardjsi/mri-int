@@ -97,6 +97,10 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAdminMetrics(); setMetrics(data); }
       catch (e) { console.error('Metrics failed', e); }
     };
+    const fetchHealth = async () => {
+      try { const data = await api.getAdminDataHealth(); setHealth(data); }
+      catch (e) { console.error('Health failed', e); }
+    };
     const fetchTop = async () => {
       try { const data = await api.getAdminTopStocks(); setTopStocks(data); }
       catch (e) { console.error('Top stocks failed', e); }
@@ -361,7 +365,9 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                             ema_200_slope_positive: s.condition_ema_200_slope,
                             at_6m_high: s.condition_6m_high,
                             volume_surge: s.condition_volume,
-                            relative_strength: s.condition_rs
+                            relative_strength: s.condition_rs,
+                            breakout_10d: s.condition_breakout_10d,
+                            price_quality: s.condition_price_quality
                         };
                         return (
                             <tr key={s.symbol} onClick={() => onSelectStock({ ...s, conditions, score: s.total_score, price: s.close })} className="clickable-row">
@@ -597,7 +603,9 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                             ema_200_slope_positive: s.condition_ema_200_slope,
                             at_6m_high: s.condition_6m_high,
                             volume_surge: s.condition_volume,
-                            relative_strength: s.condition_rs
+                            relative_strength: s.condition_rs,
+                            breakout_10d: s.condition_breakout_10d,
+                            price_quality: s.condition_price_quality
                         };
                         return (
                             <tr key={s.symbol} onClick={() => onSelectStock({ ...s, conditions, price: s.current_price })} className="clickable-row">

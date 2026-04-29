@@ -19,21 +19,26 @@ def get_shadow_signals(conn=Depends(get_db)):
             SELECT s.symbol, s.total_score, s.date,
                    s.condition_ema_50_200, s.condition_ema_200_slope,
                    s.condition_6m_high, s.condition_volume, s.condition_rs,
-                   s.condition_breakout_10d, s.condition_price_quality
+                   s.condition_breakout_10d, s.condition_price_quality,
+                   dp.close
             FROM public.stock_scores s
+            LEFT JOIN public.daily_prices dp
+              ON dp.symbol = s.symbol AND dp.date = s.date
             WHERE s.date = (SELECT MAX(date) FROM public.stock_scores)
             ORDER BY s.total_score DESC, (s.condition_6m_high AND s.condition_volume) DESC, s.symbol ASC
             LIMIT 10
         """)
         rows = cur.fetchall()
+        is_dict = not rows or isinstance(rows[0], dict)
         
         stocks = []
         for r in rows:
-            if isinstance(r, dict):
+            if is_dict:
                 sym, score, dt = r['symbol'], r['total_score'], r['date']
                 c_ema, c_slope, c_high, c_vol, c_rs = r['condition_ema_50_200'], r['condition_ema_200_slope'], r['condition_6m_high'], r['condition_volume'], r['condition_rs']
+                c_breakout, c_quality, close = r['condition_breakout_10d'], r['condition_price_quality'], r['close']
             else:
-                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs = r
+                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs, c_breakout, c_quality, close = r
             
             # Explicitly force breakout detection
             is_breakout = bool(c_high and c_vol)
@@ -46,16 +51,14 @@ def get_shadow_signals(conn=Depends(get_db)):
                 "condition_6m_high": bool(c_high),
                 "condition_volume": bool(c_vol),
                 "condition_rs": bool(c_rs),
-                "condition_breakout_10d": bool(r['condition_breakout_10d'] if is_dict else r[8]),
-                "condition_price_quality": bool(r['condition_price_quality'] if is_dict else r[9]),
-                "close": 0,
+                "condition_breakout_10d": bool(c_breakout),
+                "condition_price_quality": bool(c_quality),
+                "close": float(close) if close is not None else None,
                 "is_breakout": is_breakout
             })
             
-        return {
-            "date": str(rows[0][2] if not isinstance(rows[0], dict) else rows[0]['date']) if rows else None,
-            "stocks": stocks
-        }
+        latest_date = rows[0]["date"] if is_dict and rows else (rows[0][2] if rows else None)
+        return {"date": str(latest_date) if latest_date else None, "stocks": stocks}
     except Exception as e:
         import logging
         logging.getLogger("mri_api").error(f"SHADOW_API_ERROR: {e}")
