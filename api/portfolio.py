@@ -123,7 +123,8 @@ def get_open_positions(
                 "current_price": float(p["current_price"] if is_dict else p[5]) if (p["current_price"] if is_dict else p[5]) else None,
                 "pnl_pct": float(p["pnl_pct"] if is_dict else p[6]) if (p["pnl_pct"] if is_dict else p[6]) else None,
                 "score": p["total_score"] if is_dict else p[7],
-                "conditions": conditions
+                "conditions": conditions,
+                "breakout_candidate": bool(p["condition_breakout_10d"] if is_dict else p[13]) if has_score and (p["total_score"] if is_dict else p[7]) >= 80 else False
             }
         )
 
@@ -153,7 +154,8 @@ def get_open_positions(
                 "current_price": float(p["current_price"] if is_dict_sw else p[5]) if (p["current_price"] if is_dict_sw else p[5]) else None,
                 "pnl_pct": float(p["pnl_pct"] if is_dict_sw else p[6]) if (p["pnl_pct"] if is_dict_sw else p[6]) else None,
                 "score": p["total_score"] if is_dict_sw else p[7],
-                "conditions": conditions
+                "conditions": conditions,
+                "breakout_candidate": bool(p["condition_breakout_10d"] if is_dict_sw else p[13]) if has_score and (p["total_score"] if is_dict_sw else p[7]) >= 80 else False
             }
         )
 
@@ -183,6 +185,9 @@ def get_open_positions(
                         "quantity": h["quantity"],
                         "current_price": float(h["current_price"]) if h.get("current_price") else None,
                         "pnl_pct": float(h["pnl_pct"]) if h.get("pnl_pct") is not None else None,
+                        "score": h.get("score"),
+                        "conditions": h.get("conditions"),
+                        "breakout_candidate": h.get("breakout_candidate", False)
                     }
                 )
         except Exception:

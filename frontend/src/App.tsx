@@ -989,10 +989,10 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                 {positions.positions.map((p: any) => (
                   <tr key={`${p.source}-${p.symbol}`} onClick={() => onSelectStock(p)} className="clickable-row">
                     <td className="font-bold">
-                      {p.symbol}
-                      {p.conditions?.at_6m_high && p.conditions?.volume_surge && (
-                        <div className="score-trend-indicator" style={{ fontSize: '9px', fontWeight: 'normal' }}>🚀 BREAKOUT</div>
+                      {p.breakout_candidate && (
+                        <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
                       )}
+                      {p.symbol}
                     </td>
                     <td>
                       <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
@@ -1227,7 +1227,12 @@ function PerformancePage() {
               <tbody>
                 {positions.positions.map((p: any) => (
                   <tr key={`${p.source}-${p.symbol}`}>
-                    <td className="font-bold">{p.symbol}</td>
+                    <td className="font-bold">
+                      {p.breakout_candidate && (
+                        <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
+                      )}
+                      {p.symbol}
+                    </td>
                     <td>
                       <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
                         {p.source}
