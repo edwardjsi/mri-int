@@ -55,6 +55,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
+from psycopg2.extras import RealDictCursor
+
 def get_current_client(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     conn=Depends(get_db),
@@ -68,7 +70,7 @@ def get_current_client(
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired or invalid")
 
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT id, email, name, is_active, initial_capital, created_at FROM clients WHERE id = %s", (str(client_id),))
     client = cur.fetchone()
     if not client or not client["is_active"]:

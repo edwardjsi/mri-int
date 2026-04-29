@@ -88,22 +88,34 @@ def trigger_debate(symbol: str, background_tasks: BackgroundTasks, client=Depend
         raise HTTPException(status_code=404, detail=f"{symbol} not found in quality verdicts. Run QIF pipeline first.")
 
     client_email = client.get("email") if client else None
+    logger.info(f"Debate triggered for {symbol} by {client_email}")
 
     def _run_and_email():
-        analysis = run_debate(symbol)
-        if "error" not in analysis:
-            html = format_debate_email_html(analysis)
-            send_email_custom(
-                recipient_email=client_email,
-                subject=f"MRI Forensic Debate: {symbol}",
-                html_body=html
-            )
-        else:
-            send_email_custom(
-                recipient_email=client_email,
-                subject=f"MRI Debate Failed: {symbol}",
-                html_body=f"<p>Debate analysis could not be generated for {symbol}.</p><pre>{analysis.get('error')}</pre>"
-            )
+        try:
+            logger.info(f"Starting background debate analysis for {symbol}...")
+            analysis = run_debate(symbol)
+            if "error" not in analysis:
+                logger.info(f"Debate analysis complete for {symbol}. Sending email to {client_email}...")
+                html = format_debate_email_html(analysis)
+                success = send_email_custom(
+                    recipient_email=client_email,
+                    subject=f"MRI Forensic Debate: {symbol}",
+                    html_body=html
+                )
+                if success:
+                    logger.info(f"Debate email successfully sent for {symbol}")
+                else:
+                    logger.error(f"Failed to send debate email for {symbol} to {client_email}")
+            else:
+                error_msg = analysis.get('error')
+                logger.error(f"Debate analysis failed for {symbol}: {error_msg}")
+                send_email_custom(
+                    recipient_email=client_email,
+                    subject=f"MRI Debate Failed: {symbol}",
+                    html_body=f"<p>Debate analysis could not be generated for {symbol}.</p><pre>{error_msg}</pre>"
+                )
+        except Exception as e:
+            logger.exception(f"CRITICAL ERROR in debate background task for {symbol}: {e}")
 
     background_tasks.add_task(_run_and_email)
     return {"status": "debate_started", "symbol": symbol, "message": f"Analysis running for {symbol}. Results will be emailed to {client_email or 'your address'} shortly."}
