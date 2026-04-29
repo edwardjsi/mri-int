@@ -275,11 +275,10 @@ def analyze_single_stock(symbol):
 
 def update_all_breakout_candidates(conn=None):
     """
-    EOD pipeline step: for every client holding, check if the stock is a breakout
-    candidate today and update client_external_holdings.breakout_candidate.
+    EOD pipeline step: for every client holding AND watchlist item, check if the stock 
+    is a breakout candidate today and update both tables.
 
     A breakout candidate = condition_breakout_10d = True AND total_score >= 60.
-    Runs after market close so the Risk Audit page reflects today's signals.
     """
     should_close = False
     if conn is None:
@@ -288,44 +287,48 @@ def update_all_breakout_candidates(conn=None):
 
     try:
         cur = conn.cursor()
+        
+        # 1. Update Digital Twin (External Holdings)
         cur.execute("""
             SELECT DISTINCT ON (eh.client_id, eh.symbol)
-                eh.client_id, eh.symbol, eh.id,
-                ss.condition_breakout_10d, ss.total_score
+                eh.id, ss.condition_breakout_10d, ss.total_score
             FROM client_external_holdings eh
             LEFT JOIN LATERAL (
-                SELECT symbol, condition_breakout_10d, total_score
+                SELECT condition_breakout_10d, total_score
                 FROM stock_scores
                 WHERE symbol = eh.symbol
-                ORDER BY date DESC
-                LIMIT 1
+                ORDER BY date DESC LIMIT 1
             ) ss ON true
             WHERE eh.symbol IS NOT NULL
         """)
-        rows = cur.fetchall()
-        updated = 0
-        for row in rows:
-            # eh_id is at index 2, breakout_10d at index 3, total_score at index 4
-            eh_id = row[2]
-            breakout_10d = row[3]
-            total_score = row[4]
-            is_candidate = (
-                breakout_10d is True and
-                total_score is not None and
-                total_score >= 60
-            )
-            cur.execute("""
-                UPDATE client_external_holdings
-                SET breakout_candidate = %s, updated_at = NOW()
-                WHERE id = %s
-            """, (is_candidate, eh_id))
-            updated += 1
+        for row in cur.fetchall():
+            eh_id, breakout, score = row[0], row[1], row[2]
+            is_candidate = (breakout is True and score is not None and score >= 60)
+            cur.execute("UPDATE client_external_holdings SET breakout_candidate = %s, updated_at = NOW() WHERE id = %s", (is_candidate, eh_id))
+
+        # 2. Update Watchlist
+        cur.execute("""
+            SELECT DISTINCT ON (cw.client_id, cw.symbol)
+                cw.id, ss.condition_breakout_10d, ss.total_score
+            FROM client_watchlist cw
+            LEFT JOIN LATERAL (
+                SELECT condition_breakout_10d, total_score
+                FROM stock_scores
+                WHERE symbol = cw.symbol
+                ORDER BY date DESC LIMIT 1
+            ) ss ON true
+            WHERE cw.symbol IS NOT NULL
+        """)
+        for row in cur.fetchall():
+            cw_id, breakout, score = row[0], row[1], row[2]
+            is_candidate = (breakout is True and score is not None and score >= 60)
+            cur.execute("UPDATE client_watchlist SET breakout_candidate = %s WHERE id = %s", (is_candidate, cw_id))
+
         conn.commit()
         cur.close()
-        logger.info(f"Breakout candidate update complete: {updated} holdings evaluated")
-        return updated
+        logger.info("Breakout candidate update complete for holdings and watchlist.")
     except Exception as e:
-        logger.error(f"Breakout candidate update failed: {e}")
+        logger.error(f"Breakout update failed: {e}")
         conn.rollback()
         raise
     finally:

@@ -2098,7 +2098,12 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
              <tbody>
               {watchlist.map(item => (
                 <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}} onClick={() => !item.is_pending && onSelectStock(item)} className={item.is_pending ? '' : 'clickable-row'}>
-                  <td className="font-bold">{item.symbol}</td>
+                  <td className="font-bold">
+                    {item.breakout_candidate && (
+                      <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
+                    )}
+                    {item.symbol}
+                  </td>
                   <td>{item.price ? `₹${item.price.toLocaleString()}` : (item.is_pending ? 'Saving...' : 'N/A')}</td>
                   <td>
                     {item.is_pending ? (

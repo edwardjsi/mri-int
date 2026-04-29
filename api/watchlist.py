@@ -27,6 +27,7 @@ class WatchlistItem(BaseModel):
     regime: Optional[str] = None
     trend_alignment: Optional[str] = None
     conditions: Optional[ScoreConditions] = None
+    breakout_candidate: bool = False
     is_not_found: bool = False
     is_pending: bool = False
 
@@ -92,7 +93,8 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 WHEN dp.close < dp.ema_200 THEN 'BEAR'
                 ELSE 'NEUTRAL'
             END as trend_alignment,
-            (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found
+            (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found,
+            cw.breakout_candidate
         FROM client_watchlist cw
         LEFT JOIN (
             SELECT DISTINCT ON (symbol) 
@@ -123,6 +125,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
         score = None
         trend = None
         conditions = None
+        breakout_candidate = row["breakout_candidate"] if is_dict else row[10]
         
         if row:
             try:
@@ -151,6 +154,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             score=score,
             trend_alignment=trend,
             conditions=conditions,
+            breakout_candidate=bool(breakout_candidate),
             is_not_found=row["is_not_found"] if is_dict else False
         ))
         

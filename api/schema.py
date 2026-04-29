@@ -66,11 +66,13 @@ def ensure_required_tables(conn) -> None:
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
             symbol VARCHAR(20) NOT NULL,
+            breakout_candidate BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, symbol)
         );
         """
     )
+    cur.execute("ALTER TABLE client_watchlist ADD COLUMN IF NOT EXISTS breakout_candidate BOOLEAN DEFAULT FALSE;")
 
     # 4. Client Signals (Daily Recommendations)
     cur.execute(
