@@ -172,6 +172,19 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
     }
   };
 
+  const handleTriggerPipeline = async () => {
+    if (!confirm('This will run the FULL pipeline: ingest → indicators → regime → signals → STEE → emails → QIF. This takes 5-10 minutes. Proceed?')) return;
+    setIsRecovering(true);
+    try {
+      await api.triggerPipeline();
+      alert('Full pipeline started! Check back in 5-10 minutes for updated data.');
+    } catch (e) {
+      alert('Failed to trigger pipeline: ' + e.message);
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
   const handleAddGlobalSymbol = async () => {
     if (!newSymbol) return;
     try {
@@ -261,9 +274,18 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                 onClick={handleTriggerRecovery} 
                 disabled={isRecovering}
                 className="action-btn btn-primary"
-                style={{ width: '100%', height: '100%', fontSize: '0.9rem' }}
+                style={{ width: '48%', height: '100%', fontSize: '0.9rem' }}
             >
                 {isRecovering ? '⏳ Repairing...' : '🛠️ Force Repair'}
+            </button>
+            <div style={{ width: '4%' }}></div>
+<button 
+                onClick={handleTriggerPipeline} 
+                disabled={isRecovering}
+                className="action-btn btn-executed"
+                style={{ width: '48%', height: '100%', fontSize: '0.9rem' }}
+            >
+                {isRecovering ? '⏳ Running...' : '🚀 Run Pipeline'}
             </button>
         </div>
       </div>

@@ -177,6 +177,7 @@ export const api = {
     getAdminSwingTrades: () => apiFetch('/admin/swing-trades'),
     getAdminAuditLogs: () => apiFetch('/admin/audit-logs'),
     triggerAdminRecovery: () => apiFetch('/admin/trigger-recovery', { method: 'POST' }),
+    triggerPipeline: () => apiFetch('/admin/trigger-pipeline', { method: 'POST' }),
     addGlobalSymbol: (symbol: string) => apiFetch('/admin/global-universe/add', { method: 'POST', body: JSON.stringify({ symbol }) }),
     repairSymbol: (symbol: string) => apiFetch('/admin/symbol/repair', { method: 'POST', body: JSON.stringify({ symbol }) }),
 
