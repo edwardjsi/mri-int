@@ -145,6 +145,24 @@ function QualityVerdict({ symbol }: { symbol: string }) {
 
 /* ─── Stock Details Modal ────────────────────────────────── */
 function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
+  const [debating, setDebating] = useState(false);
+  const [debateStatus, setDebateStatus] = useState<string | null>(null);
+
+  const handleTriggerDebate = async () => {
+    if (!confirm(`Trigger AI Forensic Debate for ${stock.symbol}? This will analyze guidance vs reality and email you a deep-dive report.`)) return;
+    setDebating(true);
+    setDebateStatus(null);
+    try {
+      const res = await api.triggerDebate(stock.symbol);
+      setDebateStatus(res.message || "Debate triggered! Check your email in a few minutes.");
+    } catch (err: any) {
+      setDebateStatus("Failed to start debate. Ensure this stock has fundamental data.");
+      console.error(err);
+    } finally {
+      setDebating(false);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -178,8 +196,37 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
 
         <QualityVerdict symbol={stock.symbol} />
 
-        <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
-          <button className="btn-primary" onClick={onClose}>Close Report</button>
+        {debateStatus && (
+          <div style={{ 
+            marginTop: '1.5rem', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            background: debateStatus.includes('Failed') ? '#ef444415' : '#22c55e15',
+            border: `1px solid ${debateStatus.includes('Failed') ? '#ef444440' : '#22c55e40'}`,
+            color: debateStatus.includes('Failed') ? '#fca5a5' : '#86efac',
+            fontSize: '12px',
+            textAlign: 'center'
+          }}>
+            {debateStatus}
+          </div>
+        )}
+
+        <div className="modal-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
+          <button 
+            className="btn-secondary" 
+            onClick={handleTriggerDebate}
+            disabled={debating}
+            style={{ 
+              flex: 1, 
+              background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', 
+              color: 'white',
+              border: 'none',
+              fontWeight: 'bold'
+            }}
+          >
+            {debating ? '🧠 AI Debating...' : '📊 AI Forensic Debate'}
+          </button>
+          <button className="btn-primary" onClick={onClose} style={{ flex: 1 }}>Close Report</button>
         </div>
       </div>
     </div>
