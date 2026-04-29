@@ -4,7 +4,7 @@ from engine_fundamental.pipeline import run_quality_pipeline
 from engine_fundamental.collector import fetch_and_store_financials
 import logging
 
-router = APIRouter(prefix="/fundamental", tags=["fundamental"])
+router = APIRouter(prefix="/api/fundamental", tags=["fundamental"])
 logger = logging.getLogger(__name__)
 
 @router.get("/verdict/{symbol}")
