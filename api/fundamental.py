@@ -3,7 +3,7 @@ from api.deps import get_db, get_current_client
 from engine_fundamental.pipeline import run_quality_pipeline
 from engine_fundamental.collector import fetch_and_store_financials
 from engine_qualitative.debate import run_debate, format_debate_email_html
-from engine_core.email_service import send_alert_email
+from engine_core.email_service import send_email_custom
 import logging
 
 router = APIRouter(prefix="/api/fundamental", tags=["fundamental"])
@@ -93,14 +93,16 @@ def trigger_debate(symbol: str, background_tasks: BackgroundTasks, client=Depend
         analysis = run_debate(symbol)
         if "error" not in analysis:
             html = format_debate_email_html(analysis)
-            send_alert_email(
-                subject=f"MRI Debate: {symbol}",
-                message_html=html
+            send_email_custom(
+                recipient_email=client_email,
+                subject=f"MRI Forensic Debate: {symbol}",
+                html_body=html
             )
         else:
-            send_alert_email(
+            send_email_custom(
+                recipient_email=client_email,
                 subject=f"MRI Debate Failed: {symbol}",
-                message_html=f"<p>Debate analysis could not be generated.</p><pre>{analysis.get('error')}</pre>"
+                html_body=f"<p>Debate analysis could not be generated for {symbol}.</p><pre>{analysis.get('error')}</pre>"
             )
 
     background_tasks.add_task(_run_and_email)

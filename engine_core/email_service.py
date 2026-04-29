@@ -605,39 +605,30 @@ def send_portfolio_review(email: str, name: str, results: dict):
 
 def send_alert_email(subject: str, message_html: str):
     """Generic alert email for pipeline failures or data quality warnings."""
-    if not SENDER_EMAIL or not aws_credentials_present():
-        logger.warning("Email alerts disabled: credentials or SENDER_EMAIL missing.")
+    return send_email_custom(SENDER_EMAIL, f"MRI ALERT: {subject}", message_html)
+
+def send_email_custom(recipient_email: str, subject: str, html_body: str):
+    """Send a custom HTML email to a specific recipient."""
+    if not recipient_email or not SENDER_EMAIL or not aws_credentials_present():
+        logger.warning(f"Email disabled: recipient={recipient_email}, sender={SENDER_EMAIL}")
         return False
         
     try:
         ses_region = resolve_ses_region()
         ses = get_ses_client(ses_region)
         
-        html_body = f"""
-        <html>
-        <body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;color:#333;border:2px solid #ef4444;border-radius:12px;">
-            <h2 style="color:#ef4444">🚨 MRI Pipeline Alert</h2>
-            <p style="font-size:16px;font-weight:bold">{subject}</p>
-            <div style="background:#fef2f2;padding:15px;border-radius:4px;margin:20px 0">
-                {message_html}
-            </div>
-            <p style="font-size:12px;color:#999;text-align:center">This is an automated system alert from Market Regime Intelligence.</p>
-        </body>
-        </html>
-        """
-        
         ses.send_email(
             Source=SENDER_EMAIL,
-            Destination={"ToAddresses": [SENDER_EMAIL]}, # Send to admin
+            Destination={"ToAddresses": [recipient_email]},
             Message={
-                "Subject": {"Data": f"MRI ALERT: {subject}", "Charset": "UTF-8"},
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
                 "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
             },
         )
-        logger.info(f"✅ Alert email sent: {subject}")
+        logger.info(f"✅ Custom email sent to {recipient_email}: {subject}")
         return True
     except Exception as e:
-        logger.error(f"❌ Failed to send alert email: {e}")
+        logger.error(f"❌ Failed to send custom email to {recipient_email}: {e}")
         return False
 
 
