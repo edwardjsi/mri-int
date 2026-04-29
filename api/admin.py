@@ -409,3 +409,61 @@ def get_client_portfolio(client_id: str, conn=Depends(get_db), admin=Depends(ver
         return JSONResponse(status_code=500, content={"detail": str(e)})
     finally:
         cur.close()
+
+
+@router.get("/dashboard-health")
+def get_dashboard_health(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Quick production health snapshot for dashboard feed dependencies."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    checks = {}
+
+    def run_check(name: str, query: str):
+        try:
+            cur.execute(query)
+            row = cur.fetchone()
+            count = int(row["count"] if row and row.get("count") is not None else 0)
+            checks[name] = {"ok": True, "count": count}
+        except Exception as e:
+            checks[name] = {"ok": False, "count": 0, "error": str(e)}
+
+    try:
+        run_check(
+            "stock_scores_latest",
+            """
+            SELECT COUNT(*) AS count
+            FROM stock_scores
+            WHERE date = (SELECT MAX(date) FROM stock_scores)
+            """,
+        )
+        run_check(
+            "daily_prices_latest",
+            """
+            SELECT COUNT(*) AS count
+            FROM daily_prices
+            WHERE date = (SELECT MAX(date) FROM daily_prices)
+            """,
+        )
+        run_check(
+            "quality_verdicts",
+            "SELECT COUNT(*) AS count FROM quality_verdicts",
+        )
+        run_check(
+            "quality_improvers",
+            "SELECT COUNT(*) AS count FROM quality_verdicts WHERE score_change IS NOT NULL",
+        )
+        run_check(
+            "swing_trades_open",
+            "SELECT COUNT(*) AS count FROM swing_trades WHERE status IN ('OPEN', 'PARTIAL_EXIT')",
+        )
+        run_check(
+            "audit_logs_recent",
+            "SELECT COUNT(*) AS count FROM system_audit_logs WHERE timestamp >= NOW() - INTERVAL '7 days'",
+        )
+
+        overall_ok = all(v.get("ok") for v in checks.values())
+        return {"ok": overall_ok, "checks": checks}
+    except Exception as e:
+        logger.error(f"DASHBOARD HEALTH ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
