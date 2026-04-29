@@ -52,6 +52,10 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
   const [explorerSort, setGlobalSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_interest', direction: 'desc' });
+  const [qifSort, setQifSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'score', direction: 'desc' });
+  const [shadowSort, setShadowSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'perf_pct', direction: 'desc' });
+  const [swingSort, setSwingSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'entry_date', direction: 'desc' });
+  const [hofSort, setHofSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'perf_pct', direction: 'desc' });
 
   const handleLeaderboardSort = (key: string) => {
     setLeaderboardSort(prev => ({
@@ -66,6 +70,24 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
   };
+
+  const applySort = (arr: any[], sort: { key: string, direction: 'asc' | 'desc' }) =>
+    [...arr].sort((a, b) => {
+      const aVal = a[sort.key], bVal = b[sort.key];
+      if (aVal == null) return sort.direction === 'asc' ? 1 : -1;
+      if (bVal == null) return sort.direction === 'asc' ? -1 : 1;
+      if (aVal === bVal) return 0;
+      const res = aVal < bVal ? -1 : 1;
+      return sort.direction === 'asc' ? res : -res;
+    });
+
+  const handleQifSort = (key: string) => setQifSort(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+  const handleShadowSort = (key: string) => setShadowSort(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+  const handleSwingSort = (key: string) => setSwingSort(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+  const handleHofSort = (key: string) => setHofSort(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+
+  const sortIcon = (key: string, sort: { key: string, direction: 'asc' | 'desc' }) =>
+    sort.key === key ? (sort.direction === 'asc' ? '🔼' : '🔽') : '↕️';
 
   // Regime Status Indicator
   const [regimeStatus, setRegimeStatus] = useState<{ regime: string; date: string } | null>(null);
@@ -471,19 +493,19 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
             )}
             <div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
-                <thead>
-                    <tr>
-<th>Symbol</th>
-              <th>Verdict</th>
-              <th>Score</th>
-              <th>Change</th>
-              <th>Velocity</th>
+<thead>
+            <tr>
+              <th onClick={() => handleQifSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', qifSort)}</th>
+              <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Verdict {sortIcon('score', qifSort)}</th>
+              <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Score {sortIcon('score', qifSort)}</th>
+              <th onClick={() => handleQifSort('score_change')} style={{ cursor: 'pointer' }}>Change {sortIcon('score_change', qifSort)}</th>
+              <th onClick={() => handleQifSort('velocity')} style={{ cursor: 'pointer' }}>Velocity {sortIcon('velocity', qifSort)}</th>
               <th>Trend</th>
               <th>Actions</th>
             </tr>
-                </thead>
-                <tbody>
-                    {qualityLeaderboard.map(s => (
+          </thead>
+          <tbody>
+            {applySort(qualityLeaderboard, qifSort).map(s => (
                         <tr key={s.symbol + '_qif'} onClick={() => onSelectStock({ ...s, symbol: s.symbol })} className="clickable-row">
                             <td className="font-bold">{s.symbol}</td>
                             <td>
@@ -537,18 +559,18 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
         <p className="section-subtitle">What the Top 10 looks like today (ignores Market Regime filters).</p>
         <div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>First Entered Top 10</th>
-                        <th>Status</th>
-                        <th>Entry Price</th>
-                        <th>Current Price</th>
-                        <th>Total Return %</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {strategyShadow.map(s => (
+<thead>
+            <tr>
+              <th onClick={() => handleShadowSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', shadowSort)}</th>
+              <th onClick={() => handleShadowSort('first_entry_date')} style={{ cursor: 'pointer' }}>First Entered {sortIcon('first_entry_date', shadowSort)}</th>
+              <th onClick={() => handleShadowSort('is_active')} style={{ cursor: 'pointer' }}>Status {sortIcon('is_active', shadowSort)}</th>
+              <th onClick={() => handleShadowSort('entry_price')} style={{ cursor: 'pointer' }}>Entry Price {sortIcon('entry_price', shadowSort)}</th>
+              <th onClick={() => handleShadowSort('latest_price')} style={{ cursor: 'pointer' }}>Current Price {sortIcon('latest_price', shadowSort)}</th>
+              <th onClick={() => handleShadowSort('perf_pct')} style={{ cursor: 'pointer' }}>Total Return % {sortIcon('perf_pct', shadowSort)}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {applySort(strategyShadow, shadowSort).map(s => (
                         <tr key={s.symbol} style={!s.is_active ? { opacity: 0.6 } : {}}>
                             <td className="font-bold">{s.symbol}</td>
                             <td>{new Date(s.first_entry_date).toLocaleDateString()}</td>
@@ -575,24 +597,24 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
       <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">🚀 STEE Active Swing Trades</h3>
         <p className="section-subtitle">Real-time tracking of automated momentum breakout trades.</p>
-        <div className="table-container" style={{ marginTop: '16px' }}>
+<div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Client</th>
-                        <th>Symbol</th>
-                        <th>Entry Date</th>
-                        <th>Entry Price</th>
-                        <th>Stop Loss</th>
-                        <th>Current Price</th>
-                        <th>Qty</th>
-                        <th>PnL (₹)</th>
-                        <th>Perf %</th>
-                        <th>Status</th>
-                    </tr>
+              <thead>
+                <tr>
+                  <th onClick={() => handleSwingSort('client_name')} style={{ cursor: 'pointer' }}>Client {sortIcon('client_name', swingSort)}</th>
+                  <th onClick={() => handleSwingSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', swingSort)}</th>
+                  <th onClick={() => handleSwingSort('entry_date')} style={{ cursor: 'pointer' }}>Entry Date {sortIcon('entry_date', swingSort)}</th>
+<th onClick={() => handleSwingSort('entry_price')} style={{ cursor: 'pointer' }}>Entry Price {sortIcon('entry_price', swingSort)}</th>
+              <th>Stop Loss</th>
+              <th onClick={() => handleSwingSort('current_price')} style={{ cursor: 'pointer' }}>Current Price {sortIcon('current_price', swingSort)}</th>
+              <th onClick={() => handleSwingSort('quantity')} style={{ cursor: 'pointer' }}>Qty {sortIcon('quantity', swingSort)}</th>
+              <th onClick={() => handleSwingSort('pnl_abs')} style={{ cursor: 'pointer' }}>PnL (₹) {sortIcon('pnl_abs', swingSort)}</th>
+              <th onClick={() => handleSwingSort('perf_pct')} style={{ cursor: 'pointer' }}>Perf % {sortIcon('perf_pct', swingSort)}</th>
+              <th onClick={() => handleSwingSort('status')} style={{ cursor: 'pointer' }}>Status {sortIcon('status', swingSort)}</th>
+            </tr>
                 </thead>
                 <tbody>
-                    {swingTrades.map(t => (
+                    {applySort(swingTrades, swingSort).map(t => (
                         <tr key={t.id}>
                             <td className="text-xs opacity-70">{t.client_name}</td>
                             <td className="font-bold">{t.symbol}</td>
@@ -627,19 +649,19 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
         <p className="section-subtitle">Tracking stocks from their first 75+ score appearance in MRI.</p>
         <div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>First Seen</th>
-                        <th>Entry Price</th>
-                        <th>Current Price</th>
-                        <th>Perf %</th>
-                        <th>Max Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {hallOfFame.map(s => (
-                        <tr key={s.symbol}>
+<thead>
+            <tr>
+              <th onClick={() => handleHofSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', hofSort)}</th>
+              <th onClick={() => handleHofSort('first_appeared_date')} style={{ cursor: 'pointer' }}>First Seen {sortIcon('first_appeared_date', hofSort)}</th>
+              <th onClick={() => handleHofSort('entry_price')} style={{ cursor: 'pointer' }}>Entry Price {sortIcon('entry_price', hofSort)}</th>
+              <th onClick={() => handleHofSort('latest_price')} style={{ cursor: 'pointer' }}>Current Price {sortIcon('latest_price', hofSort)}</th>
+              <th onClick={() => handleHofSort('perf_pct')} style={{ cursor: 'pointer' }}>Perf % {sortIcon('perf_pct', hofSort)}</th>
+              <th onClick={() => handleHofSort('max_score')} style={{ cursor: 'pointer' }}>Max Score {sortIcon('max_score', hofSort)}</th>
+            </tr>
+          </thead>
+<tbody>
+            {applySort(hallOfFame, hofSort).map(s => (
+              <tr key={s.symbol}>
                             <td className="font-bold">{s.symbol}</td>
                             <td>{new Date(s.first_appeared_date).toLocaleDateString()}</td>
                             <td>₹{s.entry_price?.toLocaleString()}</td>
