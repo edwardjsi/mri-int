@@ -5,7 +5,7 @@ import io
 from engine_core.ingestion_engine import load_indices, load_stocks
 from engine_core.indicator_engine import compute_indicators_all
 from engine_core.regime_engine import compute_market_regime
-from engine_core.signal_generator import run_signal_generation
+from engine_core.signal_generator import run_signal_generator
 from engine_core.swing_execution_engine import run_swing_execution
 from engine_core.email_service import send_all_emails
 from engine_core.db import get_connection
@@ -41,17 +41,20 @@ def run_full_mri_pipeline():
         
         # Step 4: Signals
         logger.info("[4/8] Generating client signals...")
-        run_signal_generation()
+        run_signal_generator()
         
         # Step 5: STEE Swing Execution
         logger.info("[5/8] Running STEE swing execution engine...")
-        run_swing_execution()
+        from engine_core.swing_execution_engine import run_stee
+        run_stee()
         
         # Step 6: Emails
         logger.info("[6/8] Sending signal emails...")
         # Note: email_service.py might need AWS credentials
         try:
-            send_all_emails()
+            from engine_core.email_service import send_signal_emails, send_stee_signal_emails
+            send_signal_emails()
+            send_stee_signal_emails()
         except Exception as e:
             logger.error(f"Email sending failed: {e}")
             
