@@ -65,6 +65,19 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
     }));
   };
 
+  // Regime Status Indicator
+  const [regimeStatus, setRegimeStatus] = useState<{ regime: string; date: string } | null>(null);
+
+  useEffect(() => {
+    api.getRegime().then(d => setRegimeStatus(d)).catch(() => {});
+  }, []);
+
+  const getRegimeColor = (regime: string) => {
+    if (regime === 'BULLISH') return { bg: '#22c55e', text: 'white' };
+    if (regime === 'SIDEWAYS') return { bg: '#eab308', text: 'black' };
+    return { bg: '#ef4444', text: 'white' }; // BEARISH
+  };
+
   const sortedLeaderboard = [...dailyLeaderboard.top_stocks].sort((a, b) => {
     const { key, direction } = leaderboardSort;
     let aVal = a[key];
@@ -197,6 +210,17 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   return (
     <div className="admin-dashboard">
       <div className="stats-row">
+        <div className="stat-card" style={{ background: regimeStatus ? `linear-gradient(135deg, ${getRegimeColor(regimeStatus.regime).bg}22 0%, #1e293b 100%)` : '', border: regimeStatus ? `1px solid ${getRegimeColor(regimeStatus.regime).bg}` : '' }}>
+          <div className="stat-label" style={{ color: regimeStatus ? getRegimeColor(regimeStatus.regime).text : '' }}>
+            🛡️ Market Regime
+          </div>
+          <div className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: regimeStatus ? getRegimeColor(regimeStatus.regime).text : '' }}>
+            {regimeStatus?.regime || '...'}
+          </div>
+          <div className="stat-subtitle" style={{ fontSize: '10px', opacity: 0.7 }}>
+            {regimeStatus?.date || ''}
+          </div>
+        </div>
         <div className="stat-card">
           <div className="stat-label">Platform Users</div>
           <div className="stat-value">{metrics?.total_users}</div>
