@@ -212,6 +212,7 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
             "rolling_high_6m",
             "avg_volume_20d",
             "rs_90d",
+            "high_10d",
         ]
         for col in numeric_cols:
             if col in df.columns:
@@ -231,12 +232,17 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
             )
 
         # 2. Safety: Fill NaNs to avoid the '>=' TypeError crash
-        df['rolling_high_6m'] = df['rolling_high_6m'].fillna(df['close'])
-        df['ema_50'] = df['ema_50'].fillna(df['close'])  # Fallback to close
-        df['ema_200'] = df['ema_200'].fillna(df['ema_50'])  # Fallback trend
+        df['rolling_high_6m'] = df['rolling_high_6m'].fillna(df['close']).fillna(0)
+        df['ema_50'] = df['ema_50'].fillna(df['close']).fillna(0)  # Fallback to close
+        df['ema_200'] = df['ema_200'].fillna(df['ema_50']).fillna(0)  # Fallback trend
         df['ema_200_slope_20'] = df['ema_200_slope_20'].fillna(0)
-        df['avg_volume_20d'] = df['avg_volume_20d'].fillna(df['volume'])
+        df['avg_volume_20d'] = df['avg_volume_20d'].fillna(df['volume']).fillna(0)
         df['rs_90d'] = df['rs_90d'].fillna(0)
+        df['high_10d'] = df['high_10d'].fillna(df['high']).fillna(0) # Fallback to current high
+        df['volume'] = df['volume'].fillna(0)
+        df['close'] = df['close'].fillna(0)
+        df['high'] = df['high'].fillna(0)
+        df['low'] = df['low'].fillna(0)
 
         # 3. Calculate MRI Conditions & Weighted Scores
         df['condition_ema_50_200'] = (df['ema_50'] >= df['ema_200']).astype(bool)
@@ -247,7 +253,7 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['condition_breakout_10d'] = (df['close'] > df['high_10d']).fillna(False).astype(bool)
         # Price Quality: Top 30% of day's range
         df['price_range'] = df['high'] - df['low']
-        df['condition_price_quality'] = ((df['close'] - df['low']) / (df['price_range'] + 1e-9) >= 0.7).astype(bool)
+        df['condition_price_quality'] = ((df['close'] - df['low']) / (df['price_range'] + 1e-9) >= 0.7).fillna(False).astype(bool)
 
         # Apply 7-Step Weights (Total = 100)
         df['total_score'] = (

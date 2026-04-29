@@ -216,10 +216,10 @@ def compute_indicators(df, idx_df):
         s_df["atr_14"] = tr.rolling(window=14).mean()
         
         # 7-Step System expansion
-        s_df["condition_breakout_10d"] = (s_df["close"] > s_df["high_10d"]).astype(bool)
+        s_df["condition_breakout_10d"] = (s_df["close"] > s_df["high_10d"]).fillna(False).astype(bool)
         # Price Quality (Close Range): (Close - Low) / (High - Low)
         s_df["price_quality"] = (s_df["close"] - s_df["low"]) / (s_df["high"] - s_df["low"] + 1e-9)
-        s_df["condition_price_quality"] = (s_df["price_quality"] >= 0.7).astype(bool)
+        s_df["condition_price_quality"] = (s_df["price_quality"].fillna(0) >= 0.7).astype(bool)
 
         if not idx_df.empty:
             merged = pd.merge(
