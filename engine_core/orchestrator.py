@@ -66,13 +66,13 @@ def run_full_mri_pipeline():
         # Step 8: Health (Skipping internal monitor script for now, handled by dashboard)
         logger.info("[8/9] Pipeline logic complete.")
 
-# Step 9: Fundamentals
-    logger.info("[9/9] Running Fundamental Analysis for top candidates...")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT symbol FROM stock_scores WHERE date = (SELECT MAX(date) FROM stock_scores) ORDER BY total_score DESC LIMIT 20")
-    top_symbols = [r[0] if isinstance(r, (list, tuple)) else r['symbol'] for r in cur.fetchall()]
-    conn.close()
+        # Step 9: Fundamentals
+        logger.info("[9/9] Running Fundamental Analysis for top candidates...")
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT symbol FROM stock_scores WHERE date = (SELECT MAX(date) FROM stock_scores) ORDER BY total_score DESC LIMIT 20")
+        top_symbols = [r[0] if isinstance(r, (list, tuple)) else r['symbol'] for r in cur.fetchall()]
+        conn.close()
 
         for sym in top_symbols:
             yf_sym = f"{sym}.NS" if not sym.endswith(".NS") and not sym.endswith(".BO") else sym
