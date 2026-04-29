@@ -41,21 +41,23 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
     cur.execute("ALTER TABLE clients ALTER COLUMN created_at TYPE TIMESTAMPTZ;")
 
-    # 2. Digital Twin (External Holdings)
+# 2. Digital Twin (External Holdings)
     cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS client_external_holdings (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-            symbol VARCHAR(20) NOT NULL,
-            quantity NUMERIC(15,4) DEFAULT 0,
-            avg_cost NUMERIC(12,4) DEFAULT 0,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            UNIQUE(client_id, symbol)
-        );
-        """
+    """
+    CREATE TABLE IF NOT EXISTS client_external_holdings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+    symbol VARCHAR(20) NOT NULL,
+    quantity NUMERIC(15,4) DEFAULT 0,
+    avg_cost NUMERIC(12,4) DEFAULT 0,
+    breakout_candidate BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(client_id, symbol)
+    );
+    """
     )
+    cur.execute("ALTER TABLE client_external_holdings ADD COLUMN IF NOT EXISTS breakout_candidate BOOLEAN DEFAULT FALSE;")
 
     # 3. Watchlist
     cur.execute(

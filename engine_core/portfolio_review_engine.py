@@ -120,12 +120,13 @@ def _analyze(holdings, conn):
     symbols = list(set([h["symbol"].upper().strip() for h in holdings]))
     symbol_tuple = tuple(symbols)
 
-    # 3. Latest stock scores for submitted symbols
+# 3. Latest stock scores for submitted symbols
     cur.execute("""
-        SELECT DISTINCT ON (ss.symbol) 
-               ss.symbol, ss.total_score, ss.date,
-               ss.condition_ema_50_200, ss.condition_ema_200_slope,
-               ss.condition_6m_high, ss.condition_volume, ss.condition_rs
+        SELECT DISTINCT ON (ss.symbol)
+        ss.symbol, ss.total_score, ss.date,
+        ss.condition_ema_50_200, ss.condition_ema_200_slope,
+        ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
+        ss.condition_breakout_10d, ss.condition_price_quality
         FROM stock_scores ss
         WHERE ss.symbol IN %s
         ORDER BY ss.symbol, ss.date DESC
@@ -225,6 +226,7 @@ def _analyze(holdings, conn):
             "alignment": alignment,
             "risk_factor": float(round(risk_factor, 2)),
             "risk_contribution_pct": float(round(risk_contribution * 100, 2)),
+            "breakout_candidate": bool(score_data["condition_breakout_10d"]) if score_data and score_data.get("condition_breakout_10d") is not None and score is not None and score >= 60 else False,
         }
 
         # Add score condition breakdown if available
@@ -235,6 +237,8 @@ def _analyze(holdings, conn):
                 "at_6m_high": score_data["condition_6m_high"],
                 "volume_surge": score_data["condition_volume"],
                 "relative_strength": score_data["condition_rs"],
+                "breakout_10d": score_data["condition_breakout_10d"],
+                "price_quality": score_data["condition_price_quality"],
             }
 
         analyzed_holdings.append(holding_result)
@@ -428,8 +432,66 @@ def print_terminal_report(result):
 
 if __name__ == "__main__":
     import json
-    import argparse
-    import pandas as pd
+import argparse
+import pandas as pd
+
+def update_all_breakout_candidates(conn=None):
+    """
+    EOD pipeline step: for every client holding, check if the stock is a breakout
+    candidate today and update client_external_holdings.breakout_candidate.
+
+    A breakout candidate = condition_breakout_10d = True AND total_score >= 60.
+    Runs after market close so the Risk Audit page reflects today's signals.
+    """
+    should_close = False
+    if conn is None:
+        conn = get_connection()
+        should_close = True
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT DISTINCT ON (eh.client_id, eh.symbol)
+                eh.client_id, eh.symbol, eh.id,
+                ss.condition_breakout_10d, ss.total_score
+            FROM client_external_holdings eh
+            LEFT JOIN LATERAL (
+                SELECT symbol, condition_breakout_10d, total_score
+                FROM stock_scores
+                WHERE symbol = eh.symbol
+                ORDER BY date DESC
+                LIMIT 1
+            ) ss ON true
+            WHERE eh.symbol IS NOT NULL
+        """)
+        rows = cur.fetchall()
+        updated = 0
+        for row in rows:
+            client_id, symbol, eh_id = row[0], row[1], row[2]
+            breakout_10d = row[3]
+            total_score = row[4]
+            is_candidate = (
+                breakout_10d is True and
+                total_score is not None and
+                total_score >= 60
+            )
+            cur.execute("""
+                UPDATE client_external_holdings
+                SET breakout_candidate = %s, updated_at = NOW()
+                WHERE id = %s
+            """, (is_candidate, eh_id))
+            updated += 1
+        conn.commit()
+        cur.close()
+        logger.info(f"Breakout candidate update complete: {updated} holdings evaluated")
+        return updated
+    except Exception as e:
+        logger.error(f"Breakout candidate update failed: {e}")
+        conn.rollback()
+        raise
+    finally:
+        if should_close:
+            conn.close()
 
     parser = argparse.ArgumentParser(description="Portfolio Review Engine — MRI Risk Analysis")
     parser.add_argument("--holdings", type=str, help='JSON array of holdings')

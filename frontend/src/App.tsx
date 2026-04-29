@@ -1717,7 +1717,12 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 	              <tbody>
 	                {sortedSavedHoldings.map((h: any) => (
 	                  <tr key={h.symbol}>
-	                    <td className="font-bold">{h.symbol}</td>
+<td className="font-bold">
+                {h.breakout_candidate && (
+                  <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
+                )}
+                {h.symbol}
+              </td>
 	                    <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
 	                    <td>
 	                      <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
@@ -1853,8 +1858,13 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                 </thead>
                 <tbody>
                   {sortedHoldings.map((h: any) => (
-                    <tr key={h.symbol} onClick={() => onSelectStock(h)} className="clickable-row">
-                      <td className="font-bold">{h.symbol}</td>
+<tr key={h.symbol} onClick={() => onSelectStock(h)} className="clickable-row">
+              <td className="font-bold">
+                {h.breakout_candidate && (
+                  <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
+                )}
+                {h.symbol}
+              </td>
                       <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
                       <td>
                         <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
