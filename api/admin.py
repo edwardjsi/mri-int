@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from api.deps import get_db, get_current_client
 from engine_core.indicator_engine import compute_indicators_all
+from engine_core.orchestrator import run_full_mri_pipeline
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -310,6 +311,16 @@ def trigger_recovery(background_tasks: BackgroundTasks, admin=Depends(verify_adm
         return {"message": "Indicator recovery task started in background."}
     except Exception as e:
         logger.error(f"RECOVERY TRIGGER ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/trigger-pipeline")
+def trigger_full_pipeline(background_tasks: BackgroundTasks, admin=Depends(verify_admin)):
+    """Manually trigger the full 8-step MRI pipeline in the background."""
+    try:
+        background_tasks.add_task(run_full_mri_pipeline)
+        return {"message": "Full MRI pipeline started in background."}
+    except Exception as e:
+        logger.error(f"PIPELINE TRIGGER ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/global-universe/add")
