@@ -102,6 +102,7 @@ def run_debate(symbol):
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return {"error": "OPENAI_API_KEY not set in environment"}
+        # Create client without explicit proxies argument to avoid TypeError with newer OpenAI/Httpx versions
         client = OpenAI(api_key=api_key)
     except ImportError:
         return {"error": "OpenAI package not installed"}

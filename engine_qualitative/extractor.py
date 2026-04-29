@@ -1,10 +1,16 @@
 import os
 import json
-from openai import OpenAI
 
-# Initialize client only if API key exists to avoid crash on import
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+def get_openai_client():
+    try:
+        from openai import OpenAI
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return None
+        return OpenAI(api_key=api_key)
+    except Exception as e:
+        print(f"Error initializing OpenAI client: {e}")
+        return None
 
 PROMPT = """
 You are extracting INVESTMENT SIGNALS from company disclosures.
@@ -29,6 +35,7 @@ Return JSON:
 """
 
 def extract_signals(docs):
+    client = get_openai_client()
     if not client:
         print("WARNING: OpenAI client not initialized. Skipping signal extraction.")
         return []
