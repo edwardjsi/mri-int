@@ -80,9 +80,9 @@ from engine_fundamental.pipeline import run_quality_pipeline
 
 conn = get_connection()
 cur = conn.cursor()
-# Fetch top 20 symbols by score from today
-cur.execute("SELECT symbol FROM stock_scores WHERE date = (SELECT MAX(date) FROM stock_scores) ORDER BY score DESC LIMIT 20")
-top_symbols = [r['symbol'] for r in cur.fetchall()]
+# Fetch top 20 symbols by total_score from today
+cur.execute("SELECT symbol FROM stock_scores WHERE date = (SELECT MAX(date) FROM stock_scores) ORDER BY total_score DESC LIMIT 20")
+top_symbols = [r[0] if isinstance(r, (list, tuple)) else r['symbol'] for r in cur.fetchall()]
 conn.close()
 
 for sym in top_symbols:
