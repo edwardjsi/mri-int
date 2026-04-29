@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-# DEBUG: VERSION 100.5 - NO PANDAS SQL
-print("DEBUG: LOADING engine_core/regime_engine.py VERSION 100.5")
+# DEBUG: VERSION 100.6 - FIXED BREAKOUT NULLS
+print("DEBUG: LOADING engine_core/regime_engine.py VERSION 100.6")
 import psycopg2
 from psycopg2.extras import execute_batch
 from scipy.stats import linregress
