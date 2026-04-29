@@ -218,7 +218,7 @@ def _analyze(holdings, conn):
             "alignment": alignment,
             "risk_factor": float(round(risk_factor, 2)),
             "risk_contribution_pct": float(round(risk_contribution * 100, 2)),
-            "breakout_candidate": bool(score_data["condition_breakout_10d"]) if score_data and score_data.get("condition_breakout_10d") is not None and score is not None and score >= 60 else False,
+            "breakout_candidate": bool(score_data["condition_breakout_10d"]) if score_data and score_data.get("condition_breakout_10d") is not None and score is not None and score >= 80 else False,
         }
 
         # Add score condition breakdown if available
@@ -278,7 +278,7 @@ def update_all_breakout_candidates(conn=None):
     EOD pipeline step: for every client holding AND watchlist item, check if the stock 
     is a breakout candidate today and update both tables.
 
-    A breakout candidate = condition_breakout_10d = True AND total_score >= 60.
+    A breakout candidate = condition_breakout_10d = True AND total_score >= 80.
     """
     should_close = False
     if conn is None:
@@ -303,7 +303,7 @@ def update_all_breakout_candidates(conn=None):
         """)
         for row in cur.fetchall():
             eh_id, breakout, score = row[0], row[1], row[2]
-            is_candidate = (breakout is True and score is not None and score >= 60)
+            is_candidate = (breakout is True and score is not None and score >= 80)
             cur.execute("UPDATE client_external_holdings SET breakout_candidate = %s, updated_at = NOW() WHERE id = %s", (is_candidate, eh_id))
 
         # 2. Update Watchlist
@@ -321,7 +321,7 @@ def update_all_breakout_candidates(conn=None):
         """)
         for row in cur.fetchall():
             cw_id, breakout, score = row[0], row[1], row[2]
-            is_candidate = (breakout is True and score is not None and score >= 60)
+            is_candidate = (breakout is True and score is not None and score >= 80)
             cur.execute("UPDATE client_watchlist SET breakout_candidate = %s WHERE id = %s", (is_candidate, cw_id))
 
         conn.commit()
