@@ -244,7 +244,7 @@ def compute_stock_scores_for_symbols(symbols: list[str]):
         df['condition_6m_high'] = (df['close'] >= df['rolling_high_6m'] * 0.99).astype(bool)
         df['condition_volume'] = (df['volume'] > (1.5 * df['avg_volume_20d'])).astype(bool)
         df['condition_rs'] = (df['rs_90d'] > 0).astype(bool)
-        df['condition_breakout_10d'] = (df['close'] > df['high_10d']).astype(bool)
+        df['condition_breakout_10d'] = (df['close'] > df['high_10d']).fillna(False).astype(bool)
         # Price Quality: Top 30% of day's range
         df['price_range'] = df['high'] - df['low']
         df['condition_price_quality'] = ((df['close'] - df['low']) / (df['price_range'] + 1e-9) >= 0.7).astype(bool)
