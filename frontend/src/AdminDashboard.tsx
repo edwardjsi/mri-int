@@ -46,6 +46,8 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [qualityLeaderboard, setQualityLeaderboard] = useState<any[]>([]);
   const [topQualityStocks, setTopQualityStocks] = useState<any[]>([]);
+  const [debatingSymbol, setDebatingSymbol] = useState<string | null>(null);
+  const [debateStatus, setDebateStatus] = useState<{ symbol: string; msg: string } | null>(null);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -197,15 +199,29 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
     }
   };
 
-  const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
-    e.stopPropagation(); // Don't trigger row click/select
-    if (!confirm(`SURGICAL REPAIR: This will DELETE all price/score history for ${symbol} and re-fetch it fresh. Proceed?`)) return;
+const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
+  e.stopPropagation(); // Don't trigger row click/select
+  if (!confirm(`SURGICAL REPAIR: This will DELETE all price/score history for ${symbol} and re-fetch it fresh. Proceed?`)) return;
+  try {
+    await api.repairSymbol(symbol);
+    alert(`${symbol} data cleared. It will re-appear after the next background ingestion cycle.`);
+    loadAdminIntel();
+  } catch (e) {
+    alert('Failed to trigger repair: ' + e.message);
+  }
+};
+
+  const handleDebate = async (e: React.MouseEvent, symbol: string) => {
+    e.stopPropagation();
+    if (!confirm(`Run GPT Debate for ${symbol}? Results will be emailed to you.`)) return;
+    setDebatingSymbol(symbol);
     try {
-      await api.repairSymbol(symbol);
-      alert(`${symbol} data cleared. It will re-appear after the next background ingestion cycle.`);
-      loadAdminIntel();
-    } catch (e) {
-      alert('Failed to trigger repair: ' + e.message);
+      const result = await api.triggerDebate(symbol);
+      setDebateStatus({ symbol, msg: result.message || 'Debate started — check your email shortly.' });
+    } catch (err: any) {
+      alert('Debate failed: ' + err.message);
+    } finally {
+      setDebatingSymbol(null);
     }
   };
 
@@ -442,18 +458,29 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
 
       <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">💎 Fundamental Quality Leaderboard (QIF)</h3>
-        <p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
-        <div className="table-container" style={{ marginTop: '16px' }}>
+<p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
+            {debateStatus && (
+              <div style={{
+                marginTop: '10px', padding: '10px 14px', borderRadius: '8px',
+                background: '#22c55e20', border: '1px solid #22c55e40', color: '#86efac',
+                fontSize: '12px', fontWeight: 600
+              }}>
+                📊 Debate queued for <b>{debateStatus.symbol}</b> — {debateStatus.msg}
+                <button onClick={() => setDebateStatus(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#86efac', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+              </div>
+            )}
+            <div className="table-container" style={{ marginTop: '16px' }}>
             <table className="data-table">
                 <thead>
                     <tr>
-                        <th>Symbol</th>
-                        <th>Verdict</th>
-                        <th>Score</th>
-                        <th>Change</th>
-                        <th>Velocity</th>
-                        <th>Trend</th>
-                    </tr>
+<th>Symbol</th>
+              <th>Verdict</th>
+              <th>Score</th>
+              <th>Change</th>
+              <th>Velocity</th>
+              <th>Trend</th>
+              <th>Actions</th>
+            </tr>
                 </thead>
                 <tbody>
                     {qualityLeaderboard.map(s => (
@@ -475,13 +502,31 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
                                     {s.score_change >= 0 ? '+' : ''}{parseFloat(s.score_change).toFixed(1)}
                                 </span>
                             </td>
-                            <td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
-                            <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
-                        </tr>
+<td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
+              <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
+              <td>
+                <button
+                  onClick={(e) => handleDebate(e, s.symbol)}
+                  disabled={debatingSymbol === s.symbol}
+                  style={{
+                    background: debatingSymbol === s.symbol ? '#64748b' : '#7c3aed',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '3px 10px',
+                    fontSize: '11px',
+                    cursor: debatingSymbol === s.symbol ? 'not-allowed' : 'pointer',
+                    fontWeight: 700,
+                  }}
+                >
+                  {debatingSymbol === s.symbol ? '⏳...' : '📊 Debate'}
+                </button>
+              </td>
+            </tr>
                     ))}
-                    {(!qualityLeaderboard.length) && (
-                        <tr><td colSpan={6} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
-                    )}
+{(!qualityLeaderboard.length) && (
+              <tr><td colSpan={7} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
+            )}
                 </tbody>
             </table>
         </div>
