@@ -18,7 +18,11 @@ jobs:
         run: |
           git rev-parse HEAD
           sed -n '1,80p' scripts/pipeline_cloud.sh
+      - name: Check if Market is Open
+        run: python scripts/check_market_holiday.py
+
       - name: RUN REAL PIPELINE (ENGINE_CORE)
+        if: success()
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_SSL: "true"

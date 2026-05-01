@@ -64,6 +64,9 @@ The "Modern" pipeline is defined in `scripts/pipeline_cloud.sh` and orchestrated
 ## 🛠️ Essential Commands
 
 ```bash
+# Check if market is open (holiday/weekend gate)
+python3 scripts/check_market_holiday.py
+
 # Check database freshness (Drift detection)
 python3 scripts/db_freshness_check.py
 

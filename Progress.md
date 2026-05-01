@@ -335,3 +335,52 @@
 4. **Lock `outputs/snapshot_canonical.md`** as the canonical reference document
 
 5. **Decide on next direction:** SaaS Phase 2 dashboard OR live pipeline repair
+
+---
+
+## 📅 Session: May 1, 2026 — Market Holiday Gate + README v2
+
+**Session Start:** ~08:00 IST
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. Market Holiday Skip Logic ✅
+- **New Script:** Created `scripts/check_market_holiday.py`
+  - Hardcoded 17 NSE/BSE holidays for 2026 (Diwali, Eid, Independence Day, etc.)
+  - Exits `0` → trading day, proceed
+  - Exits `1` → holiday, skip pipeline
+- **GitHub Actions Update:** Added "Check if Market is Open" step to `.github/workflows/FINAL_FIX.yml`
+  - Pipeline runs only `if: success()` (holiday check passes)
+  - GitHub cron already restricted to Mon-Fri; this adds holiday layer
+
+#### 2. README v2 Rewrite ✅
+- **Backup:** Copied `Readme.md` → `Readme_v1.md`
+- **New Content:** Complete rewrite covering:
+  - 7-step MRI Score system (0-100 weighted)
+  - Quality Investor Framework (QIF) — 7 fundamental agents
+  - AI Forensic Debate Engine (QIL Phase 3)
+  - STEE specs (breakout entries, 2R exits, stop loss)
+  - Daily pipeline flow (8 steps)
+  - Architecture (Neon + Railway), security hardening, AAE roadmap
+  - Key decisions (026-085), viability criteria
+- **Commit:** `58637a6` — docs: replace Readme.md with v2.0
+
+#### 3. Session Documentation ✅
+- Created `docs/Progress_April_29_30_2026.md` with full session details
+- Committed as `f344bec`
+
+#### 4. Cleanup ✅
+- Removed duplicate repo at `/home/immanuels/mri-int/`
+- Working copy remains at `/home/immanuels/Desktop/mri-int/`
+
+### ⏳ Left for Next Session
+1. Push 2 pending commits to remote (`git push origin main`)
+2. Debate end-to-end test: trigger from UI → GPT analysis → email delivery
+3. Frontend deployment (React bundle rebuild + deploy)
+4. Verify market holiday script on next NSE holiday
+
+### ⏳ Left from Previous Session
+1. **Debate Trigger Verification:** Test the full debate flow end-to-end
+2. **Frontend Build:** Ensure the updated React bundle is deployed
+3. **Backtest Snapshot Lock:** Complete canonical backtest restoration

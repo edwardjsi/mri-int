@@ -567,3 +567,13 @@ Decision:
 5. Do not build document RAG, LLM agents, or event orchestration until real financial seed data has been imported, verified, and converted into stable feature snapshots.
 Reason: The new AAE PRD expands the product from a fundamentals-only engine into a full research platform. The safest implementation path is to preserve the current PRDE work as the data foundation and layer event-driven agents only after deterministic financial outputs are reproducible.
 Status: FINAL.
+
+## Decision 086 — Market Holiday Skip in GitHub Actions
+Date: 2026-05-01
+Decision:
+1. Add `scripts/check_market_holiday.py` to the GitHub Actions workflow as a pre-pipeline gate.
+2. The script checks against a hardcoded list of 17 NSE/BSE market holidays for 2026.
+3. Exits code `0` (trading day) → pipeline proceeds; exits code `1` (holiday) → workflow stops.
+4. GitHub Actions workflow only runs on Mon-Fri cron; this adds the holiday exclusion layer.
+Reason: Prevents wasted GitHub Actions minutes on days when Indian markets are closed. The pipeline is idempotent and would handle empty data gracefully, but skipping entirely is cleaner and avoids unnecessary compute/logs.
+Status: FINAL.

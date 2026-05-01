@@ -1,0 +1,17 @@
+=== MRI Cloud Pipeline — Wednesday 29 April 2026 09:31:05 AM IST ===
+[1/8] Ingesting today's market data...
+<stdin>:1: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:engine_core.ingestion_engine:📡 [engine_core] Ingesting Index Data...
+INFO:engine_core.db:✅ Core schema initialized (market_index_prices hardened)
+INFO:engine_core.ingestion_engine:  ✅ NIFTY50 synced (299 rows).
+INFO:engine_core.ingestion_engine:  ✅ SENSEX synced (299 rows).
+INFO:engine_core.ingestion_engine:📡 [engine_core] Processing 500 stocks (CSV list)...
+WARNING:engine_core.ingestion_engine:  ⚠️ ABFRL rejected by Audit: Detected suspicious >50% price spike
