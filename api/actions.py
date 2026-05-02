@@ -59,7 +59,8 @@ def record_action(
         VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING id
     """, (str(client["id"]), req.signal_id, req.action_taken, actual_price, req.quantity, req.notes))
-    action_id = str(cur.fetchone()["id"])
+    res = cur.fetchone()
+    action_id = str(res["id"] if isinstance(res, dict) else res[0])
 
     # If EXECUTED, update client_portfolio
     if req.action_taken == "EXECUTED" and req.quantity and req.quantity > 0:

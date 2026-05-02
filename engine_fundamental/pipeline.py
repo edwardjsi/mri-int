@@ -39,17 +39,27 @@ def get_qil_sources_for_ticker(symbol):
     conn.close()
     if not row: return []
     
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        if isinstance(item, (list, tuple)):
+            return item[index] if len(item) > index else None
+        return None
+
     sources = []
-    if row['concall_url']:
-        sources.append({"url": row['concall_url'], "type": "concall", "date": datetime.now().strftime("%Y-%m")})
-    if row['annual_report_url']:
-        sources.append({"url": row['annual_report_url'], "type": "annual_report", "date": datetime.now().strftime("%Y-%m")})
+    concall_url = get_val(row, 'concall_url', 0)
+    annual_url = get_val(row, 'annual_report_url', 1)
+
+    if concall_url:
+        sources.append({"url": concall_url, "type": "concall", "date": datetime.now().strftime("%Y-%m")})
+    if annual_url:
+        sources.append({"url": annual_url, "type": "annual_report", "date": datetime.now().strftime("%Y-%m")})
     return sources
 
 def run_quality_pipeline(symbol):
-    history = get_financial_history(symbol)
+    base_sym = symbol.replace(".NS", "").replace(".BO", "").upper()
+    history = get_financial_history(base_sym)
     if not history:
-        logger.error(f"No financial history for {symbol}. Run collector first.")
+        logger.error(f"No financial history for {base_sym}. Run collector first.")
         return None
 
     # Execute all agents
@@ -93,9 +103,9 @@ def run_quality_pipeline(symbol):
     
     if not reject:
         try:
-            sources = get_qil_sources_for_ticker(symbol)
+            sources = get_qil_sources_for_ticker(base_sym)
             if sources:
-                docs = build_qil_input(symbol, sources)
+                docs = build_qil_input(base_sym, sources)
                 signals = extract_signals(docs)
                 qil_score, s_flags = score_signals(signals)
                 
@@ -111,7 +121,7 @@ def run_quality_pipeline(symbol):
                 penalty += cross_penalty
                 qil_flags = s_flags + c_flags
         except Exception as e:
-            print(f"QIL Engine failed for {symbol}: {e}")
+            print(f"QIL Engine failed for {base_sym}: {e}")
 
     final_score = max(0, min(100, base_score + qil_adjustment - penalty))
     
@@ -136,14 +146,14 @@ def run_quality_pipeline(symbol):
     cur = conn.cursor()
     
     # Get last known score from history
-    cur.execute("SELECT score FROM quality_verdicts WHERE symbol = %s", (symbol,))
+    cur.execute("SELECT score FROM quality_verdicts WHERE symbol = %s", (base_sym,))
     row = cur.fetchone()
     if row:
         prev_score = float(row[0])
         score_change = final_score - prev_score
         
     # Get score history for velocity
-    cur.execute("SELECT score FROM quality_verdicts_history WHERE symbol = %s ORDER BY recorded_at DESC LIMIT 5", (symbol,))
+    cur.execute("SELECT score FROM quality_verdicts_history WHERE symbol = %s ORDER BY recorded_at DESC LIMIT 5", (base_sym,))
     history_rows = cur.fetchall()
     score_history = [float(r[0]) for r in reversed(history_rows)]
     score_history.append(final_score)
@@ -178,7 +188,7 @@ def run_quality_pipeline(symbol):
             qil_flags = EXCLUDED.qil_flags,
             updated_at = NOW()
     """, (
-        symbol, final_score, category, f"Quality Analysis for {symbol}. Fundamental strength score: {base_score:.1f}", 
+        base_sym, final_score, category, f"Quality Analysis for {base_sym}. Fundamental strength score: {base_score:.1f}", 
         flags,
         prev_score, score_change, velocity,
         results['revenue_growth']['score'], results['margin_quality']['score'],
@@ -188,17 +198,16 @@ def run_quality_pipeline(symbol):
     ))
     
     # Record in history
-    cur.execute("INSERT INTO quality_verdicts_history (symbol, score) VALUES (%s, %s)", (symbol, final_score))
+    cur.execute("INSERT INTO quality_verdicts_history (symbol, score) VALUES (%s, %s)", (base_sym, final_score))
     
     conn.commit()
     cur.close()
     conn.close()
     
-    logger.info(f"Quality Verdict for {symbol}: {category} ({final_score:.1f}/100) | Change: {score_change:+.1f} | Velocity: {velocity:.1f} | Trend: {trend}")
+    logger.info(f"Quality Verdict for {base_sym}: {category} ({final_score:.1f}/100) | Change: {score_change:+.1f} | Velocity: {velocity:.1f} | Trend: {trend}")
     
-    logger.info(f"Quality Verdict for {symbol}: {category} ({final_score:.1f}/100)")
     return {
-        "symbol": symbol,
+        "symbol": base_sym,
         "score": final_score,
         "category": category,
         "flags": flags,

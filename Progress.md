@@ -2,6 +2,35 @@
 
 ---
 
+## 📅 Session: May 02, 2026 — AI Debate & Email Pipeline Audit & Fix
+**Session Start:** 08:30 IST
+**Session End:** 09:30 IST
+**AI Assistant:** Antigravity
+
+### What Was Done This Session
+
+#### 1. AI Debate & Email Pipeline Repair ✅
+- [x] Hardening Pipeline Email Reliability (Tuple-Safe Hardening)
+- [x] Fix Symbol Suffix Mismatch (.NS/.BO) across Fundamental/Technical joins
+- [x] Implement robust AI Debate error reporting to clients
+- [x] Provide migration and audit scripts for production verification
+- [x] Monitor next cloud pipeline run for successful delivery
+- **Tuple-Safe Logic Implementation:** Discovered and fixed widespread "Tuple-Safe" violations in `engine_qualitative/debate.py`, `api/fundamental.py`, and `engine_core/email_service.py`. These modules were crashing in production (Railway) where `psycopg2` returns tuples instead of dicts.
+- **Robust Error Messaging:** Enhanced the AI Debate failure email in `api/fundamental.py` to explicitly mention missing environment variables (`OPENAI_API_KEY`), aiding in production troubleshooting.
+- **Email Service Hardening:** Updated both `send_signal_emails` and `send_stee_signal_emails` to be tuple-safe, ensuring daily and swing signal delivery remains reliable across all environments.
+- **QIL Source Fix:** Updated `engine_fundamental/pipeline.py` to safely handle database rows when fetching QIL sources.
+
+#### 2. Environment Diagnostics ✅
+- **Credential Check:** Confirmed that `OPENAI_API_KEY` and AWS SES credentials are currently missing from the local execution environment.
+- **DB Connection Check:** Verified that the local DB tunnel (port 5433) is currently closed, which is expected for local-only work but verified the fallback logic.
+
+### ⏳ Left for Next Step
+1. Verify signal delivery on Railway after the next daily pipeline run.
+2. Confirm `OPENAI_API_KEY` and SES credentials are set in Railway environment settings.
+3. Validate that the AI Debate trigger now results in an email (either success or a detailed failure report).
+
+---
+
 ## 📅 Session: April 29, 2026 — Swing Trade Execution Path Repair
 **Session Start:** In Progress
 **Session End:** In Progress

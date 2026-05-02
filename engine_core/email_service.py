@@ -325,6 +325,12 @@ def send_signal_emails():
 
     ses = get_ses_client(ses_region)
 
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        if isinstance(item, (list, tuple)):
+            return item[index] if len(item) > index else None
+        return None
+
     # 1. Get current market regime for the latest date
     cur.execute("""
         SELECT classification, date FROM market_regime 
@@ -336,8 +342,8 @@ def send_signal_emails():
         conn.close()
         return 0
     
-    regime = regime_row["classification"]
-    latest_date = regime_row["date"]
+    regime = get_val(regime_row, "classification", 0)
+    latest_date = get_val(regime_row, "date", 1)
 
     # 2. Get all active clients
     cur.execute("SELECT id, email, name FROM clients WHERE is_active = true")
@@ -350,9 +356,9 @@ def send_signal_emails():
 
     sent_count = 0
     for client in active_clients:
-        client_id = str(client["id"])
-        email = client["email"]
-        name = client["name"] or "Investor"
+        client_id = str(get_val(client, "id", 0))
+        email = get_val(client, "email", 1)
+        name = get_val(client, "name", 2) or "Investor"
 
         # 3. Prevent duplicate emails for the same day
         cur.execute("""
@@ -456,12 +462,18 @@ def send_stee_signal_emails():
         ses_region = resolve_ses_region()
         ses = get_ses_client(ses_region)
 
+        def get_val(item, key, index):
+            if isinstance(item, dict): return item.get(key)
+            if isinstance(item, (list, tuple)):
+                return item[index] if len(item) > index else None
+            return None
+
         # 1. Get Regime
         cur.execute("SELECT classification, date FROM market_regime ORDER BY date DESC LIMIT 1")
         reg_row = cur.fetchone()
         if not reg_row: return 0
-        regime = reg_row["classification"]
-        latest_date = reg_row["date"]
+        regime = get_val(reg_row, "classification", 0)
+        latest_date = get_val(reg_row, "date", 1)
 
         # 2. Get active clients
         cur.execute("SELECT id, email, name FROM clients WHERE is_active = true")
@@ -469,9 +481,9 @@ def send_stee_signal_emails():
 
         sent_count = 0
         for client in clients:
-            client_id = str(client["id"])
-            email = client["email"]
-            name = client["name"] or "Investor"
+            client_id = str(get_val(client, "id", 0))
+            email = get_val(client, "email", 1)
+            name = get_val(client, "name", 2) or "Investor"
 
             # 3. Fetch new STEE trades for today
             cur.execute("""

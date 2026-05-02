@@ -9,20 +9,24 @@ logger = logging.getLogger(__name__)
 def fetch_and_store_financials(symbol):
     """
     Fetch 5-10 years of financials from Yahoo and store in fundamental_financials table.
+    Ensures symbol is normalized (base MRI format) in the database.
     """
-    logger.info(f"Fetching fundamental data for {symbol}...")
-    stock = yf.Ticker(symbol)
+    yf_sym = symbol if symbol.endswith(".NS") or symbol.endswith(".BO") else f"{symbol}.NS"
+    base_sym = symbol.replace(".NS", "").replace(".BO", "").upper()
+    
+    logger.info(f"Fetching fundamental data for {yf_sym} (Database: {base_sym})...")
+    stock = yf.Ticker(yf_sym)
     
     try:
         # T.transpose() because yfinance returns years as columns
         income = stock.financials.T
         balance = stock.balance_sheet.T
     except Exception as e:
-        logger.error(f"Failed to fetch data for {symbol}: {e}")
+        logger.error(f"Failed to fetch data for {yf_sym}: {e}")
         return None
 
     if income.empty or balance.empty:
-        logger.warning(f"No financial statements found for {symbol}")
+        logger.warning(f"No financial statements found for {yf_sym}")
         return None
 
     conn = get_connection()
@@ -74,7 +78,7 @@ def fetch_and_store_financials(symbol):
                 equity = EXCLUDED.equity,
                 updated_at = NOW()
         """, (
-            symbol, year, revenue, ebitda, net_profit, total_assets,
+            base_sym, year, revenue, ebitda, net_profit, total_assets,
             capital_employed, receivables, inventory, debt, equity
         ))
         records_saved += 1
@@ -82,7 +86,7 @@ def fetch_and_store_financials(symbol):
     conn.commit()
     cur.close()
     conn.close()
-    logger.info(f"Stored {records_saved} years of financial data for {symbol}")
+    logger.info(f"Stored {records_saved} years of financial data for {base_sym}")
     return records_saved
 
 if __name__ == "__main__":

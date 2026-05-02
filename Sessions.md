@@ -1,5 +1,17 @@
 # **MRI Sessions Log**
 
+## **May 02, 2026: AI Debate and Email Pipeline Hardening**
+
+**Context:** AI Forensic Debate and associated emails were failing to trigger or crashing in production.
+**Actions:**
+1.  **Tuple-Safe Hardening:** Standardized database row access across all modules (`debate.py`, `email_service.py`, `pipeline.py`, etc.) to support both dict and tuple responses from `psycopg2`.
+2.  **Symbol Normalization:** Fixed a critical symbol mismatch where fundamental data was stored with `.NS` suffixes but technical scores used base symbols. Normalization now ensures consistency.
+3.  **API Reliability:** Improved the `trigger_debate` background task with robust error reporting and environment variable validation.
+4.  **Diagnostics:** Created `scripts/mri_audit.py` and `scripts/migrate_symbols.py` for production verification and data cleanup.
+**Result:** System is now resilient to database driver fluctuations and correctly joins technical/fundamental data for AI analysis.
+**Next Step:** Ensure `OPENAI_API_KEY` and AWS SES credentials are correctly provisioned in the production environment (Railway/Render).
+
+
 ## **April 29, 2026: Swing Trade Execution Path Repair**
 - **Objective**: Restore the broken STEE swing-trade flow before addressing the broader dashboard issues.
 - **Actions**:

@@ -96,6 +96,7 @@ def get_mri_scores(symbol):
     return row
 
 def run_debate(symbol):
+    base_sym = symbol.replace(".NS", "").replace(".BO", "").upper()
     client = None
     try:
         from openai import OpenAI
@@ -107,38 +108,65 @@ def run_debate(symbol):
     except ImportError:
         return {"error": "OpenAI package not installed"}
 
-    verdict = get_quality_verdict(symbol)
-    mri = get_mri_scores(symbol)
-    history = get_financial_history(symbol)
+    verdict = get_quality_verdict(base_sym)
+    mri = get_mri_scores(base_sym)
+    history = get_financial_history(base_sym)
 
     if not verdict and not history:
-        return {"error": f"No data found for {symbol}. Run QIF pipeline first."}
+        return {"error": f"No data found for {base_sym}. Run QIF pipeline first."}
 
     evidence_parts = []
 
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        if isinstance(item, (list, tuple)):
+            return item[index] if len(item) > index else None
+        return None
+
     if verdict:
-        verdict_dict = dict(verdict)
-        evidence_parts.append(f"### Quality Verdict\nScore: {verdict_dict.get('score', 'N/A')}/100\nCategory: {verdict_dict.get('category', 'N/A')}\nFlags: {verdict_dict.get('flags', 'None')}")
-        for key in ['revenue_score', 'margin_score', 'leverage_score', 'wc_score', 'roce_score', 'evolution_score']:
-            val = verdict_dict.get(key)
-            if val is not None:
-                evidence_parts.append(f"- {key}: {val}/10")
+        score = get_val(verdict, 'score', 1) # Assuming score is 2nd col if tuple
+        category = get_val(verdict, 'category', 2)
+        flags = get_val(verdict, 'flags', 3)
+        
+        # If it's a dict, we can be more precise
+        if isinstance(verdict, dict):
+             evidence_parts.append(f"### Quality Verdict\nScore: {verdict.get('score', 'N/A')}/100\nCategory: {verdict.get('category', 'N/A')}\nFlags: {verdict.get('flags', 'None')}")
+             for key in ['revenue_score', 'margin_score', 'leverage_score', 'wc_score', 'roce_score', 'evolution_score']:
+                 val = verdict.get(key)
+                 if val is not None:
+                     evidence_parts.append(f"- {key}: {val}/10")
+        else:
+             # Fallback for tuple - just provide the basic info
+             evidence_parts.append(f"### Quality Verdict\nScore: {score}/100\nCategory: {category}\nFlags: {flags}")
 
     if mri:
-        mri_dict = dict(mri)
-        score = mri_dict.get('total_score')
+        score = get_val(mri, 'total_score', 0)
         evidence_parts.append(f"\n### MRI Technical Score\nTotal: {score}/100")
-        for cond in ['condition_ema_50_200', 'condition_ema_200_slope', 'condition_6m_high', 'condition_volume', 'condition_rs', 'condition_breakout_10d', 'condition_price_quality']:
-            val = mri_dict.get(cond)
-            if val is not None:
-                evidence_parts.append(f"- {cond}: {'PASS' if val else 'FAIL'}")
+        
+        if isinstance(mri, dict):
+            for cond in ['condition_ema_50_200', 'condition_ema_200_slope', 'condition_6m_high', 'condition_volume', 'condition_rs', 'condition_breakout_10d', 'condition_price_quality']:
+                val = mri.get(cond)
+                if val is not None:
+                    evidence_parts.append(f"- {cond}: {'PASS' if val else 'FAIL'}")
+        else:
+            # Tuple fallback for MRI conditions (indices 2 to 8)
+            cond_names = ['ema_50_200', 'ema_200_slope', '6m_high', 'volume', 'rs', 'breakout_10d', 'price_quality']
+            for i, name in enumerate(cond_names):
+                val = mri[i+2] if len(mri) > i+2 else None
+                if val is not None:
+                    evidence_parts.append(f"- {name}: {'PASS' if val else 'FAIL'}")
 
     if history:
         evidence_parts.append(f"\n### Financial History ({len(history)} years)")
         for row in history:
-            evidence_parts.append(f"Year {row['year']}: Rev={row['revenue']}, EBITDA={row['ebitda']}, Profit={row['net_profit']}, Debt={row['debt']}, Equity={row['equity']}")
+            if isinstance(row, dict):
+                evidence_parts.append(f"Year {row['year']}: Rev={row['revenue']}, EBITDA={row['ebitda']}, Profit={row['net_profit']}, Debt={row['debt']}, Equity={row['equity']}")
+            else:
+                # Year is index 0, Rev 1, EBITDA 2, Profit 3, Debt 8, Equity 9 based on SELECT in get_financial_history
+                evidence_parts.append(f"Year {row[0]}: Rev={row[1]}, EBITDA={row[2]}, Profit={row[3]}, Debt={row[8]}, Equity={row[9]}")
 
     evidence = "\n".join(evidence_parts)
+
     user_message = f"Analyze this company ({symbol}):\n\n{evidence}"
 
     try:

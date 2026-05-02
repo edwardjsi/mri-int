@@ -79,15 +79,22 @@ def trigger_debate(symbol: str, background_tasks: BackgroundTasks, client=Depend
     Run GPT debate analysis for a symbol and email results to the client.
     Only works for symbols already in quality_verdicts (must pass QIF screen first).
     """
-    symbol = symbol.upper()
+    symbol = symbol.upper().replace(".NS", "").replace(".BO", "")
+    
     cur = conn.cursor()
-    cur.execute("SELECT * FROM quality_verdicts WHERE symbol = %s", (symbol,))
+    cur.execute("SELECT 1 FROM quality_verdicts WHERE symbol = %s", (symbol,))
     verdict = cur.fetchone()
 
     if not verdict:
         raise HTTPException(status_code=404, detail=f"{symbol} not found in quality verdicts. Run QIF pipeline first.")
 
-    client_email = client.get("email") if client else None
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        if isinstance(item, (list, tuple)):
+            return item[index] if len(item) > index else None
+        return None
+
+    client_email = get_val(client, 'email', 1)
     logger.info(f"Debate triggered for {symbol} by {client_email}")
 
     def _run_and_email():
@@ -105,14 +112,14 @@ def trigger_debate(symbol: str, background_tasks: BackgroundTasks, client=Depend
                 if success:
                     logger.info(f"Debate email successfully sent for {symbol}")
                 else:
-                    logger.error(f"Failed to send debate email for {symbol} to {client_email}")
+                    logger.error(f"Failed to send debate email for {symbol} to {client_email}. Check SES credentials and verified identities.")
             else:
                 error_msg = analysis.get('error')
                 logger.error(f"Debate analysis failed for {symbol}: {error_msg}")
                 send_email_custom(
                     recipient_email=client_email,
                     subject=f"MRI Debate Failed: {symbol}",
-                    html_body=f"<p>Debate analysis could not be generated for {symbol}.</p><pre>{error_msg}</pre>"
+                    html_body=f"<p>Debate analysis could not be generated for {symbol}.</p><p>Error: <b>{error_msg}</b></p><p>Please ensure OPENAI_API_KEY is set in the production environment.</p>"
                 )
         except Exception as e:
             logger.exception(f"CRITICAL ERROR in debate background task for {symbol}: {e}")

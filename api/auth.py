@@ -70,7 +70,8 @@ def register(req: RegisterRequest, conn=Depends(get_db)):
            VALUES (%s, %s, %s, %s) RETURNING id""",
         (clean_email, req.name, hashed, req.initial_capital),
     )
-    client_id = str(cur.fetchone()["id"])
+    res = cur.fetchone()
+    client_id = str(res["id"] if isinstance(res, dict) else res[0])
     conn.commit()
 
     # Add to MailerLite mailing list (non-blocking — never raises)
@@ -157,8 +158,9 @@ def get_profile(client=Depends(get_current_client), conn=Depends(get_db)):
         "SELECT COALESCE(SUM(amount), 0) AS added FROM capital_additions WHERE client_id = %s",
         (str(client["id"]),),
     )
-    added = float(cur.fetchone()["added"])
-    total = float(client["initial_capital"]) + added
+    res = cur.fetchone()
+    added = float(res["added"] if isinstance(res, dict) else (res[0] or 0))
+    total = float(client["initial_capital"] if isinstance(client, dict) else client[4]) + added
     return {
         "id": str(client["id"]),
         "email": client["email"],
