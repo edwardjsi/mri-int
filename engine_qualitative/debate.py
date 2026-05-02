@@ -12,7 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEBATE_PROMPT = """
-You are a forensic equity analyst. Your job is to analyze a company that passed our 7-point quality screen and produce a critical "Debate Report."
+You are a forensic equity analyst specializing in the Indian Stock Market (NSE/BSE). Your job is to analyze an Indian company that passed our 7-point quality screen and produce a critical "Debate Report." 
+
+IMPORTANT: All financial figures provided to you are in Indian Rupees (INR). Please use the ₹ symbol in your analysis.
 
 You have access to:
 1. The company's 7 fundamental agent scores (revenue, margins, leverage, working capital, ROCE, evolution, translation)
@@ -95,6 +97,22 @@ def get_mri_scores(symbol):
     conn.close()
     return row
 
+def get_company_name(symbol):
+    """Fetch company name from universe table."""
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT company_name FROM universe WHERE symbol = %s", (symbol,))
+        row = cur.fetchone()
+        if row:
+            return row[0] if isinstance(row, (list, tuple)) else row.get('company_name')
+        return None
+    except:
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
 def run_debate(symbol):
     base_sym = symbol.replace(".NS", "").replace(".BO", "").upper()
     client = None
@@ -115,11 +133,13 @@ def run_debate(symbol):
     verdict = get_quality_verdict(base_sym)
     mri = get_mri_scores(base_sym)
     history = get_financial_history(base_sym)
+    company_name = get_company_name(base_sym) or base_sym
 
     if not verdict and not history:
         return {"error": f"No data found for {base_sym}. Run QIF pipeline first."}
 
     evidence_parts = []
+    evidence_parts.append(f"Analysis for **{company_name} ({base_sym})** - Indian Equity Market")
 
     def get_val(item, key, index):
         if isinstance(item, dict): return item.get(key)
@@ -161,17 +181,17 @@ def run_debate(symbol):
                     evidence_parts.append(f"- {name}: {'PASS' if val else 'FAIL'}")
 
     if history:
-        evidence_parts.append(f"\n### Financial History ({len(history)} years)")
+        evidence_parts.append(f"\n### Financial History ({len(history)} years) - All figures in INR")
         for row in history:
             if isinstance(row, dict):
-                evidence_parts.append(f"Year {row['year']}: Rev={row['revenue']}, EBITDA={row['ebitda']}, Profit={row['net_profit']}, Debt={row['debt']}, Equity={row['equity']}")
+                evidence_parts.append(f"Year {row['year']}: Rev=₹{row['revenue']}, EBITDA=₹{row['ebitda']}, Profit=₹{row['net_profit']}, Debt=₹{row['debt']}, Equity=₹{row['equity']}")
             else:
                 # Year is index 0, Rev 1, EBITDA 2, Profit 3, Debt 8, Equity 9 based on SELECT in get_financial_history
-                evidence_parts.append(f"Year {row[0]}: Rev={row[1]}, EBITDA={row[2]}, Profit={row[3]}, Debt={row[8]}, Equity={row[9]}")
+                evidence_parts.append(f"Year {row[0]}: Rev=₹{row[1]}, EBITDA=₹{row[2]}, Profit=₹{row[3]}, Debt=₹{row[8]}, Equity=₹{row[9]}")
 
     evidence = "\n".join(evidence_parts)
 
-    user_message = f"Analyze this company ({symbol}):\n\n{evidence}"
+    user_message = f"Analyze this Indian company: {company_name} ({base_sym})\n\n{evidence}"
 
     try:
         resp = client.chat.completions.create(
