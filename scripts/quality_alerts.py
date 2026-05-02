@@ -19,9 +19,21 @@ def check_quality_alerts():
     """)
     rows = cur.fetchall()
     
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        return item[index] if len(item) > index else None
+
     alerts = []
     for row in rows:
-        symbol, score, change, velocity, category = row
+        symbol = get_val(row, 'symbol', 0)
+        score = get_val(row, 'score', 1)
+        change = get_val(row, 'score_change', 2)
+        velocity = get_val(row, 'velocity', 3)
+        category = get_val(row, 'category', 4)
+
+        if score is None or change is None or velocity is None:
+            continue
+
         signal = classify_quality_signal(float(score), float(change), float(velocity))
         
         if signal != "WATCH":

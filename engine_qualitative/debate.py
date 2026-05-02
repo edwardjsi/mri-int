@@ -100,13 +100,17 @@ def run_debate(symbol):
     client = None
     try:
         from openai import OpenAI
+        import httpx
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return {"error": "OPENAI_API_KEY not set in environment"}
-        # Create client without explicit proxies argument to avoid TypeError with newer OpenAI/Httpx versions
-        client = OpenAI(api_key=api_key)
+        
+        # Use a custom http_client to avoid the 'proxies' vs 'proxy' argument conflict 
+        # caused by the version mismatch between openai (v1.12.0) and httpx (v0.28.1)
+        http_client = httpx.Client()
+        client = OpenAI(api_key=api_key, http_client=http_client)
     except ImportError:
-        return {"error": "OpenAI package not installed"}
+        return {"error": "OpenAI or HTTPX package not installed"}
 
     verdict = get_quality_verdict(base_sym)
     mri = get_mri_scores(base_sym)
