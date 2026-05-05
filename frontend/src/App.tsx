@@ -902,7 +902,6 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [trajectoryAlerts, setTrajectoryAlerts] = useState<any[]>([]);
   const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
-905:   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const loadData = async () => {
     try {
