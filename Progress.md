@@ -25,11 +25,12 @@
 - [x] **Risk Audit Sorting**: Confirmed sorting functionality for the Portfolio Risk Audit results and Digital Twin holdings.
 
 #### 4. Phase 3 Forensic Hardening ✅
-- [x] **Dataset Integrity Audit**: Created and executed `scripts/audit_fundamental_joins.py`. Confirmed no suffix mismatches (`.NS`/`.BO`) are blocking joins, though 399 symbols (mostly BSE codes) lack fundamental data.
+- [x] **Dataset Integrity Audit**: Created and executed `scripts/audit_fundamental_joins.py`. Confirmed no suffix mismatches (`.NS`/`.BO`) are blocking joins.
+- [x] **Fundamental Coverage Expansion**: Upgraded the fundamental collector to seamlessly support BSE numeric codes (`.BO`) and safely sanitize numpy values for Postgres ingestion.
+- [x] **Data Backfill**: Initiated and successfully executed a batch backfill fetching 5-10 years of historical financial data for the 399 missing BSE-coded symbols.
 
 ### ⏳ Left for Next Session
-1. **Fundamental Coverage Expansion**: Investigate and backfill fundamental data for the 399 missing symbols identified in the audit.
-2. **Debate Trigger Verification**: Run end-to-end test for AI Debate trigger from UI.
+1. **Debate Trigger Verification**: Run end-to-end test for AI Debate trigger from UI.
 
 ---
 

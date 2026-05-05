@@ -7,8 +7,9 @@
 1.  **Neon DB Discovery:** Verified 30-year historical dataset in Neon (2.1M rows).
 2.  **Backtest Restoration:** Restored `backups/20260304` and verified **22.12% CAGR**.
 3.  **UI Sorting:** Implemented sorting for Dashboard holdings and Watchlist tables.
-4.  **Forensic Hardening:** Completed Phase 3 Join Audit. Found 399 missing fundamental data points (BSE codes), but confirmed join logic is suffix-safe.
-**Result:** Platform is now fully verified against historical truth and UI is significantly more professional with sortable data tables.
+4.  **Forensic Hardening**: Completed Phase 3 Join Audit. Discovered 399 BSE-coded symbols missing fundamental data.
+5.  **Fundamental Data Backfill**: Upgraded `engine_fundamental/collector.py` to properly handle BSE numeric codes (`.BO`) and explicitly cast `numpy` values to Python native types, resolving Postgres schema errors. Triggered batch backfill for all 399 missing symbols to enrich the pipeline's QIF generation layer.
+**Result**: Platform is now fully verified against historical truth, UI is significantly more professional with sortable data tables, and fundamental data coverage is substantially expanded.
 
 ## **May 04, 2026: Forensic Alert Hardening & Verification**
 
