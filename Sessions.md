@@ -1,4 +1,23 @@
 # **MRI Sessions Log**
+6: 
+## **May 05, 2026: Canonical Backtest Restoration from Neon DB**
+
+**Context:** The 17-year canonical backtest was unverified in this workspace due to missing CSV snapshots.
+**Actions:**
+1.  **Neon DB Discovery:** Verified that the Neon database (from `.env`) contains the **FULL 30-year historical dataset** (1996–2026, 2.1M rows) with all indicators pre-computed.
+2.  **Backtest Toolchain Repair:** Updated `scripts/export_canonical_csvs.py` to include the missing `ema_200_slope_20` column required by the backtest engine.
+3.  **Data Restoration:** Exported the complete historical dataset from Neon to `backups/20260304/daily_prices.csv` (220MB).
+4.  **Verification:** Ran `scripts/run_canonical_backtest.py` and generated a fresh `outputs/snapshot_canonical.md` report.
+**Result:** Strategy performance is now verified against the live historical dataset: **22.12% CAGR** | **-28.01% Max DD** | **0.88 Sharpe**.
+
+## **May 04, 2026: Forensic Alert Hardening & Verification**
+
+**Context:** Finalizing the production deployment of the AI Forensic Debate and STEE email systems.
+**Actions:**
+1.  **Numeric Hardening:** Added `try/except` blocks to `scripts/quality_alerts.py` to prevent crashes caused by non-numeric string data (e.g., "N/A") in technical scores.
+2.  **OpenAI Client Fix:** Resolved the `proxies` argument conflict in `engine_qualitative/debate.py` by implementing a custom `httpx.Client`.
+3.  **UI Alignment:** Integrated the Quality Trajectory layer into the Watchlist and added sortable columns.
+**Result:** Alerting pipeline is now crash-resistant. (Work was staged but not committed in this session).
 
 ## **May 02, 2026: AI Debate and Email Pipeline Hardening**
 

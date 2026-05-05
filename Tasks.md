@@ -87,6 +87,12 @@
 - [x] **Pipeline Automation:** Integrated fundamental analysis into `pipeline_cloud.sh` to auto-refresh top picks.
 ---
 
+## ✅ Day 73: Watchlist Hardening & UX (Completed 2026-05-04)
+- [x] **Sortable Watchlist**: Implemented client-side sorting for Symbols, Prices, MRI Scores, and Trends.
+- [x] **Header UI**: Added dynamic sort icons and hover states to the Watchlist table.
+- [x] **Code Hardening Audit**: Verified fix for `debate.py` proxy conflict; implemented `ValueError` hardening for `quality_alerts.py`. Full details in [FORENSIC_HARDENING.md](file:///home/immanuels/Desktop/mri-int/docs/FORENSIC_HARDENING.md).
+---
+
 ## ✅ Day 71: Qualitative Intelligence Layer (Phase 2) (Completed 2026-04-28)
 - [x] **QIL Engine:** Built a narrative-based analysis layer using GPT-4o-mini for investment signal extraction.
 - [x] **Narrative Validation:** Implemented deterministic cross-checks to flag management narrative mismatches.

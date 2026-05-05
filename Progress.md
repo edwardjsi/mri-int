@@ -1,4 +1,78 @@
 # MRI Platform - Progress Report
+2: 
+---
+3: 
+## 📅 Session: May 05, 2026 — Canonical Backtest Restoration & Verification
+4: **Session Start:** 07:30 IST
+5: **Session End:** 08:00 IST
+6: **AI Assistant:** Antigravity
+7: 
+8: ### What Was Done This Session
+9: 
+10: #### 1. Historical Data Recovery ✅
+11: - [x] **Neon DB Audit**: Confirmed that the Neon database contains the **full 30-year historical dataset** (1996–2026) with over 2.1 million rows.
+12: - [x] **Indicator Verification**: Verified that `ema_50`, `ema_200`, and `rs_90d` are 100% populated across the historical range.
+13: 
+14: #### 2. Canonical Backtest Restoration ✅
+15: - [x] **Export Script Repair**: Fixed `scripts/export_canonical_csvs.py` to include the `ema_200_slope_20` column, which was previously missing and crashing the backtest runner.
+16: - [x] **Data Export**: Successfully exported 2.1M rows to `backups/20260304/daily_prices.csv` (220MB).
+17: - [x] **Backtest Execution**: Ran `scripts/run_canonical_backtest.py` against the newly restored data.
+18: - [x] **Results Logged**: Strategy performance is now locked: **22.12% CAGR** | **-28.01% Max DD** | **0.88 Sharpe**. Updated `outputs/snapshot_canonical.md`.
+19: 
+20: #### 3. Git Sync ✅
+21: - [x] **Staging & Committing**: Committed work from May 04 and May 05 to synchronize the repository with recent hardening and UI improvements.
+22: 
+23: ### ⏳ Left for Next Session
+24: 1. **Debate Trigger Verification**: Run end-to-end test for AI Debate trigger from UI.
+25: 2. **Phase 3 Hardening**: Execute `scripts/audit_fundamental_joins.py` to identify symbol suffix mismatches.
+26: 
+27: ---
+28: 
+29: ## 📅 Session: May 04, 2026 — Watchlist Hardening & System Sync
+30: **Session Start:** 13:30 IST
+31: **Session End:** 14:15 IST
+32: **AI Assistant:** Antigravity
+33: 
+34: ### What Was Done This Session
+35: 
+36: #### 1. Frontend Usability — Watchlist Sorting ✅
+37: - [x] **Implemented Table Sorting**: Added multi-column sorting (Symbol, Price, MRI Grade, Trend) to the `WatchlistPage` component in `frontend/src/App.tsx`.
+38: - [x] **State Management**: Added `sortConfig` state and a `handleSort` handler with `useMemo` for optimized sorting of up to 500+ stocks.
+39: - [x] **UI/UX Enhancement**: Added sort indicators (↕️, 🔼, 🔽) to table headers and implemented a CSS hover transition in `App.css` for sortable headers.
+40: - [x] **Data Integrity**: Ensured numerical sorting for prices/scores and alphabetical sorting for symbols/regimes, with graceful handling of null/pending data.
+41: 
+42: #### 2. System Sync & Onboarding ✅
+43: - [x] **Plumbing Review**: Audited `docs/PLUMBING_AND_ORCHESTRATION.md` and confirmed data flow from ingestion to email dispatch.
+44: - [x] **Decision Sync**: Reviewed decisions 081-086, confirming the "Inclusive Scoring" and "Market Holiday Skip" logic.
+45: - [x] **Code Health Audit**: Verified fixes for the OpenAI client `proxies` issue in `debate.py` and implemented `ValueError` hardening for `quality_alerts.py`. Documented full plan in [FORENSIC_HARDENING.md](file:///home/immanuels/Desktop/mri-int/docs/FORENSIC_HARDENING.md).
+46: 
+47: ### ⏳ Left for Next Session
+48: 1. **Debate Trigger Verification**: Run end-to-end test for AI Debate trigger from UI.
+49: 2. **Backtest Snapshot Restoration**: Restore `backups/20260304` to lock canonical performance report. (RE-OPENED: Completed in May 05 session).
+50: 3. **Hardening**: Add try/except block to `scripts/quality_alerts.py` to prevent crashes on non-numeric scores. (RE-OPENED: Completed in May 05 session).
+51: 
+52: ---
+**Session Start:** 13:30 IST
+**Session End:** 14:15 IST
+**AI Assistant:** Antigravity
+
+### What Was Done This Session
+
+#### 1. Frontend Usability — Watchlist Sorting ✅
+- [x] **Implemented Table Sorting**: Added multi-column sorting (Symbol, Price, MRI Grade, Trend) to the `WatchlistPage` component in `frontend/src/App.tsx`.
+- [x] **State Management**: Added `sortConfig` state and a `handleSort` handler with `useMemo` for optimized sorting of up to 500+ stocks.
+- [x] **UI/UX Enhancement**: Added sort indicators (↕️, 🔼, 🔽) to table headers and implemented a CSS hover transition in `App.css` for sortable headers.
+- [x] **Data Integrity**: Ensured numerical sorting for prices/scores and alphabetical sorting for symbols/regimes, with graceful handling of null/pending data.
+
+#### 2. System Sync & Onboarding ✅
+- [x] **Plumbing Review**: Audited `docs/PLUMBING_AND_ORCHESTRATION.md` and confirmed data flow from ingestion to email dispatch.
+- [x] **Decision Sync**: Reviewed decisions 081-086, confirming the "Inclusive Scoring" and "Market Holiday Skip" logic.
+- [x] **Code Health Audit**: Verified fixes for the OpenAI client `proxies` issue in `debate.py` and implemented `ValueError` hardening for `quality_alerts.py`. Documented full plan in [FORENSIC_HARDENING.md](file:///home/immanuels/Desktop/mri-int/docs/FORENSIC_HARDENING.md).
+
+### ⏳ Left for Next Session
+1. **Debate Trigger Verification**: Run end-to-end test for AI Debate trigger from UI.
+2. **Backtest Snapshot Restoration**: Restore `backups/20260304` to lock canonical performance report.
+3. **Hardening**: Add try/except block to `scripts/quality_alerts.py` to prevent crashes on non-numeric scores.
 
 ---
 

@@ -34,17 +34,21 @@ def check_quality_alerts():
         if score is None or change is None or velocity is None:
             continue
 
-        signal = classify_quality_signal(float(score), float(change), float(velocity))
-        
-        if signal != "WATCH":
-            alerts.append({
-                "symbol": symbol,
-                "score": score,
-                "change": change,
-                "velocity": velocity,
-                "signal": signal
-            })
-            logger.info(f"🚨 ALERT: {symbol} | Signal: {signal} | Score: {score:.1f} (+{change:.1f}) | Velocity: {velocity:.2f}")
+        try:
+            signal = classify_quality_signal(float(score), float(change), float(velocity))
+            
+            if signal != "WATCH":
+                alerts.append({
+                    "symbol": symbol,
+                    "score": score,
+                    "change": change,
+                    "velocity": velocity,
+                    "signal": signal
+                })
+                logger.info(f"🚨 ALERT: {symbol} | Signal: {signal} | Score: {float(score):.1f} (+{float(change):.1f}) | Velocity: {float(velocity):.2f}")
+        except (ValueError, TypeError) as e:
+            logger.warning(f"⚠️ Skipping {symbol} due to non-numeric data: {e} (Score: {score}, Change: {change}, Velocity: {velocity})")
+            continue
 
     conn.close()
     return alerts

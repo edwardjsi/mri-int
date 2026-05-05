@@ -506,6 +506,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1px solid #334155;
+  transition: background 0.15s, color 0.15s;
+}
+
+.data-table th[style*="cursor: pointer"]:hover {
+  background: #1e293b;
+  color: #f1f5f9;
 }
 
 .data-table td {

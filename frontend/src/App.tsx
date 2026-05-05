@@ -2058,6 +2058,42 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [newSymbol, setNewSymbol] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) return ' ↕️';
+    return sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
+  };
+
+  const sortedWatchlist = useMemo(() => {
+    let sortableItems = [...watchlist];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        // Handle nulls/undefined for sorting
+        if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [watchlist, sortConfig]);
 
   // Search Logic for Autocomplete
   useEffect(() => {
@@ -2206,15 +2242,15 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
           <table className="data-table">
             <thead>
               <tr>
-                <th>Symbol</th>
-                <th>Price</th>
-                <th>MRI Grade</th>
-                <th>Trend</th>
+                <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSortIcon('symbol')}</th>
+                <th onClick={() => handleSort('price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price{getSortIcon('price')}</th>
+                <th onClick={() => handleSort('score')} style={{ cursor: 'pointer', userSelect: 'none' }}>MRI Grade{getSortIcon('score')}</th>
+                <th onClick={() => handleSort('trend_alignment')} style={{ cursor: 'pointer', userSelect: 'none' }}>Trend{getSortIcon('trend_alignment')}</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {watchlist.map(item => (
+              {sortedWatchlist.map(item => (
                 <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}} onClick={() => !item.is_pending && onSelectStock(item)} className={item.is_pending ? '' : 'clickable-row'}>
                   <td className="font-bold">
                     {item.breakout_candidate && (
