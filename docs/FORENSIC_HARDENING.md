@@ -33,5 +33,5 @@ This document tracks the hardening and verification of the AI Forensic Debate an
 - [ ] **Monitor**: Check logs for GPT-4o-mini response latency and formatting.
 - [ ] **Delivery**: Verify SES email receipt for the debate report.
 
-### Phase 3: Dataset Integrity Audit
-- [ ] **Join Audit**: Run `scripts/audit_fundamental_joins.py` (to be created) to identify any symbols with technical scores but missing fundamental history due to suffix mismatches.
+### Phase 3: Dataset Integrity Audit (Completed)
+- [x] **Join Audit**: Run `scripts/audit_fundamental_joins.py` (Completed May 05). Confirmed no suffix mismatches (`.NS`/`.BO`) are blocking technical-fundamental joins. Identified 399 symbols (mostly BSE codes) missing fundamental data.

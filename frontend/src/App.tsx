@@ -902,6 +902,7 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [trajectoryAlerts, setTrajectoryAlerts] = useState<any[]>([]);
   const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
+905:   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const loadData = async () => {
     try {
@@ -937,6 +938,43 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
       loadData();
     } catch (err: any) { alert(err.message); }
   };
+
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) return ' ↕️';
+    return sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
+  };
+
+  const sortedPositions = useMemo(() => {
+    if (!positions?.positions) return [];
+    let sortableItems = [...positions.positions];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        
+        if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [positions?.positions, sortConfig]);
 
   const handleAddCapital = async (amount: number) => {
     try {
@@ -1096,10 +1134,17 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
           <div className="table-container">
             <table className="data-table">
               <thead>
-                <tr><th>Symbol</th><th>Source</th><th>Price</th><th>Qty</th><th>Value</th><th>P&L %</th></tr>
+                <tr>
+                  <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSortIcon('symbol')}</th>
+                  <th onClick={() => handleSort('source')} style={{ cursor: 'pointer', userSelect: 'none' }}>Source{getSortIcon('source')}</th>
+                  <th onClick={() => handleSort('current_price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price{getSortIcon('current_price')}</th>
+                  <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer', userSelect: 'none' }}>Qty{getSortIcon('quantity')}</th>
+                  <th style={{ cursor: 'default', userSelect: 'none' }}>Value</th>
+                  <th onClick={() => handleSort('pnl_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>P&L %{getSortIcon('pnl_pct')}</th>
+                </tr>
               </thead>
               <tbody>
-                {positions.positions.map((p: any) => (
+                {sortedPositions.map((p: any) => (
                   <tr key={`${p.source}-${p.symbol}`} onClick={() => onSelectStock(p)} className="clickable-row">
                     <td className="font-bold">
                       {p.breakout_candidate && (
