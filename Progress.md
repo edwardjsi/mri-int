@@ -2,6 +2,145 @@
 
 ---
 
+## 📅 Session: May 08, 2026 — PERX Runtime Verification & Email Delivery
+**Session Start:** In Progress
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. PERX Runtime Verification ✅
+- [x] Connected to the live Neon database using the current application code path.
+- [x] Confirmed `perx_reports` and `perx_scores` exist in production data storage.
+- [x] Identified real QIF-covered candidate symbols for verification.
+- [x] Ran a real PERX generation pass for `ZENTEC` and confirmed inserts into both `perx_reports` and `perx_scores`.
+
+#### 2. Debate Layer Verification ✅
+- [x] Installed the missing `openai` and `httpx` packages into the project `venv` so the local runtime matches the debate engine requirements.
+- [x] Ran the real GPT debate path successfully for `ZENTEC`.
+- [x] Confirmed the debate output shape includes guidance, nuances, mistakes, and verdict as expected by the current system.
+
+#### 3. PERX + Debate Persistence ✅
+- [x] Generated a PERX report with `include_debate=true`.
+- [x] Verified the stored `report_json` contains the forensic review verdict payload.
+- [x] Confirmed the persisted report can reuse the live GPT layer without modifying existing scoring logic.
+
+#### 4. PERX Email Phase ✅
+- [x] Added `build_perx_report_email_html(...)` to `engine_core/email_service.py`.
+- [x] Added `send_perx_report_email(...)` to the shared SES email service.
+- [x] Added `POST /api/perx/email/{report_id}` to `api/perx.py`.
+- [x] Added `email_log` persistence for PERX report delivery attempts.
+- [x] Passed `python -m py_compile` for the touched email and router files.
+
+### ⏳ Left for Next Session
+1. **PERX Frontend Entry:** Add the first thin UI surface for company-first scan invocation and stored report inspection.
+2. **PERX Admin/Watchlist Surfacing:** Expose latest PERX runs in an existing dashboard/admin workflow without redesigning the product shell.
+3. **Email Endpoint Live Send Check:** Run the new `/api/perx/email/{report_id}` endpoint in an SES-enabled environment and verify the `email_log` row shape end to end.
+
+### 📌 Current Milestone
+- Debate generation and PERX runtime verification are now proven.
+- The next smallest implementation step is **PERX Frontend Entry**.
+
+## 📅 Session: May 08, 2026 — PERX V1 Planning & Integration Path
+**Session Start:** In Progress
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. PERX Feasibility Review ✅
+- [x] Reviewed `docs/Perx PRD.md` against the current MRI/STEE/QIF/Debate system architecture.
+- [x] Confirmed PERX should be implemented as an orchestration layer on top of the existing monolith rather than as a new service.
+- [x] Confirmed that current MRI/STEE price history is already sufficient for PERX V1.
+- [x] Confirmed that the main remaining data gaps are not price downloads, but future derived layers such as sector intelligence, fragility tracking, lifecycle history, and analog storage.
+
+#### 2. Planning Decision Logged ✅
+- [x] Added a new architectural decision in `Decisions.md` establishing **PERX V1** as a backend-first, company-first orchestration layer inside the current FastAPI monolith.
+- [x] Locked the initial PERX delivery sequence to:
+  - Phase 1: single-symbol orchestration + stored report JSON
+  - Phase 2: email delivery + watchlist hooks
+  - Phase 3: compare mode + archive + richer derived layers
+
+#### 3. Implementation Plan Created ✅
+- [x] Created `docs/PERX_IMPLEMENTATION_PLAN.md`.
+- [x] Mapped the PERX PRD onto existing modules, tables, routes, and email infrastructure.
+- [x] Defined the smallest logical implementation step as:
+  - `perx_reports` + `perx_scores`
+  - `engine_perx/orchestrator.py`
+  - `api/perx.py`
+  - unified single-symbol report JSON
+
+### ⏳ Left for Next Session
+1. **Debate Trigger Verification:** Complete the still-open end-to-end test from UI trigger → GPT analysis → SES email delivery.
+2. **PERX Phase 1 Backend:** Add `perx_reports` and `perx_scores` to `api/schema.py`.
+3. **PERX Orchestrator:** Create the initial `engine_perx/` backend package and `POST /api/perx/scan/{symbol}` route.
+4. **PERX Report MVP:** Return a unified JSON report that reuses MRI, STEE, QIF, and Debate evidence without modifying existing engine logic.
+
+### 📌 Current Milestone
+- Active milestone remains **Debate Trigger Verification**.
+- PERX V1 is now the approved **next implementation layer** after that verification step.
+
+---
+
+## 📅 Session: May 08, 2026 — PERX Phase 1 Backend Foundation
+**Session Start:** In Progress
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. PERX Schema Foundation ✅
+- [x] Added `perx_reports` to `api/schema.py` for persisted institutional report JSON.
+- [x] Added `perx_scores` to `api/schema.py` for latest symbol-level PERX score snapshots.
+- [x] Added supporting indexes for client/date and symbol/date retrieval patterns.
+
+#### 2. PERX Backend Package ✅
+- [x] Created `engine_perx/` with:
+  - `orchestrator.py`
+  - `report_builder.py`
+  - `scoring.py`
+  - `__init__.py`
+- [x] Implemented deterministic PERX score synthesis from existing MRI, STEE-style setup evidence, QIF, and trajectory inputs.
+- [x] Implemented a first-pass lifecycle classifier and fragility snapshot derived from existing financial and technical evidence.
+
+#### 3. API Integration ✅
+- [x] Added `api/perx.py`.
+- [x] Added `POST /api/perx/scan/{symbol}` to generate and persist a single-symbol PERX report.
+- [x] Added `GET /api/perx/report/{report_id}` to fetch stored reports for the requesting client.
+- [x] Wired the PERX router into `api/main.py`.
+
+#### 4. Report Assembly ✅
+- [x] PERX V1 now assembles a unified JSON report with:
+  - header
+  - executive summary
+  - narrative transition
+  - engine outputs
+  - institutional forensic review placeholder or on-demand debate inclusion
+  - lifecycle
+  - final institutional verdict
+- [x] Reused existing MRI, QIF, market regime, and debate plumbing without modifying production scoring logic.
+
+#### 5. Verification ✅
+- [x] Passed `python -m py_compile` for:
+  - `api/perx.py`
+  - `api/main.py`
+  - `api/schema.py`
+  - `engine_perx/orchestrator.py`
+  - `engine_perx/report_builder.py`
+  - `engine_perx/scoring.py`
+
+### ⏳ Left for Next Session
+1. **Debate Trigger Verification:** Complete the still-open UI → GPT → SES end-to-end validation.
+2. **PERX Runtime Verification:** Run the API against a real database and verify `perx_reports` / `perx_scores` populate successfully for a QIF-covered symbol.
+3. **PERX Email Phase:** Add PERX institutional report email delivery using the existing SES pipeline.
+4. **PERX Frontend Entry:** Add the first thin UI surface for company-first scan invocation and stored report inspection.
+
+### 📌 Current Milestone
+- Active milestone remains **Debate Trigger Verification**.
+- PERX backend foundation is now implemented as the approved next-layer groundwork behind that milestone.
+
+---
+
 ## 📅 Session: May 05, 2026 — Canonical Backtest Restoration & Verification
 **Session Start:** 07:30 IST
 **Session End:** 08:00 IST

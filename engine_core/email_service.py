@@ -227,6 +227,114 @@ def build_stee_signal_email_html(client_name, trades, regime):
     return html
 
 
+def build_perx_report_email_html(client_name: str, report: dict) -> str:
+    """Build HTML email body for a PERX institutional report."""
+    header = report.get("header", {})
+    summary = report.get("executive_summary", "")
+    narrative = report.get("narrative_transition", {})
+    lifecycle = report.get("lifecycle", {})
+    verdict = report.get("final_institutional_verdict", "")
+    engine_outputs = report.get("engine_outputs", {})
+    forensic = report.get("institutional_forensic_review", {})
+
+    symbol = header.get("symbol") or report.get("symbol", "UNKNOWN")
+    company_name = header.get("company_name") or report.get("company_name") or symbol
+    perx_score = header.get("perx_score", "N/A")
+    lifecycle_phase = header.get("lifecycle_phase", "UNKNOWN")
+    sector = header.get("sector", "UNKNOWN")
+    report_timestamp = header.get("report_timestamp", date.today().isoformat())
+
+    perx_color = "#22c55e" if float(perx_score or 0) >= 75 else "#f59e0b" if float(perx_score or 0) >= 60 else "#ef4444"
+    mri = engine_outputs.get("mri", {})
+    qif = engine_outputs.get("qif", {})
+    stee = engine_outputs.get("stee", {})
+    fragility = engine_outputs.get("fragility", {})
+
+    forensic_block = ""
+    if forensic and not forensic.get("unavailable"):
+        forensic_verdict = forensic.get("verdict", {})
+        forensic_block = f"""
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;margin:16px 0">
+                <h3 style="margin:0 0 8px 0;color:#334155">Institutional Forensic Review</h3>
+                <p style="margin:0 0 10px;color:#475569;line-height:1.6">{forensic.get('guidance_vs_reality', 'No forensic summary available.')}</p>
+                <p style="margin:0;color:#0f172a;font-weight:600">
+                    Verdict: {forensic_verdict.get('buy_recommendation', 'UNDER REVIEW')} | Score: {forensic_verdict.get('score', 'N/A')}/10
+                </p>
+            </div>
+        """
+    elif forensic:
+        forensic_block = f"""
+            <div style="background:#fff7ed;border-radius:12px;padding:16px;margin:16px 0;border:1px solid #fed7aa">
+                <h3 style="margin:0 0 8px 0;color:#9a3412">Institutional Forensic Review</h3>
+                <p style="margin:0;color:#9a3412;line-height:1.6">{forensic.get('message', 'Forensic review not available for this report.')}</p>
+            </div>
+        """
+
+    return f"""
+    <html>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:700px;margin:0 auto;padding:20px;background:#f8fafc">
+        <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+            <div style="border-left:6px solid {perx_color};padding-left:16px;margin-bottom:20px">
+                <div style="font-size:12px;color:#64748b;font-weight:700;letter-spacing:0.04em">PERX INSTITUTIONAL REPORT</div>
+                <h1 style="margin:6px 0 4px;font-size:28px;color:#0f172a">{company_name}</h1>
+                <p style="margin:0;color:#475569">{symbol} | {sector} | Generated {report_timestamp}</p>
+            </div>
+
+            <div style="display:inline-block;padding:8px 16px;border-radius:999px;background:{perx_color};color:white;font-weight:700;margin-bottom:18px">
+                PERX {perx_score}/100 | {lifecycle_phase}
+            </div>
+
+            <p style="color:#334155;line-height:1.7">Hi {client_name},</p>
+            <p style="color:#334155;line-height:1.7">{summary}</p>
+
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;margin:16px 0">
+                <h3 style="margin:0 0 10px;color:#334155">Narrative Transition</h3>
+                <p style="margin:0 0 8px;color:#475569"><b>Previous:</b> {narrative.get('previous_market_perception', 'N/A')}</p>
+                <p style="margin:0 0 8px;color:#475569"><b>Emerging:</b> {narrative.get('emerging_market_perception', 'N/A')}</p>
+                <p style="margin:0;color:#475569;line-height:1.6">{narrative.get('why_this_matters', '')}</p>
+            </div>
+
+            <h3 style="margin:24px 0 10px;color:#0f172a">Engine Snapshot</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+                <tr style="background:#f1f5f9">
+                    <th style="padding:10px;text-align:left">Layer</th>
+                    <th style="padding:10px;text-align:left">Signal</th>
+                </tr>
+                <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">MRI</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">Score {mri.get('total_score', 'N/A')}/100 | Breakout {mri.get('breakout_structure', 'N/A')} | RS {mri.get('relative_strength', 'N/A')}</td></tr>
+                <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">STEE</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">Setup {stee.get('setup_quality_score', 'N/A')} | Breakout Ready {stee.get('breakout_ready', 'N/A')}</td></tr>
+                <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">QIF</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">Score {qif.get('score', 'N/A')}/100 | Category {qif.get('category', 'N/A')}</td></tr>
+                <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">Fragility</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">Level {fragility.get('level', 'N/A')} | {fragility.get('summary', 'No summary available.')}</td></tr>
+                <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">Lifecycle</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">{lifecycle.get('stage', lifecycle_phase)} | Narrative Intensity {lifecycle.get('narrative_intensity', 'N/A')}</td></tr>
+            </table>
+
+            {forensic_block}
+
+            <div style="background:#ecfeff;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #a5f3fc">
+                <h3 style="margin:0 0 8px;color:#155e75">Final Institutional Verdict</h3>
+                <p style="margin:0;color:#164e63;line-height:1.7">{verdict}</p>
+            </div>
+
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+            <p style="font-size:12px;color:#94a3b8;text-align:center">
+                PERX is an institutional intelligence layer built on MRI, QIF, STEE, and forensic review. It is not a trading instruction.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+
+def send_perx_report_email(recipient_email: str, client_name: str, report: dict) -> bool:
+    """Send a PERX institutional report email using the shared SES path."""
+    header = report.get("header", {})
+    symbol = header.get("symbol") or report.get("symbol", "UNKNOWN")
+    company_name = header.get("company_name") or report.get("company_name") or symbol
+    perx_score = header.get("perx_score", "N/A")
+    subject = f"PERX Report: {company_name} ({symbol}) | {perx_score}/100"
+    html_body = build_perx_report_email_html(client_name, report)
+    return send_email_custom(recipient_email=recipient_email, subject=subject, html_body=html_body)
+
+
 def send_password_reset_email(email: str, name: str, token: str):
     ok, err = send_password_reset_email_detailed(email=email, name=name, token=token)
     if not ok:

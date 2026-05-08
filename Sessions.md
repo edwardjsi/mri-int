@@ -1,5 +1,41 @@
 # **MRI Sessions Log**
 
+## **May 08, 2026: PERX Runtime Verification & Email Delivery**
+
+**Context:** Completing the post-foundation validation pass for PERX V1 and moving the product one step forward by wiring institutional report delivery through the existing SES path.
+**Actions:**
+1.  **Live Database Verification:** Connected to the live Neon database, confirmed `perx_reports` and `perx_scores` exist, and validated that QIF-covered symbols were available for a real PERX run.
+2.  **PERX Runtime Proof:** Ran the real `generate_perx_report()` path against Neon for `ZENTEC` and confirmed inserts into both `perx_reports` and `perx_scores`.
+3.  **Debate Layer Verification:** Installed the missing `openai` and `httpx` packages into the project `venv`, then ran the real GPT debate path successfully for `ZENTEC`.
+4.  **PERX + Debate Proof:** Generated and persisted a PERX report with `include_debate=true`, confirming the stored JSON now includes the institutional forensic review payload.
+5.  **Email Delivery Wiring:** Added `build_perx_report_email_html(...)` and `send_perx_report_email(...)` to `engine_core/email_service.py`, and added `POST /api/perx/email/{report_id}` to `api/perx.py` with `email_log` persistence.
+6.  **Verification:** Passed `python -m py_compile api/perx.py engine_core/email_service.py`.
+**Result:** PERX V1 is now proven against the real database and can generate, persist, fetch, and email institutional report payloads through the existing monolith patterns.
+**Next Step:** Add the first thin frontend PERX entry point for company-first scan invocation and stored report viewing.
+
+## **May 08, 2026: PERX Phase 1 Backend Foundation**
+
+**Context:** Beginning the first real PERX implementation step after the planning pass, while keeping MRI/STEE/QIF/Debate production logic untouched.
+**Actions:**
+1.  **Schema Foundation:** Added `perx_reports` and `perx_scores` in `api/schema.py` for persisted report JSON and latest PERX score snapshots.
+2.  **New Backend Package:** Created `engine_perx/` with deterministic scoring, report assembly, and orchestration modules.
+3.  **API Wiring:** Added `api/perx.py` with authenticated scan/fetch routes and registered the router in `api/main.py`.
+4.  **Report MVP:** Implemented single-symbol PERX report generation that reuses MRI technical evidence, QIF outputs, market regime context, and the existing debate engine as an optional forensic-review layer.
+5.  **Verification:** Passed `python -m py_compile` for all new PERX modules and touched API/schema files.
+**Result:** PERX now has a working backend foundation inside the monolith: schema, orchestrator, and routes for generating and storing a first institutional report JSON.
+**Next Step:** Run the new routes against a real database, verify inserts into `perx_reports` and `perx_scores`, and then add SES report delivery.
+
+## **May 08, 2026: PERX V1 Planning & Documentation**
+
+**Context:** Evaluating how the new PERX rerating product can fit into the current MRI/STEE/QIF/Debate stack without redesigning the architecture.
+**Actions:**
+1.  **Architecture Review:** Mapped `docs/Perx PRD.md` onto the current FastAPI monolith, Neon database, SES delivery path, and existing engine modules.
+2.  **Data Readiness Check:** Confirmed existing price, technical, and fundamental data are sufficient for a PERX V1 orchestration layer; identified the remaining gaps as future derived layers rather than missing Yahoo price downloads.
+3.  **Decision Logging:** Added a formal architectural decision declaring PERX V1 a backend-first orchestration layer inside the existing monolith.
+4.  **Implementation Planning:** Created `docs/PERX_IMPLEMENTATION_PLAN.md` with scope, reuse map, phases, endpoints, tables, report structure, and smallest next build step.
+**Result:** PERX now has an approved implementation path that preserves current MRI/STEE/QIF production flows and starts with a single-symbol orchestration/report MVP.
+**Next Step:** Finish the still-open debate-trigger verification milestone, then begin PERX Phase 1 backend work (`perx_reports`, `perx_scores`, `engine_perx/`, `api/perx.py`).
+
 ## **May 05, 2026: Canonical Backtest Restoration & UI Sorting**
 
 **Context:** Restoring historical performance baseline and improving dashboard usability.
