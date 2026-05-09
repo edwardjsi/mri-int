@@ -396,7 +396,22 @@ def ensure_required_tables(conn) -> None:
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_swing_trades_client_status ON public.swing_trades(client_id, status);")
 
-    # 17. PERX Reports and Latest Score Snapshots
+    # 17. System Audit Logs
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.system_audit_logs (
+            id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            event_type  VARCHAR(50) NOT NULL,
+            severity    VARCHAR(20) DEFAULT 'INFO',
+            message     TEXT,
+            metadata    JSONB,
+            timestamp   TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON public.system_audit_logs(timestamp DESC);")
+
+    # 18. PERX Reports and Latest Score Snapshots
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS public.perx_reports (

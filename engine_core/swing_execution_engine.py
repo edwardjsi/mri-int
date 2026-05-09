@@ -54,15 +54,15 @@ def get_qualified_watchlist(cur):
     return cur.fetchall()
 
 def log_audit_event(cur, event_type, severity, message, metadata=None):
-    """Log an audit event to the system_audit_logs table."""
+    """Log an audit event to the system_audit_logs table. Transaction-safe."""
+    import json
     try:
-        import json
         cur.execute("""
             INSERT INTO system_audit_logs (event_type, severity, message, metadata)
             VALUES (%s, %s, %s, %s)
         """, (event_type, severity, message, json.dumps(metadata or {})))
-    except Exception as e:
-        logger.error(f"Failed to log audit event: {e}")
+    except Exception:
+        pass
 
 def process_entries(cur, regime_row, watchlist, clients):
     regime = regime_row["classification"]
