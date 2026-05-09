@@ -34,9 +34,16 @@ def scan_symbol(
             persist=True,
         )
         
-        # V3 AUTO-EMAIL: Send the report automatically in background
+        # V3 AUTO-EMAIL: Ensure metadata exists then send
         client_email = client.get("email")
         if client_email:
+            # Sync metadata one last time before emailing
+            try:
+                from engine_perx.sector import get_sector_context
+                cur = conn.cursor()
+                get_sector_context(cur, symbol, result["report"]["header"].get("sector", "UNKNOWN"))
+            except: pass
+            
             background_tasks.add_task(
                 send_perx_report_email,
                 recipient_email=client_email,

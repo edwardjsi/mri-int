@@ -2,6 +2,43 @@
 
 ---
 
+## 📅 Session: May 09, 2026 — PERX V3 & Pipeline Stability
+**Session Start:** 09:00 IST
+**Session End:** 14:00 IST
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. Pipeline Hardening ✅
+- [x] Added `system_audit_logs` to production schema.
+- [x] Hardened `swing_execution_engine.py` against SQL transaction failures.
+- [x] Enabled GitHub Actions push-trigger for automatic daily runs.
+- [x] Resolved SMA/EMA mismatch in Regime dashboard card.
+
+#### 2. PERX V2 Release ✅
+- [x] Implemented **Compare Mode** (Side-by-side analysis).
+- [x] Built **Research Archive** with advanced filtering.
+- [x] Added **Institutional Baseline** (Memory of prior scans).
+
+#### 3. PERX V3 Release ✅
+- [x] Automated **Background Emailing** of reports.
+- [x] Implemented **Real Sector Intelligence** (Industry ranks/peers).
+- [x] Added **PDF Export** for professional memos.
+- [x] Surfaced **Watchlist PERX Scores**.
+
+#### 4. Frontend Resilience ✅
+- [x] Fixed "Blank Screen" crash via safe-boot rendering.
+- [x] Hardened symbols search with `stock_sectors` fallback.
+- [x] Added symbol fallback logic for manual input.
+
+### ⏳ Left for Next Session
+1. **Live V3 Audit**: Monitor the first auto-triggered daily pipeline run with the new V3 code.
+2. **UI Polishing**: Refine the Compare Mode UI layout for mobile responsiveness.
+
+### 📌 Current Milestone
+- PERX is **Implementation Complete**.
+- Platform is **Pipeline Stable**.
+
 ## 📅 Session: May 08, 2026 — PERX Frontend Entry
 **Session Start:** In Progress
 **Session End:** In Progress

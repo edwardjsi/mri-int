@@ -1,5 +1,28 @@
 # **MRI Sessions Log**
 
+## **May 09, 2026: PERX V2/V3 Launch & Pipeline Hardening**
+
+**Context:** Completing the full PERX vision while resolving critical pipeline crashes and data drift issues.
+**Actions:**
+1.  **Pipeline Fixes:** 
+    - Added `system_audit_logs` table to `api/schema.py`. 
+    - Fixed STEE engine crash by making `log_audit_event` transaction-safe.
+    - Updated GitHub Actions to trigger on `push` to main.
+    - Fixed Regime API: Switched missing `sma_200` to `ema_50/ema_200` to resolve dashboard stagnation.
+2.  **PERX V2 release:**
+    - **Compare Mode**: Side-by-side analysis of 2 companies with differential highlighting.
+    - **Research Archive**: Filterable storage of all past scans.
+    - **Baseline Awareness**: New scans now contrast against the user's prior evaluation of the company.
+    - **Trajectory**: Integrated PERX score history into the report view.
+3.  **PERX V3 release:**
+    - **Auto-Email**: Triggered institutional report delivery automatically on scan completion.
+    - **Sector Intelligence**: Implemented real Industry Rank and Peer Context engines.
+    - **PDF Memo**: Added backend PDF generator (ReportLab) and frontend download button.
+    - **Watchlist Integration**: Surfaced PERX metrics directly in the main watchlist table.
+4.  **Production Hardening:** Resolved "Blank Screen" crashes via structural code reset and extreme data guarding in React components.
+**Result:** PERX is now a fully mature, production-ready institutional intelligence suite. Pipeline is stable and auto-triggering.
+**Next Step:** Monitor live V3 usage and begin planning the "Portfolio Digital Twin" enhancements.
+
 ## **May 08, 2026: PERX Frontend Entry**
 
 **Context:** Adding the first thin PERX user surface after backend/runtime and email-delivery work were proven, while preserving the existing dashboard shell and avoiding any new standalone frontend architecture.

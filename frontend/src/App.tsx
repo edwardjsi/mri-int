@@ -1776,6 +1776,7 @@ function PerxPage() {
 
   useEffect(() => { if (tab === 'archive') handleLoadArchive(); }, [tab]);
 
+  // FINAL EXTRACTION (Keep this at the bottom of the logic block)
   const report = activeReport?.report;
   const header = report?.header || {};
   const narrative = report?.narrative_transition || {};
@@ -1837,7 +1838,9 @@ function PerxPage() {
               </div>
             )}
           </div>
-          {report && (
+          {loading && <div style={{ padding: '20px', textAlign: 'center', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>🔄 Generating Institutional Rerating Report... Please wait.</div>}
+
+          {report && !loading && (
             <div style={{ display: 'grid', gap: '20px' }}>
               <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
