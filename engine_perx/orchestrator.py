@@ -44,7 +44,7 @@ def _json_safe(value: Any) -> Any:
 
 def _get_company_name(cur, symbol: str) -> str | None:
     try:
-        cur.execute("SELECT company_name FROM universe WHERE symbol = %s", (symbol,))
+        cur.execute("SELECT company_name FROM stock_sectors WHERE symbol = %s", (symbol,))
         row = cur.fetchone()
         if row:
             return row["company_name"] if isinstance(row, dict) else row[0]

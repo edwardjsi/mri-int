@@ -10,10 +10,9 @@ def get_sector_context(cur, symbol: str, sector: str) -> dict[str, Any]:
     # Fetch peers in the same industry by latest MRI score
     cur.execute(
         """
-        SELECT ss.symbol, ss.total_score, u.company_name
+        SELECT ss.symbol, ss.total_score, sc.company_name
         FROM stock_scores ss
         JOIN stock_sectors sc ON sc.symbol = ss.symbol
-        JOIN universe u ON u.symbol = ss.symbol
         WHERE sc.industry = %s
           AND ss.date = (SELECT MAX(date) FROM stock_scores)
         ORDER BY ss.total_score DESC

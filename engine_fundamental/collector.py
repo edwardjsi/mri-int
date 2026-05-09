@@ -56,6 +56,23 @@ def fetch_and_store_financials(symbol):
     conn = get_connection()
     cur = conn.cursor()
     
+    # NEW: Populate stock_sectors metadata from Yahoo Info (V3 fix)
+    try:
+        info = stock.info
+        co_name = info.get('longName') or info.get('shortName') or base_sym
+        industry = info.get('industry') or info.get('sector') or 'UNKNOWN'
+        
+        cur.execute("""
+            INSERT INTO stock_sectors (symbol, company_name, industry)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (symbol) DO UPDATE SET
+                company_name = EXCLUDED.company_name,
+                industry = EXCLUDED.industry,
+                updated_at = NOW()
+        """, (base_sym, co_name, industry))
+    except Exception as e:
+        logger.warning(f"Failed to update sector metadata for {base_sym}: {e}")
+    
     records_saved = 0
     for date_idx, row in income.iterrows():
         year = date_idx.year

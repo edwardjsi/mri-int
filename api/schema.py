@@ -446,7 +446,19 @@ def ensure_required_tables(conn) -> None:
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_perx_scores_generated ON public.perx_scores(generated_at DESC);")
 
-    # 18. Daily Prices Indicator Expansion
+    # 19. Stock Sectors (Metadata)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.stock_sectors (
+            symbol VARCHAR(20) PRIMARY KEY,
+            company_name VARCHAR(255),
+            industry VARCHAR(100),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    # 20. Daily Prices Indicator Expansion
     indicator_cols = [
         ("ema_10", "NUMERIC(12,4)"),
         ("high_10d", "NUMERIC(12,4)"),

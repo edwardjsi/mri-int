@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse
 import psycopg2.extras
 
@@ -20,6 +20,7 @@ router = APIRouter(prefix="/api/perx", tags=["perx"])
 @router.post("/scan/{symbol}")
 def scan_symbol(
     symbol: str,
+    background_tasks: BackgroundTasks,
     include_debate: bool = Query(False, description="Include the existing AI forensic review in the generated report."),
     client=Depends(get_current_client),
     conn=Depends(get_db),
@@ -33,17 +34,15 @@ def scan_symbol(
             persist=True,
         )
         
-        # V3 AUTO-EMAIL: Send the report automatically
-        try:
-            client_email = client.get("email")
-            if client_email:
-                send_perx_report_email(
-                    recipient_email=client_email,
-                    client_name=client.get("name") or "Investor",
-                    report=result["report"],
-                )
-        except Exception as e:
-            print(f"Auto-email failed: {e}")
+        # V3 AUTO-EMAIL: Send the report automatically in background
+        client_email = client.get("email")
+        if client_email:
+            background_tasks.add_task(
+                send_perx_report_email,
+                recipient_email=client_email,
+                client_name=client.get("name") or "Investor",
+                report=result["report"],
+            )
 
         return {
             "status": "ok",
@@ -79,7 +78,7 @@ def search_companies(q: str, conn=Depends(get_db)):
     try:
         cur.execute("""
             SELECT symbol, company_name
-            FROM universe
+            FROM stock_sectors
             WHERE symbol ILIKE %s OR company_name ILIKE %s
             LIMIT 10
         """, (query, query))

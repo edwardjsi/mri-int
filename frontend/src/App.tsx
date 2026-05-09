@@ -1708,14 +1708,15 @@ function PerxPage() {
 
   const handleScan = async (e?: any) => {
     if (e) e.preventDefault();
-    if (!symbol) { setStatus('Select a company first.'); return; }
+    const targetSym = (symbol || query || '').trim().toUpperCase();
+    if (!targetSym) { setStatus('Select a company first.'); return; }
     setLoading(true); setStatus(null);
     try {
-      const result = await api.scanPerx(symbol, includeDebate);
+      const result = await api.scanPerx(targetSym, includeDebate);
       setActiveReport(result);
       setStatus(`PERX report generated.`);
       loadData();
-      const hist = await api.getPerxHistory(symbol, 30);
+      const hist = await api.getPerxHistory(targetSym, 30);
       if (Array.isArray(hist)) setHistory(hist);
     } catch (err: any) { setStatus(err.message || 'Scan failed.'); }
     finally { setLoading(false); }
