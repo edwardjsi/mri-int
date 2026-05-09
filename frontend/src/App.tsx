@@ -585,8 +585,8 @@ function ResetPasswordPage({ token, onComplete }: { token: string, onComplete: (
 
 /* ─── Regime Card ────────────────────────────────────────── */
 function RegimeCard({ regime }: { regime: any }) {
-  const colorMap: Record<string, string> = { BULL: '#22c55e', BEAR: '#ef4444', NEUTRAL: '#eab308' };
-  const emojiMap: Record<string, string> = { BULL: '🟢', BEAR: '🔴', NEUTRAL: '🟡' };
+  const colorMap: Record<string, string> = { BULLISH: '#22c55e', BEARISH: '#ef4444', SIDEWAYS: '#eab308', NEUTRAL: '#6b7280' };
+  const emojiMap: Record<string, string> = { BULLISH: '🟢', BEARISH: '🔴', SIDEWAYS: '🟡', NEUTRAL: '⚪' };
   const color = colorMap[regime?.regime] || '#6b7280';
   return (
     <div className="card regime-card" style={{ borderLeftColor: color }}>
@@ -595,7 +595,7 @@ function RegimeCard({ regime }: { regime: any }) {
         {emojiMap[regime?.regime] || '⚪'} {regime?.regime || 'Loading...'}
       </div>
       <div className="card-meta">
-        {regime?.date && <>As of {regime.date} · SMA 200: ₹{regime.sma_200?.toLocaleString()}</>}
+        {regime?.date && <>As of {regime.date} · EMA 200: ₹{regime.ema_200?.toLocaleString()}</>}
       </div>
     </div>
   );

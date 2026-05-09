@@ -529,7 +529,7 @@ function RegimeCard({ regime }: { regime: any }) {
         {emojiMap[regime?.regime] || '⚪'} {regime?.regime || 'Loading...'}
       </div>
       <div className="card-meta">
-        {regime?.date && <>As of {regime.date} · SMA 200: ₹{regime.sma_200?.toLocaleString()}</>}
+        {regime?.date && <>As of {regime.date} · EMA 200: ₹{regime.ema_200?.toLocaleString()}</>}
       </div>
     </div>
   );

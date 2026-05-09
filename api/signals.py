@@ -71,23 +71,23 @@ def get_current_regime(conn=Depends(get_db)):
     """Current market regime (latest date in market_regime)."""
     cur = conn.cursor()
     cur.execute("""
-        SELECT date, classification, sma_200, sma_200_slope_20
+        SELECT date, classification, ema_50, ema_200
         FROM market_regime
         ORDER BY date DESC LIMIT 1
     """)
     row = cur.fetchone()
     cur.close()
-    
+
     if not row:
         return {"regime": "UNKNOWN", "date": None}
-    
+
     # Tuple-safe access
     is_dict = isinstance(row, dict)
     res = {
         "regime": row["classification"] if is_dict else row[1],
         "date": str(row["date"] if is_dict else row[0]),
-        "sma_200": float(row["sma_200"] if is_dict else row[2]) if (row["sma_200"] if is_dict else row[2]) else None,
-        "sma_200_slope": float(row["sma_200_slope_20"] if is_dict else row[3]) if (row["sma_200_slope_20"] if is_dict else row[3]) else None,
+        "ema_50": float(row["ema_50"] if is_dict else row[2]) if (row["ema_50"] if is_dict else row[2]) else None,
+        "ema_200": float(row["ema_200"] if is_dict else row[3]) if (row["ema_200"] if is_dict else row[3]) else None,
     }
     return res
 
