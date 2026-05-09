@@ -27,6 +27,7 @@ RUN pip install --no-cache-dir -r requirements.txt -r api-requirements.txt
 COPY engine_core/ ./engine_core/
 COPY engine_fundamental/ ./engine_fundamental/
 COPY engine_qualitative/ ./engine_qualitative/
+COPY engine_perx/ ./engine_perx/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
 
