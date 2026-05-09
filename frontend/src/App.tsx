@@ -1559,6 +1559,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                 <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {getSortIcon('symbol')}</th>
                 <th onClick={() => handleSort('price')} style={{ cursor: 'pointer' }}>Price {getSortIcon('price')}</th>
                 <th onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>MRI Grade {getSortIcon('score')}</th>
+                <th onClick={() => handleSort('perx_score')} style={{ cursor: 'pointer' }}>PERX {getSortIcon('perx_score')}</th>
                 <th onClick={() => handleSort('trend_alignment')} style={{ cursor: 'pointer' }}>Trend {getSortIcon('trend_alignment')}</th>
                 <th>Action</th>
               </tr>
@@ -1583,6 +1584,14 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                     ) : (
                       <span className="badge-pending">🔄 Tracking...</span>
                     )}
+                  </td>
+                  <td>
+                    {item.is_pending ? '...' : (item.perx_score !== undefined && item.perx_score !== null ? (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="score-badge" style={{ background: '#2563eb' }}>{item.perx_score}</span>
+                        <span style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px' }}>{item.perx_lifecycle}</span>
+                      </div>
+                    ) : 'N/A')}
                   </td>
                   <td>
                     {item.is_pending ? '...' : (item.trend_alignment ? (
@@ -1897,6 +1906,35 @@ function PerxPage() {
                   </div>
                 )}
 
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Sector Intelligence</div>
+                  <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>INDUSTRY RANK</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{engineOutputs.sector?.industry_rank || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>SECTOR BREADTH</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: engineOutputs.sector?.industry_breadth === 'Accumulation' ? '#22c55e' : '#94a3b8' }}>{engineOutputs.sector?.industry_breadth}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>PEER CONTEXT</div>
+                        <div style={{ fontSize: '11px' }}>{(engineOutputs.sector?.top_peers || []).join(', ') || 'No peers found'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Historical Analogs</div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {(engineOutputs.analogs || []).map((a: string, i: number) => (
+                      <span key={i} style={{ padding: '6px 12px', background: '#1e3a8a30', border: '1px solid #3b82f640', borderRadius: '6px', fontSize: '12px', color: '#60a5fa' }}>{a}</span>
+                    ))}
+                  </div>
+                </div>
+
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Final Institutional Verdict</div>
                   <p style={{ lineHeight: '1.6', color: '#e2e8f0', margin: 0 }}>{report.final_institutional_verdict}</p>
@@ -1906,6 +1944,14 @@ function PerxPage() {
                   <button onClick={handleEmailReport} disabled={emailing} style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', opacity: emailing ? 0.6 : 1 }}>
                     {emailing ? 'Sending Email...' : 'Email This Report'}
                   </button>
+                  <a 
+                    href={api.getPerxPdfUrl(activeReport.report_id || activeReport.meta?.id)} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    style={{ textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', background: '#1e293b', color: 'white', border: '1px solid #334155', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    📥 Export PDF Memo
+                  </a>
                 </div>
               </div>
 

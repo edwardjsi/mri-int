@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
+from engine_perx.analogs import get_historical_analogs
 from engine_perx.report_builder import (
     build_engine_outputs,
     build_executive_summary,
@@ -19,6 +20,7 @@ from engine_perx.scoring import (
     compute_trajectory_support,
     narrative_intensity_label,
 )
+from engine_perx.sector import get_sector_context
 from engine_qualitative.debate import run_debate
 
 
@@ -150,7 +152,7 @@ def _fetch_previous_report(cur, symbol: str, client_id: str | None) -> dict[str,
 def _build_report_payload(
     symbol: str,
     company_name: str,
-    sector: str | None,
+    sector_intelligence: dict[str, Any],
     mri_snapshot: dict[str, Any],
     quality_snapshot: dict[str, Any],
     financial_history: list[dict[str, Any]],
@@ -171,6 +173,7 @@ def _build_report_payload(
     )
     lifecycle_stage = classify_lifecycle_stage(perx_score, mri_snapshot, quality_snapshot, fragility_snapshot)
     narrative_intensity = narrative_intensity_label(perx_score)
+    analogs = get_historical_analogs(perx_score, lifecycle_stage)
 
     # Contextual evaluation against prior report
     prior_context = "No previous institutional evaluation found in your archive."
@@ -190,7 +193,7 @@ def _build_report_payload(
             "perx_score": perx_score,
             "lifecycle_phase": lifecycle_stage,
             "report_timestamp": str(regime_snapshot.get("date") or mri_snapshot.get("date")),
-            "sector": sector or "UNKNOWN",
+            "sector": sector_intelligence.get("sector_name") or "UNKNOWN",
             "prior_baseline": prior_context
         },
         "executive_summary": build_executive_summary(
@@ -204,7 +207,7 @@ def _build_report_payload(
         "narrative_transition": build_narrative_transition(
             symbol,
             company_name,
-            sector,
+            sector_intelligence.get("sector_name"),
             quality_snapshot,
             mri_snapshot,
             lifecycle_stage,
@@ -217,7 +220,8 @@ def _build_report_payload(
             fragility_snapshot,
             perx_score,
             narrative_intensity,
-            sector,
+            sector_intelligence,
+            analogs,
         ),
         "institutional_forensic_review": forensic_review,
         "lifecycle": {
@@ -276,11 +280,15 @@ def generate_perx_report(
 
     company_name = _get_company_name(cur, base_symbol) or base_symbol
     sector = _get_sector(cur, base_symbol) or "UNKNOWN"
+    
+    # Calculate Sector Intelligence (V3)
+    sector_intelligence = get_sector_context(cur, base_symbol, sector)
+    
     forensic_review = _build_forensic_review(base_symbol, include_debate=include_debate)
     report = _build_report_payload(
         base_symbol,
         company_name,
-        sector,
+        sector_intelligence,
         mri_snapshot,
         quality_snapshot or {},
         financial_history,

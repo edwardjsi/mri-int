@@ -70,7 +70,8 @@ def build_engine_outputs(
     fragility_snapshot: dict,
     perx_score: float,
     narrative_intensity: str,
-    sector: str | None,
+    sector_intelligence: dict,
+    analogs: list[str],
 ) -> dict:
     avg_volume = float(mri_snapshot.get("avg_volume_20d") or 0)
     volume = float(mri_snapshot.get("volume") or 0)
@@ -102,13 +103,7 @@ def build_engine_outputs(
             "trajectory_change": quality_snapshot.get("score_change"),
             "velocity": quality_snapshot.get("velocity"),
         },
-        "sector": {
-            "sector": sector or "UNKNOWN",
-            "sector_rs": "Pending Derived Layer",
-            "sector_breadth": "Pending Derived Layer",
-            "institutional_attention": "Pending Derived Layer",
-            "status": "V1 placeholder built from current dataset constraints",
-        },
+        "sector": sector_intelligence,
         "perx": {
             "score": perx_score,
             "narrative_intensity": narrative_intensity,
@@ -116,6 +111,7 @@ def build_engine_outputs(
             "market_regime": regime_snapshot.get("classification"),
         },
         "fragility": fragility_snapshot,
+        "analogs": analogs
     }
 
 

@@ -30,6 +30,8 @@ class WatchlistItem(BaseModel):
     breakout_candidate: bool = False
     is_not_found: bool = False
     is_pending: bool = False
+    perx_score: Optional[float] = None
+    perx_lifecycle: Optional[str] = None
 
 @router.get("/universal", response_model=List[str])
 def get_universal_watchlist(conn=Depends(get_db)):
@@ -94,7 +96,9 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 ELSE 'NEUTRAL'
             END as trend_alignment,
             (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found,
-            cw.breakout_candidate
+            cw.breakout_candidate,
+            ps.perx_score,
+            ps.lifecycle_stage as perx_lifecycle
         FROM client_watchlist cw
         LEFT JOIN (
             SELECT DISTINCT ON (symbol) 
@@ -109,6 +113,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             FROM daily_prices
             ORDER BY symbol, date DESC
         ) dp ON dp.symbol = cw.symbol
+        LEFT JOIN perx_scores ps ON cw.symbol = ps.symbol
         WHERE cw.client_id = %s::uuid
     """, (str(client["id"]),))
     
@@ -155,7 +160,9 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
             trend_alignment=trend,
             conditions=conditions,
             breakout_candidate=bool(breakout_candidate),
-            is_not_found=row["is_not_found"] if is_dict else False
+            is_not_found=row["is_not_found"] if is_dict else False,
+            perx_score=float(row["perx_score"]) if (is_dict and row["perx_score"]) else (float(row[11]) if not is_dict and row[11] else None),
+            perx_lifecycle=row["perx_lifecycle"] if is_dict else row[12]
         ))
         
     return results

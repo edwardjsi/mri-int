@@ -285,6 +285,7 @@ def build_perx_report_email_html(client_name: str, report: dict) -> str:
             </div>
 
             <p style="color:#334155;line-height:1.7">Hi {client_name},</p>
+            <p style="color:#64748b;font-size:12px;font-style:italic">This report was automatically generated following your institutional scan.</p>
             <p style="color:#334155;line-height:1.7">{summary}</p>
 
             <div style="background:#f8fafc;border-radius:12px;padding:16px;margin:16px 0">

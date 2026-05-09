@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 import psycopg2.extras
 
 from api.deps import get_current_client, get_db
@@ -10,6 +11,7 @@ from engine_perx.orchestrator import (
     list_perx_archive_for_client,
     generate_perx_comparison,
 )
+from engine_perx.pdf_generator import generate_perx_pdf
 from engine_core.email_service import send_perx_report_email
 
 router = APIRouter(prefix="/api/perx", tags=["perx"])
@@ -30,6 +32,19 @@ def scan_symbol(
             include_debate=include_debate,
             persist=True,
         )
+        
+        # V3 AUTO-EMAIL: Send the report automatically
+        try:
+            client_email = client.get("email")
+            if client_email:
+                send_perx_report_email(
+                    recipient_email=client_email,
+                    client_name=client.get("name") or "Investor",
+                    report=result["report"],
+                )
+        except Exception as e:
+            print(f"Auto-email failed: {e}")
+
         return {
             "status": "ok",
             "report_id": result["report_id"],
@@ -127,6 +142,27 @@ def compare_symbols(
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"PERX compare failed: {exc}")
+
+
+@router.get("/report/{report_id}/pdf")
+def get_report_pdf(report_id: str, client=Depends(get_current_client), conn=Depends(get_db)):
+    """Generate and stream the professional institutional PDF memo."""
+    row = fetch_perx_report(report_id, conn, str(client["id"]))
+    if not row:
+        raise HTTPException(status_code=404, detail="PERX report not found")
+    
+    report_payload = row.get("report_json")
+    if not isinstance(report_payload, dict):
+        raise HTTPException(status_code=500, detail="Stored report is corrupted")
+        
+    pdf_buffer = generate_perx_pdf(report_payload)
+    filename = f"PERX_{report_payload['symbol']}_{report_payload['header']['report_timestamp']}.pdf"
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 @router.post("/email/{report_id}")
