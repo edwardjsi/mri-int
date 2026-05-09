@@ -1828,10 +1828,100 @@ function PerxPage() {
             )}
           </div>
           {report && (
-            <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
-               <h3>{header.company_name} ({header.symbol})</h3>
-               <div style={{ padding: '10px 20px', background: '#2563eb', borderRadius: '30px', display: 'inline-block', fontWeight: 800 }}>PERX {header.perx_score}/100</div>
-               <p style={{ marginTop: '15px' }}>{report.executive_summary}</p>
+            <div style={{ display: 'grid', gap: '20px' }}>
+              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.4rem' }}>{header.company_name}</h3>
+                    <p style={{ color: '#94a3b8', margin: '4px 0' }}>{header.symbol} • {header.sector} • Generated {header.report_timestamp}</p>
+                  </div>
+                  <div style={{ padding: '10px 20px', borderRadius: '30px', background: '#2563eb', fontWeight: 800 }}>
+                    PERX {header.perx_score}/100 | {header.lifecycle_phase}
+                  </div>
+                </div>
+
+                {header.prior_baseline && (
+                  <div style={{ padding: '12px 16px', background: '#1e3a8a30', borderRadius: '8px', borderLeft: '4px solid #3b82f6', marginBottom: '20px', fontSize: '13px' }}>
+                    <b>Institutional Baseline:</b> {header.prior_baseline}
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Executive Summary</div>
+                  <p style={{ lineHeight: '1.6', background: '#0f172a', padding: '16px', borderRadius: '8px', margin: 0 }}>{report.executive_summary}</p>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Narrative Transition</div>
+                  <div style={{ display: 'grid', gap: '12px', background: '#0f172a', padding: '16px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '13px' }}><b style={{ color: '#94a3b8' }}>Previous:</b> {narrative.previous_market_perception}</div>
+                    <div style={{ fontSize: '13px' }}><b style={{ color: '#60a5fa' }}>Emerging:</b> {narrative.emerging_market_perception}</div>
+                    <div style={{ fontSize: '13px', color: '#cbd5e1', fontStyle: 'italic', marginTop: '4px' }}>{narrative.why_this_matters}</div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Engine Snapshot</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                    <div style={{ padding: '12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>MRI TECHNICAL</div>
+                      <div style={{ fontSize: '13px' }}>Score: <b>{engineOutputs.mri?.total_score}/100</b></div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>RS: {engineOutputs.mri?.relative_strength} | Breakout: {engineOutputs.mri?.breakout_structure}</div>
+                    </div>
+                    <div style={{ padding: '12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>QIF FUNDAMENTAL</div>
+                      <div style={{ fontSize: '13px' }}>Score: <b>{engineOutputs.qif?.score}/100</b></div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>Category: {engineOutputs.qif?.category}</div>
+                    </div>
+                    <div style={{ padding: '12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>STEE SETUP</div>
+                      <div style={{ fontSize: '13px' }}>Setup: <b>{engineOutputs.stee?.setup_quality_score}</b></div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>Ready: {engineOutputs.stee?.breakout_ready ? 'YES' : 'No'}</div>
+                    </div>
+                    <div style={{ padding: '12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>THESIS FRAGILITY</div>
+                      <div style={{ fontSize: '13px' }}>Level: <b style={{ color: engineOutputs.fragility?.level === 'LOW' ? '#22c55e' : (engineOutputs.fragility?.level === 'HIGH' ? '#ef4444' : '#eab308') }}>{engineOutputs.fragility?.level}</b></div>
+                    </div>
+                  </div>
+                </div>
+
+                {report.institutional_forensic_review && !report.institutional_forensic_review.unavailable && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Institutional Forensic Review</div>
+                    <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <p style={{ fontSize: '13px', lineHeight: '1.6', margin: '0 0 12px 0' }}>{report.institutional_forensic_review.guidance_vs_reality}</p>
+                      <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 'bold' }}>
+                        Verdict: {report.institutional_forensic_review.verdict?.buy_recommendation} | Score: {report.institutional_forensic_review.verdict?.score}/10
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Final Institutional Verdict</div>
+                  <p style={{ lineHeight: '1.6', color: '#e2e8f0', margin: 0 }}>{report.final_institutional_verdict}</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button onClick={handleEmailReport} disabled={emailing} style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', opacity: emailing ? 0.6 : 1 }}>
+                    {emailing ? 'Sending Email...' : 'Email This Report'}
+                  </button>
+                </div>
+              </div>
+
+              {history && history.length > 1 && (
+                <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '12px' }}>PERX Score Trajectory</div>
+                  <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '10px' }}>
+                    {history.map((h, i) => (
+                      <div key={i} style={{ minWidth: '100px', padding: '12px', background: '#0f172a', borderRadius: '8px', textAlign: 'center', border: '1px solid #1e293b' }}>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#3b82f6' }}>{h.perx_score}</div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>{new Date(h.created_at).toLocaleDateString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
