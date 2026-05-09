@@ -2339,11 +2339,278 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   );
 }
 
+/* ─── PERX Page ─────────────────────────────────────────── */
+function PerxPage() {
+  const [symbol, setSymbol] = useState('');
+  const [includeDebate, setIncludeDebate] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [activeReport, setActiveReport] = useState<any>(null);
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+
+  const loadRecentReports = async () => {
+    try {
+      const rows = await api.getRecentPerxReports(8);
+      setRecentReports(rows || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadRecentReports();
+  }, []);
+
+  const handleScan = async (e?: any) => {
+    if (e) e.preventDefault();
+    const trimmed = symbol.trim().toUpperCase();
+    if (!trimmed) {
+      setStatus('Enter a symbol to generate a PERX report.');
+      return;
+    }
+
+    setLoading(true);
+    setStatus(null);
+    try {
+      const result = await api.scanPerx(trimmed, includeDebate);
+      setActiveReport(result);
+      setStatus(`PERX report generated for ${trimmed}.`);
+      setSymbol(trimmed);
+      loadRecentReports();
+    } catch (err: any) {
+      setStatus(err.message || 'PERX scan failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenReport = async (reportId: string) => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const report = await api.getPerxReport(reportId);
+      setActiveReport({ report_id: reportId, report: report.report_json, meta: report });
+      setStatus(`Loaded stored PERX report ${reportId.slice(0, 8)}.`);
+    } catch (err: any) {
+      setStatus(err.message || 'Failed to load stored PERX report.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailReport = async () => {
+    const reportId = activeReport?.report_id || activeReport?.meta?.id;
+    if (!reportId) {
+      setStatus('No active PERX report available to email.');
+      return;
+    }
+    setEmailing(true);
+    setStatus(null);
+    try {
+      const result = await api.emailPerxReport(reportId);
+      setStatus(`PERX report emailed to ${result.recipient}.`);
+    } catch (err: any) {
+      setStatus(err.message || 'Failed to send PERX report email.');
+    } finally {
+      setEmailing(false);
+    }
+  };
+
+  const report = activeReport?.report;
+  const header = report?.header || {};
+  const narrative = report?.narrative_transition || {};
+  const engineOutputs = report?.engine_outputs || {};
+  const forensic = report?.institutional_forensic_review || {};
+
+  return (
+    <div className="dashboard-grid" style={{ gap: '16px' }}>
+      <section className="panel-card" style={{ display: 'grid', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div>
+            <h2 className="section-title" style={{ margin: 0 }}>PERX Institutional Scan</h2>
+            <p className="card-meta" style={{ marginTop: '6px' }}>
+              Generate a company-first rerating report from the existing MRI, QIF, STEE, and forensic layers.
+            </p>
+          </div>
+          <div style={{ padding: '8px 12px', borderRadius: '999px', background: '#0f172a', border: '1px solid #1e293b', fontSize: '12px', color: '#94a3b8' }}>
+            Backend-first V1
+          </div>
+        </div>
+
+        <form onSubmit={handleScan} style={{ display: 'grid', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <input
+              className="form-input"
+              style={{ maxWidth: '240px' }}
+              value={symbol}
+              onChange={e => setSymbol(e.target.value.toUpperCase())}
+              placeholder="Enter symbol, e.g. ZENTEC"
+            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={includeDebate}
+                onChange={e => setIncludeDebate(e.target.checked)}
+              />
+              Include forensic debate
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className="btn-primary" type="submit" disabled={loading}>
+              {loading ? 'Generating PERX...' : 'Generate PERX Report'}
+            </button>
+            <button className="btn-secondary" type="button" disabled={emailing || !activeReport} onClick={handleEmailReport}>
+              {emailing ? 'Sending Email...' : 'Email Active Report'}
+            </button>
+          </div>
+        </form>
+
+        {status && (
+          <div style={{
+            padding: '12px',
+            borderRadius: '10px',
+            background: status.includes('failed') || status.includes('Failed') ? '#ef444415' : '#22c55e15',
+            border: `1px solid ${status.includes('failed') || status.includes('Failed') ? '#ef444440' : '#22c55e40'}`,
+            color: status.includes('failed') || status.includes('Failed') ? '#fca5a5' : '#86efac',
+            fontSize: '13px'
+          }}>
+            {status}
+          </div>
+        )}
+      </section>
+
+      <section className="panel-card" style={{ display: 'grid', gap: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <h3 className="section-title" style={{ margin: 0 }}>Recent PERX Reports</h3>
+          <button className="link-btn" onClick={loadRecentReports}>Refresh</button>
+        </div>
+        {recentReports.length === 0 ? (
+          <div className="empty-state">No PERX reports have been generated for this account yet.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {recentReports.map(item => (
+              <button
+                key={item.id}
+                onClick={() => handleOpenReport(item.id)}
+                style={{
+                  textAlign: 'left',
+                  background: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  color: '#e2e8f0',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                  <div style={{ fontWeight: 700 }}>{item.company_name || item.symbol}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>{new Date(item.created_at).toLocaleString()}</div>
+                </div>
+                <div style={{ marginTop: '6px', fontSize: '12px', color: '#94a3b8' }}>
+                  {item.symbol} | PERX {item.perx_score}/100 | {item.lifecycle_stage} | {item.include_debate ? 'With Debate' : 'Deterministic Only'}
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  {item.summary}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {report && (
+        <section className="panel-card" style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div>
+              <h3 className="section-title" style={{ margin: 0 }}>{header.company_name || report.company_name}</h3>
+              <p className="card-meta" style={{ marginTop: '6px' }}>
+                {header.symbol} | {header.sector} | Generated {header.report_timestamp}
+              </p>
+            </div>
+            <div style={{
+              padding: '8px 12px',
+              borderRadius: '999px',
+              background: '#1d4ed8',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '12px'
+            }}>
+              PERX {header.perx_score}/100 | {header.lifecycle_phase}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Executive Summary</div>
+              <div style={{ lineHeight: '1.7', color: '#e2e8f0' }}>{report.executive_summary}</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '12px' }}>
+              <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Narrative Shift</div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                  <b>Previous:</b> {narrative.previous_market_perception}<br />
+                  <b>Emerging:</b> {narrative.emerging_market_perception}
+                </div>
+              </div>
+              <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Final Institutional Verdict</div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>
+                  {report.final_institutional_verdict}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '12px' }}>
+              <div className="summary-stat">
+                <span className="summary-label">MRI</span>
+                <div className="stat-value">{engineOutputs.mri?.total_score ?? 'N/A'}</div>
+                <div className="card-meta">{engineOutputs.mri?.breakout_structure || 'No structure'}</div>
+              </div>
+              <div className="summary-stat">
+                <span className="summary-label">QIF</span>
+                <div className="stat-value">{engineOutputs.qif?.score ?? 'N/A'}</div>
+                <div className="card-meta">{engineOutputs.qif?.category || 'No category'}</div>
+              </div>
+              <div className="summary-stat">
+                <span className="summary-label">STEE</span>
+                <div className="stat-value">{engineOutputs.stee?.setup_quality_score ?? 'N/A'}</div>
+                <div className="card-meta">{engineOutputs.stee?.breakout_ready ? 'Breakout Ready' : 'Not Ready'}</div>
+              </div>
+              <div className="summary-stat">
+                <span className="summary-label">Fragility</span>
+                <div className="stat-value">{engineOutputs.fragility?.level || 'N/A'}</div>
+                <div className="card-meta">{report.lifecycle?.narrative_intensity || 'N/A'} intensity</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Institutional Forensic Review</div>
+              {forensic.unavailable ? (
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>{forensic.message}</div>
+              ) : (
+                <div style={{ display: 'grid', gap: '10px' }}>
+                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.6' }}>{forensic.guidance_vs_reality}</div>
+                  <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
+                    Verdict: <b>{forensic.verdict?.buy_recommendation}</b> | Score {forensic.verdict?.score}/10
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main App ────────────────────────────────────────────── */
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow' | 'perx'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   // ... rest of the component
@@ -2394,6 +2661,9 @@ function App() {
           <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
             <span className="nav-icon">👀</span> Watchlist
           </button>
+          <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
+            <span className="nav-icon">🏛️</span> PERX
+          </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
               <span className="nav-icon">🛡️</span> Platform Intelligence
@@ -2413,6 +2683,7 @@ function App() {
                 page === 'history' ? 'Trade History' :
                   page === 'riskaudit' ? 'Portfolio Risk Audit' :
                     page === 'watchlist' ? 'Stock Watchlist' :
+                      page === 'perx' ? 'PERX Institutional Scan' :
                       page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
           </h1>
         </header>
@@ -2423,6 +2694,7 @@ function App() {
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
+          {page === 'perx' && <PerxPage />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
       </main>
@@ -2448,6 +2720,9 @@ function App() {
 
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
           <span className="nav-icon">👀</span> Watchlist
+        </button>
+        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
+          <span className="nav-icon">🏛️</span> PERX
         </button>
         <button className={`mobile-nav-link ${page === 'performance' ? 'active' : ''}`} onClick={() => setPage('performance')}>
           <span className="nav-icon">📈</span> Perf

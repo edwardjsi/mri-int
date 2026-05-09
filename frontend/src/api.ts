@@ -335,6 +335,13 @@ export const api = {
   getTrajectoryAlerts: () => apiFetch('/fundamental/alerts'),
   triggerQualityRecompute: (symbol: string) => apiFetch(`/fundamental/recompute/${symbol}`, { method: 'POST' }),
   triggerDebate: (symbol: string) => apiFetch(`/fundamental/debate/${symbol}`, { method: 'POST' }),
+
+  // PERX
+  scanPerx: (symbol: string, includeDebate: boolean = false) =>
+    apiFetch(`/perx/scan/${encodeURIComponent(symbol)}?include_debate=${includeDebate ? 'true' : 'false'}`, { method: 'POST' }),
+  getPerxReport: (reportId: string) => apiFetch(`/perx/report/${reportId}`),
+  getRecentPerxReports: (limit: number = 10) => apiFetch(`/perx/recent?limit=${limit}`),
+  emailPerxReport: (reportId: string) => apiFetch(`/perx/email/${reportId}`, { method: 'POST' }),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

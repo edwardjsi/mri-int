@@ -2,6 +2,43 @@
 
 ---
 
+## 📅 Session: May 08, 2026 — PERX Frontend Entry
+**Session Start:** In Progress
+**Session End:** In Progress
+**AI Assistant:** Codex
+
+### What Was Done This Session
+
+#### 1. Thin PERX UI Surface ✅
+- [x] Added a new `PerxPage` inside `frontend/src/App.tsx`.
+- [x] Added a company-first scan input and include-debate toggle.
+- [x] Added inline active-report preview for executive summary, narrative shift, engine snapshot, and forensic review.
+- [x] Added an email action for the active report.
+
+#### 2. Stored Report Reopen Flow ✅
+- [x] Added `GET /api/perx/recent` in `api/perx.py`.
+- [x] Added `list_perx_reports_for_client(...)` in `engine_perx/orchestrator.py`.
+- [x] Added frontend API helpers for recent reports, fetch-by-id, scan, and email send.
+- [x] Added recent-report cards so the client can reopen stored PERX reports without a new dashboard.
+
+#### 3. App Shell Integration ✅
+- [x] Added `PERX` navigation in the desktop sidebar.
+- [x] Added `PERX` navigation in the mobile nav.
+- [x] Wired the new page into the existing logged-in app shell without changing architecture.
+
+#### 4. Verification ✅ / ⚠️
+- [x] Passed `python -m py_compile api/perx.py engine_perx/orchestrator.py`.
+- [ ] Frontend build verification is still blocked in this workspace because `npm` is not installed.
+
+### ⏳ Left for Next Session
+1. **Frontend Build Verification:** Run `npm run build` or the Docker frontend build path in a Node-enabled environment.
+2. **PERX UI Refinement:** Adjust the first page based on live rendering and real user flow rather than static inspection alone.
+3. **Admin/Watchlist Surfacing:** Optionally expose PERX report links from existing watchlist or admin intelligence surfaces.
+
+### 📌 Current Milestone
+- PERX now has a first integrated frontend entry.
+- The next smallest logical step is **frontend build verification and live UI refinement**.
+
 ## 📅 Session: May 08, 2026 — PERX Runtime Verification & Email Delivery
 **Session Start:** In Progress
 **Session End:** In Progress

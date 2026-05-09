@@ -1,5 +1,23 @@
 # **MRI Sessions Log**
 
+## **May 08, 2026: PERX Frontend Entry**
+
+**Context:** Adding the first thin PERX user surface after backend/runtime and email-delivery work were proven, while preserving the existing dashboard shell and avoiding any new standalone frontend architecture.
+**Actions:**
+1.  **Frontend API Wiring:** Added PERX client helpers in `frontend/src/api.ts` for scan, fetch, recent-report list, and email-send actions.
+2.  **Minimal Backend Support:** Added `GET /api/perx/recent` and `list_perx_reports_for_client(...)` so the frontend can reopen stored reports for the authenticated client.
+3.  **Thin UI Surface:** Added a new `PerxPage` in `frontend/src/App.tsx` with:
+    - company-first symbol input
+    - include-debate toggle
+    - generate report action
+    - email active report action
+    - recent stored reports list
+    - inline institutional report preview
+4.  **Navigation Integration:** Added `PERX` to the desktop and mobile app navigation and wired the page switch into the existing logged-in shell.
+5.  **Verification:** Passed `python -m py_compile api/perx.py engine_perx/orchestrator.py`. Frontend build verification is still blocked in this workspace because `npm` is not installed.
+**Result:** PERX now has its first end-user entry point inside the existing React shell, with scan, reopen, preview, and email actions connected to the current monolith routes.
+**Next Step:** Run a real frontend build in a Node-enabled environment, then refine the PERX page based on live UI behaviour rather than backend assumptions.
+
 ## **May 08, 2026: PERX Runtime Verification & Email Delivery**
 
 **Context:** Completing the post-foundation validation pass for PERX V1 and moving the product one step forward by wiring institutional report delivery through the existing SES path.

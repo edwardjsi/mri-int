@@ -577,3 +577,29 @@ Decision:
 4. GitHub Actions workflow only runs on Mon-Fri cron; this adds the holiday exclusion layer.
 Reason: Prevents wasted GitHub Actions minutes on days when Indian markets are closed. The pipeline is idempotent and would handle empty data gracefully, but skipping entirely is cleaner and avoids unnecessary compute/logs.
 Status: FINAL.
+
+## Decision 087 — PERX V1 as a Company-First Orchestration Layer
+Date: 2026-05-08
+Decision:
+1. Implement PERX V1 as a new orchestration and synthesis layer inside the existing MRI FastAPI monolith, not as a separate service or parallel architecture.
+2. Reuse existing engine outputs as the PERX evidence base:
+   - `stock_scores` for MRI technical leadership
+   - `market_regime` for environment overlay
+   - `swing_trades` plus technical conditions for STEE context
+   - `quality_verdicts` and `fundamental_financials` for QIF and financial trend evidence
+   - `engine_qualitative/debate.py` as the Institutional Forensic Review section
+   - `engine_core/email_service.py` and AWS SES for optional report delivery
+3. Start PERX with a backend-first MVP:
+   - `engine_perx/` orchestration package
+   - `api/perx.py` routes
+   - `perx_reports` and `perx_scores` persistence
+   - unified report JSON for a single symbol
+   - optional HTML email send for the generated report
+4. Keep PERX deterministic-first. AI may synthesize, explain narrative transition, and produce institutional wording, but must not invent metrics, override deterministic scores, issue trading advice, or generate price targets.
+5. Do not block PERX V1 on new price ingestion. Existing MRI/STEE price history is sufficient. Additional data work should focus only on selective fundamental coverage gaps and future PERX-specific derived layers such as sector intelligence, fragility tracking, lifecycle history, and analog storage.
+6. Sequence delivery conservatively:
+   - Phase 1: single-symbol orchestration and stored report JSON
+   - Phase 2: email, watchlist hooks, and report retrieval
+   - Phase 3: compare mode, archive UI, lifecycle history, and richer sector/fragility layers
+Reason: The existing platform already has the major technical, fundamental, qualitative, email, and dashboard primitives that PERX needs. Building PERX as an orchestration layer maximizes reuse, protects current production flows, and allows the product to ship incrementally without redesigning MRI/STEE/QIF.
+Status: FINAL.

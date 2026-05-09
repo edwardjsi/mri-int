@@ -396,7 +396,42 @@ def ensure_required_tables(conn) -> None:
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_swing_trades_client_status ON public.swing_trades(client_id, status);")
 
-    # 17. Daily Prices Indicator Expansion
+    # 17. PERX Reports and Latest Score Snapshots
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.perx_reports (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol VARCHAR(20) NOT NULL,
+            company_name VARCHAR(255),
+            perx_score NUMERIC(6,2),
+            lifecycle_stage VARCHAR(40),
+            report_json JSONB NOT NULL,
+            summary TEXT,
+            include_debate BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_perx_reports_client_created ON public.perx_reports(client_id, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_perx_reports_symbol_created ON public.perx_reports(symbol, created_at DESC);")
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.perx_scores (
+            symbol VARCHAR(20) PRIMARY KEY,
+            latest_report_id UUID,
+            perx_score NUMERIC(6,2) NOT NULL,
+            lifecycle_stage VARCHAR(40),
+            narrative_intensity VARCHAR(20),
+            fragility_level VARCHAR(20),
+            generated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_perx_scores_generated ON public.perx_scores(generated_at DESC);")
+
+    # 18. Daily Prices Indicator Expansion
     indicator_cols = [
         ("ema_10", "NUMERIC(12,4)"),
         ("high_10d", "NUMERIC(12,4)"),

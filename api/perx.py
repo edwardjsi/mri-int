@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from api.deps import get_current_client, get_db
-from engine_perx.orchestrator import fetch_perx_report, generate_perx_report
+from engine_perx.orchestrator import fetch_perx_report, generate_perx_report, list_perx_reports_for_client
 from engine_core.email_service import send_perx_report_email
 
 router = APIRouter(prefix="/api/perx", tags=["perx"])
@@ -39,6 +39,11 @@ def get_report(report_id: str, client=Depends(get_current_client), conn=Depends(
     if not row:
         raise HTTPException(status_code=404, detail="PERX report not found")
     return row
+
+
+@router.get("/recent")
+def get_recent_reports(limit: int = 10, client=Depends(get_current_client), conn=Depends(get_db)):
+    return list_perx_reports_for_client(conn, str(client["id"]), limit=limit)
 
 
 @router.post("/email/{report_id}")
