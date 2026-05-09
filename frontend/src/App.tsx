@@ -2438,28 +2438,37 @@ function PerxPage() {
   };
 
   const loadHistory = async (sym: string) => {
+    if (!sym) return;
     setHistoryLoading(true);
     try { 
       const res = await api.getPerxHistory(sym, 30);
       setHistory(Array.isArray(res) ? res : []); 
-    } catch { setHistory([]); }
-    setHistoryLoading(false);
+    } catch (err) {
+      console.error("PERX History error:", err);
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const loadArchive = async (p = 0) => {
     setArchiveLoading(true);
     try {
       const params: any = { limit: 20, offset: p * 20 };
-      if (archiveFilter.symbol) params.symbol = archiveFilter.symbol;
-      if (archiveFilter.lifecycle) params.lifecycle_stage = archiveFilter.lifecycle;
-      if (archiveFilter.minScore) params.min_score = Number(archiveFilter.minScore);
-      if (archiveFilter.maxScore) params.max_score = Number(archiveFilter.maxScore);
+      if (archiveFilter?.symbol) params.symbol = archiveFilter.symbol;
+      if (archiveFilter?.lifecycle) params.lifecycle_stage = archiveFilter.lifecycle;
+      if (archiveFilter?.minScore) params.min_score = Number(archiveFilter.minScore);
+      if (archiveFilter?.maxScore) params.max_score = Number(archiveFilter.maxScore);
       const res = await api.getPerxArchive(params);
-      setArchiveRows((res && res.rows) || []);
-      setArchiveTotal((res && res.total) || 0);
+      setArchiveRows(Array.isArray(res?.rows) ? res.rows : []);
+      setArchiveTotal(Number(res?.total || 0));
       setArchivePage(p);
-    } catch { setArchiveRows([]); }
-    setArchiveLoading(false);
+    } catch (err) {
+      console.error("PERX Archive error:", err);
+      setArchiveRows([]);
+    } finally {
+      setArchiveLoading(false);
+    }
   };
 
   useEffect(() => { if (tab === 'archive') loadArchive(); }, [tab]);
@@ -2515,15 +2524,15 @@ function PerxPage() {
   };
 
   return (
-    <div className="dashboard-grid" style={{ gap: '16px' }}>
+    <div style={{ display: 'grid', gap: '16px', padding: '16px' }}>
       {/* ─── Tab Navigation ─── */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-        {(['scan', 'compare', 'archive'] as PerxTab[]).map(t => (
+        {['scan', 'compare', 'archive'].map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => setTab(t as PerxTab)}
             className={`btn-${tab === t ? 'primary' : 'secondary'}`}
-            style={{ textTransform: 'capitalize', padding: '8px 20px' }}
+            style={{ textTransform: 'capitalize', padding: '8px 20px', cursor: 'pointer' }}
           >
             {t}
           </button>
@@ -2546,25 +2555,25 @@ function PerxPage() {
                 <div style={{ position: 'relative', display: 'inline-block', width: '100%', maxWidth: '320px' }}>
                   <input
                     className="form-input"
-                    value={query}
+                    value={query || ''}
                     onChange={e => setQuery(e.target.value)}
-                    onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                    onFocus={() => (suggestions || []).length > 0 && setShowSuggestions(true)}
                     placeholder="Search company or symbol..."
                     style={{ width: '100%' }}
                   />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="autocomplete-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '240px', overflowY: 'auto' }}>
-                      {suggestions.map((s, i) => (
+                  {showSuggestions && (suggestions || []).length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '240px', overflowY: 'auto' }}>
+                      {(suggestions || []).map((s, i) => (
                         <button key={i} onClick={() => selectSuggestion(s)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                          <span style={{ fontWeight: 700 }}>{s.symbol}</span>
-                          <span style={{ color: '#94a3b8', marginLeft: '8px' }}>{s.company_name}</span>
+                          <span style={{ fontWeight: 700 }}>{s?.symbol}</span>
+                          <span style={{ color: '#94a3b8', marginLeft: '8px' }}>{s?.company_name}</span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cbd5e1', marginTop: '12px' }}>
-                  <input type="checkbox" checked={includeDebate} onChange={e => setIncludeDebate(e.target.checked)} />
+                  <input type="checkbox" checked={!!includeDebate} onChange={e => setIncludeDebate(e.target.checked)} />
                   Include forensic debate
                 </label>
               </div>
@@ -2573,13 +2582,13 @@ function PerxPage() {
                 <button className="btn-secondary" type="button" disabled={emailing || !activeReport} onClick={handleEmailReport}>{emailing ? 'Sending...' : 'Email Report'}</button>
               </div>
             </form>
-            {status && <div className={`status-alert ${status.toLowerCase().includes('failed') ? 'error' : 'success'}`} style={{ padding: '10px', borderRadius: '8px', background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', fontSize: '13px' }}>{status}</div>}
+            {status && <div style={{ padding: '10px', borderRadius: '8px', background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', fontSize: '13px' }}>{status}</div>}
 
-            {portfolioSymbols.length > 0 && (
+            {(portfolioSymbols || []).length > 0 && (
               <div style={{ marginTop: '4px' }}>
                 <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Your Portfolio Stocks</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {portfolioSymbols.map(sym => (
+                  {(portfolioSymbols || []).map(sym => (
                     <button
                       key={sym}
                       onClick={() => { setSymbol(sym); setQuery(sym); setShowSuggestions(false); }}
@@ -2593,8 +2602,6 @@ function PerxPage() {
                         cursor: 'pointer',
                         fontWeight: symbol === sym ? 700 : 400
                       }}
-                      onMouseEnter={e => symbol !== sym && (e.currentTarget.style.background = '#1e293b')}
-                      onMouseLeave={e => symbol !== sym && (e.currentTarget.style.background = '#0f172a')}
                     >
                       {sym}
                     </button>
@@ -2608,15 +2615,15 @@ function PerxPage() {
             <section className="panel-card" style={{ display: 'grid', gap: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <h3 className="section-title">{header.company_name}</h3>
-                  <p className="card-meta">{header.symbol} | {header.sector} | {header.report_timestamp}</p>
+                  <h3 className="section-title">{header?.company_name || 'Report'}</h3>
+                  <p className="card-meta">{header?.symbol} | {header?.sector} | {header?.report_timestamp}</p>
                 </div>
                 <div style={{ padding: '8px 16px', borderRadius: '999px', background: '#1d4ed8', color: 'white', fontWeight: 700 }}>
-                  PERX {header.perx_score}/100 | {header.lifecycle_phase}
+                  PERX {header?.perx_score}/100 | {header?.lifecycle_phase}
                 </div>
               </div>
 
-              {header.prior_baseline && (
+              {header?.prior_baseline && (
                 <div style={{ padding: '10px 14px', background: '#1e293b', borderRadius: '8px', fontSize: '12px', borderLeft: '4px solid #3b82f6', color: '#cbd5e1', marginBottom: '12px' }}>
                   <b>Institutional Baseline:</b> {header.prior_baseline}
                 </div>
@@ -2626,10 +2633,10 @@ function PerxPage() {
                 <div style={{ padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Score Trajectory</div>
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                    {history.map(h => (
-                      <div key={h.id} style={{ padding: '6px 10px', background: '#1e293b', borderRadius: '6px', minWidth: '80px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#60a5fa' }}>{h.perx_score}</div>
-                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>{new Date(h.created_at).toLocaleDateString()}</div>
+                    {(history || []).map(h => (
+                      <div key={h?.id || Math.random()} style={{ padding: '6px 10px', background: '#1e293b', borderRadius: '6px', minWidth: '80px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#60a5fa' }}>{h?.perx_score}</div>
+                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>{h?.created_at ? new Date(h.created_at).toLocaleDateString() : 'N/A'}</div>
                       </div>
                     ))}
                   </div>
@@ -2639,16 +2646,16 @@ function PerxPage() {
               <div style={{ display: 'grid', gap: '12px' }}>
                 <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Executive Summary</div>
-                  <div style={{ lineHeight: '1.6', color: '#e2e8f0' }}>{report.executive_summary}</div>
+                  <div style={{ lineHeight: '1.6', color: '#e2e8f0' }}>{report?.executive_summary}</div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '12px' }}>
                   <div className="summary-stat">
                     <span className="summary-label">Narrative Shift</span>
-                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}><b>Emerging:</b> {narrative.emerging_market_perception}</div>
+                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}><b>Emerging:</b> {narrative?.emerging_market_perception}</div>
                   </div>
                   <div className="summary-stat">
                     <span className="summary-label">Final Verdict</span>
-                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}>{report.final_institutional_verdict}</div>
+                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}>{report?.final_institutional_verdict}</div>
                   </div>
                 </div>
               </div>
@@ -2658,13 +2665,13 @@ function PerxPage() {
           <section className="panel-card">
             <h3 className="section-title">Recent Scans</h3>
             <div style={{ display: 'grid', gap: '8px' }}>
-              {recentReports.map(r => (
-                <button key={r.id} onClick={() => handleOpenReport(r.id)} style={{ textAlign: 'left', padding: '12px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', color: '#e2e8f0', cursor: 'pointer' }}>
+              {(recentReports || []).map(r => (
+                <button key={r?.id || Math.random()} onClick={() => handleOpenReport(r?.id)} style={{ textAlign: 'left', padding: '12px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', color: '#e2e8f0', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <b>{r.company_name}</b>
-                    <span style={{ color: '#94a3b8' }}>{r.perx_score} pts</span>
+                    <b>{r?.company_name}</b>
+                    <span style={{ color: '#94a3b8' }}>{r?.perx_score} pts</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{r.symbol} • {r.lifecycle_stage} • {new Date(r.created_at).toLocaleDateString()}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{r?.symbol} • {r?.lifecycle_stage} • {r?.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</div>
                 </button>
               ))}
             </div>
@@ -2679,18 +2686,18 @@ function PerxPage() {
             <form onSubmit={handleCompare} style={{ display: 'grid', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ position: 'relative' }}>
-                  <input className="form-input" value={query} onChange={e => setQuery(e.target.value)} onFocus={() => suggestions.length > 0 && setShowSuggestions(true)} placeholder="Company A..." style={{ width: '100%' }} />
-                  {showSuggestions && suggestions.length > 0 && (
+                  <input className="form-input" value={query} onChange={e => setQuery(e.target.value)} onFocus={() => (suggestions || []).length > 0 && setShowSuggestions(true)} placeholder="Company A..." style={{ width: '100%' }} />
+                  {showSuggestions && (suggestions || []).length > 0 && (
                     <div className="autocomplete-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '180px', overflowY: 'auto' }}>
-                      {suggestions.map((s, i) => <button key={i} onClick={() => selectSuggestion(s)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s.symbol}: {s.company_name}</button>)}
+                      {(suggestions || []).map((s, i) => <button key={i} onClick={() => selectSuggestion(s)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s?.symbol}: {s?.company_name}</button>)}
                     </div>
                   )}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <input className="form-input" value={queryB} onChange={e => setQueryB(e.target.value)} onFocus={() => suggestionsB.length > 0 && setShowSuggestionsB(true)} placeholder="Company B..." style={{ width: '100%' }} />
-                  {showSuggestionsB && suggestionsB.length > 0 && (
+                  <input className="form-input" value={queryB} onChange={e => setQueryB(e.target.value)} onFocus={() => (suggestionsB || []).length > 0 && setShowSuggestionsB(true)} placeholder="Company B..." style={{ width: '100%' }} />
+                  {showSuggestionsB && (suggestionsB || []).length > 0 && (
                     <div className="autocomplete-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '180px', overflowY: 'auto' }}>
-                      {suggestionsB.map((s, i) => <button key={i} onClick={() => selectSuggestion(s, true)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s.symbol}: {s.company_name}</button>)}
+                      {(suggestionsB || []).map((s, i) => <button key={i} onClick={() => selectSuggestion(s, true)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s?.symbol}: {s?.company_name}</button>)}
                     </div>
                   )}
                 </div>
@@ -2704,23 +2711,23 @@ function PerxPage() {
               <div style={{ padding: '16px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
                 <h3 style={{ margin: '0 0 12px 0', fontSize: '15px' }}>Comparison Summary</h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {comparison.comparison.key_differentials.map((d: string, i: number) => (
+                  {(comparison?.comparison?.key_differentials || []).map((d: string, i: number) => (
                     <span key={i} style={{ padding: '4px 10px', borderRadius: '6px', background: '#0f172a', fontSize: '12px', border: '1px solid #1e293b' }}>{d}</span>
                   ))}
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {[comparison.left, comparison.right].map((r, i) => (
-                  <section key={i} className="panel-card" style={{ padding: '14px', borderTop: `4px solid ${comparison.comparison.winner.perx_score === (i === 0 ? 'left' : 'right') ? '#22c55e' : '#1e293b'}` }}>
+                {[comparison?.left, comparison?.right].filter(Boolean).map((r, i) => (
+                  <section key={i} className="panel-card" style={{ padding: '14px', borderTop: `4px solid ${comparison?.comparison?.winner?.perx_score === (i === 0 ? 'left' : 'right') ? '#22c55e' : '#1e293b'}` }}>
                     <div style={{ marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0 }}>{r.company_name}</h4>
-                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#60a5fa', margin: '4px 0' }}>{r.header?.perx_score}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{r.header?.lifecycle_phase}</div>
+                      <h4 style={{ margin: 0 }}>{r?.company_name}</h4>
+                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#60a5fa', margin: '4px 0' }}>{r?.header?.perx_score}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{r?.header?.lifecycle_phase}</div>
                     </div>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>MRI:</b> {r.engine_outputs?.mri?.total_score}</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>QIF:</b> {r.engine_outputs?.qif?.score} ({r.engine_outputs?.qif?.category})</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>Fragility:</b> {r.engine_outputs?.fragility?.level}</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>MRI:</b> {r?.engine_outputs?.mri?.total_score}</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>QIF:</b> {r?.engine_outputs?.qif?.score} ({r?.engine_outputs?.qif?.category})</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>Fragility:</b> {r?.engine_outputs?.fragility?.level}</div>
                     </div>
                   </section>
                 ))}
@@ -2734,12 +2741,12 @@ function PerxPage() {
         <section className="panel-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 className="section-title" style={{ margin: 0 }}>Research Archive</h2>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{archiveTotal} reports found</div>
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{archiveTotal || 0} reports found</div>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-            <input className="form-input" placeholder="Filter symbol..." value={archiveFilter.symbol} onChange={e => setArchiveFilter({...archiveFilter, symbol: e.target.value})} />
-            <select className="form-input" value={archiveFilter.lifecycle} onChange={e => setArchiveFilter({...archiveFilter, lifecycle: e.target.value})}>
+            <input className="form-input" placeholder="Filter symbol..." value={archiveFilter?.symbol || ''} onChange={e => setArchiveFilter({...archiveFilter, symbol: e.target.value})} />
+            <select className="form-input" value={archiveFilter?.lifecycle || ''} onChange={e => setArchiveFilter({...archiveFilter, lifecycle: e.target.value})}>
               <option value="">All Stages</option>
               {['Accumulation', 'Early Rerating', 'Institutional Expansion', 'Euphoria', 'Distribution'].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -2757,14 +2764,14 @@ function PerxPage() {
                 </tr>
               </thead>
               <tbody>
-                {archiveRows.map(r => (
-                  <tr key={r.id} style={{ borderBottom: '1px solid #0f172a' }}>
-                    <td style={{ padding: '12px 8px' }}><b>{r.symbol}</b></td>
-                    <td style={{ padding: '12px 8px', color: '#60a5fa', fontWeight: 700 }}>{r.perx_score}</td>
-                    <td style={{ padding: '12px 8px' }}>{r.lifecycle_stage}</td>
-                    <td style={{ padding: '12px 8px', color: '#94a3b8' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                {(archiveRows || []).map(r => (
+                  <tr key={r?.id || Math.random()} style={{ borderBottom: '1px solid #0f172a' }}>
+                    <td style={{ padding: '12px 8px' }}><b>{r?.symbol}</b></td>
+                    <td style={{ padding: '12px 8px', color: '#60a5fa', fontWeight: 700 }}>{r?.perx_score}</td>
+                    <td style={{ padding: '12px 8px' }}>{r?.lifecycle_stage}</td>
+                    <td style={{ padding: '12px 8px', color: '#94a3b8' }}>{r?.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</td>
                     <td style={{ padding: '12px 8px' }}>
-                      <button className="link-btn" onClick={() => { setTab('scan'); handleOpenReport(r.id); }}>Open</button>
+                      <button className="link-btn" onClick={() => { setTab('scan'); handleOpenReport(r?.id); }}>Open</button>
                     </td>
                   </tr>
                 ))}
