@@ -2609,7 +2609,13 @@ function PerxPage() {
                 </div>
               </div>
 
-              {history.length > 1 && (
+              {header.prior_baseline && (
+                <div style={{ padding: '10px 14px', background: '#1e293b', borderRadius: '8px', fontSize: '12px', borderLeft: '4px solid #3b82f6', color: '#cbd5e1', marginBottom: '12px' }}>
+                  <b>Institutional Baseline:</b> {header.prior_baseline}
+                </div>
+              )}
+
+              {history && history.length > 1 && (
                 <div style={{ padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Score Trajectory</div>
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>

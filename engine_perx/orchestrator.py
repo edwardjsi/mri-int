@@ -129,6 +129,24 @@ def _build_forensic_review(symbol: str, include_debate: bool) -> dict[str, Any]:
     return review
 
 
+def _fetch_previous_report(cur, symbol: str, client_id: str | None) -> dict[str, Any] | None:
+    """Fetch the most recent prior report for this symbol/client to provide context."""
+    if not client_id:
+        return None
+    cur.execute(
+        """
+        SELECT report_json, perx_score, created_at
+        FROM perx_reports
+        WHERE symbol = %s AND client_id = %s
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (symbol, client_id),
+    )
+    row = cur.fetchone()
+    return dict(row) if row else None
+
+
 def _build_report_payload(
     symbol: str,
     company_name: str,
@@ -138,6 +156,7 @@ def _build_report_payload(
     financial_history: list[dict[str, Any]],
     regime_snapshot: dict[str, Any],
     forensic_review: dict[str, Any],
+    previous_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     stee_score = compute_stee_setup_score(mri_snapshot)
     trajectory_support = compute_trajectory_support(quality_snapshot)
@@ -153,6 +172,15 @@ def _build_report_payload(
     lifecycle_stage = classify_lifecycle_stage(perx_score, mri_snapshot, quality_snapshot, fragility_snapshot)
     narrative_intensity = narrative_intensity_label(perx_score)
 
+    # Contextual evaluation against prior report
+    prior_context = "No previous institutional evaluation found in your archive."
+    if previous_report:
+        prev_score = float(previous_report.get("perx_score") or 0)
+        prev_date = previous_report.get("created_at")
+        diff = perx_score - prev_score
+        direction = "improved" if diff > 0 else "softened" if diff < 0 else "remained stable"
+        prior_context = f"Baseline established on {prev_date}: PERX score has {direction} by {abs(diff):.1f} points."
+
     report = {
         "symbol": symbol,
         "company_name": company_name,
@@ -163,6 +191,7 @@ def _build_report_payload(
             "lifecycle_phase": lifecycle_stage,
             "report_timestamp": str(regime_snapshot.get("date") or mri_snapshot.get("date")),
             "sector": sector or "UNKNOWN",
+            "prior_baseline": prior_context
         },
         "executive_summary": build_executive_summary(
             symbol,
@@ -218,10 +247,14 @@ def generate_perx_report(
     base_symbol = normalize_symbol(symbol)
     cur = conn.cursor()
 
+    # 1. Fetch current evidence
     mri_snapshot = _fetch_latest_mri_snapshot(cur, base_symbol)
     quality_snapshot = _fetch_latest_quality_snapshot(cur, base_symbol)
     financial_history = _fetch_financial_history(cur, base_symbol)
     regime_snapshot = _fetch_latest_regime(cur)
+    
+    # 2. Fetch previous report for context
+    previous_report = _fetch_previous_report(cur, base_symbol, client_id)
 
     if not mri_snapshot:
         raise ValueError(
@@ -253,6 +286,7 @@ def generate_perx_report(
         financial_history,
         regime_snapshot,
         forensic_review,
+        previous_report=previous_report
     )
 
     report_id = None
