@@ -474,26 +474,26 @@ def generate_perx_comparison(conn, symbol_a: str, symbol_b: str, client_id: str,
     winner: dict[str, str] = {}
     differentials: list[str] = []
 
-    score_a = float(left["header"]["perx_score"] or 0)
-    score_b = float(right["header"]["perx_score"] or 0)
+    score_a = float(left.get("header", {}).get("perx_score") or 0)
+    score_b = float(right.get("header", {}).get("perx_score") or 0)
     winner["perx_score"] = "left" if score_a >= score_b else "right"
 
-    mri_a = float(left["engine_outputs"]["mri"]["total_score"] or 0)
-    mri_b = float(right["engine_outputs"]["mri"]["total_score"] or 0)
+    mri_a = float(left.get("engine_outputs", {}).get("mri", {}).get("total_score") or 0)
+    mri_b = float(right.get("engine_outputs", {}).get("mri", {}).get("total_score") or 0)
     winner["mri"] = "left" if mri_a >= mri_b else "right"
 
-    qif_a = float(left["engine_outputs"]["qif"]["score"] or 0)
-    qif_b = float(right["engine_outputs"]["qif"]["score"] or 0)
+    qif_a = float(left.get("engine_outputs", {}).get("qif", {}).get("score") or 0)
+    qif_b = float(right.get("engine_outputs", {}).get("qif", {}).get("score") or 0)
     winner["qif"] = "left" if qif_a >= qif_b else "right"
 
-    frag_a = left["engine_outputs"]["fragility"]["level"]
-    frag_b = right["engine_outputs"]["fragility"]["level"]
+    frag_a = left.get("engine_outputs", {}).get("fragility", {}).get("level")
+    frag_b = right.get("engine_outputs", {}).get("fragility", {}).get("level")
     frag_order = {"LOW": 0, "MODERATE": 1, "HIGH": 2}
     winner["fragility"] = "left" if (frag_order.get(frag_a, 0) <= frag_order.get(frag_b, 0)) else "right"
 
     lifecycle_rank = {"Accumulation": 0, "Early Rerating": 1, "Institutional Expansion": 2, "Euphoria": 3, "Distribution": 4}
-    rank_a = lifecycle_rank.get(left["lifecycle"]["stage"], 0)
-    rank_b = lifecycle_rank.get(right["lifecycle"]["stage"], 0)
+    rank_a = lifecycle_rank.get(left.get("lifecycle", {}).get("stage"), 0)
+    rank_b = lifecycle_rank.get(right.get("lifecycle", {}).get("stage"), 0)
     winner["lifecycle"] = "left" if rank_a >= rank_b else "right"
 
     if qif_a != qif_b:

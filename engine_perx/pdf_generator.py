@@ -22,15 +22,15 @@ def generate_perx_pdf(report: dict) -> BytesIO:
 
     # 1. Header
     elements.append(Paragraph("PERX INSTITUTIONAL REPORT", title_style))
-    elements.append(Paragraph(f"<b>{report['company_name']}</b>", styles['Heading2']))
-    elements.append(Paragraph(f"Symbol: {report['symbol']} | Sector: {report['header'].get('sector', 'UNKNOWN')}", styles['Normal']))
-    elements.append(Paragraph(f"Generated: {report['header'].get('report_timestamp', 'N/A')}", styles['Normal']))
+    elements.append(Paragraph(f"<b>{report.get('company_name', report.get('symbol', 'UNKNOWN'))}</b>", styles['Heading2']))
+    elements.append(Paragraph(f"Symbol: {report.get('symbol', 'UNKNOWN')} | Sector: {report.get('header', {}).get('sector', 'UNKNOWN')}", styles['Normal']))
+    elements.append(Paragraph(f"Generated: {report.get('header', {}).get('report_timestamp', 'N/A')}", styles['Normal']))
     elements.append(Spacer(1, 20))
 
     # 2. PERX Score & Phase
     score_data = [
         [Paragraph("PERX RERATING SCORE", label_style), Paragraph("LIFECYCLE PHASE", label_style)],
-        [Paragraph(f"{report['header']['perx_score']}/100", value_style), Paragraph(report['header']['lifecycle_phase'], value_style)]
+        [Paragraph(f"{report.get('header', {}).get('perx_score', 'N/A')}/100", value_style), Paragraph(report.get('header', {}).get('lifecycle_phase', 'UNKNOWN'), value_style)]
     ]
     t = Table(score_data, colWidths=[200, 200])
     t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
@@ -39,26 +39,26 @@ def generate_perx_pdf(report: dict) -> BytesIO:
 
     # 3. Executive Summary
     elements.append(Paragraph("EXECUTIVE SUMMARY", header_style))
-    elements.append(Paragraph(report['executive_summary'], text_style))
+    elements.append(Paragraph(report.get('executive_summary', 'No summary available.'), text_style))
     elements.append(Spacer(1, 15))
 
     # 4. Narrative Transition
     elements.append(Paragraph("NARRATIVE TRANSITION", header_style))
-    elements.append(Paragraph(f"<b>Previous Market Perception:</b> {report['narrative_transition']['previous_market_perception']}", text_style))
-    elements.append(Paragraph(f"<b>Emerging Market Perception:</b> {report['narrative_transition']['emerging_market_perception']}", text_style))
+    elements.append(Paragraph(f"<b>Previous Market Perception:</b> {report.get('narrative_transition', {}).get('previous_market_perception', 'N/A')}", text_style))
+    elements.append(Paragraph(f"<b>Emerging Market Perception:</b> {report.get('narrative_transition', {}).get('emerging_market_perception', 'N/A')}", text_style))
     elements.append(Spacer(1, 10))
-    elements.append(Paragraph(report['narrative_transition']['why_this_matters'], text_style))
+    elements.append(Paragraph(report.get('narrative_transition', {}).get('why_this_matters', ''), text_style))
     elements.append(Spacer(1, 15))
 
     # 5. Engine Snapshot Table
     elements.append(Paragraph("ENGINE SNAPSHOT", header_style))
-    snapshot = report['engine_outputs']
+    snapshot = report.get('engine_outputs', {})
     snap_data = [
         ["Layer", "Score / Signal"],
-        ["MRI Technical", f"{snapshot['mri']['total_score']}/100 (RS: {snapshot['mri']['relative_strength']})"],
-        ["QIF Fundamental", f"{snapshot['qif']['score']}/100 ({snapshot['qif']['category']})"],
-        ["STEE Setup", f"{snapshot['stee']['setup_quality_score']} (Ready: {snapshot['stee']['breakout_ready']})"],
-        ["Thesis Fragility", snapshot['fragility']['level']]
+        ["MRI Technical", f"{snapshot.get('mri', {}).get('total_score', 'N/A')}/100 (RS: {snapshot.get('mri', {}).get('relative_strength', 'N/A')})"],
+        ["QIF Fundamental", f"{snapshot.get('qif', {}).get('score', 'N/A')}/100 ({snapshot.get('qif', {}).get('category', 'N/A')})"],
+        ["STEE Setup", f"{snapshot.get('stee', {}).get('setup_quality_score', 'N/A')} (Ready: {snapshot.get('stee', {}).get('breakout_ready', 'N/A')})"],
+        ["Thesis Fragility", snapshot.get('fragility', {}).get('level', 'N/A')]
     ]
     st = Table(snap_data, colWidths=[150, 250])
     st.setStyle(TableStyle([

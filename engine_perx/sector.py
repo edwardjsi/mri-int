@@ -23,11 +23,11 @@ def get_sector_context(cur, symbol: str, sector: str) -> dict[str, Any]:
     peers = cur.fetchall()
     
     # Calculate rank
-    peer_list = [dict(p) if isinstance(p, dict) else {"symbol": p[0], "score": p[1], "name": p[2]} for p in peers]
+    peer_list = [dict(p) if isinstance(p, dict) else {"symbol": p[0], "total_score": p[1], "name": p[2]} for p in peers]
     rank = next((i + 1 for i, p in enumerate(peer_list) if p['symbol'] == symbol), None)
     
     # Determine Industry Breadth (Avg score of top 10)
-    avg_sector_score = sum(p['score'] for p in peer_list) / len(peer_list) if peer_list else 0
+    avg_sector_score = sum(p.get('total_score', 0) for p in peer_list) / len(peer_list) if peer_list else 0
     breadth = "Accumulation" if avg_sector_score >= 70 else "Neutral" if avg_sector_score >= 50 else "Distribution"
 
     return {
