@@ -2379,22 +2379,25 @@ function PerxPage() {
   const loadRecentReports = async () => {
     try {
       const rows = await api.getRecentPerxReports(8);
-      setRecentReports(rows || []);
+      setRecentReports(Array.isArray(rows) ? rows : []);
     } catch (err) {
       console.error(err);
+      setRecentReports([]);
     }
   };
 
   const loadPortfolioSymbols = async () => {
     try {
       const pos = await api.getPositions();
+      if (!pos) return;
       const syms = Array.from(new Set([
-        ...(pos.core_positions || []).map((p: any) => p.symbol),
-        ...(pos.swing_positions || []).map((p: any) => p.symbol)
+        ...(pos.core_positions || []).map((p: any) => p?.symbol),
+        ...(pos.swing_positions || []).map((p: any) => p?.symbol)
       ])).filter(Boolean) as string[];
       setPortfolioSymbols(syms);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load portfolio symbols for PERX selection", err);
+      setPortfolioSymbols([]);
     }
   };
 
@@ -2436,21 +2439,25 @@ function PerxPage() {
 
   const loadHistory = async (sym: string) => {
     setHistoryLoading(true);
-    try { setHistory(await api.getPerxHistory(sym, 30)); } catch { setHistory([]); }
+    try { 
+      const res = await api.getPerxHistory(sym, 30);
+      setHistory(Array.isArray(res) ? res : []); 
+    } catch { setHistory([]); }
     setHistoryLoading(false);
   };
 
-  const loadArchive = async (page = 0) => {
+  const loadArchive = async (p = 0) => {
     setArchiveLoading(true);
     try {
-      const params: any = { limit: 20, offset: page * 20 };
+      const params: any = { limit: 20, offset: p * 20 };
       if (archiveFilter.symbol) params.symbol = archiveFilter.symbol;
       if (archiveFilter.lifecycle) params.lifecycle_stage = archiveFilter.lifecycle;
       if (archiveFilter.minScore) params.min_score = Number(archiveFilter.minScore);
       if (archiveFilter.maxScore) params.max_score = Number(archiveFilter.maxScore);
       const res = await api.getPerxArchive(params);
-      setArchiveRows(res.rows || []);
-      setArchiveTotal(res.total || 0);
+      setArchiveRows((res && res.rows) || []);
+      setArchiveTotal((res && res.total) || 0);
+      setArchivePage(p);
     } catch { setArchiveRows([]); }
     setArchiveLoading(false);
   };
@@ -2707,13 +2714,13 @@ function PerxPage() {
                   <section key={i} className="panel-card" style={{ padding: '14px', borderTop: `4px solid ${comparison.comparison.winner.perx_score === (i === 0 ? 'left' : 'right') ? '#22c55e' : '#1e293b'}` }}>
                     <div style={{ marginBottom: '12px' }}>
                       <h4 style={{ margin: 0 }}>{r.company_name}</h4>
-                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#60a5fa', margin: '4px 0' }}>{r.header.perx_score}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{r.header.lifecycle_phase}</div>
+                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#60a5fa', margin: '4px 0' }}>{r.header?.perx_score}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{r.header?.lifecycle_phase}</div>
                     </div>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>MRI:</b> {r.engine_outputs.mri.total_score}</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>QIF:</b> {r.engine_outputs.qif.score} ({r.engine_outputs.qif.category})</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>Fragility:</b> {r.engine_outputs.fragility.level}</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>MRI:</b> {r.engine_outputs?.mri?.total_score}</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>QIF:</b> {r.engine_outputs?.qif?.score} ({r.engine_outputs?.qif?.category})</div>
+                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>Fragility:</b> {r.engine_outputs?.fragility?.level}</div>
                     </div>
                   </section>
                 ))}
