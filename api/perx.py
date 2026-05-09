@@ -13,8 +13,41 @@ from engine_perx.orchestrator import (
 )
 from engine_perx.pdf_generator import generate_perx_pdf
 from engine_core.email_service import send_perx_report_email
+from engine_core.db import get_connection
 
 router = APIRouter(prefix="/api/perx", tags=["perx"])
+
+
+def background_perx_email(client_id: str, recipient_email: str, client_name: str, report: dict, symbol: str):
+    """Background task to send and log PERX report email."""
+    success = send_perx_report_email(
+        recipient_email=recipient_email,
+        client_name=client_name,
+        report=report,
+    )
+    
+    # Log to DB using a fresh connection
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        status_value = "SENT" if success else "FAILED"
+        cur.execute(
+            """
+            INSERT INTO email_log (client_id, date, email_type, service, subject, status)
+            VALUES (%s, CURRENT_DATE, 'PERX_REPORT', 'AWS_SES', %s, %s)
+            """,
+            (
+                client_id,
+                f"PERX Report: {symbol} (AUTO)",
+                status_value,
+            ),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        # We don't want background logging failures to crash anything, but we should know
+        print(f"PERX Background Email Logging Error: {e}")
 
 
 @router.post("/scan/{symbol}")
@@ -40,15 +73,17 @@ def scan_symbol(
             # Sync metadata one last time before emailing
             try:
                 from engine_perx.sector import get_sector_context
-                cur = conn.cursor()
-                get_sector_context(cur, symbol, result["report"]["header"].get("sector", "UNKNOWN"))
+                with conn.cursor() as cur:
+                    get_sector_context(cur, symbol, result["report"]["header"].get("sector", "UNKNOWN"))
             except: pass
             
             background_tasks.add_task(
-                send_perx_report_email,
+                background_perx_email,
+                client_id=str(client["id"]),
                 recipient_email=client_email,
                 client_name=client.get("name") or "Investor",
                 report=result["report"],
+                symbol=symbol,
             )
 
         return {

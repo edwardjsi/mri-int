@@ -1,6 +1,17 @@
 # **MRI Sessions Log**
 
+## **May 09, 2026: PERX Reliability & UI Fixes**
+
+**Context:** Resolving issues where PERX scans showed no results and automatic emails were failing or unlogged.
+**Actions:**
+1.  **UI Repair:** Added a visible status/error message area to the PERX page so users can see validation failures (e.g., invalid symbols).
+2.  **Symbol Intelligence:** Enhanced the scan logic to automatically match typed company names against suggestions if no suggestion was explicitly clicked.
+3.  **Email Transparency:** Wrapped the automatic PERX email in a background task that explicitly logs success/failure to the `email_log` table for easier debugging.
+4.  **Metadata Hardening:** Ensured sector context synchronization closes its database cursor correctly during the scan lifecycle.
+**Result:** Users now receive immediate feedback on scan status and all automatic emails are tracked in the system audit trail.
+
 ## **May 09, 2026: PERX V2/V3 Launch & Pipeline Hardening**
+
 
 **Context:** Completing the full PERX vision while resolving critical pipeline crashes and data drift issues.
 **Actions:**

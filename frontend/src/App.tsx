@@ -1708,7 +1708,19 @@ function PerxPage() {
 
   const handleScan = async (e?: any) => {
     if (e) e.preventDefault();
-    const targetSym = (symbol || query || '').trim().toUpperCase();
+    let targetSym = symbol;
+    if (!targetSym && query) {
+      const found = suggestions.find(s => 
+        s.symbol.toUpperCase() === query.toUpperCase() || 
+        (s.company_name && s.company_name.toUpperCase() === query.toUpperCase())
+      );
+      if (found) {
+        targetSym = found.symbol;
+      } else {
+        targetSym = query.trim().toUpperCase();
+      }
+    }
+
     if (!targetSym) { setStatus('Select a company first.'); return; }
     setLoading(true); setStatus(null);
     try {
@@ -1718,7 +1730,13 @@ function PerxPage() {
       loadData();
       const hist = await api.getPerxHistory(targetSym, 30);
       if (Array.isArray(hist)) setHistory(hist);
-    } catch (err: any) { setStatus(err.message || 'Scan failed.'); }
+    } catch (err: any) { 
+      let msg = err.message || 'Scan failed.';
+      if (msg.includes('requires MRI') && targetSym.length > 10) {
+        msg = `Symbol "${targetSym}" not found. Please select a valid company from the suggestions.`;
+      }
+      setStatus(msg);
+    }
     finally { setLoading(false); }
   };
 
@@ -1839,6 +1857,7 @@ function PerxPage() {
             )}
           </div>
           {loading && <div style={{ padding: '20px', textAlign: 'center', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>🔄 Generating Institutional Rerating Report... Please wait.</div>}
+          {status && <div style={{ padding: '12px 16px', background: status.includes('failed') || status.includes('requires') ? '#7f1d1d' : '#1e3a8a', borderRadius: '8px', border: '1px solid #334155', fontSize: '14px' }}>{status}</div>}
 
           {report && !loading && (
             <div style={{ display: 'grid', gap: '20px' }}>

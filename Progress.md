@@ -2,7 +2,28 @@
 
 ---
 
+## 📅 Session: May 09, 2026 — PERX Reliability & UI Fixes
+**Session Start:** 14:30 IST
+**Session End:** 15:00 IST
+
+### What Was Done This Session
+
+#### 1. UI Resilience ✅
+- [x] Added `status` message rendering to `PerxPage`.
+- [x] Improved `handleScan` to fuzzy-match company names to symbols from suggestions.
+- [x] Added descriptive error messages for "MRI data required" failures.
+
+#### 2. Email & Backend Hardening ✅
+- [x] Added `background_perx_email` task with explicit `email_log` persistence.
+- [x] Fixed cursor leak in `scan_symbol` metadata sync.
+- [x] Verified `PERX_REPORT` email mechanism in DB logs.
+
+### ⏳ Left for Next Session
+1. **Live Verification**: Confirm with the user if they can now see results and receive emails.
+2. **SES Audit**: Investigate high failure rate in `DAILY_SIGNAL` emails for some clients.
+
 ## 📅 Session: May 09, 2026 — PERX V3 & Pipeline Stability
+
 **Session Start:** 09:00 IST
 **Session End:** 14:00 IST
 **AI Assistant:** Codex
