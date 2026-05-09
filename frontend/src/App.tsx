@@ -1997,9 +1997,102 @@ function PerxPage() {
       )}
 
       {tab === 'compare' && (
-        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px' }}>
-          <h3>Side-by-Side Comparison</h3>
-          <p style={{ color: '#94a3b8' }}>Search and select two companies above to compare institutional scores.</p>
+        <div style={{ display: 'grid', gap: '20px' }}>
+          <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h3 style={{ margin: '0 0 16px 0' }}>Institutional Side-by-Side Comparison</h3>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ position: 'relative', width: '280px' }}>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>COMPANY A</label>
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  placeholder="Primary symbol..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {suggestions.map((s, i) => (
+                      <div key={i} onClick={() => selectSuggestion(s)} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #1e293b' }} onMouseEnter={e => e.currentTarget.style.background = '#1e293b'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <b>{s.symbol}</b> - {s.company_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: '1.2rem', color: '#64748b', paddingBottom: '12px' }}>VS</div>
+              <div style={{ position: 'relative', width: '280px' }}>
+                <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>COMPANY B</label>
+                <input
+                  value={queryB}
+                  onChange={e => setQueryB(e.target.value)}
+                  onFocus={() => suggestionsB.length > 0 && setShowSuggestionsB(true)}
+                  placeholder="Comparison symbol..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                {showSuggestionsB && suggestionsB.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {suggestionsB.map((s, i) => (
+                      <div key={i} onClick={() => selectSuggestion(s, true)} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #1e293b' }} onMouseEnter={e => e.currentTarget.style.background = '#1e293b'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <b>{s.symbol}</b> - {s.company_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={handleCompare} 
+                disabled={comparing}
+                style={{ padding: '12px 32px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', height: '48px' }}
+              >
+                {comparing ? 'Analysing...' : 'Compare Scores'}
+              </button>
+            </div>
+          </div>
+
+          {comparing && <div style={{ padding: '40px', textAlign: 'center', background: '#1e293b', borderRadius: '12px' }}>🔄 Generating Side-by-Side Institutional Comparison...</div>}
+
+          {comparison && !comparing && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              {/* Left Column (Symbol A) */}
+              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison.winner.perx_score === 'left' ? '6px solid #22c55e' : '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.left.company_name}</h4>
+                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.left.header.perx_score}</div>
+                </div>
+                <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.left.lifecycle.stage}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.left.engine_outputs.mri.total_score}/100</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.left.engine_outputs.qif.category}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.left.engine_outputs.fragility.level}</div>
+                </div>
+              </div>
+
+              {/* Right Column (Symbol B) */}
+              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison.winner.perx_score === 'right' ? '6px solid #22c55e' : '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.right.company_name}</h4>
+                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.right.header.perx_score}</div>
+                </div>
+                <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.right.lifecycle.stage}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.right.engine_outputs.mri.total_score}/100</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.right.engine_outputs.qif.category}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.right.engine_outputs.fragility.level}</div>
+                </div>
+              </div>
+
+              {/* Comparison Summary */}
+              <div style={{ gridColumn: 'span 2', padding: '20px', background: '#1e3a8a30', borderRadius: '12px', border: '1px solid #3b82f640' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#60a5fa' }}>Institutional Differential</h4>
+                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                  {comparison.comparison.key_differentials.map((d: string, i: number) => (
+                    <div key={i} style={{ fontSize: '13px', background: '#0f172a', padding: '6px 12px', borderRadius: '20px', border: '1px solid #1e293b' }}>• {d}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

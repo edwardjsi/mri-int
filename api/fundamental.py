@@ -21,7 +21,8 @@ def get_quality_verdict(symbol: str, conn=Depends(get_db)):
         try:
             # Check if we have financials first
             cur.execute("SELECT COUNT(*) FROM fundamental_financials WHERE symbol = %s", (symbol.upper(),))
-            count = cur.fetchone()[0]
+            row_count = cur.fetchone()
+            count = row_count['count'] if isinstance(row_count, dict) else row_count[0]
             if count == 0:
                 fetch_and_store_financials(symbol.upper())
             

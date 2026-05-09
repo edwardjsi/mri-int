@@ -1,6 +1,16 @@
 # **MRI Sessions Log**
 
+## **May 09, 2026: PERX Archive & Compare Fixes**
+
+**Context:** Resolving issues where PERX reports were not appearing in the archive and the comparison link was non-functional.
+**Actions:**
+1.  **Backend Fix:** Resolved a `KeyError: 0` in `engine_perx/orchestrator.py` by making the record count retrieval compatible with `RealDictCursor`.
+2.  **UI Implementation:** Completely implemented the "Compare" tab UI in `frontend/src/App.tsx`, including dual-search inputs, comparison logic invocation, and side-by-side result rendering with winner highlighting.
+3.  **Hardening:** Applied tuple/dict safety to the count check in `api/fundamental.py`.
+**Result:** Past PERX reports are now visible in the research archive, and users can perform side-by-side institutional comparisons between any two symbols.
+
 ## **May 09, 2026: PERX Reliability & UI Fixes**
+
 
 **Context:** Resolving issues where PERX scans showed no results and automatic emails were failing or unlogged.
 **Actions:**

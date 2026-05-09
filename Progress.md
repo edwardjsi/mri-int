@@ -2,7 +2,30 @@
 
 ---
 
+## 📅 Session: May 09, 2026 — PERX Archive & Compare Fixes
+**Session Start:** 15:10 IST
+**Session End:** 15:30 IST
+
+### What Was Done This Session
+
+#### 1. Archive Recovery ✅
+- [x] Fixed `KeyError: 0` in `list_perx_archive_for_client`.
+- [x] Confirmed archive rows now load for the authenticated client.
+
+#### 2. Compare Mode Implementation ✅
+- [x] Added dual-symbol search UI to the Compare tab.
+- [x] Implemented side-by-side rendering of PERX reports.
+- [x] Added visual "winner" highlighting for scores and categories.
+- [x] Surfaced the "Institutional Differential" summary.
+
+#### 3. General Hardening ✅
+- [x] Fixed similar `KeyError` potential in `api/fundamental.py`.
+
+### ⏳ Left for Next Session
+1. **Performance Audit**: Evaluate the speed of side-by-side scans (currently runs sequentially).
+
 ## 📅 Session: May 09, 2026 — PERX Reliability & UI Fixes
+
 **Session Start:** 14:30 IST
 **Session End:** 15:00 IST
 

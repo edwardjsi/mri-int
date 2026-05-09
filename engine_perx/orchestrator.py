@@ -442,7 +442,8 @@ def list_perx_archive_for_client(
     where_clause = " AND ".join(conditions)
 
     cur.execute(f"SELECT COUNT(*) FROM perx_reports WHERE {where_clause}", params)
-    total = cur.fetchone()[0]
+    row_count = cur.fetchone()
+    total = row_count['count'] if isinstance(row_count, dict) else row_count[0]
 
     cur.execute(
         f"""
