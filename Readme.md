@@ -16,6 +16,7 @@ MRI is a quantitative equity intelligence platform for Indian listed equities. I
 | **Trajectory** | Score velocity + trend direction | Daily |
 | **AI Forensic Debate** | BUY/HOLD/AVOID verdict + thesis breakdown | On-demand |
 | **STEE Signals** | Breakout entries with stop loss & 2R exits | Daily |
+| **PERX Intelligence** | Institutional Re-rating Scan, Lifecycle Classification, Peer Compare | On-demand |
 
 ---
 
@@ -91,6 +92,20 @@ Rule-based swing trade execution with regime filtering:
 | **Trailing Stop** | Exit remaining 50% when Close < EMA 10 |
 | **Market Filter** | Only trade in BULLISH or SIDEWAYS regimes |
 | **Position Sizing** | Qty = (Capital × 0.01) / (Entry − Stop) |
+
+---
+
+## 🔎 PE Re-Rating Discovery Engine (PERX)
+
+PERX is the institutional orchestration and synthesis layer of MRI. Instead of looking at raw scores in isolation, PERX synthesizes technical momentum, QIF fundamentals, and qualitative debate into a cohesive, institutional-grade research view.
+
+### Key Capabilities:
+- **Comprehensive Synthesis:** Aggregates MRI Technical Leadership, STEE Breakout Context, and QIF Fundamentals into a unified PE Re-Rating Score.
+- **Compare Mode:** Side-by-side analysis of two companies, automatically highlighting the "Institutional Differential" to easily identify the stronger asset.
+- **Sector Intelligence:** Contextualizes a stock's performance by ranking it against immediate peers within its specific industry.
+- **Lifecycle & Fragility:** Classifies the company's current market stage (e.g., Explosive Improver, Value Trap) and assesses financial fragility.
+- **Automated Delivery:** Formats comprehensive scans into professional PDF memos and delivers them directly to user inboxes via AWS SES.
+- **Research Archive:** Maintains a persistent memory of prior scans to track how a company's narrative and metrics shift over time.
 
 ---
 
@@ -202,6 +217,7 @@ AAE extends MRI into a full research and stock-selection platform:
 | QIF | 7-agent fundamental scoring | ✅ Live |
 | QIL | AI narrative + cross-checks | ✅ Live |
 | Debate | Forensic GPT equity analysis | ✅ Live |
+| PERX | PE Re-Rating Discovery Engine | ✅ Live |
 | AAE V1 | Event-driven research platform | 🔜 Next |
 | AAE V2 | Document RAG + structural signals | 📋 Planned |
 | AAE V3 | Macro correlation + risk agents | 📋 Planned |

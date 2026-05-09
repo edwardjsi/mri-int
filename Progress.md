@@ -2,6 +2,40 @@
 
 ---
 
+## 📅 Session: May 09, 2026 — Documentation Cleanup & PERX Readme
+
+**Session Start:** 19:50 IST
+**Session End:** 20:10 IST
+
+### What Was Done This Session
+
+#### 1. PERX Readme Integration ✅
+- [x] Added PERX row to "What MRI Does" summary table.
+- [x] Created dedicated `🔎 PE Re-Rating Discovery Engine (PERX)` section in `Readme.md`.
+- [x] Updated Product Roadmap table with PERX as ✅ Live.
+
+#### 2. Obsolete PRDE Cleanup ✅
+- [x] Reviewed `docs/PRDE_TOMORROW_TODO.md` — confirmed superseded by PERX (Decision 087).
+- [x] Deleted 7 obsolete PRDE files:
+  - `docs/PRDE_CSV_IMPORT_CONTRACT.md`
+  - `docs/PRDE_IMPLEMENTATION_CHECKLIST.md`
+  - `docs/PRDE_INFRASTRUCTURE_PLAN.md`
+  - `docs/PRDE_TOMORROW_TODO.md`
+  - `docs/prde_financials_template.csv`
+  - `scripts/import_prde_financials.py`
+  - `scripts/verify_prde_import.py`
+
+#### 3. PERX Compare Mode UX Polish ✅
+- [x] Changed Compare layout to responsive 2-column grid (`repeat(auto-fit, minmax(280px, 1fr))`).
+- [x] Added `|| 'N/A'` / `|| '0'` fallbacks to all 10 comparison data fields.
+- [x] Verified frontend build passes cleanly.
+
+### 📌 Current Milestone
+- PERX is **Implementation Complete** and documented in the public Readme.
+- All obsolete PRDE planning artifacts have been removed.
+
+---
+
 ## 📅 Session: May 09, 2026 — PERX Compare Runtime Fix
 **Session Start:** 15:40 IST
 **Session End:** 16:00 IST

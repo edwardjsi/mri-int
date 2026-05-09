@@ -1,5 +1,15 @@
 # **MRI Sessions Log**
 
+## **May 09, 2026: Documentation Cleanup & PERX Readme**
+
+**Context:** Integrating PERX into the public-facing Readme, cleaning up obsolete PRDE planning artifacts, and polishing the Compare Mode UI.
+**Actions:**
+1.  **Readme Update:** Added PERX to the "What MRI Does" table, created a dedicated PERX section describing all six key capabilities, and marked PERX as ✅ Live in the Product Roadmap.
+2.  **PRDE Cleanup:** Confirmed `PRDE_TOMORROW_TODO.md` was never executed and was superseded by Decision 087 (PERX pivot). Deleted 7 obsolete PRDE files (4 docs, 1 CSV template, 2 scripts).
+3.  **Compare UX Polish:** Changed the comparison results to a responsive 2-column grid layout and added N/A fallbacks to all 10 data fields to prevent blank rendering.
+4.  **Build Verification:** Frontend build passes cleanly (726 modules, 4.98s).
+**Result:** The public Readme now accurately reflects the PERX module. The repo is free of stale PRDE planning debt.
+
 ## **May 09, 2026: PERX Compare Mode Runtime Fix**
 
 **Context:** Resolving a "Blank Screen" crash occurring during side-by-side PERX comparisons.
