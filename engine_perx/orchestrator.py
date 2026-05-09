@@ -344,3 +344,133 @@ def list_perx_reports_for_client(conn, client_id: str, limit: int = 10) -> list[
     )
     rows = cur.fetchall()
     return [dict(row) for row in rows]
+
+
+def get_perx_score_history(conn, symbol: str, limit: int = 30) -> list[dict[str, Any]]:
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, symbol, perx_score, lifecycle_stage, created_at
+        FROM perx_reports
+        WHERE symbol = %s
+        ORDER BY created_at DESC
+        LIMIT %s
+        """,
+        (normalize_symbol(symbol), limit),
+    )
+    rows = cur.fetchall()
+    return [dict(row) for row in rows]
+
+
+def list_perx_archive_for_client(
+    conn,
+    client_id: str,
+    symbol: str | None = None,
+    lifecycle_stage: str | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict[str, Any]], int]:
+    cur = conn.cursor()
+    conditions = ["client_id = %s"]
+    params: list[Any] = [client_id]
+
+    if symbol:
+        conditions.append("symbol ILIKE %s")
+        params.append(f"%{symbol.upper()}%")
+    if lifecycle_stage:
+        conditions.append("lifecycle_stage = %s")
+        params.append(lifecycle_stage)
+    if min_score is not None:
+        conditions.append("perx_score >= %s")
+        params.append(min_score)
+    if max_score is not None:
+        conditions.append("perx_score <= %s")
+        params.append(max_score)
+    if from_date:
+        conditions.append("created_at >= %s")
+        params.append(from_date)
+    if to_date:
+        conditions.append("created_at <= %s")
+        params.append(to_date)
+
+    where_clause = " AND ".join(conditions)
+
+    cur.execute(f"SELECT COUNT(*) FROM perx_reports WHERE {where_clause}", params)
+    total = cur.fetchone()[0]
+
+    cur.execute(
+        f"""
+        SELECT id, symbol, company_name, perx_score, lifecycle_stage,
+               summary, include_debate, created_at
+        FROM perx_reports
+        WHERE {where_clause}
+        ORDER BY created_at DESC
+        LIMIT %s OFFSET %s
+        """,
+        params + [limit, offset],
+    )
+    rows = cur.fetchall()
+    return [dict(row) for row in rows], int(total)
+
+
+def generate_perx_comparison(conn, symbol_a: str, symbol_b: str, client_id: str, include_debate: bool = False) -> dict[str, Any]:
+    report_a = generate_perx_report(
+        normalize_symbol(symbol_a), conn, client_id=client_id,
+        include_debate=include_debate, persist=True,
+    )
+    report_b = generate_perx_report(
+        normalize_symbol(symbol_b), conn, client_id=client_id,
+        include_debate=include_debate, persist=True,
+    )
+    left = report_a["report"]
+    right = report_b["report"]
+
+    winner: dict[str, str] = {}
+    differentials: list[str] = []
+
+    score_a = float(left["header"]["perx_score"] or 0)
+    score_b = float(right["header"]["perx_score"] or 0)
+    winner["perx_score"] = "left" if score_a >= score_b else "right"
+
+    mri_a = float(left["engine_outputs"]["mri"]["total_score"] or 0)
+    mri_b = float(right["engine_outputs"]["mri"]["total_score"] or 0)
+    winner["mri"] = "left" if mri_a >= mri_b else "right"
+
+    qif_a = float(left["engine_outputs"]["qif"]["score"] or 0)
+    qif_b = float(right["engine_outputs"]["qif"]["score"] or 0)
+    winner["qif"] = "left" if qif_a >= qif_b else "right"
+
+    frag_a = left["engine_outputs"]["fragility"]["level"]
+    frag_b = right["engine_outputs"]["fragility"]["level"]
+    frag_order = {"LOW": 0, "MODERATE": 1, "HIGH": 2}
+    winner["fragility"] = "left" if (frag_order.get(frag_a, 0) <= frag_order.get(frag_b, 0)) else "right"
+
+    lifecycle_rank = {"Accumulation": 0, "Early Rerating": 1, "Institutional Expansion": 2, "Euphoria": 3, "Distribution": 4}
+    rank_a = lifecycle_rank.get(left["lifecycle"]["stage"], 0)
+    rank_b = lifecycle_rank.get(right["lifecycle"]["stage"], 0)
+    winner["lifecycle"] = "left" if rank_a >= rank_b else "right"
+
+    if qif_a != qif_b:
+        differentials.append(f"QIF: {'left' if qif_a > qif_b else 'right'} leads by {abs(qif_a - qif_b):.0f} points")
+    if mri_a != mri_b:
+        differentials.append(f"MRI: {'left' if mri_a > mri_b else 'right'} leads by {abs(mri_a - mri_b):.0f} points")
+    if frag_a != frag_b:
+        differentials.append(f"Fragility: {frag_a} vs {frag_b}")
+    score_delta = round(score_a - score_b, 1)
+    differentials.append(f"PERX delta: {score_delta:+.1f}")
+
+    return {
+        "report_id_a": report_a["report_id"],
+        "report_id_b": report_b["report_id"],
+        "left": left,
+        "right": right,
+        "comparison": {
+            "winner": winner,
+            "score_delta": score_delta,
+            "key_differentials": differentials,
+        },
+    }

@@ -2,7 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 import psycopg2.extras
 
 from api.deps import get_current_client, get_db
-from engine_perx.orchestrator import fetch_perx_report, generate_perx_report, list_perx_reports_for_client
+from engine_perx.orchestrator import (
+    fetch_perx_report,
+    generate_perx_report,
+    list_perx_reports_for_client,
+    get_perx_score_history,
+    list_perx_archive_for_client,
+    generate_perx_comparison,
+)
 from engine_core.email_service import send_perx_report_email
 
 router = APIRouter(prefix="/api/perx", tags=["perx"])
@@ -66,6 +73,60 @@ def search_companies(q: str, conn=Depends(get_db)):
         return []
     finally:
         cur.close()
+
+
+@router.get("/history/{symbol}")
+def get_history(symbol: str, limit: int = 30, client=Depends(get_current_client), conn=Depends(get_db)):
+    """PERX score trajectory over all scans for a symbol."""
+    return get_perx_score_history(conn, symbol, limit=limit)
+
+
+@router.get("/archive")
+def get_archive(
+    limit: int = 50,
+    offset: int = 0,
+    symbol: str | None = None,
+    lifecycle_stage: str | None = None,
+    min_score: float | None = None,
+    max_score: float | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """List all PERX scans for the client with filters."""
+    rows, total = list_perx_archive_for_client(
+        conn, str(client["id"]),
+        symbol=symbol, lifecycle_stage=lifecycle_stage,
+        min_score=min_score, max_score=max_score,
+        from_date=from_date, to_date=to_date,
+        limit=limit, offset=offset,
+    )
+    return {"rows": rows, "total": total, "limit": limit, "offset": offset}
+
+
+@router.post("/compare")
+def compare_symbols(
+    symbol_a: str,
+    symbol_b: str,
+    include_debate: bool = False,
+    client=Depends(get_current_client),
+    conn=Depends(get_db),
+):
+    """Side-by-side PERX comparison of two symbols."""
+    try:
+        result = generate_perx_comparison(
+            conn=conn,
+            symbol_a=symbol_a,
+            symbol_b=symbol_b,
+            client_id=str(client["id"]),
+            include_debate=include_debate,
+        )
+        return {"status": "ok", "comparison": result}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"PERX compare failed: {exc}")
 
 
 @router.post("/email/{report_id}")

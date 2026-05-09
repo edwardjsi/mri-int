@@ -343,6 +343,15 @@ export const api = {
   getRecentPerxReports: (limit: number = 10) => apiFetch(`/perx/recent?limit=${limit}`),
   emailPerxReport: (reportId: string) => apiFetch(`/perx/email/${reportId}`, { method: 'POST' }),
   searchCompanies: (q: string) => apiFetch(`/perx/search?q=${encodeURIComponent(q)}`),
+  getPerxHistory: (symbol: string, limit?: number) => apiFetch(`/perx/history/${encodeURIComponent(symbol)}?limit=${limit || 30}`),
+  getPerxArchive: (params: Record<string, string | number>) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
+    ).toString();
+    return apiFetch(`/perx/archive?${qs}`);
+  },
+  comparePerx: (symbolA: string, symbolB: string, includeDebate: boolean = false) =>
+    apiFetch(`/perx/compare?symbol_a=${encodeURIComponent(symbolA)}&symbol_b=${encodeURIComponent(symbolB)}&include_debate=${includeDebate}`, { method: 'POST' }),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

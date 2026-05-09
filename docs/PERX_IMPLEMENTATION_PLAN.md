@@ -32,6 +32,7 @@ Existing engines already available:
 
 ## What Has Already Been Completed
 
+### MRI/STEE Platform
 - Nifty 500 price ingestion and indicator pipeline
 - 7-step weighted MRI score and technical transparency
 - QIF financial scoring and verdict persistence
@@ -39,6 +40,20 @@ Existing engines already available:
 - Watchlist and Digital Twin persistence
 - Admin visibility, health checks, and SES-based notifications
 - Schema auto-heal patterns in `api/schema.py`
+- `system_audit_logs` table for execution audit trail
+- Pipeline auto-triggers on push to `main` (GitHub Actions)
+- Market holiday gate preventing weekend runs
+- EMA-50/EMA-200 regime (not SMA) — reflected in UI and API
+
+### PERX V1 (Shipped May 08, 2026)
+- `perx_reports` and `perx_scores` schema in `api/schema.py`
+- `engine_perx/` package: orchestrator, scoring, report_builder
+- `api/perx.py`: scan, fetch, search, recent, email endpoints
+- `PerxPage` in `frontend/src/App.tsx` with company autocomplete dropdown
+- On-demand QIF compute (missing quality/fundamental data fetched automatically)
+- Email delivery via existing SES path
+- Debate/Forensic Review integration (optional via toggle)
+- Docker: `engine_perx/` copied into Railway container
 
 ## Known Constraints
 
@@ -51,11 +66,181 @@ Existing engines already available:
 
 ## Current Milestone Context
 
-The current active delivery milestone in `Progress.md` remains:
+**V1 Delivery Status (May 08, 2026):** ✅ COMPLETE
 
-- Debate Trigger Verification
+All V1 items shipped to production (Railway):
+- `perx_reports` and `perx_scores` schema in `api/schema.py`
+- `engine_perx/` orchestration package with on-demand QIF compute
+- `api/perx.py` with scan, fetch, search, recent, and email endpoints
+- `PerxPage` in frontend with company autocomplete dropdown
+- Email delivery via existing SES path
+- Debate/Forensic Review integration
 
-PERX is the next planned product layer after that verification milestone, not a replacement for it.
+**V2 is now the active delivery milestone.**
+
+## Data Readiness
+
+### What We Already Have Enough Of (V2)
+
+V2 can be built entirely from existing data and infrastructure, with these additions to enable:
+
+- **Compare Mode**: `perx_scores` already snapshots every scan; needs history endpoint + UI
+- **Research Archive**: `perx_reports` already stores all scans; needs filter/search API + UI
+- **Lifecycle History**: `perx_scores` already tracks latest; needs full history query
+
+### What Is Still Missing For Full PERX (Phase 3)
+
+The full PRD expects additional layers that are not yet modeled as first-class data:
+
+- sector intelligence and sector breadth history
+- explicit fragility snapshots persistence
+- lifecycle history persistence (full timeline, not just latest)
+- narrative transition history
+- historical analog storage
+
+These are Phase 3 blockers, not V2 blockers.
+
+---
+
+## V2 Scope: Compare Mode + Research Archive + Lifecycle History
+
+### In Scope (V2)
+
+#### Compare Mode
+- `POST /api/perx/compare` — generate side-by-side comparison of 2 symbols
+- Comparison UI in `PerxPage`: pick 2 companies, view diff across MRI, STEE, QIF, PERX score, lifecycle, fragility
+- Shared context: same regime backdrop, same sector if available
+
+#### Research Archive
+- `GET /api/perx/archive` — list all scans with filters (symbol, date range, score range, lifecycle stage)
+- Archive view in `PerxPage`: table of all past scans for the client, sortable/filterable
+
+#### Lifecycle History
+- `GET /api/perx/history/{symbol}` — PERX score trajectory over all scans for a symbol
+- Small sparkline/score chart in the single-company report view
+
+#### On-Demand Quality Improvements
+- PERX already computes missing QIF data on-demand; continue to improve coverage and speed
+
+### Out of Scope (V2)
+- Compare mode for more than 2 companies
+- Sector intelligence layer
+- Analog detection
+- PDF export
+- Lifecycle history persistence for symbols not scanned via PERX
+
+### Recommended V2 Tables
+
+```text
+# No new tables required for V2
+# perx_reports  — already has all scan history
+# perx_scores   — already has latest per symbol
+# Consider adding perx_score_history in Phase 3 if lifetime trajectory is needed beyond scans
+```
+
+## V2 API Plan
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/perx/compare` | POST | Compare 2 symbols side-by-side |
+| `/api/perx/archive` | GET | List all scans with filters |
+| `/api/perx/history/{symbol}` | GET | Score trajectory for a symbol |
+| `/api/perx/search` | GET | Company autocomplete (already in V1) |
+
+## V2 Report Structure
+
+### Compare Report JSON
+```json
+{
+  "left": { ...same as single report... },
+  "right": { ...same as single report... },
+  "comparison": {
+    "winner": {
+      "perx_score": "left",
+      "mri": "left",
+      "qif": "left",
+      "fragility": "right",
+      "lifecycle": "left"
+    },
+    "score_delta": 8.5,
+    "key_differentials": [
+      "QIF score: left leads by 15 points on ROCE trajectory",
+      "Fragility: right is MODERATE vs left LOW"
+    ]
+  }
+}
+```
+
+## V2 Frontend Plan
+
+### Compare Mode UI
+- Add a second company search alongside the existing one
+- When both are selected, show side-by-side report panels
+- Comparison summary banner at top
+
+### Archive UI
+- New tab/section in `PerxPage` below the scan + recent reports
+- Filter bar: symbol search, date range, score range, lifecycle stage
+- Sortable table of all scans for the client
+
+### Lifecycle History UI
+- Small line chart or score badge list within the single-company report
+- Shows all past PERX scores for that symbol with timestamps
+
+## Delivery Sequence
+
+### V2 Step 1: Lifecycle History
+- Add `GET /api/perx/history/{symbol}` endpoint
+- Show score trajectory in single-company report view
+- *Rationale*: smallest scope, proves the history query pattern
+
+### V2 Step 2: Research Archive
+- Add `GET /api/perx/archive` endpoint with filters
+- Add archive tab to `PerxPage` with filter bar and results table
+- *Rationale*: easy backend query, useful standalone
+
+### V2 Step 3: Compare Mode
+- Add `POST /api/perx/compare` endpoint generating side-by-side report
+- Add second company search in `PerxPage`
+- Show comparison summary + diff panels
+- *Rationale*: highest user-value V2 feature, most complex
+
+## Smallest Next Implementation Step (V2)
+
+The next smallest logical step is **Lifecycle History**:
+
+1. Add `GET /api/perx/history/{symbol}` in `api/perx.py`
+2. Add `get_perx_score_history(...)` in `engine_perx/orchestrator.py`
+3. Add history sparkline/list to the single-company report in `PerxPage`
+
+This proves the history query pattern and provides immediate value (seeing score trajectory).
+
+---
+
+## V1 Completed Deliverables (Reference)
+
+- ✅ `perx_reports` and `perx_scores` schema
+- ✅ `engine_perx/` orchestration package
+- ✅ Single-symbol unified report JSON
+- ✅ API routes: scan, fetch, recent, search, email
+- ✅ On-demand QIF compute (missing data fetched automatically)
+- ✅ Company autocomplete dropdown
+- ✅ Email delivery via existing SES path
+- ✅ Debate/Forensic Review integration (optional)
+- ✅ PERX sidebar navigation (desktop + mobile)
+- ✅ Frontend build: `npm run build` → `api/static/`
+
+---
+
+## V3+ Roadmap (Future Phases)
+
+| Feature | Description |
+|---------|-------------|
+| Sector Intelligence | Sector RS, breadth, institutional attention derived layers |
+| Analog Detection | Historical rerating pattern matching |
+| Lifecycle History Persistence | Full timeline for all tracked symbols |
+| PDF Export | Branded institutional report as downloadable PDF |
+| Watchlist PERX Intelligence | PERX scores surfaced in watchlist table |
 
 ## Existing Infrastructure We Can Reuse
 
@@ -79,7 +264,7 @@ Current useful data sources:
 
 - `daily_prices`
 - `stock_scores`
-- `market_regime`
+- `market_regime` (EMA-based: ema_50, ema_200, classification)
 - `fundamental_financials`
 - `quality_verdicts`
 - `quality_verdicts_history`
@@ -89,6 +274,8 @@ Current useful data sources:
 - `client_external_holdings`
 - `email_log`
 - `system_audit_logs`
+- `perx_reports` (all scan history, V1+)
+- `perx_scores` (latest PERX snapshot per symbol, V1+)
 
 ### 3. Email Delivery
 
