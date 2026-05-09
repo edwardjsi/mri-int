@@ -342,6 +342,7 @@ export const api = {
   getPerxReport: (reportId: string) => apiFetch(`/perx/report/${reportId}`),
   getRecentPerxReports: (limit: number = 10) => apiFetch(`/perx/recent?limit=${limit}`),
   emailPerxReport: (reportId: string) => apiFetch(`/perx/email/${reportId}`, { method: 'POST' }),
+  searchCompanies: (q: string) => apiFetch(`/perx/search?q=${encodeURIComponent(q)}`),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

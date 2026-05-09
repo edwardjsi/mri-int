@@ -2341,6 +2341,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
 /* ─── PERX Page ─────────────────────────────────────────── */
 function PerxPage() {
+  const [query, setQuery] = useState('');
   const [symbol, setSymbol] = useState('');
   const [includeDebate, setIncludeDebate] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -2348,6 +2349,8 @@ function PerxPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [activeReport, setActiveReport] = useState<any>(null);
   const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const loadRecentReports = async () => {
     try {
@@ -2362,11 +2365,35 @@ function PerxPage() {
     loadRecentReports();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (query.length >= 2) {
+        try {
+          const results = await api.searchCompanies(query);
+          setSuggestions(results || []);
+          setShowSuggestions(true);
+        } catch {
+          setSuggestions([]);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const selectSuggestion = (company: any) => {
+    setSymbol(company.symbol);
+    setQuery(company.company_name || company.symbol);
+    setShowSuggestions(false);
+  };
+
   const handleScan = async (e?: any) => {
     if (e) e.preventDefault();
     const trimmed = symbol.trim().toUpperCase();
     if (!trimmed) {
-      setStatus('Enter a symbol to generate a PERX report.');
+      setStatus('Select a company to generate a PERX report.');
       return;
     }
 
@@ -2376,7 +2403,6 @@ function PerxPage() {
       const result = await api.scanPerx(trimmed, includeDebate);
       setActiveReport(result);
       setStatus(`PERX report generated for ${trimmed}.`);
-      setSymbol(trimmed);
       loadRecentReports();
     } catch (err: any) {
       setStatus(err.message || 'PERX scan failed.');
@@ -2440,13 +2466,40 @@ function PerxPage() {
 
         <form onSubmit={handleScan} style={{ display: 'grid', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <input
-              className="form-input"
-              style={{ maxWidth: '240px' }}
-              value={symbol}
-              onChange={e => setSymbol(e.target.value.toUpperCase())}
-              placeholder="Enter symbol, e.g. ZENTEC"
-            />
+            <div style={{ position: 'relative', display: 'inline-block', maxWidth: '320px' }}>
+              <input
+                className="form-input"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="Search company or symbol..."
+                style={{ width: '100%' }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999,
+                  background: '#0f172a', border: '1px solid #1e293b',
+                  borderRadius: '8px', marginTop: '4px', maxHeight: '240px', overflowY: 'auto',
+                }}>
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => selectSuggestion(s)}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '10px 14px', background: 'none', border: 'none',
+                        color: '#e2e8f0', cursor: 'pointer', fontSize: '13px',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      <span style={{ fontWeight: 700 }}>{s.symbol}</span>
+                      <span style={{ color: '#94a3b8', marginLeft: '8px' }}>{s.company_name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cbd5e1' }}>
               <input
                 type="checkbox"

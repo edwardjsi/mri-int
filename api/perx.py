@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+import psycopg2.extras
 
 from api.deps import get_current_client, get_db
 from engine_perx.orchestrator import fetch_perx_report, generate_perx_report, list_perx_reports_for_client
@@ -44,6 +45,27 @@ def get_report(report_id: str, client=Depends(get_current_client), conn=Depends(
 @router.get("/recent")
 def get_recent_reports(limit: int = 10, client=Depends(get_current_client), conn=Depends(get_db)):
     return list_perx_reports_for_client(conn, str(client["id"]), limit=limit)
+
+
+@router.get("/search")
+def search_companies(q: str, conn=Depends(get_db)):
+    """Autocomplete search for company name or symbol to power the PERX dropdown."""
+    if not q or len(q) < 2:
+        return []
+    query = f"%{q.upper()}%"
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT symbol, company_name
+            FROM universe
+            WHERE symbol ILIKE %s OR company_name ILIKE %s
+            LIMIT 10
+        """, (query, query))
+        return [dict(r) for r in cur.fetchall()]
+    except Exception:
+        return []
+    finally:
+        cur.close()
 
 
 @router.post("/email/{report_id}")

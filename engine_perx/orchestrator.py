@@ -223,17 +223,23 @@ def generate_perx_report(
     financial_history = _fetch_financial_history(cur, base_symbol)
     regime_snapshot = _fetch_latest_regime(cur)
 
-    missing = []
     if not mri_snapshot:
-        missing.append("stock_scores/daily_prices")
-    if not quality_snapshot:
-        missing.append("quality_verdicts")
-    if not financial_history:
-        missing.append("fundamental_financials")
-    if missing:
         raise ValueError(
-            f"PERX V1 currently requires existing MRI and QIF coverage for {base_symbol}. Missing: {', '.join(missing)}."
+            f"PERX requires MRI price/indicator data for {base_symbol}. "
+            "Please ensure the symbol is in the tracked universe and today's data has been ingested."
         )
+
+    if not quality_snapshot or not financial_history:
+        try:
+            from engine_fundamental.collector import fetch_and_store_financials
+            from engine_fundamental.pipeline import run_quality_pipeline
+            yf_sym = f"{base_symbol}.NS" if not base_symbol.endswith((".NS", ".BO")) else base_symbol
+            fetch_and_store_financials(yf_sym)
+            run_quality_pipeline(base_symbol)
+            quality_snapshot = _fetch_latest_quality_snapshot(cur, base_symbol)
+            financial_history = _fetch_financial_history(cur, base_symbol)
+        except Exception:
+            pass
 
     company_name = _get_company_name(cur, base_symbol) or base_symbol
     sector = _get_sector(cur, base_symbol) or "UNKNOWN"
@@ -243,7 +249,7 @@ def generate_perx_report(
         company_name,
         sector,
         mri_snapshot,
-        quality_snapshot,
+        quality_snapshot or {},
         financial_history,
         regime_snapshot,
         forensic_review,
