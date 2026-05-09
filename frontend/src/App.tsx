@@ -1117,7 +1117,7 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         )}
       </section>
 
-      {/* ── SECTION 0: My Positions (Core + External) ── */}
+      {/* ── My Positions ── */}
       {positions?.positions?.length > 0 ? (
         <section className="section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -1134,12 +1134,12 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             <table className="data-table">
               <thead>
                 <tr>
-                  <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSortIcon('symbol')}</th>
-                  <th onClick={() => handleSort('source')} style={{ cursor: 'pointer', userSelect: 'none' }}>Source{getSortIcon('source')}</th>
-                  <th onClick={() => handleSort('current_price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price{getSortIcon('current_price')}</th>
-                  <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer', userSelect: 'none' }}>Qty{getSortIcon('quantity')}</th>
-                  <th style={{ cursor: 'default', userSelect: 'none' }}>Value</th>
-                  <th onClick={() => handleSort('pnl_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>P&L %{getSortIcon('pnl_pct')}</th>
+                  <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {getSortIcon('symbol')}</th>
+                  <th>Source</th>
+                  <th onClick={() => handleSort('current_price')} style={{ cursor: 'pointer' }}>Price {getSortIcon('current_price')}</th>
+                  <th>Qty</th>
+                  <th>Value</th>
+                  <th onClick={() => handleSort('pnl_pct')} style={{ cursor: 'pointer' }}>P&L % {getSortIcon('pnl_pct')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1179,59 +1179,9 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         </section>
       )}
 
-      {/* ── SECTION 0.5: STEE Swing Breakouts (High Priority) ── */}
-      {positions?.positions?.some(p => p.source === 'Swing' && p.entry_date === todayDate) && (
-        <section className="section breakout-alert-section" style={{ border: '2px solid #22c55e', background: 'rgba(34, 197, 94, 0.05)' }}>
-          <h2 className="section-title" style={{ color: '#22c55e' }}>
-            🚀 STEE Execution: New Breakouts Detected
-          </h2>
-          <p className="section-subtitle">
-            The automated engine has initiated {positions.positions.filter(p => p.source === 'Swing' && p.entry_date === todayDate).length} new momentum trades based on today's price action.
-          </p>
-          <div className="signals-grid">
-            {positions.positions
-              .filter(p => p.source === 'Swing' && p.entry_date === todayDate)
-              .map(p => (
-                <div key={p.symbol} className="signal-card signal-buy" onClick={() => onSelectStock(p)}>
-                  <div className="signal-header">
-                    <span className="signal-symbol">{p.symbol}</span>
-                    <span className="badge-buy">STEE ENTRY</span>
-                  </div>
-                  <div className="signal-details">
-                    <div className="signal-detail"><span className="detail-label">Entry</span><span className="detail-value">₹{p.entry_price?.toLocaleString()}</span></div>
-                    <div className="signal-detail"><span className="detail-label">Qty</span><span className="detail-value">{p.quantity}</span></div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── SECTION 1: Pending Trades (from previous days) ── */}
-      {pendingOlder.length > 0 && (
-        <section className="section pending-section">
-          <h2 className="section-title pending-title">
-            ⏳ Pending — Execute Your Trades
-          </h2>
-          <p className="section-subtitle">
-            You received these signals earlier. Mark them as Executed (with actual price + qty from your broker) or Skip.
-          </p>
-          <div className="signals-grid">
-            {pendingOlder.map((s: any) => (
-              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── SECTION 2: Today's Fresh Signals ── */}
+      {/* ── Signals ── */}
       <section className="section">
-        <h2 className="section-title today-title">
-          📊 Today's New Signals {todayDate ? `(${todayDate})` : ''}
-        </h2>
-        <p className="section-subtitle">
-          Fresh signals from today's pipeline. Execute these in your broker tomorrow at 9:15 AM.
-        </p>
+        <h2 className="section-title">✨ MRI Signals (Daily Alignment)</h2>
         {todaySignals.length > 0 ? (
           <div className="signals-grid">
             {todaySignals.map((s: any) => (
@@ -1239,171 +1189,17 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             ))}
           </div>
         ) : (
-          <div className="empty-state">No new signals today. The market may be closed or there are no actionable setups.</div>
+          <div className="empty-state">No new daily signals today. System is standing down.</div>
         )}
       </section>
 
-      {showAddCapital && (
-        <AddCapitalDialog onConfirm={handleAddCapital} onCancel={() => setShowAddCapital(false)} />
-      )}
-    </div>
-  );
-}
-
-/* ─── History Page ────────────────────────────────────────── */
-function HistoryPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  const [actions, setActions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.getActionHistory()
-      .then(setActions)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="loading">Loading history...</div>;
-
-  return (
-    <div className="history">
-      <h2 className="section-title">My Trade History</h2>
-      {actions.length > 0 ? (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Symbol</th>
-                <th>Signal</th>
-                <th>Action</th>
-                <th>Rec. Price</th>
-                <th>Actual Price</th>
-                <th>Qty</th>
-                <th>Score</th>
-                <th>Regime</th>
-              </tr>
-            </thead>
-            <tbody>
-              {actions.map((a: any) => (
-                <tr key={a.id} onClick={() => onSelectStock(a)} className="clickable-row">
-                  <td>{a.signal_date}</td>
-                  <td className="font-bold">{a.symbol}</td>
-                  <td><span className={`signal-badge-sm ${a.signal_action === 'BUY' ? 'badge-buy' : 'badge-sell'}`}>{a.signal_action}</span></td>
-                  <td><span className={`action-badge ${a.action_taken === 'EXECUTED' ? 'badge-executed' : 'badge-skipped'}`}>{a.action_taken}</span></td>
-                  <td>₹{a.recommended_price?.toLocaleString()}</td>
-                  <td>₹{a.actual_price?.toLocaleString()}</td>
-                  <td>{a.quantity || '-'}</td>
-                  <td>{a.score}/100</td>
-                  <td>{a.regime}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="empty-state">No actions recorded yet. Start by executing or skipping signals on the Dashboard.</div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Performance Page ────────────────────────────────────── */
-function PerformancePage() {
-  const [performance, setPerformance] = useState<any>(null);
-  const [positions, setPositions] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      api.getPerformance().catch(() => null),
-      api.getPositions().catch(() => ({ positions: [] })),
-    ]).then(([perf, pos]) => {
-      setPerformance(perf);
-      setPositions(pos);
-    }).finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="loading">Loading performance...</div>;
-
-  // Merge client + nifty data for charting
-  const chartData = performance?.client?.map((c: any, i: number) => ({
-    date: c.date,
-    'Your Portfolio': c.value,
-    'Nifty 50': performance.nifty?.[i]?.value || 100,
-  })) || [];
-
-  return (
-    <div className="performance">
-      <h2 className="section-title">My Performance</h2>
-
-      {performance?.initial_capital && (
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="stat-label">Initial Capital</div>
-            <div className="stat-value">₹{performance.initial_capital.toLocaleString()}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Current Equity</div>
-            <div className="stat-value" style={{ color: performance.latest_equity >= performance.initial_capital ? '#22c55e' : '#ef4444' }}>
-              ₹{performance.latest_equity.toLocaleString()}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Open Positions</div>
-            <div className="stat-value">{positions?.count || 0}</div>
-          </div>
-        </div>
-      )}
-
-      {chartData.length > 0 ? (
-        <div className="chart-container">
-          <h3 className="chart-title">Your Equity vs Nifty 50 (Base 100)</h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={chartData}>
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f1f5f9' }} />
-              <Legend />
-              <Line type="monotone" dataKey="Your Portfolio" stroke="#3b82f6" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Nifty 50" stroke="#6b7280" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="empty-state">No equity data yet. Execute some signals to start tracking your performance.</div>
-      )}
-
-      {positions?.positions?.length > 0 && (
+      {pendingOlder.length > 0 && (
         <section className="section">
-          <h3 className="section-title">Current Positions (Core + External)</h3>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr><th>Symbol</th><th>Source</th><th>Entry Date</th><th>Entry Price</th><th>Current Price</th><th>Qty</th><th>P&L %</th></tr>
-              </thead>
-              <tbody>
-                {positions.positions.map((p: any) => (
-                  <tr key={`${p.source}-${p.symbol}`}>
-                    <td className="font-bold">
-                      {p.breakout_candidate && (
-                        <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
-                      )}
-                      {p.symbol}
-                    </td>
-                    <td>
-                      <span className={`action-badge ${p.source === 'Core' ? 'badge-executed' : 'badge-skipped'}`} style={{ fontSize: '10px' }}>
-                        {p.source}
-                      </span>
-                    </td>
-                    <td>{p.entry_date}</td>
-                    <td>₹{p.entry_price?.toLocaleString()}</td>
-                    <td>₹{p.current_price?.toLocaleString()}</td>
-                    <td>{p.quantity}</td>
-                    <td style={{ color: (p.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444' }}>{p.pnl_pct}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h2 className="section-title">⏳ Open/Pending Signals</h2>
+          <div className="signals-grid">
+            {pendingOlder.map((s: any) => (
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
+            ))}
           </div>
         </section>
       )}
@@ -1411,686 +1207,225 @@ function PerformancePage() {
   );
 }
 
-/* ─── Risk Audit Page ────────────────────────────────────── */
-function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [savedResult, setSavedResult] = useState<any>(null);
-  const [savedError, setSavedError] = useState('');
-  const [holdingsStatus, setHoldingsStatus] = useState<any>(null);
-  const [holdingsStatusLoading, setHoldingsStatusLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-  const [savedSortConfig, setSavedSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-  const [deleteAllArmed, setDeleteAllArmed] = useState(false);
-
-  const [savedLoading, setSavedLoading] = useState(false);
-
-  const loadHoldingsStatus = async () => {
-    setHoldingsStatusLoading(true);
-    try {
-      const data = await api.getHoldingsStatus();
-      setHoldingsStatus(data);
-    } catch (err: any) {
-      setHoldingsStatus({ storage_ready: false, error: err?.message || 'Failed to load holdings status' });
-    } finally {
-      setHoldingsStatusLoading(false);
-    }
-  };
-
-  const loadSavedHoldings = async () => {
-    setSavedLoading(true);
-    try {
-      setSavedError('');
-      const data = await api.getSavedHoldings();
-      setSavedResult(data);
-    } catch (err: any) {
-      console.error('Failed to load saved holdings', err);
-      setSavedResult(null);
-      setSavedError(err?.message || 'Failed to load saved holdings');
-    } finally {
-      setSavedLoading(false);
-    }
-  };
+/* ─── History Page ────────────────────────────────────────── */
+function HistoryPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSavedHoldings();
-    loadHoldingsStatus();
+    api.getActionHistory()
+      .then(setHistory)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+  if (loading) return <div className="loading">Retrieving history...</div>;
+
+  return (
+    <div className="history">
+      <h2 className="section-title">📜 Action History</h2>
+      {history.length > 0 ? (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr><th>Date</th><th>Symbol</th><th>Action</th><th>Price</th><th>Qty</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {history.map((a: any, idx: number) => (
+                <tr key={idx} onClick={() => onSelectStock(a)} className="clickable-row">
+                  <td>{a.recorded_at ? new Date(a.recorded_at).toLocaleDateString() : (a.date || 'N/A')}</td>
+                  <td className="font-bold">{a.symbol}</td>
+                  <td><span className={`action-badge ${a.action === 'EXECUTED' ? 'badge-executed' : 'badge-skipped'}`}>{a.action}</span></td>
+                  <td>₹{a.actual_price?.toLocaleString()}</td>
+                  <td>{a.quantity}</td>
+                  <td>{a.regime}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">No recorded actions found.</div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Performance Page ────────────────────────────────────── */
+function PerformancePage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getPerformance()
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="loading">Calculating performance metrics...</div>;
+  if (!data) return <div className="empty-state">Performance data currently unavailable.</div>;
+
+  return (
+    <div className="performance">
+      <div className="dashboard-top-row">
+        <div className="card performance-card">
+          <div className="card-label">Strategy CAGR</div>
+          <div className="performance-value" style={{ color: data.cagr >= 0 ? '#22c55e' : '#ef4444' }}>
+            {data.cagr >= 0 ? '+' : ''}{data.cagr}%
+          </div>
+          <div className="card-meta">Benchmark: {data.benchmark_cagr}%</div>
+        </div>
+        <div className="card performance-card">
+          <div className="card-label">Max Drawdown</div>
+          <div className="performance-value" style={{ color: '#ef4444' }}>{data.max_drawdown}%</div>
+          <div className="card-meta">Benchmark: {data.benchmark_drawdown}%</div>
+        </div>
+        <div className="card performance-card">
+          <div className="card-label">Sharpe Ratio</div>
+          <div className="performance-value" style={{ color: data.sharpe >= 1 ? '#22c55e' : '#eab308' }}>
+            {data.sharpe}
+          </div>
+          <div className="card-meta">Risk-adjusted return</div>
+        </div>
+      </div>
+
+      <section className="section" style={{ height: '400px', marginTop: '2rem' }}>
+        <h3 className="section-title">Equity Curve</h3>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data.equity_curve}>
+            <XAxis dataKey="date" hide />
+            <YAxis hide domain={['auto', 'auto']} />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="strategy" stroke="#3b82f6" dot={false} strokeWidth={2} name="MRI Strategy" />
+            <Line type="monotone" dataKey="benchmark" stroke="#94a3b8" dot={false} strokeWidth={2} name="Nifty 50" />
+          </LineChart>
+        </ResponsiveContainer>
+      </section>
+    </div>
+  );
+}
+
+/* ─── Risk Audit Page ─────────────────────────────────────── */
+function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [results, setRiskResults] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isRegrading, setIsRegrading] = useState(false);
+
+  const loadStatus = async () => {
+    try {
+      const res = await api.getHoldingsStatus();
+      setStatus(res);
+    } catch (err) { console.error(err); }
   };
 
-  const handleSavedSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (savedSortConfig && savedSortConfig.key === key && savedSortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSavedSortConfig({ key, direction });
-  };
-
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) return ' ↕️';
-    return sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
-  };
-
-  const getSavedSortIcon = (key: string) => {
-    if (!savedSortConfig || savedSortConfig.key !== key) return ' ↕️';
-    return savedSortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
-  };
-
-  const getEffectiveCurrentPrice = (h: any) => {
-    const live = h?.live_price;
-    const eod = h?.current_price;
-    const cost = h?.avg_cost;
-    return (live ?? eod ?? cost ?? null);
-  };
-
-  const getSortableValue = (row: any, key: string) => {
-    if (!row) return null;
-    switch (key) {
-      case 'current_effective':
-        return getEffectiveCurrentPrice(row);
-      case 'below_200ema':
-        return row?.below_200ema === true ? 1 : (row?.below_200ema === false ? 0 : null);
-      default:
-        return row[key];
-    }
-  };
-
-  const sortedHoldings = useMemo(() => {
-    if (!result?.holdings) return [];
-    let sortableItems = [...result.holdings];
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        let aVal = getSortableValue(a, sortConfig.key);
-        let bVal = getSortableValue(b, sortConfig.key);
-
-        if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-        if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-
-        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [result?.holdings, sortConfig]);
-
-  const sortedSavedHoldings = useMemo(() => {
-    if (!savedResult?.holdings) return [];
-    let sortableItems = [...savedResult.holdings];
-    if (savedSortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        let aVal = getSortableValue(a, savedSortConfig.key);
-        let bVal = getSortableValue(b, savedSortConfig.key);
-
-        if (aVal === null || aVal === undefined) aVal = savedSortConfig.direction === 'asc' ? Infinity : -Infinity;
-        if (bVal === null || bVal === undefined) bVal = savedSortConfig.direction === 'asc' ? Infinity : -Infinity;
-
-        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-        if (aVal < bVal) return savedSortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return savedSortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [savedResult?.holdings, savedSortConfig]);
-
-  const [dragging, setDragging] = useState(false);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
-  };
+  useEffect(() => { loadStatus(); }, []);
 
   const handleUpload = async () => {
     if (!file) return;
-    setLoading(true);
-    setError('');
+    setUploading(true);
     try {
-      const data = await api.uploadPortfolioCsv(file);
-
-      // ── Immediately show analysis if the server returned it ──
-      if (data?.analysis) {
-        setResult(data.analysis);
-      }
-
-      await loadSavedHoldings();
-      await loadHoldingsStatus();
-
-      const persisted = (data?.digital_twin_row_count !== undefined && data?.digital_twin_row_count !== null)
-        ? ` (Saved: ${data.digital_twin_row_count} holdings)` : '';
-
-      const pending = data?.pending_symbols?.length > 0
-        ? `\n\n⏳ ${data.pending_symbols.length} unknown symbol(s) queued for scoring: ${data.pending_symbols.slice(0, 5).join(', ')}${data.pending_symbols.length > 5 ? '...' : ''}. Scores will appear after the next pipeline run.`
-        : '';
-
-      if (data?.digital_twin_saved) {
-        alert(`✅ Portfolio uploaded and analysed!${persisted}${pending}`);
-      } else {
-        const extra = data?.digital_twin_error ? `\n\nSave failed: ${data.digital_twin_error}` : '';
-        alert(`Portfolio uploaded and analysed, but could not save holdings to your Digital Twin.${extra}${pending}`);
-      }
-    } catch (err: any) {
-      setError(err.message === 'Failed to fetch'
-        ? '⚠️ Connection Failed: Please ensure you have "Clear Cache & Re-deployed" on Render and your VITE_API_URL is correct.'
-        : (err.message || 'Failed to analyze portfolio'));
-    } finally {
-      setLoading(false);
-    }
+      const res = await api.uploadHoldings(file);
+      setRiskResults(res);
+      await loadStatus();
+      alert(`Portfolio uploaded and analysed!`);
+    } catch (err: any) { alert(err.message); }
+    finally { setUploading(false); }
   };
 
-  const handleSaveToHoldings = async () => {
-    if (!result?.holdings) return;
-    setSaveLoading(true);
-    try {
-      const holdingsToSave = result.holdings.map((h: any) => ({
-        symbol: h.symbol,
-        quantity: h.quantity,
-        avg_cost: h.avg_cost
-      }));
-
-      const resp = await api.saveHoldingsBulk(holdingsToSave);
-      const persisted = resp?.persisted_holdings_count !== undefined ? ` (Persisted: ${resp.persisted_holdings_count})` : '';
-
-      alert(`Success: ${holdingsToSave.length} holdings saved to your Digital Twin!${persisted}`);
-      loadSavedHoldings();
-      loadHoldingsStatus();
-    } catch (err: any) {
-      console.error('Save failed:', err);
-      alert(err.message || 'Failed to save holdings to database');
-    } finally {
-      setSaveLoading(false);
-    }
-  };
-
-  const handleDeleteHolding = async (symbol: string) => {
-    if (!confirm(`Remove ${symbol} from your holdings?`)) return;
-    try {
-      await api.deleteHolding(symbol);
-      loadSavedHoldings();
-      loadHoldingsStatus();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete holding');
-    }
-  };
-
-  const handleDeleteAllHoldings = async () => {
-    if (!deleteAllArmed) {
-      setDeleteAllArmed(true);
-      window.setTimeout(() => setDeleteAllArmed(false), 8000);
+  const handleDeleteAll = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      window.setTimeout(() => setShowDeleteConfirm(false), 8000);
       return;
     }
     try {
-      const resp = await api.deleteAllHoldings();
-      const persisted = resp?.persisted_holdings_count !== undefined ? `Remaining: ${resp.persisted_holdings_count}` : '';
-      alert(`Holdings deleted. ${persisted}`.trim());
-      loadSavedHoldings();
-      loadHoldingsStatus();
-      setDeleteAllArmed(false);
-    } catch (err: any) {
-      setDeleteAllArmed(false);
-      alert(err.message || 'Failed to delete holdings');
-    }
+      await api.deleteAllHoldings();
+      setRiskResults(null);
+      await loadStatus();
+      setShowDeleteConfirm(false);
+      alert("Holdings deleted.");
+    } catch (err: any) { alert(err.message); }
   };
 
-  const handleRegradeHoldings = async () => {
+  const handleRegrade = async () => {
+    const doEmail = confirm("Email you the updated Risk Audit report after regrading?");
+    setIsRegrading(true);
     try {
-      const sendEmail = confirm('Email you the updated Risk Audit report after regrading?');
-      setSavedLoading(true);
-      const data = await api.regradeHoldingsSync(sendEmail);
-      setSavedResult(data);
-      await loadHoldingsStatus();
-      alert(`Regrade complete. ${sendEmail ? 'If SES is configured, you should also receive an email.' : ''}`.trim());
-    } catch (err: any) {
-      alert(err.message || 'Failed to start regrade');
-    }
-    finally {
-      setSavedLoading(false);
-    }
+      const res = await api.regradeHoldingsSync(doEmail);
+      setRiskResults(res);
+      await loadStatus();
+      alert(`Regrade complete. ${doEmail ? "Email sent." : ""}`);
+    } catch (err: any) { alert(err.message); }
+    finally { setIsRegrading(false); }
   };
 
-  const hasSavedHoldings = !!(savedResult && savedResult.holdings && savedResult.holdings.length > 0);
-  const canDeleteSavedHoldings = (holdingsStatus?.holdings_count ?? 0) > 0 || hasSavedHoldings;
-
-  // Manual Add States
-  const [manualSym, setManualSym] = useState('');
-  const [manualQty, setManualQty] = useState('');
-  const [manualCost, setManualCost] = useState('');
-  const [manualSuggs, setManualSuggs] = useState<any[]>([]);
-
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (manualSym.length >= 2) {
-        try {
-          const results = await api.searchStocks(manualSym);
-          setManualSuggs(results || []);
-        } catch (e) {
-          setManualSuggs([]);
-        }
-      } else {
-        setManualSuggs([]);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [manualSym]);
-
-  const handleManualAdd = async () => {
-    if (!manualSym || !manualQty || !manualCost) {
-      alert('Please fill out all fields: Symbol, Quantity, and Avg Cost');
-      return;
-    }
-    try {
-      setLoading(true);
-      await api.addHolding(manualSym, parseFloat(manualQty), parseFloat(manualCost));
-      setManualSym(''); setManualQty(''); setManualCost('');
-      loadSavedHoldings();
-      loadHoldingsStatus();
-    } catch (err: any) {
-      alert(err.message || 'Failed to add holding');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadPanel = (
-    <div className="upload-section animate-fade-in">
-      <div
-        className={`upload-zone ${dragging ? 'dragging' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => document.getElementById('csv-upload')?.click()}
-      >
-        <div className="upload-icon">📂</div>
-        <div className="upload-text">
-          <span className="upload-main-text">
-            {file ? file.name : 'Click or Drag CSV here'}
-          </span>
-          <span className="upload-sub-text">
-            Supports Zerodha, Groww, and standard portfolio CSVs.
-          </span>
-          <div className="info-shelf" style={{ marginTop: '12px', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#64748b' }}>
-            <strong>💡 Required Columns:</strong> <code>symbol</code>, <code>quantity</code>, <code>avg_cost</code>
-          </div>
-        </div>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFileChange}
-          className="file-input"
-          id="csv-upload"
-        />
-      </div>
-
-      <div className="upload-actions">
-        <button
-          className="btn-upload-submit"
-          onClick={handleUpload}
-          disabled={!file || loading}
-        >
-          {loading ? '🔬 Analyzing Portfolio...' : (hasSavedHoldings ? 'Upload / Replace Portfolio' : 'Analyze Risk Now')}
-        </button>
-
-        {file && !loading && (
-          <button className="link-btn" onClick={() => setFile(null)}>
-            Clear selection
+  return (
+    <div className="risk-audit">
+      <section className="panel-card" style={{ marginBottom: '2rem' }}>
+        <h2 className="section-title">🛡️ Digital Twin Portfolio Audit</h2>
+        <p className="card-meta">Upload your Zerodha/External holdings CSV to analyze quality and regime alignment.</p>
+        
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} className="form-input" style={{ width: 'auto' }} />
+          <button className="btn-primary" onClick={handleUpload} disabled={!file || uploading}>
+            {uploading ? 'Analyzing...' : 'Upload & Audit'}
           </button>
-        )}
-      </div>
-    </div>
-  );
-
-  const savedHoldingsSection = (
-    <section className="section" style={{ marginTop: hasSavedHoldings ? '16px' : '40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-        <h2 className="section-title" style={{ margin: 0 }}>🛡️ My Holdings (Digital Twin)</h2>
-        {canDeleteSavedHoldings && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button className="btn-secondary" onClick={handleRegradeHoldings} disabled={savedLoading} style={{ padding: '8px 12px' }}>
-              {savedLoading ? '🔄 Regrading...' : '🔄 Regrade Holdings'}
-            </button>
-            {deleteAllArmed && (
-              <div style={{ color: '#fecaca', fontSize: '12px', fontWeight: 700 }}>
-                Click again to permanently delete all holdings
-              </div>
-            )}
-            <button className="btn-danger" onClick={handleDeleteAllHoldings} style={{ padding: '8px 12px' }}>
-              {deleteAllArmed ? '⚠️ Confirm Delete All' : '🗑️ Delete Saved Portfolio'}
-            </button>
-            {deleteAllArmed && (
-              <button className="link-btn" onClick={() => setDeleteAllArmed(false)}>
-                Cancel
+          {status?.holdings_count > 0 && (
+            <>
+              <button className="btn-secondary" onClick={handleRegrade} disabled={isRegrading}>
+                {isRegrading ? 'Regrading...' : '🔄 Regrade Sync'}
               </button>
-            )}
+              <button className="btn-danger" onClick={handleDeleteAll} style={{ opacity: showDeleteConfirm ? 1 : 0.6 }}>
+                {showDeleteConfirm ? '⚠️ Click to Confirm Delete' : '🗑️ Clear Digital Twin'}
+              </button>
+            </>
+          )}
+        </div>
+        {status && (
+          <div style={{ marginTop: '1rem', fontSize: '13px', color: '#94a3b8' }}>
+            Current Twin: <b>{status.holdings_count} symbols</b> | Last Audit: {status.last_audit ? new Date(status.last_audit).toLocaleString() : 'Never'}
           </div>
         )}
-      </div>
-      <p className="section-subtitle">
-        Your persistent portfolio layer. These assets are tracked in real-time against MRI intelligence.
-      </p>
+      </section>
 
-      <div className="stats-row" style={{ marginTop: '12px' }}>
-        <div className="stat-card" style={{ flex: 1 }}>
-          <div className="stat-label">Storage Status</div>
-          <div className="card-meta" style={{ marginTop: '8px', lineHeight: 1.5 }}>
-            {holdingsStatusLoading ? (
-              <span>Checking…</span>
-            ) : holdingsStatus ? (
-              <>
-                <div><b>storage_ready</b>: {String(!!holdingsStatus.storage_ready)}</div>
-                {holdingsStatus.client_id && <div><b>client_id</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.client_id}</span></div>}
-                {holdingsStatus.database && <div><b>database</b>: <span style={{ fontFamily: 'monospace' }}>{holdingsStatus.database}</span></div>}
-                {holdingsStatus.holdings_count !== undefined && holdingsStatus.holdings_count !== null && (
-                  <div><b>holdings_count</b>: {holdingsStatus.holdings_count}</div>
-                )}
-                {holdingsStatus.ungraded_symbols_count !== undefined && holdingsStatus.ungraded_symbols_count !== null && (
-                  <div><b>ungraded_symbols_count</b>: {holdingsStatus.ungraded_symbols_count}</div>
-                )}
-                {holdingsStatus.error && (
-                  <div style={{ color: '#ef4444', marginTop: '6px' }}><b>error</b>: {String(holdingsStatus.error)}</div>
-                )}
-              </>
-            ) : (
-              <span>Not available</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {savedLoading ? (
-        <div className="loading">📡 Loading your Digital Twin...</div>
-      ) : savedError ? (
-        <div className="empty-state">⚠️ Could not load your Digital Twin: {savedError}</div>
-      ) : savedResult && savedResult.storage_ready === false ? (
-        <div className="empty-state">⚠️ Holdings storage not ready yet: {savedResult.summary || savedResult.error || 'Unknown error'}</div>
-      ) : hasSavedHoldings ? (
-        <>
-          {savedResult.analysis_error && (
-            <div className="empty-state" style={{ marginBottom: '12px' }}>
-              ⚠️ MRI analysis is falling back (scores may be missing): {String(savedResult.analysis_error)}
-            </div>
-          )}
-          {savedResult.pricing_note && (
-            <div className="empty-state" style={{ marginBottom: '12px' }}>{savedResult.pricing_note}</div>
-          )}
-          <div className="stats-row">
-            <div className="stat-card" style={{ borderLeft: `4px solid ${savedResult.risk_level === 'EXTREME' || savedResult.risk_level === 'HIGH' ? '#ef4444' : savedResult.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>
-              <div className="stat-label">Portfolio Risk</div>
-              <div className="stat-value">{savedResult.risk_level}</div>
-              <div className="card-meta">Score: {savedResult.risk_score_pct || '0%'}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Invested Value</div>
-              <div className="stat-value">₹{savedResult.total_portfolio_value?.toLocaleString()}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Holdings</div>
-              <div className="stat-value">{savedResult.holdings_count}</div>
-            </div>
+      {results && (
+        <section className="panel-card">
+          <h3 className="section-title">Audit Results</h3>
+          <div className="summary-stats" style={{ marginBottom: '2rem' }}>
+             <div className="summary-stat">
+               <span className="summary-label">Audit Grade</span>
+               <span className="summary-value" style={{ color: '#22c55e' }}>{results.overall_grade}</span>
+             </div>
+             <div className="summary-stat">
+               <span className="summary-label">Regime Alignment</span>
+               <span className="summary-value">{results.regime_alignment_score}/100</span>
+             </div>
           </div>
 
-          <div className="table-container" style={{ marginTop: '24px' }}>
+          <div className="table-container">
             <table className="data-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSavedSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSavedSortIcon('symbol')}</th>
-                  <th onClick={() => handleSavedSort('score')} style={{ cursor: 'pointer', userSelect: 'none' }}>Score{getSavedSortIcon('score')}</th>
-                  <th onClick={() => handleSavedSort('alignment')} style={{ cursor: 'pointer', userSelect: 'none' }}>Alignment{getSavedSortIcon('alignment')}</th>
-                  <th onClick={() => handleSavedSort('quantity')} style={{ cursor: 'pointer', userSelect: 'none' }}>Qty{getSavedSortIcon('quantity')}</th>
-                  <th onClick={() => handleSavedSort('avg_cost')} style={{ cursor: 'pointer', userSelect: 'none' }}>Avg Cost{getSavedSortIcon('avg_cost')}</th>
-                  <th onClick={() => handleSavedSort('current_effective')} style={{ cursor: 'pointer', userSelect: 'none' }}>Current{getSavedSortIcon('current_effective')}</th>
-                  <th onClick={() => handleSavedSort('pnl_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>P&L %{getSavedSortIcon('pnl_pct')}</th>
-                  <th onClick={() => handleSavedSort('risk_contribution_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>Risk Contrib{getSavedSortIcon('risk_contribution_pct')}</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Symbol</th><th>Qty</th><th>MRI Score</th><th>Setup</th><th>Verdict</th></tr></thead>
               <tbody>
-                {sortedSavedHoldings.map((h: any) => (
-                  <tr key={h.symbol}>
-                    <td className="font-bold">
-                      {h.breakout_candidate && (
-                        <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
-                      )}
-                      {h.symbol}
-                    </td>
-                    <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
-                    <td>
-                      <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
-                        {h.alignment}
-                      </span>
-                    </td>
-                    <td>{h.quantity}</td>
-                    <td>₹{h.avg_cost?.toLocaleString()}</td>
-                    <td>
-                      {(() => {
-                        const p = getEffectiveCurrentPrice(h);
-                        const label = h.live_price ? 'LIVE (Yahoo)' : (h.current_price ? 'EOD (DB)' : (h.avg_cost ? 'COST' : 'N/A'));
-                        return (
-                          <>
-                            ₹{p !== null && p !== undefined ? Number(p).toLocaleString() : 'N/A'}
-                            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{label}</div>
-                          </>
-                        );
-                      })()}
-                    </td>
-                    <td style={{ color: (h.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                      {h.pnl_pct >= 0 ? '+' : ''}{h.pnl_pct}%
-                    </td>
-                    <td>{h.risk_contribution_pct}%</td>
-                    <td>
-                      <button className="btn-danger" onClick={() => handleDeleteHolding(h.symbol)} style={{ padding: '4px 8px', fontSize: '12px' }}>
-                        🗑️ Remove
-                      </button>
-                    </td>
+                {results.results.map((r: any) => (
+                  <tr key={r.symbol} onClick={() => onSelectStock(r)} className="clickable-row">
+                    <td className="font-bold">{r.symbol}</td>
+                    <td>{r.quantity}</td>
+                    <td><span className="score-badge">{r.total_score}/100</span></td>
+                    <td>{r.setup_grade}</td>
+                    <td>{r.quality_category || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </>
-      ) : (
-        <div className="empty-state">There are no stocks in your portfolio to track here right now. When you add, it will be displayed.</div>
+        </section>
       )}
-    </section>
-  );
-
-  return (
-    <div className="risk-audit">
-      <h2 className="section-title">Portfolio Risk Audit</h2>
-      <p className="section-subtitle">
-        Upload your broker holdings CSV (e.g., Zerodha) to instantly analyze your portfolio's risk against our MRI framework.
-      </p>
-
-      {hasSavedHoldings && savedHoldingsSection}
-      {!hasSavedHoldings && uploadPanel}
-      {hasSavedHoldings && (
-        <div style={{ marginTop: '18px' }}>
-          <div className="empty-state" style={{ marginBottom: '10px' }}>
-            Upload a new CSV below to replace/analyze your portfolio.
-          </div>
-          {uploadPanel}
-        </div>
-      )}
-
-      {result && (
-        <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-          <button
-            className="btn-secondary"
-            onClick={handleSaveToHoldings}
-            disabled={saveLoading}
-            style={{ backgroundColor: '#059669', color: 'white' }}
-          >
-            {saveLoading ? 'Saving...' : '💾 Save to My Holdings'}
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => setResult(null)}
-          >
-            ❌ Clear Result
-          </button>
-        </div>
-      )}
-
-      {error && <div className="error-alert" style={{ marginTop: '16px' }}>{error}</div>}
-
-      {result && result.async_processing && result.missing_symbols && result.missing_symbols.length > 0 && (
-        <div className="card" style={{ marginTop: '24px', backgroundColor: '#1e3a8a', borderColor: '#3b82f6', borderLeft: '4px solid #60a5fa' }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#93c5fd' }}>Data Discovery in Progress 🕵️‍♂️</h3>
-          <p style={{ margin: 0, fontSize: '14px', color: '#bfdbfe', lineHeight: 1.5 }}>
-            Note: We are currently downloading deep historical data for: <strong>{result.missing_symbols.join(', ')}</strong>.<br />
-            You will receive an updated, complete portfolio risk report via email in approx 20 minutes once the data is ingested and scored.<br />
-            In the meantime, here is the partial diagnosis for your recognized holdings:
-          </p>
-        </div>
-      )}
-
-      {result && result.holdings && (
-        <div className="audit-results animate-fade-in" style={{ marginTop: '24px' }}>
-          {result.pricing_note && (
-            <div className="empty-state" style={{ marginBottom: '12px' }}>{result.pricing_note}</div>
-          )}
-          <div className="stats-row">
-            <div className="stat-card" style={{ borderLeft: `4px solid ${result.risk_level === 'EXTREME' || result.risk_level === 'HIGH' ? '#ef4444' : result.risk_level === 'MODERATE' ? '#eab308' : '#22c55e'}` }}>
-              <div className="stat-label">Result Risk</div>
-              <div className="stat-value">{result.risk_level}</div>
-              <div className="card-meta">Score: {result.risk_score_pct}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Market Regime</div>
-              <div className="stat-value">{result.regime}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Invested Value</div>
-              <div className="stat-value">₹{result.total_portfolio_value?.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <div className="card summary-card" style={{ marginTop: '16px', backgroundColor: '#1e293bcc', padding: '16px', borderRadius: '8px' }}>
-            <h3 style={{ fontSize: '16px', marginBottom: '8px', color: '#e2e8f0' }}>Diagnosis</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>{result.risk_level_description}</p>
-            <p style={{ color: '#cbd5e1', fontSize: '15px', marginTop: '12px' }}>{result.summary}</p>
-          </div>
-
-          <section className="section" style={{ marginTop: '24px' }}>
-            <h3 className="section-title">Holding Breakdown</h3>
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th title="The stock symbol or ticker name" onClick={() => handleSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSortIcon('symbol')}</th>
-                    <th title="The MRI trend score (0-100) combining moving averages, momentum, and volume" onClick={() => handleSort('score')} style={{ cursor: 'pointer', userSelect: 'none' }}>Score (0-100){getSortIcon('score')}</th>
-                    <th title="Whether the stock's trend aligns with the overall Market Regime" onClick={() => handleSort('alignment')} style={{ cursor: 'pointer', userSelect: 'none' }}>Alignment{getSortIcon('alignment')}</th>
-                    <th title="Percentage of your total portfolio value invested in this stock" onClick={() => handleSort('weight_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>Weight{getSortIcon('weight_pct')}</th>
-                    <th title="How much of your portfolio's total risk comes from this specific holding" onClick={() => handleSort('risk_contribution_pct')} style={{ cursor: 'pointer', userSelect: 'none' }}>Risk Contribution{getSortIcon('risk_contribution_pct')}</th>
-                    <th title="Latest price used for display: Live Yahoo if available, else EOD DB close, else your avg cost" onClick={() => handleSort('current_effective')} style={{ cursor: 'pointer', userSelect: 'none' }}>Current{getSortIcon('current_effective')}</th>
-                    <th title="WARNING: Stocks trading below their 200-day Exponential Moving Average are in long-term downtrends" onClick={() => handleSort('below_200ema')} style={{ cursor: 'pointer', userSelect: 'none' }}>Below 200 EMA{getSortIcon('below_200ema')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedHoldings.map((h: any) => (
-                    <tr key={h.symbol} onClick={() => onSelectStock(h)} className="clickable-row">
-                      <td className="font-bold">
-                        {h.breakout_candidate && (
-                          <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
-                        )}
-                        {h.symbol}
-                      </td>
-                      <td>{h.score !== null ? `${h.score}/100` : 'N/A'}</td>
-                      <td>
-                        <span className={`action-badge ${h.alignment === 'ALIGNED' || h.alignment === 'STRONG' ? 'badge-executed' : h.alignment === 'WEAK' ? 'badge-skipped' : ''}`}>
-                          {h.alignment}
-                        </span>
-                      </td>
-                      <td>{h.weight_pct}%</td>
-                      <td>{h.risk_contribution_pct}%</td>
-                      <td>
-                        {(() => {
-                          const p = getEffectiveCurrentPrice(h);
-                          const label = h.live_price ? 'LIVE (Yahoo)' : (h.current_price ? 'EOD (DB)' : (h.avg_cost ? 'COST' : 'N/A'));
-                          return (
-                            <>
-                              ₹{p !== null && p !== undefined ? Number(p).toLocaleString() : 'N/A'}
-                              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{label}</div>
-                            </>
-                          );
-                        })()}
-                      </td>
-                      <td>
-                        {h.score === null ? 'N/A' : (h.below_200ema ? <span style={{ color: '#ef4444' }}>⚠️ YES</span> : 'NO')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      )}
-
-      <section className="section" style={{ marginTop: '24px', backgroundColor: '#fdfcfe', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e9d5ff' }}>
-        <h3 className="section-title">✨ Add Core Holding Manually</h3>
-        <p className="section-subtitle">No CSV? No problem. Add your 20+ stocks one-by-one with 100% precision.</p>
-
-        <div className="manual-entry-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-          <div style={{ position: 'relative', flex: 2, minWidth: '200px' }}>
-            <input
-              type="text" placeholder="Symbol (e.g. RELIANCE)"
-              value={manualSym} onChange={e => setManualSym(e.target.value)}
-              className="form-input" style={{ marginBottom: 0 }}
-            />
-            {manualSuggs.length > 0 && (
-              <div className="autocomplete-dropdown" style={{
-                position: 'absolute', top: '100%', left: 0, right: 0,
-                backgroundColor: 'white', border: '1px solid #e2e8f0',
-                borderRadius: '8px', zIndex: 1000, marginTop: '4px', maxHeight: '160px', overflowY: 'auto'
-              }}>
-                {manualSuggs.map(s => (
-                  <div key={s.symbol} onClick={() => { setManualSym(s.symbol); setManualSuggs([]); }} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
-                    <span style={{ fontWeight: 700 }}>{s.symbol}</span> <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.company_name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <input type="number" placeholder="Qty" value={manualQty} onChange={e => setManualQty(e.target.value)} className="form-input" style={{ flex: 1, marginBottom: 0, minWidth: '80px' }} />
-          <input type="number" placeholder="Avg Cost" value={manualCost} onChange={e => setManualCost(e.target.value)} className="form-input" style={{ flex: 1, marginBottom: 0, minWidth: '100px' }} />
-          <button className="btn-primary" onClick={handleManualAdd} style={{ padding: '8px 20px', whiteSpace: 'nowrap' }}>Add to Portfolio</button>
-        </div>
-      </section>
-
-      {!hasSavedHoldings && savedHoldingsSection}
     </div>
   );
 }
@@ -2123,14 +1458,10 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
       sortableItems.sort((a, b) => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
-
-        // Handle nulls/undefined for sorting
         if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
         if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-
         if (typeof aVal === 'string') aVal = aVal.toLowerCase();
         if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -2139,20 +1470,15 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     return sortableItems;
   }, [watchlist, sortConfig]);
 
-  // Search Logic for Autocomplete
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (newSymbol.length >= 2) {
         try {
           const results = await api.searchStocks(newSymbol);
           setSuggestions(results || []);
-        } catch (e) {
-          setSuggestions([]);
-        }
-      } else {
-        setSuggestions([]);
-      }
-    }, 300); // Debounce
+        } catch (e) { setSuggestions([]); }
+      } else { setSuggestions([]); }
+    }, 300);
     return () => clearTimeout(timer);
   }, [newSymbol]);
 
@@ -2160,35 +1486,26 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     try {
       const data = await api.getWatchlist();
       setWatchlist(data);
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { console.error(err); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    loadWatchlist();
-  }, []);
+  useEffect(() => { loadWatchlist(); }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const symbol = newSymbol.trim().toUpperCase();
     if (!symbol) return;
     setError('');
-
-    // OPTIMISTIC UPDATE: Add to local state immediately
     const optimisticItem = { symbol, price: null, score: null, trend_alignment: null, is_pending: true };
     setWatchlist(prev => [optimisticItem, ...prev]);
     setNewSymbol('');
     setSuggestions([]);
-
     try {
       await api.addToWatchlist(symbol);
       loadWatchlist();
     } catch (err: any) {
       setError(err.message || 'Failed to add symbol');
-      // Rollback on error
       setWatchlist(prev => prev.filter(item => item.symbol !== symbol));
     }
   };
@@ -2198,104 +1515,57 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     try {
       await api.removeFromWatchlist(symbol);
       loadWatchlist();
-    } catch (err: any) {
-      alert(err.message || 'Failed to remove symbol');
-    }
+    } catch (err: any) { alert(err.message); }
   };
 
-  if (loading) return <div className="loading">Loading watchlist...</div>;
+  if (loading) return <div className="loading">Loading your watchlist...</div>;
 
   return (
     <div className="watchlist">
-      <h2 className="section-title">Stock Watchlist</h2>
-      <p className="section-subtitle">Track custom stocks without owning them. They will be automatically updated in the daily pipeline.</p>
-
-      <div className="info-shelf" style={{ margin: '12px 0', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', fontSize: '0.85rem' }}>
-        <strong>💡 CSV Required Format:</strong> Just a single column named <code>symbol</code> (e.g., RELIANCE, INFOSYS).
-      </div>
-
-      <div className="watchlist-controls" style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-        <form onSubmit={handleAdd} className="watchlist-add-form" style={{ flex: 1, display: 'flex', gap: '8px', position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="Type Company or Symbol (e.g. TATA)"
-            value={newSymbol}
-            onChange={e => setNewSymbol(e.target.value)}
-            className="form-input"
-            style={{ marginBottom: 0 }}
-          />
-          {suggestions.length > 0 && (
-            <div className="autocomplete-dropdown" style={{
-              position: 'absolute', top: '100%', left: 0, right: 0,
-              backgroundColor: 'white', border: '1px solid #e2e8f0',
-              borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-              zIndex: 1000, marginTop: '4px', maxHeight: '200px', overflowY: 'auto'
-            }}>
-              {suggestions.map(s => (
-                <div
-                  key={s.symbol}
-                  onClick={() => { setNewSymbol(s.symbol); setSuggestions([]); }}
-                  style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                >
-                  <span style={{ fontWeight: 700, color: '#1e293b' }}>{s.symbol}</span>
-                  <span style={{ marginLeft: '8px', fontSize: '0.85rem', color: '#64748b' }}>{s.company_name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          <button type="submit" className="btn-primary" style={{ whiteSpace: 'nowrap' }}>Add Stock</button>
+      <section className="panel-card" style={{ marginBottom: '2rem' }}>
+        <h2 className="section-title">👀 Market Watchlist</h2>
+        <p className="card-meta">Track specific symbols for regime alignment and score triggers.</p>
+        
+        <form onSubmit={handleAdd} style={{ marginTop: '1.5rem', display: 'flex', gap: '10px', position: 'relative' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Enter symbol (e.g. RELIANCE)"
+              value={newSymbol}
+              onChange={e => setNewSymbol(e.target.value.toUpperCase())}
+              className="form-input"
+              style={{ width: '100%' }}
+            />
+            {suggestions.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="suggestion-item" onClick={() => { setNewSymbol(s.symbol); setSuggestions([]); }}>
+                    <b>{s.symbol}</b> - {s.company_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0 24px' }}>Add to List</button>
         </form>
-
-        <div className="csv-upload-btn">
-          <input
-            type="file"
-            id="watchlist-csv"
-            accept=".csv"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              try {
-                setLoading(true);
-                const result = await api.uploadWatchlistCsv(file);
-                const added = result?.total_processed ?? result?.added ?? '?';
-                const msg = result?.message || 'Watchlist updated from CSV';
-                alert(`✅ ${msg} (${added} symbols processed)`);
-                loadWatchlist();
-              } catch (err: any) {
-                alert(err.message || 'Upload failed');
-              } finally {
-                setLoading(false);
-                // Reset input so same file can be re-uploaded
-                e.target.value = '';
-              }
-            }}
-            style={{ display: 'none' }}
-          />
-          <label htmlFor="watchlist-csv" className="btn-secondary" style={{ cursor: 'pointer', padding: '10px 16px', display: 'inline-block', borderRadius: '8px' }}>
-            📁 Upload CSV
-          </label>
-        </div>
-      </div>
-
-      {error && <div className="error-alert">{error}</div>}
+        {error && <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '8px' }}>{error}</div>}
+      </section>
 
       {watchlist.length > 0 ? (
         <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
-                <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol{getSortIcon('symbol')}</th>
-                <th onClick={() => handleSort('price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price{getSortIcon('price')}</th>
-                <th onClick={() => handleSort('score')} style={{ cursor: 'pointer', userSelect: 'none' }}>MRI Grade{getSortIcon('score')}</th>
-                <th onClick={() => handleSort('trend_alignment')} style={{ cursor: 'pointer', userSelect: 'none' }}>Trend{getSortIcon('trend_alignment')}</th>
-                <th>Actions</th>
+                <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {getSortIcon('symbol')}</th>
+                <th onClick={() => handleSort('price')} style={{ cursor: 'pointer' }}>Price {getSortIcon('price')}</th>
+                <th onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>MRI Grade {getSortIcon('score')}</th>
+                <th onClick={() => handleSort('trend_alignment')} style={{ cursor: 'pointer' }}>Trend {getSortIcon('trend_alignment')}</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {sortedWatchlist.map(item => (
-                <tr key={item.symbol} style={item.is_pending ? { opacity: 0.6 } : {}} onClick={() => !item.is_pending && onSelectStock(item)} className={item.is_pending ? '' : 'clickable-row'}>
+              {sortedWatchlist.map((item: any) => (
+                <tr key={item.symbol} className={item.is_pending ? 'row-pending' : 'clickable-row'} onClick={() => !item.is_pending && onSelectStock(item)}>
                   <td className="font-bold">
                     {item.breakout_candidate && (
                       <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
@@ -2314,7 +1584,6 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                       <span className="badge-pending">🔄 Tracking...</span>
                     )}
                   </td>
-
                   <td>
                     {item.is_pending ? '...' : (item.trend_alignment ? (
                       <span className={`action-badge ${item.trend_alignment === 'BULL' ? 'badge-executed' : 'badge-skipped'}`}>
@@ -2323,7 +1592,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                     ) : 'N/A')}
                   </td>
                   <td>
-                    <button className="btn-danger" onClick={() => handleRemove(item.symbol)} disabled={item.is_pending} style={{ padding: '4px 8px', fontSize: '12px' }}>
+                    <button className="btn-danger" onClick={(e) => { e.stopPropagation(); handleRemove(item.symbol); }} disabled={item.is_pending} style={{ padding: '4px 8px', fontSize: '12px' }}>
                       🗑️ Remove
                     </button>
                   </td>
@@ -2355,6 +1624,11 @@ function PerxPage() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Safe initialization for all arrays
+  const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  
   // Compare state
   const [queryB, setQueryB] = useState('');
   const [symbolB, setSymbolB] = useState('');
@@ -2370,415 +1644,230 @@ function PerxPage() {
   const [archiveFilter, setArchiveFilter] = useState({ symbol: '', lifecycle: '', minScore: '', maxScore: '' });
   const [archiveLoading, setArchiveLoading] = useState(false);
 
-  // History state
-  const [history, setHistory] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-
-  const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
-
-  const loadRecentReports = async () => {
+  // 1. Safe Data Loading
+  const loadData = async () => {
     try {
-      const rows = await api.getRecentPerxReports(8);
-      setRecentReports(Array.isArray(rows) ? rows : []);
-    } catch (err) {
-      console.error(err);
-      setRecentReports([]);
-    }
-  };
+      const reports = await api.getRecentPerxReports(8);
+      if (Array.isArray(reports)) setRecentReports(reports);
+    } catch (e) { console.error("Recent reports load failed", e); }
 
-  const loadPortfolioSymbols = async () => {
     try {
       const pos = await api.getPositions();
-      if (!pos) return;
-      const syms = Array.from(new Set([
-        ...(pos.core_positions || []).map((p: any) => p?.symbol),
-        ...(pos.swing_positions || []).map((p: any) => p?.symbol)
-      ])).filter(Boolean) as string[];
-      setPortfolioSymbols(syms);
-    } catch (err) {
-      console.error("Failed to load portfolio symbols for PERX selection", err);
-      setPortfolioSymbols([]);
-    }
+      if (pos) {
+        const syms = Array.from(new Set([
+          ...(pos.core_positions || []).map((p: any) => p?.symbol),
+          ...(pos.swing_positions || []).map((p: any) => p?.symbol)
+        ])).filter(Boolean) as string[];
+        setPortfolioSymbols(syms);
+      }
+    } catch (e) { console.error("Portfolio symbols load failed", e); }
   };
 
-  useEffect(() => { 
-    loadRecentReports();
-    loadPortfolioSymbols();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.length >= 2) {
+      if (query && query.length >= 2) {
         try {
-          const results = await api.searchCompanies(query);
-          setSuggestions(results || []);
+          const res = await api.searchCompanies(query);
+          setSuggestions(Array.isArray(res) ? res : []);
           setShowSuggestions(true);
         } catch { setSuggestions([]); }
-      } else { setSuggestions([]); setShowSuggestions(false); }
+      }
     }, 250);
     return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (queryB.length >= 2) {
+      if (queryB && queryB.length >= 2) {
         try {
-          const results = await api.searchCompanies(queryB);
-          setSuggestionsB(results || []);
+          const res = await api.searchCompanies(queryB);
+          setSuggestionsB(Array.isArray(res) ? res : []);
           setShowSuggestionsB(true);
         } catch { setSuggestionsB([]); }
-      } else { setSuggestionsB([]); setShowSuggestionsB(false); }
+      }
     }, 250);
     return () => clearTimeout(timer);
   }, [queryB]);
 
   const selectSuggestion = (company: any, isB = false) => {
+    if (!company) return;
     if (isB) { setSymbolB(company.symbol); setQueryB(company.company_name || company.symbol); setShowSuggestionsB(false); }
     else { setSymbol(company.symbol); setQuery(company.company_name || company.symbol); setShowSuggestions(false); }
   };
 
-  const loadHistory = async (sym: string) => {
-    if (!sym) return;
-    setHistoryLoading(true);
-    try { 
-      const res = await api.getPerxHistory(sym, 30);
-      setHistory(Array.isArray(res) ? res : []); 
-    } catch (err) {
-      console.error("PERX History error:", err);
-      setHistory([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  const loadArchive = async (p = 0) => {
-    setArchiveLoading(true);
-    try {
-      const params: any = { limit: 20, offset: p * 20 };
-      if (archiveFilter?.symbol) params.symbol = archiveFilter.symbol;
-      if (archiveFilter?.lifecycle) params.lifecycle_stage = archiveFilter.lifecycle;
-      if (archiveFilter?.minScore) params.min_score = Number(archiveFilter.minScore);
-      if (archiveFilter?.maxScore) params.max_score = Number(archiveFilter.maxScore);
-      const res = await api.getPerxArchive(params);
-      setArchiveRows(Array.isArray(res?.rows) ? res.rows : []);
-      setArchiveTotal(Number(res?.total || 0));
-      setArchivePage(p);
-    } catch (err) {
-      console.error("PERX Archive error:", err);
-      setArchiveRows([]);
-    } finally {
-      setArchiveLoading(false);
-    }
-  };
-
-  useEffect(() => { if (tab === 'archive') loadArchive(); }, [tab]);
-  useEffect(() => { if (tab === 'archive') loadArchive(0); }, [archiveFilter]);
-
   const handleScan = async (e?: any) => {
     if (e) e.preventDefault();
-    const trimmed = symbol.trim().toUpperCase();
-    if (!trimmed) { setStatus('Select a company to generate a PERX report.'); return; }
+    if (!symbol) { setStatus('Select a company first.'); return; }
     setLoading(true); setStatus(null);
     try {
-      const result = await api.scanPerx(trimmed, includeDebate);
+      const result = await api.scanPerx(symbol, includeDebate);
       setActiveReport(result);
-      setStatus(`PERX report generated for ${trimmed}.`);
-      loadRecentReports();
-      loadHistory(trimmed);
-    } catch (err: any) { setStatus(err.message || 'PERX scan failed.'); }
+      setStatus(`PERX report generated.`);
+      loadData();
+      const hist = await api.getPerxHistory(symbol, 30);
+      if (Array.isArray(hist)) setHistory(hist);
+    } catch (err: any) { setStatus(err.message || 'Scan failed.'); }
     finally { setLoading(false); }
   };
 
-  const handleOpenReport = async (reportId: string) => {
+  const handleOpenReport = async (id: string) => {
+    if (!id) return;
     setLoading(true); setStatus(null);
     try {
-      const report = await api.getPerxReport(reportId);
-      const sym = report.symbol;
-      setActiveReport({ report_id: reportId, report: report.report_json, meta: report });
-      setSymbol(sym); setQuery(report.company_name || sym);
-      setStatus(`Loaded stored PERX report ${reportId.slice(0, 8)}.`);
-      loadHistory(sym);
-    } catch (err: any) { setStatus(err.message || 'Failed to load stored PERX report.'); }
+      const report = await api.getPerxReport(id);
+      if (report) {
+        setActiveReport({ report_id: id, report: report.report_json, meta: report });
+        setSymbol(report.symbol);
+        setQuery(report.company_name || report.symbol);
+        const hist = await api.getPerxHistory(report.symbol, 30);
+        if (Array.isArray(hist)) setHistory(hist);
+      }
+    } catch (err: any) { setStatus('Failed to load report.'); }
     finally { setLoading(false); }
   };
 
   const handleEmailReport = async () => {
-    const reportId = activeReport?.report_id || activeReport?.meta?.id;
-    if (!reportId) { setStatus('No active PERX report available to email.'); return; }
-    setEmailing(true); setStatus(null);
-    try { const result = await api.emailPerxReport(reportId); setStatus(`PERX report emailed to ${result.recipient}.`); }
-    catch (err: any) { setStatus(err.message || 'Failed to send PERX report email.'); }
+    const id = activeReport?.report_id || activeReport?.meta?.id;
+    if (!id) return;
+    setEmailing(true);
+    try { await api.emailPerxReport(id); setStatus('Email sent.'); }
+    catch { setStatus('Email failed.'); }
     finally { setEmailing(false); }
   };
 
   const handleCompare = async (e?: any) => {
     if (e) e.preventDefault();
-    const a = symbol.trim().toUpperCase();
-    const b = symbolB.trim().toUpperCase();
-    if (!a || !b) { setStatus('Select two companies to compare.'); return; }
-    if (a === b) { setStatus('Select two different companies.'); return; }
-    setComparing(true); setStatus(null); setComparison(null);
-    try { setComparison(await api.comparePerx(a, b, includeDebate)); setStatus(`Comparison ready: ${a} vs ${b}.`); }
-    catch (err: any) { setStatus(err.message || 'PERX compare failed.'); }
+    if (!symbol || !symbolB) { setStatus('Select two companies.'); return; }
+    setComparing(true); setStatus(null);
+    try {
+      const res = await api.comparePerx(symbol, symbolB, includeDebate);
+      setComparison(res);
+    } catch { setStatus('Comparison failed.'); }
     finally { setComparing(false); }
   };
 
+  const handleLoadArchive = async (p = 0) => {
+    setArchiveLoading(true);
+    try {
+      const params: any = { limit: 20, offset: p * 20 };
+      if (archiveFilter.symbol) params.symbol = archiveFilter.symbol;
+      if (archiveFilter.lifecycle) params.lifecycle_stage = archiveFilter.lifecycle;
+      const res = await api.getPerxArchive(params);
+      if (res) {
+        setArchiveRows(Array.isArray(res.rows) ? res.rows : []);
+        setArchiveTotal(res.total || 0);
+        setArchivePage(p);
+      }
+    } catch { setArchiveRows([]); }
+    finally { setArchiveLoading(false); }
+  };
+
+  useEffect(() => { if (tab === 'archive') handleLoadArchive(); }, [tab]);
+
+  const report = activeReport?.report;
+  const header = report?.header || {};
+  const narrative = report?.narrative_transition || {};
+  const engineOutputs = report?.engine_outputs || {};
+
   return (
-    <div style={{ display: 'grid', gap: '16px', padding: '16px' }}>
-      {/* ─── Tab Navigation ─── */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+    <div style={{ padding: '20px', color: '#e2e8f0', minHeight: '80vh' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         {['scan', 'compare', 'archive'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t as PerxTab)}
-            className={`btn-${tab === t ? 'primary' : 'secondary'}`}
-            style={{ textTransform: 'capitalize', padding: '8px 20px', cursor: 'pointer' }}
+            style={{
+              padding: '10px 24px', borderRadius: '8px', border: '1px solid #1e293b',
+              background: tab === t ? '#3b82f6' : '#0f172a', color: 'white',
+              cursor: 'pointer', textTransform: 'capitalize', fontWeight: 600
+            }}
           >
             {t}
           </button>
         ))}
       </div>
 
-      {/* ─── Tab Content ─── */}
       {tab === 'scan' && (
-        <>
-          <section className="panel-card" style={{ display: 'grid', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h2 className="section-title" style={{ margin: 0 }}>PERX Institutional Scan</h2>
-                <p className="card-meta">Generate a company-first rerating report.</p>
+        <div style={{ display: 'grid', gap: '20px' }}>
+          <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '1.5rem' }}>PERX Institutional Scan</h2>
+            <form onSubmit={handleScan} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', width: '300px' }}>
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  placeholder="Company name or symbol..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white' }}
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {suggestions.map((s, i) => (
+                      <div key={i} onClick={() => selectSuggestion(s)} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #1e293b' }} onMouseEnter={e => e.currentTarget.style.background = '#1e293b'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <b>{s.symbol}</b> - {s.company_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-
-            <form onSubmit={handleScan} style={{ display: 'grid', gap: '12px' }}>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <div style={{ position: 'relative', display: 'inline-block', width: '100%', maxWidth: '320px' }}>
-                  <input
-                    className="form-input"
-                    value={query || ''}
-                    onChange={e => setQuery(e.target.value)}
-                    onFocus={() => (suggestions || []).length > 0 && setShowSuggestions(true)}
-                    placeholder="Search company or symbol..."
-                    style={{ width: '100%' }}
-                  />
-                  {showSuggestions && (suggestions || []).length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '240px', overflowY: 'auto' }}>
-                      {(suggestions || []).map((s, i) => (
-                        <button key={i} onClick={() => selectSuggestion(s)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                          <span style={{ fontWeight: 700 }}>{s?.symbol}</span>
-                          <span style={{ color: '#94a3b8', marginLeft: '8px' }}>{s?.company_name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#cbd5e1', marginTop: '12px' }}>
-                  <input type="checkbox" checked={!!includeDebate} onChange={e => setIncludeDebate(e.target.checked)} />
-                  Include forensic debate
-                </label>
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button className="btn-primary" type="submit" disabled={loading}>{loading ? 'Generating...' : 'Generate Report'}</button>
-                <button className="btn-secondary" type="button" disabled={emailing || !activeReport} onClick={handleEmailReport}>{emailing ? 'Sending...' : 'Email Report'}</button>
-              </div>
+              <button type="submit" disabled={loading} style={{ padding: '12px 24px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer' }}>
+                {loading ? 'Processing...' : 'Run Scan'}
+              </button>
             </form>
-            {status && <div style={{ padding: '10px', borderRadius: '8px', background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', fontSize: '13px' }}>{status}</div>}
-
-            {(portfolioSymbols || []).length > 0 && (
-              <div style={{ marginTop: '4px' }}>
-                <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Your Portfolio Stocks</div>
+            {portfolioSymbols.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px' }}>Portfolio Stocks</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {(portfolioSymbols || []).map(sym => (
-                    <button
-                      key={sym}
-                      onClick={() => { setSymbol(sym); setQuery(sym); setShowSuggestions(false); }}
-                      style={{
-                        padding: '6px 12px',
-                        background: symbol === sym ? '#1d4ed8' : '#0f172a',
-                        border: '1px solid #1e293b',
-                        borderRadius: '999px',
-                        fontSize: '12px',
-                        color: symbol === sym ? 'white' : '#cbd5e1',
-                        cursor: 'pointer',
-                        fontWeight: symbol === sym ? 700 : 400
-                      }}
-                    >
-                      {sym}
-                    </button>
+                  {portfolioSymbols.map(sym => (
+                    <button key={sym} onClick={() => { setSymbol(sym); setQuery(sym); setShowSuggestions(false); }} style={{ padding: '6px 14px', borderRadius: '20px', border: '1px solid #334155', background: symbol === sym ? '#3b82f6' : '#0f172a', color: 'white', cursor: 'pointer' }}>{sym}</button>
                   ))}
                 </div>
               </div>
             )}
-          </section>
-
+          </div>
           {report && (
-            <section className="panel-card" style={{ display: 'grid', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3 className="section-title">{header?.company_name || 'Report'}</h3>
-                  <p className="card-meta">{header?.symbol} | {header?.sector} | {header?.report_timestamp}</p>
-                </div>
-                <div style={{ padding: '8px 16px', borderRadius: '999px', background: '#1d4ed8', color: 'white', fontWeight: 700 }}>
-                  PERX {header?.perx_score}/100 | {header?.lifecycle_phase}
-                </div>
-              </div>
-
-              {header?.prior_baseline && (
-                <div style={{ padding: '10px 14px', background: '#1e293b', borderRadius: '8px', fontSize: '12px', borderLeft: '4px solid #3b82f6', color: '#cbd5e1', marginBottom: '12px' }}>
-                  <b>Institutional Baseline:</b> {header.prior_baseline}
-                </div>
-              )}
-
-              {history && history.length > 1 && (
-                <div style={{ padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b' }}>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Score Trajectory</div>
-                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                    {(history || []).map(h => (
-                      <div key={h?.id || Math.random()} style={{ padding: '6px 10px', background: '#1e293b', borderRadius: '6px', minWidth: '80px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#60a5fa' }}>{h?.perx_score}</div>
-                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>{h?.created_at ? new Date(h.created_at).toLocaleDateString() : 'N/A'}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div style={{ padding: '14px', border: '1px solid #1e293b', borderRadius: '12px', background: '#0f172a' }}>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Executive Summary</div>
-                  <div style={{ lineHeight: '1.6', color: '#e2e8f0' }}>{report?.executive_summary}</div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '12px' }}>
-                  <div className="summary-stat">
-                    <span className="summary-label">Narrative Shift</span>
-                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}><b>Emerging:</b> {narrative?.emerging_market_perception}</div>
-                  </div>
-                  <div className="summary-stat">
-                    <span className="summary-label">Final Verdict</span>
-                    <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '4px' }}>{report?.final_institutional_verdict}</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          <section className="panel-card">
-            <h3 className="section-title">Recent Scans</h3>
-            <div style={{ display: 'grid', gap: '8px' }}>
-              {(recentReports || []).map(r => (
-                <button key={r?.id || Math.random()} onClick={() => handleOpenReport(r?.id)} style={{ textAlign: 'left', padding: '12px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', color: '#e2e8f0', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <b>{r?.company_name}</b>
-                    <span style={{ color: '#94a3b8' }}>{r?.perx_score} pts</span>
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{r?.symbol} • {r?.lifecycle_stage} • {r?.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</div>
-                </button>
-              ))}
+            <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+               <h3>{header.company_name} ({header.symbol})</h3>
+               <div style={{ padding: '10px 20px', background: '#2563eb', borderRadius: '30px', display: 'inline-block', fontWeight: 800 }}>PERX {header.perx_score}/100</div>
+               <p style={{ marginTop: '15px' }}>{report.executive_summary}</p>
             </div>
-          </section>
-        </>
+          )}
+        </div>
       )}
 
       {tab === 'compare' && (
-        <>
-          <section className="panel-card">
-            <h2 className="section-title">Institutional Comparison</h2>
-            <form onSubmit={handleCompare} style={{ display: 'grid', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ position: 'relative' }}>
-                  <input className="form-input" value={query} onChange={e => setQuery(e.target.value)} onFocus={() => (suggestions || []).length > 0 && setShowSuggestions(true)} placeholder="Company A..." style={{ width: '100%' }} />
-                  {showSuggestions && (suggestions || []).length > 0 && (
-                    <div className="autocomplete-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '180px', overflowY: 'auto' }}>
-                      {(suggestions || []).map((s, i) => <button key={i} onClick={() => selectSuggestion(s)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s?.symbol}: {s?.company_name}</button>)}
-                    </div>
-                  )}
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <input className="form-input" value={queryB} onChange={e => setQueryB(e.target.value)} onFocus={() => (suggestionsB || []).length > 0 && setShowSuggestionsB(true)} placeholder="Company B..." style={{ width: '100%' }} />
-                  {showSuggestionsB && (suggestionsB || []).length > 0 && (
-                    <div className="autocomplete-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999, background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', marginTop: '4px', maxHeight: '180px', overflowY: 'auto' }}>
-                      {(suggestionsB || []).map((s, i) => <button key={i} onClick={() => selectSuggestion(s, true)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', color: '#e2e8f0', cursor: 'pointer' }}>{s?.symbol}: {s?.company_name}</button>)}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button className="btn-primary" type="submit" disabled={comparing}>{comparing ? 'Comparing...' : 'Compare Side-by-Side'}</button>
-            </form>
-          </section>
-
-          {comparison && (
-            <div style={{ display: 'grid', gap: '16px' }}>
-              <div style={{ padding: '16px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '15px' }}>Comparison Summary</h3>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {(comparison?.comparison?.key_differentials || []).map((d: string, i: number) => (
-                    <span key={i} style={{ padding: '4px 10px', borderRadius: '6px', background: '#0f172a', fontSize: '12px', border: '1px solid #1e293b' }}>{d}</span>
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {[comparison?.left, comparison?.right].filter(Boolean).map((r, i) => (
-                  <section key={i} className="panel-card" style={{ padding: '14px', borderTop: `4px solid ${comparison?.comparison?.winner?.perx_score === (i === 0 ? 'left' : 'right') ? '#22c55e' : '#1e293b'}` }}>
-                    <div style={{ marginBottom: '12px' }}>
-                      <h4 style={{ margin: 0 }}>{r?.company_name}</h4>
-                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#60a5fa', margin: '4px 0' }}>{r?.header?.perx_score}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{r?.header?.lifecycle_phase}</div>
-                    </div>
-                    <div style={{ display: 'grid', gap: '8px' }}>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>MRI:</b> {r?.engine_outputs?.mri?.total_score}</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>QIF:</b> {r?.engine_outputs?.qif?.score} ({r?.engine_outputs?.qif?.category})</div>
-                      <div style={{ fontSize: '12px', padding: '8px', background: '#0f172a', borderRadius: '8px' }}><b>Fragility:</b> {r?.engine_outputs?.fragility?.level}</div>
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px' }}>
+          <h3>Side-by-Side Comparison</h3>
+          <p style={{ color: '#94a3b8' }}>Search and select two companies above to compare institutional scores.</p>
+        </div>
       )}
 
       {tab === 'archive' && (
-        <section className="panel-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 className="section-title" style={{ margin: 0 }}>Research Archive</h2>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{archiveTotal || 0} reports found</div>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-            <input className="form-input" placeholder="Filter symbol..." value={archiveFilter?.symbol || ''} onChange={e => setArchiveFilter({...archiveFilter, symbol: e.target.value})} />
-            <select className="form-input" value={archiveFilter?.lifecycle || ''} onChange={e => setArchiveFilter({...archiveFilter, lifecycle: e.target.value})}>
-              <option value="">All Stages</option>
-              {['Accumulation', 'Early Rerating', 'Institutional Expansion', 'Euphoria', 'Distribution'].map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #1e293b', textAlign: 'left', color: '#94a3b8' }}>
-                  <th style={{ padding: '12px 8px' }}>Symbol</th>
-                  <th style={{ padding: '12px 8px' }}>Score</th>
-                  <th style={{ padding: '12px 8px' }}>Stage</th>
-                  <th style={{ padding: '12px 8px' }}>Date</th>
-                  <th style={{ padding: '12px 8px' }}>Action</th>
+        <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px' }}>
+          <h3>Research Archive</h3>
+          <table style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155' }}>
+                <th style={{ padding: '12px' }}>Symbol</th>
+                <th style={{ padding: '12px' }}>Score</th>
+                <th style={{ padding: '12px' }}>Stage</th>
+                <th style={{ padding: '12px' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {archiveRows.map(r => (
+                <tr key={r.id} style={{ borderBottom: '1px solid #0f172a' }}>
+                  <td style={{ padding: '12px' }}>{r.symbol}</td>
+                  <td style={{ padding: '12px', fontWeight: 700, color: '#3b82f6' }}>{r.perx_score}</td>
+                  <td style={{ padding: '12px' }}>{r.lifecycle_stage}</td>
+                  <td style={{ padding: '12px' }}><button onClick={() => { setTab('scan'); handleOpenReport(r.id); }} style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View</button></td>
                 </tr>
-              </thead>
-              <tbody>
-                {(archiveRows || []).map(r => (
-                  <tr key={r?.id || Math.random()} style={{ borderBottom: '1px solid #0f172a' }}>
-                    <td style={{ padding: '12px 8px' }}><b>{r?.symbol}</b></td>
-                    <td style={{ padding: '12px 8px', color: '#60a5fa', fontWeight: 700 }}>{r?.perx_score}</td>
-                    <td style={{ padding: '12px 8px' }}>{r?.lifecycle_stage}</td>
-                    <td style={{ padding: '12px 8px', color: '#94a3b8' }}>{r?.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}</td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <button className="link-btn" onClick={() => { setTab('scan'); handleOpenReport(r?.id); }}>Open</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -2791,13 +1880,11 @@ function App() {
   const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow' | 'perx'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
-  // ... rest of the component
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('reset_token');
   const [isResetFlow, setIsResetFlow] = useState(!!resetToken);
 
   const handleResetComplete = () => {
-    // Clear URL without page reload
     window.history.replaceState({}, document.title, window.location.pathname);
     setIsResetFlow(false);
   };
@@ -2884,38 +1971,13 @@ function App() {
         />
       )}
 
-      {/* Mobile Bottom Navigation */}
       <nav className="mobile-nav">
-        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-          <span className="nav-icon">🏠</span> Dash
-        </button>
-        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
-          <span className="nav-icon">🚀</span> Swing
-        </button>
-        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
-          <span className="nav-icon">🛡️</span> Audit
-        </button>
-
-        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
-          <span className="nav-icon">👀</span> Watchlist
-        </button>
-        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
-          <span className="nav-icon">🏛️</span> PERX
-        </button>
-        <button className={`mobile-nav-link ${page === 'performance' ? 'active' : ''}`} onClick={() => setPage('performance')}>
-          <span className="nav-icon">📈</span> Perf
-        </button>
-        <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
-          <span className="nav-icon">📋</span> History
-        </button>
-        {isAdmin() && (
-          <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
-            <span className="nav-icon">🛡️</span> Admin
-          </button>
-        )}
-        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }}>
-          <span className="nav-icon">🚪</span> Logout
-        </button>
+        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>🏠 Dash</button>
+        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>🚀 Swing</button>
+        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>🛡️ Audit</button>
+        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>👀 Watchlist</button>
+        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>🏛️ PERX</button>
+        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }}>🚪 Logout</button>
       </nav>
     </div>
   );
