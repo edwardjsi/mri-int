@@ -1,6 +1,16 @@
 # **MRI Sessions Log**
 
+## **May 09, 2026: PERX Compare Mode Runtime Fix**
+
+**Context:** Resolving a "Blank Screen" crash occurring during side-by-side PERX comparisons.
+**Actions:**
+1.  **Data Mapping Fix:** Corrected the frontend state management to store only the `comparison` payload from the API response, matching the UI's expected property paths.
+2.  **Runtime Protection:** Implemented optional chaining (`?.`) across the comparison result renderer to prevent JavaScript crashes if technical or fundamental data is partially missing for a symbol.
+3.  **Symbol Auto-Resolution:** Extended the fuzzy symbol matching logic to both primary and secondary inputs in the Compare tool.
+**Result:** Compare mode now renders correctly even with partial datasets, and the blank screen crash is resolved.
+
 ## **May 09, 2026: PERX Archive & Compare Fixes**
+
 
 **Context:** Resolving issues where PERX reports were not appearing in the archive and the comparison link was non-functional.
 **Actions:**

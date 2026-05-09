@@ -2,7 +2,22 @@
 
 ---
 
+## 📅 Session: May 09, 2026 — PERX Compare Runtime Fix
+**Session Start:** 15:40 IST
+**Session End:** 16:00 IST
+
+### What Was Done This Session
+
+#### 1. Compare Runtime Fix ✅
+- [x] Fixed `setComparison` to target the nested payload.
+- [x] Added optional chaining to all comparison UI fields.
+- [x] Implemented dual-symbol auto-resolution from text inputs.
+
+### ⏳ Left for Next Session
+1. **UX Polish**: Add specific "N/A" indicators for missing peer data in the comparison view.
+
 ## 📅 Session: May 09, 2026 — PERX Archive & Compare Fixes
+
 **Session Start:** 15:10 IST
 **Session End:** 15:30 IST
 

@@ -1767,12 +1767,39 @@ function PerxPage() {
 
   const handleCompare = async (e?: any) => {
     if (e) e.preventDefault();
-    if (!symbol || !symbolB) { setStatus('Select two companies.'); return; }
+    
+    // Resolve Symbol A
+    let symA = symbol;
+    if (!symA && query) {
+      const found = suggestions.find(s => 
+        s.symbol.toUpperCase() === query.toUpperCase() || 
+        (s.company_name && s.company_name.toUpperCase() === query.toUpperCase())
+      );
+      symA = found ? found.symbol : query.trim().toUpperCase();
+    }
+
+    // Resolve Symbol B
+    let symB = symbolB;
+    if (!symB && queryB) {
+      const found = suggestionsB.find(s => 
+        s.symbol.toUpperCase() === queryB.toUpperCase() || 
+        (s.company_name && s.company_name.toUpperCase() === queryB.toUpperCase())
+      );
+      symB = found ? found.symbol : queryB.trim().toUpperCase();
+    }
+
+    if (!symA || !symB) { setStatus('Select two companies.'); return; }
     setComparing(true); setStatus(null);
     try {
-      const res = await api.comparePerx(symbol, symbolB, includeDebate);
-      setComparison(res);
-    } catch { setStatus('Comparison failed.'); }
+      const res = await api.comparePerx(symA, symB, includeDebate);
+      if (res && res.comparison) {
+        setComparison(res.comparison);
+      } else {
+        setStatus('Invalid comparison response.');
+      }
+    } catch (err: any) { 
+      setStatus(err.message || 'Comparison failed.'); 
+    }
     finally { setComparing(false); }
   };
 
@@ -2053,32 +2080,32 @@ function PerxPage() {
           {comparing && <div style={{ padding: '40px', textAlign: 'center', background: '#1e293b', borderRadius: '12px' }}>🔄 Generating Side-by-Side Institutional Comparison...</div>}
 
           {comparison && !comparing && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gap: '20px' }}>
               {/* Left Column (Symbol A) */}
-              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison.winner.perx_score === 'left' ? '6px solid #22c55e' : '1px solid #334155' }}>
+              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison?.winner?.perx_score === 'left' ? '6px solid #22c55e' : '1px solid #334155' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.left.company_name}</h4>
-                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.left.header.perx_score}</div>
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.left?.company_name || comparison.left?.symbol}</h4>
+                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.left?.header?.perx_score}</div>
                 </div>
                 <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.left.lifecycle.stage}</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.left.engine_outputs.mri.total_score}/100</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.left.engine_outputs.qif.category}</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.left.engine_outputs.fragility.level}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.left?.lifecycle?.stage}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.left?.engine_outputs?.mri?.total_score}/100</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.left?.engine_outputs?.qif?.category}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.left?.engine_outputs?.fragility?.level}</div>
                 </div>
               </div>
 
               {/* Right Column (Symbol B) */}
-              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison.winner.perx_score === 'right' ? '6px solid #22c55e' : '1px solid #334155' }}>
+              <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', borderLeft: comparison.comparison?.winner?.perx_score === 'right' ? '6px solid #22c55e' : '1px solid #334155' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.right.company_name}</h4>
-                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.right.header.perx_score}</div>
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{comparison.right?.company_name || comparison.right?.symbol}</h4>
+                  <div style={{ padding: '4px 12px', borderRadius: '12px', background: '#2563eb', fontWeight: 'bold' }}>{comparison.right?.header?.perx_score}</div>
                 </div>
                 <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.right.lifecycle.stage}</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.right.engine_outputs.mri.total_score}/100</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.right.engine_outputs.qif.category}</div>
-                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.right.engine_outputs.fragility.level}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Stage:</b> {comparison.right?.lifecycle?.stage}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>MRI Score:</b> {comparison.right?.engine_outputs?.mri?.total_score}/100</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>QIF Category:</b> {comparison.right?.engine_outputs?.qif?.category}</div>
+                  <div style={{ padding: '8px', background: '#0f172a', borderRadius: '6px' }}><b>Fragility:</b> {comparison.right?.engine_outputs?.fragility?.level}</div>
                 </div>
               </div>
 
@@ -2086,7 +2113,7 @@ function PerxPage() {
               <div style={{ gridColumn: 'span 2', padding: '20px', background: '#1e3a8a30', borderRadius: '12px', border: '1px solid #3b82f640' }}>
                 <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#60a5fa' }}>Institutional Differential</h4>
                 <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                  {comparison.comparison.key_differentials.map((d: string, i: number) => (
+                  {(comparison.comparison?.key_differentials || []).map((d: string, i: number) => (
                     <div key={i} style={{ fontSize: '13px', background: '#0f172a', padding: '6px 12px', borderRadius: '20px', border: '1px solid #1e293b' }}>• {d}</div>
                   ))}
                 </div>
