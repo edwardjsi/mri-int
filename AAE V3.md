@@ -13,6 +13,8 @@ Identify high-probability PE rerating candidates **before institutional consensu
 * ownership accumulation,
 * and valuation asymmetry.
 
+The platform is designed to be **80-90% deterministic** (rule-based and quantitative) while reserving **10-20% for high-leverage AI tasks** like narrative delta detection.
+
 ---
 
 # 1. Executive Summary
@@ -165,7 +167,7 @@ Immediate rejection if ANY condition is true:
 | Qualified audit opinion               | TRUE      |
 | Sudden CFO resignation                | TRUE      |
 | Repeated equity dilution              | TRUE      |
-| High related-party transaction growth | TRUE      |
+| High related-party transaction growth | TRUE (Proxy for potential siphoning) |
 
 ---
 
@@ -211,9 +213,9 @@ sector_models = {
 
 Each sector engine shall:
 
-* use sector-specific metrics,
+* use sector-specific metrics (e.g., CASA/NIM for Banks; Asset Turns/Concentration for EMS),
 * use sector-specific scoring,
-* normalize against sector medians.
+* normalize against sector medians to capture true outperformers.
 
 ---
 
@@ -363,6 +365,7 @@ NOT generic sentiment.
 * timeline evolution
 * narrative escalation
 * narrative deterioration
+* **Sentiment Deviation Index (SDI):** Flag "Management Theatre" by detecting when positive assertions are made while omitting negative qualifiers found elsewhere.
 
 ---
 
@@ -463,8 +466,8 @@ Confirm institutional accumulation.
 Track:
 
 * FII accumulation
-* DII accumulation
-* mutual fund additions
+* DII accumulation (Track net accumulation over multiple quarters)
+* Institutional Transition (Detection of retail-to-institutional ownership shift)
 * insider buying/selling
 * promoter holding changes
 * pledge changes
@@ -521,6 +524,7 @@ Track:
 * PEG ratio
 * sector premium/discount
 * historical valuation range
+* **Market Expectation Score:** Compare valuation to implied growth required for justification.
 
 ---
 
@@ -579,7 +583,8 @@ CREATE TABLE aae_false_positive_graveyard (
     failure_reason TEXT,
     rerating_score NUMERIC,
     post_failure_return NUMERIC,
-    lessons JSONB
+    lessons JSONB,
+    bear_thesis TEXT -- Forced counter-thesis for every high-conviction setup
 );
 ```
 

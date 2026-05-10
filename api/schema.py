@@ -446,27 +446,70 @@ def ensure_required_tables(conn) -> None:
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_perx_scores_generated ON public.perx_scores(generated_at DESC);")
 
-    # 19. Stock Sectors (Metadata)
+    # 21. AAE V3 Foundation
     cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS public.stock_sectors (
-            symbol VARCHAR(20) PRIMARY KEY,
-            company_name VARCHAR(255),
-            industry VARCHAR(100),
-            updated_at TIMESTAMPTZ DEFAULT NOW()
+        CREATE TABLE IF NOT EXISTS public.aae_governance_metrics (
+            symbol VARCHAR(20) NOT NULL,
+            fiscal_year INT NOT NULL,
+            fiscal_quarter INT NOT NULL,
+            promoter_holding_pct NUMERIC(6,2),
+            pledged_shares_pct NUMERIC(6,2),
+            auditor_flag BOOLEAN DEFAULT FALSE,
+            cfo_exit_flag BOOLEAN DEFAULT FALSE,
+            related_party_risk BOOLEAN DEFAULT FALSE,
+            governance_score NUMERIC(5,2),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (symbol, fiscal_year, fiscal_quarter)
         );
         """
     )
 
-    # 20. Daily Prices Indicator Expansion
-    indicator_cols = [
-        ("ema_10", "NUMERIC(12,4)"),
-        ("high_10d", "NUMERIC(12,4)"),
-        ("low_5d", "NUMERIC(12,4)"),
-        ("atr_14", "NUMERIC(12,4)")
-    ]
-    for col, col_type in indicator_cols:
-        cur.execute(f"ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS {col} {col_type};")
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_quarterly_financials (
+            id SERIAL PRIMARY KEY,
+            symbol VARCHAR(20) NOT NULL,
+            year INT NOT NULL,
+            quarter INT NOT NULL,
+            revenue NUMERIC,
+            gross_profit NUMERIC,
+            ebitda NUMERIC,
+            operating_income NUMERIC,
+            net_profit NUMERIC,
+            eps NUMERIC,
+            total_assets NUMERIC,
+            total_liabilities NUMERIC,
+            current_assets NUMERIC,
+            current_liabilities NUMERIC,
+            inventory NUMERIC,
+            receivables NUMERIC,
+            debt NUMERIC,
+            equity NUMERIC,
+            cfo NUMERIC,
+            capex NUMERIC,
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, year, quarter)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_quarterly_symbol_date ON public.aae_quarterly_financials(symbol, year DESC, quarter DESC);")
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_false_positive_graveyard (
+            id SERIAL PRIMARY KEY,
+            symbol VARCHAR(20) NOT NULL,
+            failure_type VARCHAR(50),
+            failure_reason TEXT,
+            rerating_score NUMERIC(6,2),
+            post_failure_return NUMERIC(6,2),
+            lessons JSONB,
+            bear_thesis TEXT,
+            recorded_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
 
     conn.commit()
     cur.close()
