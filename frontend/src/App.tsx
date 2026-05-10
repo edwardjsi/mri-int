@@ -900,12 +900,13 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [profile, setProfile] = useState<any>(null);
   const [qualityImprovers, setQualityImprovers] = useState<any[]>([]);
   const [trajectoryAlerts, setTrajectoryAlerts] = useState<any[]>([]);
+  const [aaeCandidates, setAaeCandidates] = useState<any[]>([]);
   const [showAddCapital, setShowAddCapital] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     try {
-      const [r, s, p, sum, prof, pos, improvers, alerts] = await Promise.all([
+      const [r, s, p, sum, prof, pos, improvers, alerts, aae] = await Promise.all([
         api.getRegime(),
         api.getTodaySignals().catch(() => ({ signals: [] })),
         api.getPendingSignals().catch(() => []),
@@ -914,6 +915,7 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         api.getPositions().catch(() => ({ positions: [] })),
         api.getTopImprovers(6).catch(() => []),
         api.getTrajectoryAlerts().catch(() => []),
+        api.getAaeTopCandidates().catch(() => []),
       ]);
       setRegime(r);
       setSignals(s);
@@ -923,6 +925,7 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
       setPositions(pos);
       setQualityImprovers(improvers);
       setTrajectoryAlerts(alerts);
+      setAaeCandidates(aae);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -1115,6 +1118,56 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             ))}
           </div>
         )}
+      </section>
+
+      {/* ── Active Alpha Engine (AAE V3) Section ── */}
+      <section className="section" style={{ marginTop: '24px' }}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%)',
+          border: '1px solid rgba(34, 197, 94, 0.25)',
+          borderRadius: '16px',
+          padding: '20px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h2 className="section-title" style={{ margin: 0, color: '#86efac' }}>🚀 Active Alpha Candidates (AAE V3)</h2>
+              <p className="section-subtitle" style={{ color: '#94a3b8', marginTop: '4px' }}>
+                Institutional Rerating Intelligence: Deep-dive fundamental inflections.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            {aaeCandidates.length > 0 ? aaeCandidates.slice(0, 8).map(c => (
+              <div key={c.symbol} 
+                onClick={() => onSelectStock({ symbol: c.symbol, score: c.master_score })}
+                className="clickable-row"
+                style={{ 
+                  background: 'rgba(15, 23, 42, 0.6)', 
+                  border: '1px solid rgba(148, 163, 184, 0.1)', 
+                  borderRadius: '10px', 
+                  padding: '14px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '15px' }}>{c.symbol}</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>{c.sector}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#22c55e', fontWeight: 800, fontSize: '16px' }}>{c.master_score}</div>
+                  <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>AAE SCORE</div>
+                </div>
+              </div>
+            )) : (
+              <div className="empty-state" style={{ gridColumn: 'span 100%', padding: '10px' }}>
+                {loading ? 'Consulting the AAE V3 Engine...' : 'No AAE candidates detected for today.'}
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* ── My Positions ── */}
