@@ -23,6 +23,7 @@ from api.watchlist import router as watchlist_router
 from api.admin import router as admin_router
 from api.fundamental import router as fundamental_router
 from api.perx import router as perx_router
+from api.aae import router as aae_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
 
@@ -76,6 +77,7 @@ app.include_router(watchlist_router)
 app.include_router(admin_router)
 app.include_router(fundamental_router)
 app.include_router(perx_router)
+app.include_router(aae_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])

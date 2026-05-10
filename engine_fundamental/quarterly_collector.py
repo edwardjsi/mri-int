@@ -64,6 +64,17 @@ def fetch_and_store_quarterly(symbol):
         net_profit = sanitize_val(row.get('Net Income'))
         eps = sanitize_val(row.get('Basic EPS')) or sanitize_val(row.get('Diluted EPS'))
         
+        # Bank specific
+        nii = sanitize_val(row.get('Net Interest Income'))
+        # Non-Interest Income = Operating Revenue - Interest Income (approx)
+        # Or just use yf's 'Other Non Interest Expense' and reverse if possible, 
+        # but yf also has 'Operating Revenue'
+        non_interest_income = None
+        if nii is not None and revenue is not None:
+             # Total Revenue in banks is often Interest Income + Fees
+             # This is a rough proxy
+             non_interest_income = revenue - sanitize_val(row.get('Interest Income', 0))
+
         total_assets = sanitize_val(bs_row.get('Total Assets'))
         total_liabilities = sanitize_val(bs_row.get('Total Liabilities Net Minority Interest'))
         current_assets = sanitize_val(bs_row.get('Current Assets'))
@@ -81,11 +92,12 @@ def fetch_and_store_quarterly(symbol):
         cur.execute("""
             INSERT INTO public.aae_quarterly_financials (
                 symbol, year, quarter, revenue, gross_profit, ebitda, 
-                operating_income, net_profit, eps, total_assets, 
+                operating_income, net_profit, eps, net_interest_income,
+                non_interest_income, total_assets, 
                 total_liabilities, current_assets, current_liabilities, 
                 inventory, receivables, debt, equity, cfo, capex
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (symbol, year, quarter) DO UPDATE SET
                 revenue = EXCLUDED.revenue,
                 gross_profit = EXCLUDED.gross_profit,
@@ -93,6 +105,8 @@ def fetch_and_store_quarterly(symbol):
                 operating_income = EXCLUDED.operating_income,
                 net_profit = EXCLUDED.net_profit,
                 eps = EXCLUDED.eps,
+                net_interest_income = EXCLUDED.net_interest_income,
+                non_interest_income = EXCLUDED.non_interest_income,
                 total_assets = EXCLUDED.total_assets,
                 total_liabilities = EXCLUDED.total_liabilities,
                 current_assets = EXCLUDED.current_assets,
@@ -106,8 +120,8 @@ def fetch_and_store_quarterly(symbol):
                 updated_at = NOW()
         """, (
             base_sym, year, quarter, revenue, gross_profit, ebitda,
-            operating_income, net_profit, eps, total_assets,
-            total_liabilities, current_assets, current_liabilities,
+            operating_income, net_profit, eps, nii, non_interest_income, 
+            total_assets, total_liabilities, current_assets, current_liabilities, 
             inventory, receivables, debt, equity, cfo, capex
         ))
         records_saved += 1

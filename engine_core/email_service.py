@@ -175,12 +175,14 @@ def build_stee_signal_email_html(client_name, trades, regime):
     
     trade_rows = ""
     for t in trades:
+        aae_val = t.get('aae_score')
+        aae_display = f"<b>{aae_val}</b>" if aae_val else "N/A"
         trade_rows += f"""
         <tr>
             <td style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:600">{t['symbol']}</td>
             <td style="padding:12px;border-bottom:1px solid #e5e7eb">₹{t['entry_price']:,.2f}</td>
             <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#ef4444;font-weight:600">₹{t['stop_loss']:,.2f}</td>
-            <td style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:700">{t['quantity']}</td>
+            <td style="padding:12px;border-bottom:1px solid #e5e7eb">{aae_display}</td>
             <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#3b82f6">₹{t['risk_amount']:,.0f}</td>
         </tr>"""
 
@@ -205,7 +207,7 @@ def build_stee_signal_email_html(client_name, trades, regime):
                     <th style="padding:12px;text-align:left">Symbol</th>
                     <th style="padding:12px;text-align:left">Entry</th>
                     <th style="padding:12px;text-align:left">Stop Loss</th>
-                    <th style="padding:12px;text-align:left">Qty</th>
+                    <th style="padding:12px;text-align:left">AAE Score</th>
                     <th style="padding:12px;text-align:left">Risk</th>
                 </tr>
                 {trade_rows}
@@ -594,11 +596,13 @@ def send_stee_signal_emails():
             email = get_val(client, "email", 1)
             name = get_val(client, "name", 2) or "Investor"
 
-            # 3. Fetch new STEE trades for today
+            # 3. Fetch new STEE trades for today + AAE Score
             cur.execute("""
-                SELECT symbol, entry_price, stop_loss, quantity, risk_amount 
-                FROM swing_trades
-                WHERE client_id = %s AND entry_date = %s AND status = 'OPEN'
+                SELECT st.symbol, st.entry_price, st.stop_loss, st.quantity, st.risk_amount,
+                       ar.master_score as aae_score
+                FROM swing_trades st
+                LEFT JOIN aae_results_snapshot ar ON st.symbol = ar.symbol
+                WHERE st.client_id = %s AND st.entry_date = %s AND st.status = 'OPEN'
             """, (client_id, latest_date))
             trades = cur.fetchall()
 

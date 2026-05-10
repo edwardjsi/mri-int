@@ -48,6 +48,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [topQualityStocks, setTopQualityStocks] = useState<any[]>([]);
   const [debatingSymbol, setDebatingSymbol] = useState<string | null>(null);
   const [debateStatus, setDebateStatus] = useState<{ symbol: string; msg: string } | null>(null);
+  const [aaeCandidates, setAaeCandidates] = useState<any[]>([]);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -174,11 +175,15 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getTopQualityStocks(6); setTopQualityStocks(data); }
       catch (e) { console.error('Top quality stocks failed', e); }
     };
+    const fetchAae = async () => {
+      try { const data = await api.getAaeTopCandidates(); setAaeCandidates(data); }
+      catch (e) { console.error('AAE failed', e); }
+    };
 
     await Promise.allSettled([
       fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), 
       fetchHallOfFame(), fetchShadow(), fetchHealth(), fetchSwingTrades(),
-      fetchAuditLogs(), fetchQualityLeaderboard(), fetchTopQuality()
+      fetchAuditLogs(), fetchQualityLeaderboard(), fetchTopQuality(), fetchAae()
     ]);
     setLoading(false);
   };
@@ -425,6 +430,68 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
                 <div className="empty-state" style={{ padding: '18px 8px' }}>No improver data yet. The admin page is live, but the newest trajectory feed is still empty.</div>
               )}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" style={{ marginTop: '24px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
+          borderRadius: '18px',
+          padding: '24px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h3 className="section-title" style={{ margin: 0, color: '#86efac' }}>🚀 AAE V3: Active Alpha Candidates</h3>
+              <p className="section-subtitle" style={{ color: '#94a3b8' }}>
+                Institutional Rerating Engine: Detecting high-conviction structural inflections.
+              </p>
+            </div>
+            <div className="badge-executed" style={{ padding: '4px 12px', fontSize: '12px' }}>Operational</div>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            {aaeCandidates.length > 0 ? aaeCandidates.map(c => (
+              <div key={c.symbol} style={{ 
+                background: 'rgba(30, 41, 59, 0.5)', 
+                border: '1px solid rgba(148, 163, 184, 0.1)', 
+                borderRadius: '12px', 
+                padding: '16px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s'
+              }} onClick={() => onSelectStock(c)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>{c.symbol}</span>
+                  <span style={{ color: '#86efac', fontWeight: 900, fontSize: '1.2rem' }}>{c.master_score}</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                   <span>{c.sector}</span>
+                   <span style={{ opacity: 0.7 }}>{c.valuation_status}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {c.reasons?.slice(0, 2).map((r, i) => (
+                    <span key={i} style={{ 
+                      fontSize: '9px', 
+                      background: 'rgba(51, 65, 85, 0.8)', 
+                      padding: '2px 8px', 
+                      borderRadius: '4px',
+                      border: '1px solid rgba(148, 163, 184, 0.1)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100%'
+                    }} title={r}>
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '24px' }}>
+                Analyzing institutional candidates...
+              </div>
+            )}
           </div>
         </div>
       </section>

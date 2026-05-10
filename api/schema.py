@@ -478,6 +478,8 @@ def ensure_required_tables(conn) -> None:
             operating_income NUMERIC,
             net_profit NUMERIC,
             eps NUMERIC,
+            net_interest_income NUMERIC,
+            non_interest_income NUMERIC,
             total_assets NUMERIC,
             total_liabilities NUMERIC,
             current_assets NUMERIC,
@@ -494,6 +496,8 @@ def ensure_required_tables(conn) -> None:
         """
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_quarterly_symbol_date ON public.aae_quarterly_financials(symbol, year DESC, quarter DESC);")
+    cur.execute("ALTER TABLE public.aae_quarterly_financials ADD COLUMN IF NOT EXISTS net_interest_income NUMERIC;")
+    cur.execute("ALTER TABLE public.aae_quarterly_financials ADD COLUMN IF NOT EXISTS non_interest_income NUMERIC;")
 
     cur.execute(
         """
@@ -507,6 +511,52 @@ def ensure_required_tables(conn) -> None:
             lessons JSONB,
             bear_thesis TEXT,
             recorded_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_transcripts (
+            id SERIAL PRIMARY KEY,
+            symbol VARCHAR(20) NOT NULL,
+            date DATE NOT NULL,
+            source_url TEXT,
+            raw_text TEXT,
+            processed_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, date)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_narrative_intelligence (
+            id SERIAL PRIMARY KEY,
+            symbol VARCHAR(20) NOT NULL,
+            date DATE NOT NULL,
+            sentiment_score NUMERIC(4,2),
+            key_themes TEXT[],
+            numeric_divergence_score NUMERIC(4,2),
+            ceo_confidence_level VARCHAR(20),
+            summary TEXT,
+            narrative_delta NUMERIC(4,2),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, date)
+        );
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_results_snapshot (
+            symbol VARCHAR(20) PRIMARY KEY,
+            master_score NUMERIC(5,2),
+            sector VARCHAR(50),
+            valuation_status VARCHAR(50),
+            ownership_status VARCHAR(50),
+            reasons JSONB,
+            updated_at TIMESTAMPTZ DEFAULT NOW()
         );
         """
     )

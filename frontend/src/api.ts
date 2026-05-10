@@ -353,6 +353,10 @@ export const api = {
   comparePerx: (symbolA: string, symbolB: string, includeDebate: boolean = false) =>
     apiFetch(`/perx/compare?symbol_a=${encodeURIComponent(symbolA)}&symbol_b=${encodeURIComponent(symbolB)}&include_debate=${includeDebate}`, { method: 'POST' }),
   getPerxPdfUrl: (reportId: string) => `/api/perx/report/${reportId}/pdf`,
+  
+  // AAE V3
+  getAaeScan: (symbol: string) => apiFetch(`/aae/scan/${symbol}`),
+  getAaeTopCandidates: () => apiFetch('/aae/top-candidates'),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
