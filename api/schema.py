@@ -561,5 +561,15 @@ def ensure_required_tables(conn) -> None:
         """
     )
 
+    # AAE V3 Graveyard Table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS aae_graveyard (
+            symbol TEXT PRIMARY KEY,
+            reason_for_death TEXT,
+            score_at_death NUMERIC,
+            date_buried TIMESTAMP DEFAULT NOW()
+        );
+    """)
+    
     conn.commit()
     cur.close()

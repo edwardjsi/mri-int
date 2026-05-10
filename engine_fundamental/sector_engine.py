@@ -93,6 +93,78 @@ class BankEngine(BaseSectorEngine):
             
         return {"score": min(100, score), "reasons": reasons, "sector": "Banking"}
 
+class ElectricalEngine(BaseSectorEngine):
+    """
+    Specialized engine for Electrical/Capital Goods.
+    Focuses on Operating Leverage (EBITDA growth vs Revenue growth).
+    """
+    def evaluate(self):
+        df = self.get_financials()
+        if df is None or df.empty or len(df) < 2:
+            return {"score": 50, "reasons": ["Insufficient data"]}
+            
+        df = df.iloc[::-1].reset_index(drop=True)
+        
+        latest = df.iloc[-1]
+        prev = df.iloc[-2]
+        
+        score = 65 # Higher baseline for Capex cycle
+        reasons = []
+        
+        # 1. Operating Leverage Test: EBITDA should grow faster than Revenue
+        rev_growth = (latest['revenue'] - prev['revenue']) / prev['revenue'] if prev['revenue'] > 0 else 0
+        ebitda_growth = (latest['ebitda'] - prev['ebitda']) / prev['ebitda'] if prev['ebitda'] > 0 else 0
+        
+        if ebitda_growth > rev_growth + 0.05:
+            score += 20
+            reasons.append(f"Operating Leverage Detected (EBITDA growth > Revenue growth)")
+        elif ebitda_growth > 0:
+            score += 10
+            reasons.append("Positive Margin Trajectory")
+            
+        # 2. Asset Turn (Efficiency)
+        latest_turn = latest['revenue'] / latest['total_assets'] if latest['total_assets'] > 0 else 0
+        prev_turn = prev['revenue'] / prev['total_assets'] if prev['total_assets'] > 0 else 0
+        if latest_turn > prev_turn:
+            score += 10
+            reasons.append("Improving Asset Utilization")
+            
+        return {"score": min(100, score), "reasons": reasons, "sector": "Electrical Infrastructure"}
+
+class EnergyEngine(BaseSectorEngine):
+    """
+    Specialized engine for Power & Renewables.
+    Focuses on Deleveraging (Debt/Equity) and Receivable improvement.
+    """
+    def evaluate(self):
+        df = self.get_financials()
+        if df is None or df.empty or len(df) < 2:
+            return {"score": 50, "reasons": ["Insufficient data"]}
+            
+        df = df.iloc[::-1].reset_index(drop=True)
+        latest = df.iloc[-1]
+        prev = df.iloc[-2]
+        
+        score = 60
+        reasons = []
+        
+        # 1. Deleveraging (Debt Reduction)
+        if latest.get('debt') and prev.get('debt') and latest['debt'] < prev['debt'] * 0.95:
+            score += 20
+            reasons.append("Significant Deleveraging (Debt Reduction)")
+            
+        # 2. Receivable Days Improvement
+        if latest.get('receivables') and prev.get('receivables') and latest['receivables'] < prev['receivables']:
+            score += 15
+            reasons.append("Improving Cash Flow (Receivables Down)")
+            
+        # 3. EBITDA Margin
+        if latest.get('ebitda') / latest.get('revenue') > prev.get('ebitda') / prev.get('revenue'):
+            score += 5
+            reasons.append("Operational Efficiency Gained")
+            
+        return {"score": min(100, score), "reasons": reasons, "sector": "Energy & Power"}
+
 def get_sector_engine(symbol):
     """
     Factory method to return the correct sector engine.
@@ -101,6 +173,12 @@ def get_sector_engine(symbol):
     df = fetch_df(query, (symbol.upper(),))
     
     if df is None or df.empty:
+        # Hardcoded overrides for missing metadata
+        if symbol.upper() == "VOLTAMP":
+            return ElectricalEngine(symbol)
+        if symbol.upper() == "SUZLON":
+            return EnergyEngine(symbol)
+        
         logger.warning(f"No sector info for {symbol}, defaulting to ManufacturingEngine")
         return ManufacturingEngine(symbol)
         
@@ -108,6 +186,12 @@ def get_sector_engine(symbol):
     if 'BANK' in industry or 'FINANCIAL SERVICES' in industry:
         logger.info(f"Using BankEngine for {symbol} ({industry})")
         return BankEngine(symbol)
+    elif 'ELECTRICAL' in industry or 'CAPITAL GOODS' in industry:
+        logger.info(f"Using ElectricalEngine for {symbol} ({industry})")
+        return ElectricalEngine(symbol)
+    elif 'POWER' in industry or 'ENERGY' in industry or 'UTILITIES' in industry:
+        logger.info(f"Using EnergyEngine for {symbol} ({industry})")
+        return EnergyEngine(symbol)
     else:
         logger.info(f"Using ManufacturingEngine for {symbol} ({industry})")
         return ManufacturingEngine(symbol)

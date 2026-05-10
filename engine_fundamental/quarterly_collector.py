@@ -73,7 +73,8 @@ def fetch_and_store_quarterly(symbol):
         if nii is not None and revenue is not None:
              # Total Revenue in banks is often Interest Income + Fees
              # This is a rough proxy
-             non_interest_income = revenue - sanitize_val(row.get('Interest Income', 0))
+             interest_income = sanitize_val(row.get('Interest Income')) or 0
+        non_interest_income = revenue - interest_income if revenue is not None else None
 
         total_assets = sanitize_val(bs_row.get('Total Assets'))
         total_liabilities = sanitize_val(bs_row.get('Total Liabilities Net Minority Interest'))

@@ -96,4 +96,8 @@ for sym in top_symbols:
         print(f"Failed analysis for {yf_sym}: {e}")
 PY
 
+# Step 9: AAE V3 Rerating Pipeline (Discovery, Ingestion, Debate)
+echo "[9/9] Running AAE V3 Production Cycle..." | tee -a "$LOG_FILE"
+python scripts/mri_aae_prod.py 2>&1 | tee -a "$LOG_FILE"
+
 echo "=== Cloud Pipeline Complete — $(date) ===" | tee -a "$LOG_FILE"

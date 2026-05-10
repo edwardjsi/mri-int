@@ -1147,18 +1147,31 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                   border: '1px solid rgba(148, 163, 184, 0.1)', 
                   borderRadius: '10px', 
                   padding: '14px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+                  flexDirection: 'column',
+                  gap: '8px'
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '15px' }}>{c.symbol}</div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>{c.sector}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700, fontSize: '15px', color: '#f8fafc' }}>{c.symbol}</span>
+                  <span style={{ 
+                    fontSize: '10px', 
+                    padding: '2px 8px', 
+                    borderRadius: '6px', 
+                    background: c.market_confirmation === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(148, 163, 184, 0.1)',
+                    color: c.market_confirmation === 'CONFIRMED' ? '#4ade80' : '#94a3b8',
+                    border: `1px solid ${c.market_confirmation === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(148, 163, 184, 0.2)'}`
+                  }}>
+                    {c.market_confirmation || 'PENDING'}
+                  </span>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#22c55e', fontWeight: 800, fontSize: '16px' }}>{c.master_score}</div>
-                  <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase' }}>AAE SCORE</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#22c55e' }}>{c.master_score}</span>
+                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 500 }}>EXPECTED RERATING</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {c.reasons && c.reasons.slice(0, 2).map((r: string, idx: number) => (
+                    <span key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '2px 6px', borderRadius: '4px' }}>• {r.length > 25 ? r.substring(0, 25) + '...' : r}</span>
+                  ))}
                 </div>
               </div>
             )) : (
@@ -1490,6 +1503,9 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [newSymbol, setNewSymbol] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [digitalTwinStock, setDigitalTwinStock] = useState<string | null>(null);
+  const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
+  const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const handleSort = (key: string) => {
@@ -1571,6 +1587,21 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     } catch (err: any) { alert(err.message); }
   };
 
+  const handleRunDigitalTwin = async (symbol: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDigitalTwinStock(symbol);
+    setDigitalTwinLoading(true);
+    setDigitalTwinResult(null);
+    try {
+      const result = await api.getAaeScan(symbol);
+      setDigitalTwinResult(result);
+    } catch (err: any) {
+      setDigitalTwinResult({ error: err.message || 'Failed to run AAE scan' });
+    } finally {
+      setDigitalTwinLoading(false);
+    }
+  };
+
   if (loading) return <div className="loading">Loading your watchlist...</div>;
 
   return (
@@ -1615,6 +1646,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                 <th onClick={() => handleSort('perx_score')} style={{ cursor: 'pointer' }}>PERX {getSortIcon('perx_score')}</th>
                 <th onClick={() => handleSort('trend_alignment')} style={{ cursor: 'pointer' }}>Trend {getSortIcon('trend_alignment')}</th>
                 <th>Action</th>
+                <th>Digital Twin</th>
               </tr>
             </thead>
             <tbody>
@@ -1658,6 +1690,14 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                       🗑️ Remove
                     </button>
                   </td>
+                  <td>
+                    <button 
+                      onClick={(e) => handleRunDigitalTwin(item.symbol, e)}
+                      className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px', background: '#8b5cf6', borderColor: '#8b5cf6' }}
+                    >
+                      🤖 Run AAE
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1665,6 +1705,84 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         </div>
       ) : (
         <div className="empty-state">There are no stocks in your watchlist to track here right now. When you add, it will be displayed.</div>
+      )}
+
+      {digitalTwinStock && (
+        <div className="modal-overlay" onClick={() => !digitalTwinLoading && setDigitalTwinStock(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <button className="modal-close" onClick={() => !digitalTwinLoading && setDigitalTwinStock(null)}>×</button>
+            <h2 className="modal-title">🤖 Digital Twin: AAE V3 Scan</h2>
+            <div className="modal-header-meta" style={{ marginBottom: '1.5rem' }}>
+              <span className="stock-symbol">{digitalTwinStock}</span>
+              <span className="stock-sector" style={{ marginLeft: '10px' }}>8-Layer Institutional Analysis</span>
+            </div>
+            
+            {digitalTwinLoading ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <div className="loading" style={{ margin: '0 auto 1rem' }}></div>
+                <p>Running AAE V3 Pipeline...</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>(Analyzing Structural Delta, Narrative Sentiment, and running Forensic Debate)</p>
+              </div>
+            ) : digitalTwinResult ? (
+              <div className="aae-results">
+                {digitalTwinResult.error ? (
+                  <div className="error-card" style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px' }}>
+                    <strong>Error:</strong> {digitalTwinResult.error}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div className="metric-box" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Master Score</div>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: digitalTwinResult.master_score >= 70 ? '#10b981' : digitalTwinResult.master_score >= 50 ? '#f59e0b' : '#ef4444' }}>
+                          {digitalTwinResult.master_score}
+                        </div>
+                      </div>
+                      <div className="metric-box" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Debate Conviction</div>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>
+                          {digitalTwinResult.debate_conviction || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {digitalTwinResult.market_confirmation && (
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Market Status</span>
+                        <span className={`badge ${digitalTwinResult.market_confirmation === 'CONFIRMED' ? 'badge-confirmed' : 'badge-pending'}`} style={{ fontSize: '0.9rem', padding: '4px 12px' }}>
+                          {digitalTwinResult.market_confirmation}
+                        </span>
+                      </div>
+                    )}
+
+                    {digitalTwinResult.debate_summary && (
+                      <div style={{ marginBottom: '1.5rem', background: '#fef2f2', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
+                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Forensic Debate Synthesis</strong>
+                        <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.5 }}>{digitalTwinResult.debate_summary}</p>
+                        {digitalTwinResult.risk_summary && (
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 }}>
+                            Critical Risk: {digitalTwinResult.risk_summary}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {digitalTwinResult.reasons && digitalTwinResult.reasons.length > 0 && (
+                      <div>
+                        <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#334155' }}>Key Drivers</strong>
+                        <ul style={{ paddingLeft: '1.5rem', margin: 0, color: '#475569', fontSize: '0.9rem' }}>
+                          {digitalTwinResult.reasons.map((reason: string, i: number) => (
+                            <li key={i} style={{ marginBottom: '4px' }}>{reason}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
       )}
     </div>
   );

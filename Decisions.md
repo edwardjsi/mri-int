@@ -603,3 +603,12 @@ Decision:
    - Phase 3: compare mode, archive UI, lifecycle history, and richer sector/fragility layers
 Reason: The existing platform already has the major technical, fundamental, qualitative, email, and dashboard primitives that PERX needs. Building PERX as an orchestration layer maximizes reuse, protects current production flows, and allows the product to ship incrementally without redesigning MRI/STEE/QIF.
 Status: FINAL.
+
+## Decision 088 — AAE V3 Watchlist Digital Twin & Daily Automation
+Date: 2026-05-11
+Decision:
+1. Embed the 8-layer AAE execution directly into the user's Watchlist via a "Digital Twin" modal, replacing the need for a separate heavy dashboard for institutional scanning.
+2. Introduce a Master Controller script (`scripts/mri_aae_prod.py`) that handles discovery, ingestion, the 7-layer fundamentals pass, and the Layer 8 Forensic Debate.
+3. Inject the AAE master controller as "Step 9" in the existing `pipeline_cloud.sh` to ensure daily execution.
+Reason: The AAE V3 is compute-heavy (LLM tokens + multi-agent debate). Integrating it strictly as an on-demand "Digital Twin" for Watchlist items, plus a top-20 automated daily run, controls API costs while maximizing visibility where the user cares most.
+Status: FINAL.
