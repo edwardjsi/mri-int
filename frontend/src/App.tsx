@@ -1509,8 +1509,8 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
   const [digitalTwinHistoryLoading, setDigitalTwinHistoryLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-1512:   const [uploadFile, setUploadFile] = useState<File | null>(null);
-1513:   const [isUploading, setIsUploading] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
