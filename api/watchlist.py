@@ -296,6 +296,11 @@ async def upload_watchlist_csv(
         
         logger.info(f"[BULK_UPLOAD] Client {client_id_str} attempting to upload {len(unique_symbols)} unique symbols: {unique_symbols[:5]}...")
         
+        # DEBUG TRACE
+        with open("/home/immanuels/Desktop/mri-int/bulk_trace.txt", "w") as f:
+            f.write(f"Client: {client_id_str}\n")
+            f.write(f"Symbols: {','.join(unique_symbols)}\n")
+        
         for symbol in unique_symbols:
             try:
                 cur.execute(
