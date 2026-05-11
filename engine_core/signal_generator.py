@@ -309,15 +309,7 @@ def run_signal_generator():
     prices = get_next_day_open_prices(cur)
     logger.info(f"Prices available: {len(prices)}")
 
-    # Update Hall of Fame tracking
-    try:
-        update_top_score_tracking(cur, scores, prices, signal_date)
-        update_strategy_shadow_tracking(cur, scores, prices, signal_date)
-    except Exception as e:
-        logger.error(f"Failed to update Tracking Tables: {e}")
-        conn.rollback()
-
-    # Get all active clients
+    # 0. Get all active clients FIRST to avoid deadlocks with write locks on tracking tables
     cur.execute("SELECT id FROM clients WHERE is_active = true")
     clients = cur.fetchall()
     logger.info(f"Active clients: {len(clients)}")
@@ -326,6 +318,14 @@ def run_signal_generator():
         logger.warning("No active clients. Nothing to do.")
         conn.close()
         return
+
+    # 1. Update Hall of Fame tracking
+    try:
+        update_top_score_tracking(cur, scores, prices, signal_date)
+        update_strategy_shadow_tracking(cur, scores, prices, signal_date)
+    except Exception as e:
+        logger.error(f"Failed to update Tracking Tables: {e}")
+        conn.rollback()
 
     total_signals = 0
     for client in clients:
