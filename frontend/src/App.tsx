@@ -1489,26 +1489,28 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
           <h3 className="section-title">Audit Results</h3>
           <div className="summary-stats" style={{ marginBottom: '2rem' }}>
              <div className="summary-stat">
-               <span className="summary-label">Audit Grade</span>
-               <span className="summary-value" style={{ color: '#22c55e' }}>{results.overall_grade}</span>
+               <span className="summary-label">Audit Risk Level</span>
+               <span className="summary-value" style={{ color: results.risk_level === 'LOW' ? '#22c55e' : results.risk_level === 'EXTREME' ? '#ef4444' : '#f59e0b' }}>
+                 {results.risk_level}
+               </span>
              </div>
              <div className="summary-stat">
                <span className="summary-label">Regime Alignment</span>
-               <span className="summary-value">{results.regime_alignment_score}/100</span>
+               <span className="summary-value">{Math.round((1 - (results.risk_score || 0)) * 100)}/100</span>
              </div>
           </div>
 
           <div className="table-container">
             <table className="data-table">
-              <thead><tr><th>Symbol</th><th>Qty</th><th>MRI Score</th><th>Setup</th><th>Verdict</th></tr></thead>
+              <thead><tr><th>Symbol</th><th>Qty</th><th>MRI Score</th><th>Status</th><th>Verdict</th></tr></thead>
               <tbody>
-                {results.results.map((r: any) => (
+                {(results.holdings || []).map((r: any) => (
                   <tr key={r.symbol} onClick={() => onSelectStock(r)} className="clickable-row">
                     <td className="font-bold">{r.symbol}</td>
                     <td>{r.quantity}</td>
-                    <td><span className="score-badge">{r.total_score}/100</span></td>
-                    <td>{r.setup_grade}</td>
-                    <td>{r.quality_category || 'N/A'}</td>
+                    <td><span className="score-badge">{r.score || 'N/A'}/100</span></td>
+                    <td>{r.alignment}</td>
+                    <td>{r.below_200ema ? '⚠️ Below 200 EMA' : '✅ Healthy Trend'}</td>
                   </tr>
                 ))}
               </tbody>
