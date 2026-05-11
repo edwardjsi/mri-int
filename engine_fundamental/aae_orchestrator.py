@@ -98,7 +98,7 @@ class AAEOrchestrator:
             result["reasons"].insert(0, f"Narrative: {narrative_summary}")
             
         # Layer 8: Forensic Debate (Stress Test) - Only for high scorers
-        if master_score > 65:
+        if master_score > 70:
             debate_engine = ForensicDebateEngine(self.symbol)
             debate_result = debate_engine.run_debate(result)
             verdict = debate_result['verdict']
