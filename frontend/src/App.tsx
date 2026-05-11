@@ -221,10 +221,11 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
               background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)',
               color: 'white',
               border: 'none',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.3)'
             }}
           >
-            {debating ? '🧠 AI Debating...' : '📊 AI Forensic Debate'}
+            {debating ? '🧠 Analyzing 8-Layers...' : '🚀 Run AAE 8-Layer Forensic Test'}
           </button>
           <button className="btn-primary" onClick={onClose} style={{ flex: 1 }}>Close Report</button>
         </div>
@@ -1407,6 +1408,40 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isRegrading, setIsRegrading] = useState(false);
 
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) return ' ↕️';
+    return sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽';
+  };
+
+  const sortedResults = useMemo(() => {
+    if (!results?.holdings) return [];
+    let sortableItems = [...results.holdings];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (aVal === null || aVal === undefined) aVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bVal === null || bVal === undefined) bVal = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [results, sortConfig]);
+
   const loadStatus = async () => {
     try {
       const res = await api.getHoldingsStatus();
@@ -1502,15 +1537,33 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
           <div className="table-container">
             <table className="data-table">
-              <thead><tr><th>Symbol</th><th>Qty</th><th>MRI Score</th><th>Status</th><th>Verdict</th></tr></thead>
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {getSortIcon('symbol')}</th>
+                  <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer' }}>Qty {getSortIcon('quantity')}</th>
+                  <th onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>MRI Score {getSortIcon('score')}</th>
+                  <th onClick={() => handleSort('alignment')} style={{ cursor: 'pointer' }}>Status {getSortIcon('alignment')}</th>
+                  <th onClick={() => handleSort('below_200ema')} style={{ cursor: 'pointer' }}>Trend {getSortIcon('below_200ema')}</th>
+                  <th>AAE Test</th>
+                </tr>
+              </thead>
               <tbody>
-                {(results.holdings || []).map((r: any) => (
+                {sortedResults.map((r: any) => (
                   <tr key={r.symbol} onClick={() => onSelectStock(r)} className="clickable-row">
                     <td className="font-bold">{r.symbol}</td>
                     <td>{r.quantity}</td>
                     <td><span className="score-badge">{r.score || 'N/A'}/100</span></td>
                     <td>{r.alignment}</td>
                     <td>{r.below_200ema ? '⚠️ Below 200 EMA' : '✅ Healthy Trend'}</td>
+                    <td>
+                      <button 
+                        className="btn-primary" 
+                        onClick={(e) => { e.stopPropagation(); onSelectStock(r); }}
+                        style={{ padding: '4px 8px', fontSize: '11px', background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', border: 'none' }}
+                      >
+                        🧠 8-Layer Test
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
