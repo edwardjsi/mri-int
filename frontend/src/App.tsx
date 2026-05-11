@@ -342,190 +342,214 @@ function LoginPage({ onLogin, onCancel }: { onLogin: () => void; onCancel?: () =
 
 function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
   return (
-    <div className="landing-shell" style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: '1.6' }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-        <h1 style={{ fontSize: '2.8rem', marginBottom: '20px', color: '#ffffff' }}>
-          The Market Regime Discovery That Changes Everything
+    <div className="landing-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 20px', color: '#e2e8f0' }}>
+      
+      {/* ─── HERO SECTION ─── */}
+      <header style={{ textAlign: 'center', marginBottom: '80px' }}>
+        <div style={{ color: '#60a5fa', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '16px', fontSize: '0.9rem' }}>
+          INSTITUTIONAL QUANT INTELLIGENCE
+        </div>
+        <h1 style={{ fontSize: '3.5rem', fontWeight: '800', lineHeight: '1.1', marginBottom: '24px', color: '#ffffff' }}>
+          MRI: Institutional Alpha for <span style={{ color: '#60a5fa' }}>Indian Equities</span>
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#94a3b8', fontStyle: 'italic' }}>
-          Dear Professional Investor,
+        <p style={{ fontSize: '1.4rem', color: '#94a3b8', maxWidth: '700px', margin: '0 auto 32px' }}>
+          Bridge the Alpha Gap. Detect PE re-ratings <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>before</span> retail wakes up.
         </p>
-      </div>
+        <p style={{ fontSize: '1.1rem', color: '#cbd5e1', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
+          You've built wealth trading India’s chaos. Now arm yourself with quant-desk forensics that spots structural inflections 70% ahead of consensus.
+        </p>
+        <button 
+          className="btn-primary" 
+          onClick={onRequestAuth}
+          style={{ fontSize: '1.2rem', padding: '18px 40px', background: '#3b82f6', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}
+        >
+          Deploy Your Digital Twin—Start Free Trial
+        </button>
+      </header>
 
-      {/* Main Content */}
-      <div style={{ fontSize: '1.1rem', color: '#e2e8f0', marginBottom: '40px' }}>
-        <p style={{ marginBottom: '24px' }}>
-          Most investment systems fail for a simple reason: they treat all market conditions as identical.
-        </p>
-        <p style={{ marginBottom: '24px' }}>
-          Whether the Nifty is grinding higher in a risk-on environment, churning sideways in consolidation, or falling in a risk-off phase, traditional analysis applies the same fundamental and technical criteria. Same screening parameters. Same selection logic. Same position sizing approach.
-        </p>
-        <p style={{ marginBottom: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
-          This is mathematically flawed.
-        </p>
-        <p style={{ marginBottom: '40px' }}>
-          Markets operate in distinct, measurable regimes. And after years of development and backtesting, we've created a system that identifies these regimes with documented accuracy—then adapts every aspect of stock selection accordingly.
-        </p>
-
-        {/* The Backtested Foundation */}
-        <h2 style={{ fontSize: '1.8rem', color: '#60a5fa', marginBottom: '20px', marginTop: '50px' }}>
-          The Backtested Foundation
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          The Market Regime Intelligence Platform v2.0 represents a breakthrough in systematic investing for Indian equities. Over multiple market cycles, our regime identification system has demonstrated the ability to classify market conditions into three primary states: Risk-On, Risk-Off, and Neutral.
-        </p>
-        <p style={{ marginBottom: '24px' }}>
-          The backtested results speak clearly:
-        </p>
-        <p style={{ marginBottom: '24px' }}>
-          During Risk-On periods, our system identifies momentum-driven opportunities with technical strength indicators that historically outperformed the Nifty. During Risk-Off phases, it shifts focus to quality defensive stocks with superior fundamental metrics. In Neutral regimes, it balances both approaches while managing position sizes more conservatively.
-        </p>
-
-        <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '30px' }}>
-          <p style={{ fontWeight: 'bold', color: '#22c55e', marginBottom: '16px' }}>
-            What this means for your investment results:
-          </p>
-          <p style={{ marginBottom: '16px' }}>
-            Portfolio drawdowns typically reduce by 15-25% during market downturns when regime intelligence guides position sizing and stock selection. Alpha generation improves during trending markets because the system identifies and acts on regime-appropriate opportunities rather than fighting market character.
-          </p>
-        </div>
-
-        {/* The Systematic Implementation */}
-        <h2 style={{ fontSize: '1.8rem', color: '#60a5fa', marginBottom: '20px', marginTop: '50px' }}>
-          The Systematic Implementation
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          Our backtested Market Regime Intelligence drives a comprehensive 7-step stock selection system:
-        </p>
-
-        <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ color: '#a78bfa', marginBottom: '12px' }}>Step 1-3: Technical Foundation</h3>
-          <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-            <li>Momentum scoring adjusted for current market regime</li>
-            <li>Volume and price action analysis weighted by regime context</li>
-            <li>Support/resistance levels interpreted through regime lens</li>
-          </ul>
-
-          <h3 style={{ color: '#a78bfa', marginBottom: '12px' }}>Step 4-5: Fundamental Quality</h3>
-          <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-            <li>Quality Investor Framework (QIF) scoring across seven business dimensions</li>
-            <li>Financial health metrics prioritized by regime requirements</li>
-            <li>Management quality and competitive positioning analysis</li>
-          </ul>
-
-          <h3 style={{ color: '#a78bfa', marginBottom: '12px' }}>Step 6-7: Integration and Validation</h3>
-          <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-            <li>Regime-selection alignment verification</li>
-            <li>Position sizing recommendations based on market character</li>
-            <li>AI Forensic Debate Engine cross-validation</li>
-          </ul>
-        </div>
-
-        <p style={{ marginBottom: '40px' }}>
-          Each evening after market hours, you receive the current regime classification alongside 3-5 stock recommendations that leverage this intelligence. The system screens the entire Nifty 500 universe, applying regime-appropriate criteria to identify opportunities that align with current market character.
-        </p>
-
-        {/* Professional Validation */}
-        <h2 style={{ fontSize: '1.8rem', color: '#60a5fa', marginBottom: '20px', marginTop: '50px' }}>
-          Professional Validation
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          The MRI Platform operates under institutional standards:
-        </p>
-        <ul style={{ paddingLeft: '20px', marginBottom: '30px' }}>
-          <li style={{ marginBottom: '8px' }}>All backtested performance claims are documented with detailed methodology</li>
-          <li style={{ marginBottom: '8px' }}>Risk management protocols include maximum position sizes and stop-loss parameters</li>
-          <li style={{ marginBottom: '8px' }}>Performance attribution clearly separates regime timing benefits from stock selection alpha</li>
-          <li style={{ marginBottom: '8px' }}>System includes built-in performance tracking against Nifty benchmarks</li>
-        </ul>
-
-        {/* Why This Matters Now */}
-        <h2 style={{ fontSize: '1.8rem', color: '#60a5fa', marginBottom: '20px', marginTop: '50px' }}>
-          Why This Matters Now
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          Indian equity markets have entered a phase where regime awareness becomes crucial. Global liquidity conditions, domestic policy cycles, and sectoral rotation patterns create distinct market characters that demand adaptive investment approaches.
-        </p>
-        <p style={{ marginBottom: '40px' }}>
-          The MRI Platform doesn't replace your existing investment process—it enhances decision-making with regime context that improves timing, selection, and risk management simultaneously.
-        </p>
-
-        {/* Your Next Step - Pricing & CTA */}
-        <div style={{ background: '#1e293b', padding: '40px', borderRadius: '16px', border: '2px solid #60a5fa', textAlign: 'center', marginTop: '50px' }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#60a5fa', marginBottom: '20px' }}>
-            Your Next Step
-          </h2>
-          <p style={{ marginBottom: '24px' }}>
-            We're offering qualified professional investors the opportunity to experience the backtested advantage firsthand.
-          </p>
-
-          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
-            <h3 style={{ color: '#22c55e', marginBottom: '16px' }}>The trial subscription includes:</h3>
-            <ul style={{ paddingLeft: '20px' }}>
-              <li>30 days of daily regime intelligence and stock recommendations</li>
-              <li>Complete access to the 7-step selection methodology</li>
-              <li>Historical performance data and backtesting documentation</li>
-              <li>Direct access to system developers for technical questions</li>
-              <li>Performance tracking tools to measure regime-awareness benefits</li>
-            </ul>
+      {/* ─── THE PROBLEM ─── */}
+      <section style={{ marginBottom: '100px' }}>
+        <h2 style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '48px', color: '#ffffff' }}>The Alpha Gap Kills Returns</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+          <div className="panel-card" style={{ padding: '32px' }}>
+            <h3 style={{ color: '#f87171', marginBottom: '12px' }}>⚠️ Late Consensus</h3>
+            <p style={{ fontSize: '1rem', color: '#94a3b8' }}>70% of the move is gone by the time a stock hits retail news cycles.</p>
           </div>
-
-          <div style={{ marginBottom: '30px' }}>
-            <p style={{ fontSize: '1.2rem', color: '#f59e0b', fontWeight: 'bold', marginBottom: '8px' }}>
-              Investment: ₹12,000 per month (₹1,44,000 annually)
-            </p>
-            <p style={{ fontSize: '1.1rem', color: '#22c55e', fontWeight: 'bold' }}>
-              Professional trial: First 30 days at ₹3,000 to evaluate system effectiveness
-            </p>
+          <div className="panel-card" style={{ padding: '32px' }}>
+            <h3 style={{ color: '#f87171', marginBottom: '12px' }}>⚠️ Narrative Blindness</h3>
+            <p style={{ fontSize: '1rem', color: '#94a3b8' }}>Earnings transcripts hide the real structural story across 1,000+ dense pages.</p>
           </div>
-
-          <div style={{ marginBottom: '40px', padding: '20px', background: '#0f172a', borderRadius: '8px' }}>
-            <p style={{ fontWeight: 'bold', color: '#22c55e', marginBottom: '8px' }}>
-              Clear success criteria:
-            </p>
-            <p style={{ fontSize: '0.95rem' }}>
-              If the MRI Platform doesn't demonstrate measurable improvement in your risk-adjusted returns within the trial period, we'll provide a complete refund along with detailed performance attribution analysis.
-            </p>
+          <div className="panel-card" style={{ padding: '32px' }}>
+            <h3 style={{ color: '#f87171', marginBottom: '12px' }}>⚠️ Risk-Off Traps</h3>
+            <p style={{ fontSize: '1rem', color: '#94a3b8' }}>No systematic guardrails for macro drawdowns—forgetting that cash <em>is</em> a position.</p>
           </div>
-
-          <button
-            className="btn-primary"
-            onClick={onRequestAuth}
-            style={{
-              fontSize: '1.2rem',
-              padding: '16px 32px',
-              marginBottom: '20px',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            Start MRI Trial → Access Platform
-          </button>
-
-          <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginTop: '16px' }}>
-            Click above to access the platform and begin your professional trial
-          </p>
         </div>
+        <p style={{ textAlign: 'center', marginTop: '40px', fontSize: '1.2rem', fontWeight: 'bold', color: '#f59e0b' }}>
+          Screeners miss this. You won't.
+        </p>
+      </section>
 
-        {/* Signature */}
-        <div style={{ marginTop: '60px', paddingTop: '30px', borderTop: '1px solid #334155' }}>
-          <p style={{ marginBottom: '8px' }}>Respectfully,</p>
-          <p style={{ fontWeight: 'bold', color: '#60a5fa', marginBottom: '4px' }}>Immanuel Santosh</p>
-          <p style={{ fontSize: '0.95rem', color: '#94a3b8' }}>Lead Developer, MRI Platform & Investor</p>
+      {/* ─── THE SOLUTION ─── */}
+      <section style={{ marginBottom: '100px' }}>
+        <h2 style={{ fontSize: '2.2rem', textAlign: 'center', marginBottom: '20px', color: '#ffffff' }}>MRI: Your Full-Stack Edge</h2>
+        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '48px' }}>Layered Engine for Nifty 500 + BSE A (800+ Stocks Daily)</p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'center' }}>
+          <div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '1.2rem' }}>1. Funnel</div>
+              <div style={{ color: '#94a3b8' }}>Total Universe scan for outlier activity.</div>
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '1.2rem' }}>2. Filter</div>
+              <div style={{ color: '#94a3b8' }}>Breadth-based Regime classification (Risk-On/Off).</div>
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '1.2rem' }}>3. Alpha</div>
+              <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>AAE V3 PE Rerater</div>
+            </div>
+          </div>
+          
+          <div className="panel-card" style={{ padding: '0', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <thead style={{ background: '#1e293b' }}>
+                <tr>
+                  <th style={{ padding: '12px', textAlign: 'left' }}>0-100 Score Factor</th>
+                  <th style={{ padding: '12px' }}>Weight</th>
+                  <th style={{ padding: '12px' }}>Edge</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155' }}>Trend Integrity</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', textAlign: 'center' }}>25%</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', color: '#22c55e' }}>EMA 50/200 Lock</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155' }}>Trend Slope</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', textAlign: 'center' }}>25%</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', color: '#22c55e' }}>Accumulation Velocity</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155' }}>Relative Strength</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', textAlign: 'center' }}>20%</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', color: '#22c55e' }}>Nifty Outperformance</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155' }}>Price Proximity</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', textAlign: 'center' }}>20%</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', color: '#22c55e' }}>6M High Momentum</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155' }}>Volume Surge</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', textAlign: 'center' }}>10%</td>
+                  <td style={{ padding: '12px', borderTop: '1px solid #334155', color: '#22c55e' }}>FII/DII Confirmation</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
 
-        {/* Disclaimer */}
-        <div style={{ marginTop: '40px', padding: '20px', background: '#1e293b', borderRadius: '8px', fontSize: '0.85rem', color: '#94a3b8' }}>
-          <p style={{ fontStyle: 'italic' }}>
-            <strong>Disclaimer:</strong> Past performance doesn't guarantee future results. The MRI Platform provides decision-support analytics for professional investors. All investment decisions remain your responsibility. Please review complete terms and risk disclosures before subscribing.
-          </p>
+      {/* ─── REGIME PROTECTION ─── */}
+      <section style={{ marginBottom: '100px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', padding: '60px', borderRadius: '24px', border: '1px solid #334155' }}>
+        <h2 style={{ fontSize: '2.2rem', marginBottom: '24px', color: '#ffffff' }}>Regime Protection: Never Buy the Dip Blind</h2>
+        <p style={{ fontSize: '1.1rem', color: '#94a3b8', marginBottom: '40px' }}>Breadth-based signals keep you liquid in bears. Max drawdown slashed vs. Nifty.</p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+          <div>
+            <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '8px' }}>Risk-On</div>
+            <p style={{ color: '#94a3b8' }}>Full Aggression. High-conviction signal generation.</p>
+          </div>
+          <div>
+            <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '8px' }}>Neutral</div>
+            <p style={{ color: '#94a3b8' }}>Flight to Quality. Only 85+ MRI scores cleared for entry.</p>
+          </div>
+          <div>
+            <div style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '8px' }}>Risk-Off</div>
+            <p style={{ color: '#94a3b8' }}>Capital Preservation. Automated SELLS & Cash deployment.</p>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* ─── AAE V3 ─── */}
+      <section style={{ marginBottom: '100px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '2.2rem', color: '#ffffff', marginBottom: '16px' }}>AAE V3: Catch Re-Ratings Early</h2>
+          <p style={{ color: '#94a3b8', fontSize: '1.2rem' }}>The PE Expander Institutions Fear.</p>
+          <p style={{ color: '#64748b' }}>Finds structural shifts pre-consensus (80% quant, 20% AI forensics).</p>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '48px' }}>
+          {['Financial (Margin/ROCE)', 'Narrative (LLM Tone)', 'Ownership (Delivery)', 'Valuation (PEG/PE)'].map((layer, i) => (
+            <div key={i} className="panel-card" style={{ padding: '20px', textAlign: 'center', border: '1px solid #22c55e' }}>
+              <div style={{ fontSize: '0.8rem', color: '#22c55e', marginBottom: '8px' }}>LAYER {i+1}</div>
+              <div style={{ fontWeight: 'bold' }}>{layer}</div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="panel-card" style={{ padding: '32px', borderLeft: '4px solid #60a5fa' }}>
+          <h3 style={{ color: '#60a5fa', marginBottom: '16px' }}>🧠 AI Forensic Boost</h3>
+          <p style={{ color: '#94a3b8' }}>Tracks theme saturation (e.g., de-leveraging pivots), numeric divergences, and learns from historical "Value Traps" to refine real-time scoring.</p>
+        </div>
+      </section>
+
+      {/* ─── PROOF ─── */}
+      <section style={{ marginBottom: '100px' }}>
+        <h2 style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '48px', color: '#ffffff' }}>Audited Proof: 26.39% CAGR (2021-2026)</h2>
+        <div className="panel-card" style={{ padding: '0', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ background: '#1e293b' }}>
+              <tr>
+                <th style={{ padding: '20px', textAlign: 'left' }}>Metric</th>
+                <th style={{ padding: '20px' }}>MRI Strategy</th>
+                <th style={{ padding: '20px' }}>Nifty 50 Buy-Hold</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', fontWeight: 'bold' }}>CAGR</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center', color: '#22c55e', fontSize: '1.4rem', fontWeight: 'bold' }}>26.39%</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center' }}>10.5%</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155' }}>Max Drawdown</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center', color: '#22c55e' }}>-33.53%</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center', color: '#ef4444' }}>-59.60%</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155' }}>Sharpe Ratio</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center', fontWeight: 'bold' }}>1.23</td>
+                <td style={{ padding: '20px', borderTop: '1px solid #334155', textAlign: 'center' }}>0.42</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style={{ textAlign: 'center', marginTop: '24px', color: '#64748b', fontSize: '0.9rem' }}>
+          Walk-forward backtest, T+1 slippage included. Past performance does not guarantee future results.
+        </p>
+      </section>
+
+      {/* ─── CTA ─── */}
+      <footer style={{ textAlign: 'center', padding: '80px 20px', background: 'radial-gradient(circle at center, #1e293b 0%, transparent 70%)' }}>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '24px', color: '#ffffff' }}>Ready to Scale Your Edge Globally?</h2>
+        <p style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px' }}>
+          Join the elite group of investors using MRI for glass-box forensics. No black magic. Just data-driven conviction.
+        </p>
+        <button 
+          className="btn-primary" 
+          onClick={onRequestAuth}
+          style={{ fontSize: '1.3rem', padding: '20px 48px', background: '#22c55e', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 0 30px rgba(34, 197, 94, 0.4)' }}
+        >
+          Deploy Digital Twin—Free Audit Today
+        </button>
+        <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center', gap: '40px', color: '#64748b', fontSize: '0.9rem' }}>
+          <div>📍 Nifty 500 Live</div>
+          <div>🚀 Q3 2026: US/EU Expansion</div>
+          <div>💼 SaaS API for Pros</div>
+        </div>
+      </footer>
     </div>
   );
 }
