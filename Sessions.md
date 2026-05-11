@@ -1,5 +1,27 @@
 # **MRI Sessions Log**
 
+## **May 11, 2026: Watchlist Upgrade — Bulk CSV Upload**
+- **Objective**: Enable users to upload large lists of symbols to their Market Watchlist at once.
+- **Actions**:
+  - **Backend Verification**: Confirmed `/api/watchlist/upload-csv` endpoint exists and handles flexible CSV formats (with/without headers).
+  - **Frontend Implementation**: Updated `WatchlistPage` in `App.tsx` with a new file upload UI section.
+  - **Logic Integration**: Wired the `📁 Bulk Upload CSV` button to `api.uploadWatchlistCsv(file)` and ensured the list refreshes automatically upon success.
+  - **User Feedback**: Added clear instructions, uploading states, and success/error alerts.
+- **Result**: Users can now efficiently scale their watchlist by uploading broker or research lists in CSV format.
+
+---
+
+## **May 11, 2026: Copywriting — Institutional Rebranding & Landing Page**
+- **Objective**: Position the MRI platform as a top-tier institutional forensic intelligence suite for seasoned investors.
+- **Actions**:
+  - **Creative Strategy**: Developed a comprehensive landing page draft focusing on "The End of Shallow Screening."
+  - **Messaging Highlights**: Surfaced high-impact features including the **8-Layer AAE V3 Engine**, **Narrative-Numeric Divergence**, and **Multi-Agent Forensic Debates**.
+  - **Digital Twin Positioning**: Framed the portfolio upload as a "Digital Twin" audit for real-time institutional-grade monitoring.
+  - **Social Proof**: Integrated the verified **22.12% CAGR** and **2.1M row** historical foundation into the core value proposition.
+- **Result**: Created a high-conviction, copywriter-grade landing page artifact (`landing_page_copy.md`) ready for implementation.
+
+---
+
 ## **May 11, 2026: UI Hotfix — Digital Twin Upload Function Repair**
 - **Objective**: Resolve the "q.uploadHoldings is not a function" Javascript error when uploading the Digital Twin portfolio CSV.
 - **Actions**:

@@ -1509,6 +1509,8 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
   const [digitalTwinHistoryLoading, setDigitalTwinHistoryLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+1512:   const [uploadFile, setUploadFile] = useState<File | null>(null);
+1513:   const [isUploading, setIsUploading] = useState(false);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -1589,6 +1591,22 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     } catch (err: any) { alert(err.message); }
   };
 
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    setIsUploading(true);
+    setError('');
+    try {
+      const res = await api.uploadWatchlistCsv(uploadFile);
+      alert(res.message || 'Bulk upload complete');
+      loadWatchlist();
+      setUploadFile(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload CSV');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleRunDigitalTwin = async (symbol: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDigitalTwinStock(symbol);
@@ -1640,6 +1658,27 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
           <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0 24px' }}>Add to List</button>
         </form>
         {error && <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '8px' }}>{error}</div>}
+        
+        <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(148, 163, 184, 0.1)', paddingTop: '1.5rem' }}>
+          <p className="card-meta" style={{ marginBottom: '10px' }}>Bulk add symbols via CSV (Ticker/Symbol column required):</p>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input 
+              type="file" 
+              accept=".csv" 
+              onChange={e => setUploadFile(e.target.files?.[0] || null)} 
+              className="form-input" 
+              style={{ width: 'auto', fontSize: '12px' }} 
+            />
+            <button 
+              className="btn-secondary" 
+              onClick={handleUpload} 
+              disabled={!uploadFile || isUploading}
+              style={{ width: 'auto', padding: '0 20px', fontSize: '13px' }}
+            >
+              {isUploading ? 'Uploading...' : '📁 Bulk Upload CSV'}
+            </button>
+          </div>
+        </div>
       </section>
 
       {watchlist.length > 0 ? (
