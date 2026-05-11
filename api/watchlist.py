@@ -223,14 +223,28 @@ async def upload_watchlist_csv(
     client=Depends(get_current_client),
     conn=Depends(get_db)
 ):
-    """Bulk upload symbols to watchlist from CSV."""
-    if not file.filename.endswith('.csv'):
+    # Log the start of upload
+    logger.info(f"Bulk upload triggered by client {client.get('email')} for file {file.filename}")
+
+    if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
 
-    content = await file.read()
     try:
-        decoded = content.decode('utf-8-sig').splitlines()
-        reader = csv.reader(decoded)
+        content = await file.read()
+        # Try multiple encodings
+        decoded_str = ""
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1']:
+            try:
+                decoded_str = content.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if not decoded_str:
+            raise ValueError("Could not decode CSV file. Please ensure it is in UTF-8 or Latin-1 format.")
+
+        lines = decoded_str.splitlines()
+        reader = csv.reader(lines)
         
         symbols = []
         first_row = next(reader, None)
@@ -238,34 +252,44 @@ async def upload_watchlist_csv(
             return {"message": "Empty file", "added": 0}
 
         # Check for header
-        header = [h.strip().lower() for h in first_row]
+        header = [str(h).strip().lower() for h in first_row]
+        logger.info(f"CSV Headers detected: {header}")
+        
         symbol_idx = -1
-        if "symbol" in header:
-            symbol_idx = header.index("symbol")
-        elif "ticker" in header:
-            symbol_idx = header.index("ticker")
+        # Flexible header detection
+        for idx, h in enumerate(header):
+            if any(term in h for term in ["symbol", "ticker", "stock", "code", "scrip"]):
+                symbol_idx = idx
+                break
         
         if symbol_idx != -1:
-            # File has headers
+            logger.info(f"Using column index {symbol_idx} for symbols")
             for row in reader:
                 if len(row) > symbol_idx:
                     sym = row[symbol_idx].strip().upper()
                     if sym: symbols.append(sym)
         else:
+            logger.info("No clear header found. Defaulting to first column.")
             # Assume no header, first row was a ticker
             sym = first_row[0].strip().upper()
             if sym: symbols.append(sym)
             for row in reader:
-                if row:
+                if row and len(row) > 0:
                     sym = row[0].strip().upper()
                     if sym: symbols.append(sym)
 
-        if not symbols:
+        # Cleanup symbols (remove .NS, .BO for normalization if present)
+        symbols = [s.replace('.NS', '').replace('.BO', '') for s in symbols if s]
+        unique_symbols = list(set(symbols))
+        
+        if not unique_symbols:
             return {"message": "No valid symbols found in CSV", "added": 0}
+
+        logger.info(f"Processing {len(unique_symbols)} unique symbols")
 
         cur = conn.cursor()
         added_count = 0
-        for symbol in set(symbols): # Deduplicate
+        for symbol in unique_symbols:
             try:
                 cur.execute(
                     "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING",
@@ -273,14 +297,24 @@ async def upload_watchlist_csv(
                 )
                 if cur.rowcount > 0:
                     added_count += 1
-            except Exception:
+            except Exception as e:
+                logger.error(f"Error adding {symbol}: {e}")
                 continue
         
         conn.commit()
-        if symbols:
-            background_tasks.add_task(ingest_missing_symbols_sync, list(set(symbols)), 'admin', client["email"])
-            background_tasks.add_task(prime_aae_data_batch, list(set(symbols)))
-        return {"message": f"Bulk upload successful. Added {added_count} new symbols.", "total_processed": len(symbols)}
+        cur.close()
+        
+        if unique_symbols:
+            logger.info(f"Triggering background ingestion for {len(unique_symbols)} symbols")
+            background_tasks.add_task(ingest_missing_symbols_sync, unique_symbols, str(client["id"]), client["email"])
+            background_tasks.add_task(prime_aae_data_batch, unique_symbols)
+            
+        return {
+            "message": f"Bulk upload successful. Added {added_count} new symbols.", 
+            "total_processed": len(unique_symbols),
+            "added_count": added_count
+        }
 
     except Exception as e:
+        logger.error(f"CSV Upload Failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"CSV processing failed: {str(e)}")

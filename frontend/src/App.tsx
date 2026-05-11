@@ -1593,14 +1593,17 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
   const handleUpload = async () => {
     if (!uploadFile) return;
+    console.log('🚀 Starting bulk upload for:', uploadFile.name);
     setIsUploading(true);
     setError('');
     try {
       const res = await api.uploadWatchlistCsv(uploadFile);
+      console.log('✅ Upload response:', res);
       alert(res.message || 'Bulk upload complete');
       loadWatchlist();
       setUploadFile(null);
     } catch (err: any) {
+      console.error('❌ Upload failed:', err);
       setError(err.message || 'Failed to upload CSV');
     } finally {
       setIsUploading(false);
