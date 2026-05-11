@@ -313,7 +313,7 @@ async def upload_watchlist_csv(
             background_tasks.add_task(prime_aae_data_batch, unique_symbols)
             
         return {
-            "message": f"Bulk upload successful. Added {added_count} new symbols.", 
+            "message": f"Bulk upload successful. Found {len(unique_symbols)} symbols, added {added_count} new ones.", 
             "total_processed": len(unique_symbols),
             "added_count": added_count
         }
