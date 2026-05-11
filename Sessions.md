@@ -1,5 +1,23 @@
 # **MRI Sessions Log**
 
+## **May 11, 2026: AAE Data Primer — Automatic Backfill on Watchlist/Holdings Add**
+- **Objective**: Ensure AAE V3 scans produce meaningful scores (not defaults) by automatically backfilling quarterly financials and governance metrics when a stock is added to the Watchlist or Digital Twin.
+- **Actions**:
+  - **New Module:** Created `engine_fundamental/aae_data_primer.py` with `prime_aae_data()` and `prime_aae_data_batch()` functions.
+  - **Watchlist Integration:** Wired `prime_aae_data` as a FastAPI `BackgroundTask` in both the single-add and CSV bulk upload endpoints of `api/watchlist.py`.
+  - **Digital Twin Integration:** Wired `prime_aae_data_batch` into all 3 external holdings add paths (`/add`, `/save-bulk`, `/upload-csv`) in `api/portfolio_review.py`.
+  - **Verification:** All 3 modified files pass `python -m py_compile`.
+- **Result**: Adding a stock to watchlist or holdings now automatically ingests quarterly financials (via `quarterly_collector`) and governance metrics (via `governance_engine`) in the background. The next AAE V3 scan for that symbol will use real data instead of returning default 50 scores.
+- **One-Time Backfill:** Created and ran `scripts/backfill_aae_existing.py` — primed AAE data for all 61 existing watchlist/holdings symbols. Result: 61/61 succeeded.
+- **AAE Scan Persistence:**
+  - Created `aae_scan_history` table — append-only log of every scan (manual + pipeline). Tracks master_score, sector, market_confirmation, debate_conviction, risk_summary, reasons, and scan_source over time.
+  - Updated `api/aae.py` — every scan (manual "Run AAE" click) now persists to both `aae_scan_history` and `aae_results_snapshot`.
+  - Updated `scripts/aae_bulk_scan.py` — daily pipeline scans also persist to history with `scan_source='PIPELINE'`.
+  - Added `GET /api/aae/history/{symbol}` endpoint — returns full score trajectory for any symbol (up to 50 scans).
+  - This enables tracking how a stock's institutional score evolves over time, identifying emerging re-raters whose scores are consistently rising.
+
+---
+
 ## **May 11, 2026: AAE V3 Definitive Production Release & UI Twin**
 - **Objective**: Finalize the 8-layer institutional intelligence stack, operationalize automated pipeline integration, and embed the "Digital Twin" into the UI.
 - **Actions**:

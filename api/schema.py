@@ -570,6 +570,24 @@ def ensure_required_tables(conn) -> None:
             date_buried TIMESTAMP DEFAULT NOW()
         );
     """)
+
+    # AAE V3 Scan History (Persistent timeline of every scan)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS public.aae_scan_history (
+            id SERIAL PRIMARY KEY,
+            symbol VARCHAR(20) NOT NULL,
+            master_score NUMERIC(5,2),
+            sector VARCHAR(50),
+            market_confirmation VARCHAR(20),
+            debate_conviction NUMERIC(5,2),
+            risk_summary TEXT,
+            reasons JSONB,
+            scan_source VARCHAR(20) DEFAULT 'MANUAL',
+            scanned_at TIMESTAMPTZ DEFAULT NOW()
+        );
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_symbol_date ON public.aae_scan_history(symbol, scanned_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_score ON public.aae_scan_history(master_score DESC);")
     
     conn.commit()
     cur.close()

@@ -7,6 +7,7 @@ import csv
 import io
 from api.deps import get_db, get_current_client
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
+from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
 
 router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 
@@ -193,6 +194,8 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
             client.get("email"),
             client.get("name")
         )
+        # Trigger AAE fundamental data backfill (quarterly financials + governance)
+        background_tasks.add_task(prime_aae_data, symbol)
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to add symbol: {e}")
@@ -276,6 +279,7 @@ async def upload_watchlist_csv(
         conn.commit()
         if symbols:
             background_tasks.add_task(ingest_missing_symbols_sync, list(set(symbols)), 'admin', client["email"])
+            background_tasks.add_task(prime_aae_data_batch, list(set(symbols)))
         return {"message": f"Bulk upload successful. Added {added_count} new symbols.", "total_processed": len(symbols)}
 
     except Exception as e:

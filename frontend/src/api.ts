@@ -357,6 +357,7 @@ export const api = {
   // AAE V3
   getAaeScan: (symbol: string) => apiFetch(`/aae/scan/${symbol}`),
   getAaeTopCandidates: () => apiFetch('/aae/top-candidates'),
+  getAaeHistory: (symbol: string) => apiFetch(`/aae/history/${symbol}`),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

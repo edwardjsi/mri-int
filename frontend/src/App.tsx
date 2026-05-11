@@ -1506,6 +1506,8 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [digitalTwinStock, setDigitalTwinStock] = useState<string | null>(null);
   const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
   const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
+  const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
+  const [digitalTwinHistoryLoading, setDigitalTwinHistoryLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const handleSort = (key: string) => {
@@ -1592,14 +1594,19 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     setDigitalTwinStock(symbol);
     setDigitalTwinLoading(true);
     setDigitalTwinResult(null);
-    try {
-      const result = await api.getAaeScan(symbol);
-      setDigitalTwinResult(result);
-    } catch (err: any) {
-      setDigitalTwinResult({ error: err.message || 'Failed to run AAE scan' });
-    } finally {
-      setDigitalTwinLoading(false);
-    }
+    setDigitalTwinHistory([]);
+    setDigitalTwinHistoryLoading(true);
+    
+    // Run scan and fetch history in parallel
+    api.getAaeScan(symbol)
+      .then(result => setDigitalTwinResult(result))
+      .catch(err => setDigitalTwinResult({ error: err.message || 'Failed to run AAE scan' }))
+      .finally(() => setDigitalTwinLoading(false));
+
+    api.getAaeHistory(symbol)
+      .then(history => setDigitalTwinHistory(history))
+      .catch(err => console.error('Failed to fetch AAE history', err))
+      .finally(() => setDigitalTwinHistoryLoading(false));
   };
 
   if (loading) return <div className="loading">Loading your watchlist...</div>;
@@ -1777,6 +1784,41 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                         </ul>
                       </div>
                     )}
+
+                    {/* ── Trajectory / History Section ── */}
+                    <div style={{ marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                      <strong style={{ display: 'block', marginBottom: '1rem', color: '#334155' }}>📊 AAE Score Trajectory</strong>
+                      {digitalTwinHistoryLoading ? (
+                        <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Loading history...</p>
+                      ) : digitalTwinHistory.length > 0 ? (
+                        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          <table style={{ width: '100%', fontSize: '0.8rem', textAlign: 'left', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                                <th style={{ padding: '8px 4px' }}>Date</th>
+                                <th style={{ padding: '8px 4px' }}>Score</th>
+                                <th style={{ padding: '8px 4px' }}>Conviction</th>
+                                <th style={{ padding: '8px 4px' }}>Source</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {digitalTwinHistory.map((h: any, i: number) => (
+                                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '8px 4px' }}>{new Date(h.scanned_at).toLocaleDateString()}</td>
+                                  <td style={{ padding: '8px 4px', fontWeight: 'bold', color: h.master_score >= 70 ? '#10b981' : h.master_score >= 50 ? '#f59e0b' : '#ef4444' }}>
+                                    {h.master_score}
+                                  </td>
+                                  <td style={{ padding: '8px 4px' }}>{h.debate_conviction || '-'}</td>
+                                  <td style={{ padding: '8px 4px', fontSize: '0.7rem' }}>{h.scan_source}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '0.8rem', color: '#64748b' }}>No historical scans found.</p>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

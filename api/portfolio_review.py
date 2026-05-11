@@ -11,6 +11,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from engine_core.db import get_connection
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
+from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
 from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
 
@@ -172,6 +173,8 @@ async def add_single_holding(
             client.get("email"), 
             client.get("name")
         )
+        # Trigger AAE fundamental data backfill (quarterly financials + governance)
+        background_tasks.add_task(prime_aae_data_batch, processed_symbols)
         
         # Analyze and return instantly
         from engine_core.portfolio_review_engine import analyze_portfolio
@@ -190,13 +193,16 @@ async def add_single_holding(
 @router.post("/save_bulk")
 async def save_holdings_bulk(
     holdings: List[SingleHoldingAddRequest],
+    background_tasks: BackgroundTasks,
     client=Depends(get_current_client),
     conn=Depends(get_db)
 ):
     cur = conn.cursor()
     try:
         client_id = str(client["id"])
+        symbols_added = []
         for h in holdings:
+            sym = h.symbol.upper().strip()
             cur.execute("""
                 INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
                 VALUES (%s::uuid, %s, %s, %s)
@@ -204,8 +210,12 @@ async def save_holdings_bulk(
                     quantity = EXCLUDED.quantity, 
                     avg_cost = EXCLUDED.avg_cost,
                     updated_at = NOW()
-            """, (client_id, h.symbol.upper().strip(), h.quantity, h.avg_cost))
+            """, (client_id, sym, h.quantity, h.avg_cost))
+            symbols_added.append(sym)
         conn.commit()
+        # Trigger AAE fundamental data backfill (quarterly financials + governance)
+        if symbols_added:
+            background_tasks.add_task(prime_aae_data_batch, symbols_added)
         return {"status": "success", "count": len(holdings)}
     except Exception as e:
         conn.rollback()
@@ -355,6 +365,8 @@ async def upload_csv(
         cur.close()
 
         background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id, client.get("email"), client.get("name"))
+        # Trigger AAE fundamental data backfill (quarterly financials + governance)
+        background_tasks.add_task(prime_aae_data_batch, processed_symbols)
 
         from engine_core.portfolio_review_engine import analyze_portfolio
         analysis = analyze_portfolio(processed_holdings, conn)
