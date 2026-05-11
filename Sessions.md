@@ -1,5 +1,15 @@
 # **MRI Sessions Log**
 
+## **May 11, 2026: UI Hotfix — Digital Twin Upload Function Repair**
+- **Objective**: Resolve the "q.uploadHoldings is not a function" Javascript error when uploading the Digital Twin portfolio CSV.
+- **Actions**:
+  - **Diagnostic**: Discovered that `frontend/src/api.ts` was using the old name `uploadPortfolioCsv` while `frontend/src/App.tsx` had been updated to expect `uploadHoldings`.
+  - **API Repair**: Renamed `uploadPortfolioCsv` to `uploadHoldings` in `frontend/src/api.ts` to restore functionality and align with the "Digital Twin" rebranding.
+  - **Verification**: Confirmed the API path `/api/portfolio-review/upload-csv` remains correct and matches the backend router in `api/portfolio_review.py`.
+- **Result**: Digital Twin portfolio upload is now functional again.
+
+---
+
 ## **May 11, 2026: AAE Data Primer — Automatic Backfill on Watchlist/Holdings Add**
 - **Objective**: Ensure AAE V3 scans produce meaningful scores (not defaults) by automatically backfilling quarterly financials and governance metrics when a stock is added to the Watchlist or Digital Twin.
 - **Actions**:

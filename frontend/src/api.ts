@@ -204,7 +204,7 @@ export const api = {
     getDailySummary: () => apiFetch('/portfolio/daily-summary'),
 
     // Portfolio Review
-    uploadPortfolioCsv: async (file: File) => {
+    uploadHoldings: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
         
