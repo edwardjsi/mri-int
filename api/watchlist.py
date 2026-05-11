@@ -5,9 +5,12 @@ import psycopg2.extras
 
 import csv
 import io
+import logging
 from api.deps import get_db, get_current_client
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
 from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 
