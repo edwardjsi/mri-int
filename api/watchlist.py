@@ -292,17 +292,20 @@ async def upload_watchlist_csv(
 
         cur = conn.cursor()
         added_count = 0
+        client_id_str = str(client["id"])
+        
+        logger.info(f"[BULK_UPLOAD] Client {client_id_str} attempting to upload {len(unique_symbols)} unique symbols: {unique_symbols[:5]}...")
+        
         for symbol in unique_symbols:
             try:
                 cur.execute(
                     "INSERT INTO client_watchlist (client_id, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (str(client["id"]), symbol)
+                    (client_id_str, symbol)
                 )
                 if cur.rowcount > 0:
                     added_count += 1
             except Exception as e:
-                logger.error(f"Error adding {symbol}: {e}")
-                continue
+                logger.error(f"[BULK_UPLOAD] Error inserting {symbol}: {e}")
         
         conn.commit()
         cur.close()
