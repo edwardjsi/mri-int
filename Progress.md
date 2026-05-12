@@ -2,6 +2,27 @@
 
 ---
 
+## 📅 Session: May 12, 2026 — 8-Layer Forensic Integration & Risk Audit Fix
+**Session Start:** 15:30 IST
+**Session End:** 16:00 IST
+
+### What Was Done This Session
+
+#### 1. Risk Audit & Dashboard Integration ✅
+- [x] Fixed critical rendering bug in `RiskAuditPage` where existing holdings were not displayed on mount.
+- [x] Integrated **AAE Master Scores** directly into the Portfolio Audit table for real-time institutional insight.
+- [x] Unified the `StockDetailsModal` in `App.tsx` to automatically surface AAE forensic summaries for all audit items.
+- [x] Wired up click handlers in `AaeDashboard.tsx` to enable the Digital Twin forensic modal from the candidate list.
+
+#### 2. Enhanced Institutional Reporting ✅
+- [x] Overhauled `AAEOrchestrator` to capture granular scores for all 8 forensic layers.
+- [x] Redesigned the **AAE Forensic Email Report** with a professional layer-by-layer breakdown table.
+- [x] Upgraded the Forensic Stress Test (Layer 8) email block to highlight conviction and critical risks.
+- [x] Verified 95+ symbols successfully audited in the production `aae_results_snapshot`.
+
+---
+
+
 ## 📅 Session: May 12, 2026 — AAE V3 Stabilization & UI Sync
 **Session Start:** 14:45 IST
 **Session End:** 15:20 IST

@@ -1,5 +1,16 @@
 # **MRI Sessions Log**
-2: 
+
+## **May 12, 2026: 8-Layer Forensic Integration & Risk Audit Fix**
+- **Objective**: Fix the Risk Audit dashboard visibility and deliver high-conviction 8-layer forensic reports via email and UI.
+- **Actions**:
+  - **Risk Audit Repair**: Resolved the `RiskAuditPage` rendering bug by ensuring holdings analysis is fetched and populated on component mount.
+  - **AAE Integration**: Joined the portfolio review engine with the `aae_results_snapshot` table to surface Master Scores directly in the Audit table.
+  - **Engine Enhancement**: Updated `AAEOrchestrator` to capture granular scores for all 8 forensic layers (Governance, Structural Delta, Ownership, etc.).
+  - **Professional Reporting**: Redesigned the AAE Forensic Email template to feature a neat layer-by-layer breakdown table and improved risk callouts.
+  - **UI Unification**: Updated `StockDetailsModal` in `App.tsx` to automatically display institutional forensic data for any audited stock.
+- **Result**: The "Digital Twin" is now fully visible in the Risk Audit page, and users receive professional, data-rich forensic reports in their inbox.
+
+---
 3: ## **May 12, 2026: AAE V3 Stabilization & UI Sync**
 4: - **Objective**: Restore functionality to the AAE Console and Watchlist by fixing pipeline crashes and synchronization errors.
 5: - **Actions**:
