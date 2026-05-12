@@ -251,11 +251,14 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
     
     # Layer Breakdown HTML
     layer_rows = ""
+    narrative_source = layers.get("narrative", {}).get("source", "SYNTHETIC_PROXY")
+    narrative_label = f"Narrative (L4) <span style='font-size:9px;color:#94a3b8;background:#f1f5f9;padding:2px 4px;border-radius:4px'>{narrative_source}</span>"
+    
     layer_configs = [
         ("Governance (L0)", layers.get("governance", {}).get("risk_score", "N/A"), "Integrity & Compliance check"),
         ("Structural Delta (L1&2)", layers.get("structural_delta", {}).get("score", "N/A"), "Earnings & Margin inflection"),
         ("Ownership (L3)", layers.get("ownership", {}).get("score", "N/A"), "FII/DII flow trajectory"),
-        ("Narrative (L4)", layers.get("narrative", {}).get("score", "N/A"), "Market sentiment & Themes"),
+        (narrative_label, layers.get("narrative", {}).get("score", "N/A"), "Market sentiment & Themes"),
         ("Market Confirmation (L5)", layers.get("market", {}).get("score", "N/A"), "Price & Volume leadership"),
         ("Valuation (L6)", layers.get("valuation", {}).get("score", "N/A"), "Risk/Reward asymmetry"),
         ("Forensic Feedback (L7)", 100 - layers.get("forensic", {}).get("penalty", 0), "Feedback loop & Penalties"),

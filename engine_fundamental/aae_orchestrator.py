@@ -52,10 +52,25 @@ class AAEOrchestrator:
         
         narrative_score = 50
         narrative_summary = None
+        narrative_source = "SYNTHETIC_PROXY"
+        
         if latest_narrative is not None and not latest_narrative.empty:
             score_val = latest_narrative.iloc[0]['sentiment_score']
             narrative_score = float(score_val) * 100 if score_val is not None else 50
             narrative_summary = latest_narrative.iloc[0]['summary']
+            narrative_source = "OFFICIAL_TRANSCRIPT"
+        else:
+            # Synthetic Narrative Fallback: Derive from Financial Delta
+            delta_score = sector_result.get('score', 50)
+            if delta_score >= 75:
+                narrative_score = 65
+                narrative_summary = "Synthesized Institutional View: Significant structural inflection in margins and efficiency detected. Management narrative likely focused on operating leverage. (Full concall analysis pending backfill)."
+            elif delta_score >= 60:
+                narrative_score = 55
+                narrative_summary = "Synthesized Institutional View: Positive financial trajectory detected. Narrative likely stable with focus on growth execution. (Full concall analysis pending backfill)."
+            else:
+                narrative_score = 50
+                narrative_summary = "Synthesized Institutional View: Neutral financial trajectory. No significant narrative inflection detected via financials. (Full concall analysis pending backfill)."
             
         # Layer 5: Market Confirmation
         market = MarketConfirmationEngine(self.symbol)
@@ -106,7 +121,8 @@ class AAEOrchestrator:
                 },
                 "narrative": {
                     "score": round(narrative_score, 1),
-                    "summary": narrative_summary
+                    "summary": narrative_summary,
+                    "source": narrative_source
                 },
                 "valuation": {
                     "score": val_result.get('valuation_score'),
