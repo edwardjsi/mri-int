@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt ./requirements.txt
 COPY api/requirements.txt ./api-requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt -r api-requirements.txt
+# Explicitly install psycopg2-binary to avoid stale-cache issues
+RUN pip install --no-cache-dir psycopg2-binary
 
 # Copy backend source code
 # Note: code now lives in engine_core/ (legacy src/ was removed)
