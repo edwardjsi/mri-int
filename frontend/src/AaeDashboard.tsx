@@ -9,6 +9,13 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [filterUniverse, setFilterUniverse] = useState('Nifty 500');
 
+  // Digital Twin Modal State
+  const [digitalTwinStock, setDigitalTwinStock] = useState<string | null>(null);
+  const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
+  const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
+  const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
+  const [digitalTwinHistoryLoading, setDigitalTwinHistoryLoading] = useState(false);
+
   useEffect(() => {
     Promise.all([
       api.getAaeTopCandidates().catch(() => []),
@@ -33,6 +40,25 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
       setCandidates(allCandidates);
     }
   }, [filterUniverse, allCandidates, watchlistSymbols]);
+
+  const handleRunDigitalTwin = async (symbol: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDigitalTwinStock(symbol);
+    setDigitalTwinLoading(true);
+    setDigitalTwinResult(null);
+    setDigitalTwinHistory([]);
+    setDigitalTwinHistoryLoading(true);
+    
+    api.getAaeScan(symbol)
+      .then(result => setDigitalTwinResult(result))
+      .catch(err => setDigitalTwinResult({ error: err.message || 'Failed to run AAE scan' }))
+      .finally(() => setDigitalTwinLoading(false));
+
+    api.getAaeHistory(symbol)
+      .then(history => setDigitalTwinHistory(history))
+      .catch(err => console.error('Failed to fetch AAE history', err))
+      .finally(() => setDigitalTwinHistoryLoading(false));
+  };
 
   return (
     <div className="aae-console-wrapper">
@@ -168,6 +194,27 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
         .aae-event-main { display: grid; gap: 5px; min-width: 0; }
         .aae-event-main strong { font-weight: 600; }
         .aae-mini-note { color: var(--muted); font-size: 12px; line-height: 1.4; }
+        
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); padding: 20px; }
+        .modal-content { background: #fff; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border-radius: 12px; position: relative; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: 0; font-size: 24px; cursor: pointer; color: var(--muted); }
+        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .modal-header-meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+        .stock-symbol { font-size: 18px; font-weight: 820; color: var(--blue); }
+        .stock-sector { color: var(--muted); font-size: 14px; }
+        
+        .metric-box { background: var(--soft); padding: 18px; border-radius: 10px; border: 1px solid var(--line); }
+        .metric-label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 720; margin-bottom: 6px; }
+        .metric-value-large { font-size: 32px; font-weight: 820; }
+        
+        .aae-results-grid { display: grid; gap: 24px; }
+        .aae-summary-card { background: #fff1f0; border-left: 4px solid var(--red); padding: 16px; border-radius: 8px; }
+        .aae-summary-title { font-weight: 800; color: #991b1b; margin-bottom: 8px; display: block; }
+        .aae-summary-text { font-size: 14px; color: #450a0a; line-height: 1.6; }
+        
+        .loading-pulse { width: 40px; height: 40px; background: var(--blue); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; margin: 0 auto 16px; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
       `}</style>
       <div className="aae-app">
         <aside className="aae-sidebar">
@@ -261,7 +308,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                 </div>
                 <div className="aae-panel-body aae-candidate-list">
                   {loading ? <p>Loading Live Candidates...</p> : candidates.map((cand, idx) => (
-                    <article className="aae-candidate" key={cand.symbol}>
+                    <article className="aae-candidate" key={cand.symbol} onClick={(e) => handleRunDigitalTwin(cand.symbol, e)} style={{ cursor: 'pointer' }}>
                       <div className="aae-rank">{idx + 1}</div>
                       <div className="aae-company-cell">
                         <div className="aae-ticker">{cand.symbol}</div>
@@ -296,7 +343,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                   </div>
                   <div className="aae-panel-body aae-event-list">
                     {candidates.slice(0, 5).map((cand, idx) => (
-                      <div className="aae-event-row" key={'event'+idx}>
+                      <div className="aae-event-row" key={'event'+idx} onClick={(e) => handleRunDigitalTwin(cand.symbol, e)} style={{ cursor: 'pointer' }}>
                         <div className="aae-event-time">{cand.symbol}</div>
                         <div className="aae-event-main">
                           <strong>Master Score: {cand.master_score}</strong>
@@ -342,6 +389,108 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
             </section>
           </section>
         </main>
+
+        {digitalTwinStock && (
+          <div className="modal-overlay" onClick={() => !digitalTwinLoading && setDigitalTwinStock(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => !digitalTwinLoading && setDigitalTwinStock(null)}>×</button>
+              <h2 className="modal-title">🤖 Digital Twin: Institutional Scan</h2>
+              <div className="modal-header-meta">
+                <span className="stock-symbol">{digitalTwinStock}</span>
+                <span className="stock-sector">AAE V3 Forensic Audit</span>
+              </div>
+              
+              {digitalTwinLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div className="loading-pulse"></div>
+                  <p style={{ fontWeight: 720 }}>Synchronizing Institutional Intelligence...</p>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>Running Narrative Sentiment, Structural Delta & Forensic Debate</p>
+                </div>
+              ) : digitalTwinResult ? (
+                <div className="aae-results-grid">
+                  {digitalTwinResult.error ? (
+                    <div className="aae-summary-card" style={{ background: '#fff1f2', borderLeftColor: '#e11d48' }}>
+                      <strong className="aae-summary-title" style={{ color: '#9f1239' }}>Scan Interrupted</strong>
+                      <p className="aae-summary-text">{digitalTwinResult.error}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div className="metric-box">
+                          <div className="metric-label">Master Score</div>
+                          <div className="metric-value-large" style={{ color: digitalTwinResult.master_score >= 80 ? 'var(--green)' : 'var(--blue)' }}>
+                            {digitalTwinResult.master_score}
+                          </div>
+                        </div>
+                        <div className="metric-box">
+                          <div className="metric-label">Debate Conviction</div>
+                          <div className="metric-value-large" style={{ color: 'var(--violet)' }}>
+                            {digitalTwinResult.debate_conviction || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {digitalTwinResult.debate_summary && (
+                        <div className="aae-summary-card">
+                          <strong className="aae-summary-title">Forensic Verdict</strong>
+                          <p className="aae-summary-text">{digitalTwinResult.debate_summary}</p>
+                          {digitalTwinResult.risk_summary && (
+                            <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase' }}>
+                              ⚠️ Critical Risk: {digitalTwinResult.risk_summary}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {digitalTwinResult.reasons && digitalTwinResult.reasons.length > 0 && (
+                        <div>
+                          <div className="metric-label" style={{ marginBottom: '10px' }}>Key Structural Drivers</div>
+                          <div style={{ display: 'grid', gap: '8px' }}>
+                            {digitalTwinResult.reasons.map((r: string, i: number) => (
+                              <div key={i} style={{ padding: '10px 14px', background: 'var(--soft)', borderRadius: '6px', fontSize: '13px' }}>
+                                • {r}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+                        <div className="metric-label" style={{ marginBottom: '12px' }}>Score Trajectory</div>
+                        {digitalTwinHistoryLoading ? (
+                          <p className="aae-subtle">Fetching history...</p>
+                        ) : digitalTwinHistory.length > 0 ? (
+                          <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', fontSize: '12px', textAlign: 'left', borderCollapse: 'collapse' }}>
+                              <thead>
+                                <tr style={{ background: 'var(--soft)', borderBottom: '1px solid var(--line)' }}>
+                                  <th style={{ padding: '10px' }}>Date</th>
+                                  <th style={{ padding: '10px' }}>Score</th>
+                                  <th style={{ padding: '10px' }}>Source</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {digitalTwinHistory.map((h: any, i: number) => (
+                                  <tr key={i} style={{ borderBottom: '1px solid var(--line)' }}>
+                                    <td style={{ padding: '10px' }}>{new Date(h.scanned_at).toLocaleDateString()}</td>
+                                    <td style={{ padding: '10px', fontWeight: 800 }}>{h.master_score}</td>
+                                    <td style={{ padding: '10px', color: 'var(--muted)' }}>{h.scan_source}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="aae-subtle">First institutional scan in progress.</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
