@@ -5,6 +5,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [sectors, setSectors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterUniverse, setFilterUniverse] = useState('Nifty 500');
 
   useEffect(() => {
     Promise.all([
@@ -190,6 +191,19 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                 <h1>AAE Research Dashboard</h1>
                 <p className="aae-subtle">Ranked re-rating candidates, structural signals, and thesis-risk monitoring.</p>
               </div>
+              <div className="aae-filters">
+                <select className="aae-select" aria-label="Universe" value={filterUniverse} onChange={e => setFilterUniverse(e.target.value)}>
+                  <option value="Nifty 500">Nifty 500</option>
+                  <option value="Nifty 50">Nifty 50</option>
+                  <option value="Watchlist">Watchlist</option>
+                  <option value="PRDE Seed">PRDE Seed</option>
+                </select>
+                <select className="aae-select" aria-label="Period">
+                  <option>Current Quarter</option>
+                  <option>Previous Quarter</option>
+                  <option>YTD</option>
+                </select>
+              </div>
             </div>
 
             <section className="aae-metric-grid">
@@ -199,9 +213,24 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                 <div className="aae-metric-foot"><span>Score above 80</span><strong className="aae-positive">Ready</strong></div>
               </div>
               <div className="aae-metric">
+                <div className="aae-metric-label">Structural Alerts</div>
+                <div className="aae-metric-value">{candidates.filter(c => JSON.stringify(c.reasons || []).includes("Structural")).length}</div>
+                <div className="aae-metric-foot"><span>Signals active</span><strong className="aae-warning">Review</strong></div>
+              </div>
+              <div className="aae-metric">
+                <div className="aae-metric-label">Thesis At Risk</div>
+                <div className="aae-metric-value">{candidates.filter(c => JSON.stringify(c.reasons || []).includes("Penalty") || JSON.stringify(c.reasons || []).includes("Headwind") || c.master_score < 50).length}</div>
+                <div className="aae-metric-foot"><span>Persistent red flags</span><strong className="aae-danger">Review</strong></div>
+              </div>
+              <div className="aae-metric">
+                <div className="aae-metric-label">PRDE Coverage</div>
+                <div className="aae-metric-value">25</div>
+                <div className="aae-metric-foot"><span>Seed companies</span><strong className="aae-positive">Ready</strong></div>
+              </div>
+              <div className="aae-metric">
                 <div className="aae-metric-label">Total Scanned</div>
                 <div className="aae-metric-value">{candidates.length}</div>
-                <div className="aae-metric-foot"><span>Top 20 displayed</span><strong className="aae-blue">Live</strong></div>
+                <div className="aae-metric-foot"><span>Top picks displayed</span><strong className="aae-blue">Live</strong></div>
               </div>
             </section>
 
