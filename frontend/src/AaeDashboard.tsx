@@ -11,6 +11,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
 
   // Digital Twin Modal State
   const [digitalTwinStock, setDigitalTwinStock] = useState<string | null>(null);
+  const [emailing, setEmailing] = useState(false);
   const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
   const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
   const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
@@ -58,6 +59,20 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
       .then(history => setDigitalTwinHistory(history))
       .catch(err => console.error('Failed to fetch AAE history', err))
       .finally(() => setDigitalTwinHistoryLoading(false));
+  };
+
+  const handleEmailAAE = async () => {
+    if (!digitalTwinStock) return;
+    setEmailing(true);
+    try {
+      const res = await api.emailAaeReport(digitalTwinStock);
+      alert(res.message || "Forensic report queued for email.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send email. Check API logs.");
+    } finally {
+      setEmailing(false);
+    }
   };
 
   return (
@@ -483,6 +498,17 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                         ) : (
                           <p className="aae-subtle">First institutional scan in progress.</p>
                         )}
+                      </div>
+
+                      <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                        <button 
+                          className="btn-primary" 
+                          onClick={handleEmailAAE}
+                          disabled={emailing}
+                          style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', border: '1px solid #4338ca', padding: '12px', borderRadius: '8px', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          {emailing ? '📨 Sending...' : '📩 Email 8-Layer Forensic Memo'}
+                        </button>
                       </div>
                     </>
                   )}

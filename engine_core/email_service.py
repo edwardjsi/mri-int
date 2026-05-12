@@ -274,6 +274,18 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;color:{s_color}">{score}</td>
         </tr>"""
 
+    # Identify the "Why Insufficient history" logic for the email
+    processed_reasons = []
+    for r in reasons:
+        if "Trend Confirmation Pending" in r:
+            processed_reasons.append(f"<b>{r}</b>: AAE has successfully captured the current institutional state, but requires one more quarter to establish a directional trend (e.g., are promoters buying or selling?).")
+        elif "No Ownership Data" in r:
+            processed_reasons.append(f"<b>{r}</b>: We are currently awaiting the next exchange filing for this symbol to populate Layer 3.")
+        else:
+            processed_reasons.append(r)
+
+    reasons_html = "".join([f"<li style='margin-bottom:8px;color:#334155'>{r}</li>" for r in processed_reasons])
+
     return f"""
     <html>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:650px;margin:0 auto;padding:20px;background:#f1f5f9">
