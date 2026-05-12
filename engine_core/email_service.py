@@ -283,7 +283,7 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
                 AAE V3 Forensic Intelligence
             </div>
 
-            <h1 style="margin:0 0 4px;font-size:28px;color:#0f172a">{symbol} Institutional Review</h1>
+            <h1 style="margin:0 0 4px;font-size:28px;color:#0f172a">{symbol} 8-Layer Institutional Forensic Audit</h1>
             <p style="margin:0 0 24px;color:#64748b;font-size:14px">Sector: {sector} | Date: {date.today().strftime('%B %d, %Y')}</p>
 
             <div style="display:flex;align-items:center;background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:28px">
@@ -364,7 +364,7 @@ def send_aae_report_email(recipient_email: str, client_name: str, result: dict) 
     """
     symbol = result.get("symbol", "UNKNOWN")
     master_score = result.get("master_score", 0)
-    subject = f"AAE Forensic Review: {symbol} | Master Alpha {master_score}/100"
+    subject = f"8-Layer Forensic Audit: {symbol} | Master Alpha {master_score}/100"
     html_body = build_aae_report_email_html(client_name, result)
     return send_email_custom(recipient_email=recipient_email, subject=subject, html_body=html_body)
 
