@@ -287,6 +287,10 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
         else:
             processed_reasons.append(r)
 
+    div_penalty = result.get("divergence_penalty", 0)
+    if div_penalty > 0:
+        processed_reasons.append(f"<b style='color:#ef4444'>Narrative Divergence Penalty (-{div_penalty} pts)</b>: Management tone is significantly more bullish than actual financial inflections suggest.")
+
     reasons_html = "".join([f"<li style='margin-bottom:8px;color:#334155'>{r}</li>" for r in processed_reasons])
 
     return f"""

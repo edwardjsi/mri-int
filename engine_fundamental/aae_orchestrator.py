@@ -44,7 +44,7 @@ class AAEOrchestrator:
         # Layer 4: Narrative
         narrative = NarrativeEngine(self.symbol)
         latest_narrative = fetch_df("""
-            SELECT sentiment_score, narrative_delta, summary 
+            SELECT sentiment_score, narrative_delta, summary, numeric_divergence_score
             FROM aae_narrative_intelligence 
             WHERE symbol = %s 
             ORDER BY date DESC LIMIT 1
@@ -53,12 +53,20 @@ class AAEOrchestrator:
         narrative_score = 50
         narrative_summary = None
         narrative_source = "SYNTHETIC_PROXY"
+        divergence_penalty = 0
         
         if latest_narrative is not None and not latest_narrative.empty:
             score_val = latest_narrative.iloc[0]['sentiment_score']
+            div_val = latest_narrative.iloc[0]['numeric_divergence_score']
+            
             narrative_score = float(score_val) * 100 if score_val is not None else 50
             narrative_summary = f"[OFFICIAL CONCALL TRANSCRIPT] {latest_narrative.iloc[0]['summary']}"
             narrative_source = "OFFICIAL_TRANSCRIPT"
+            
+            # Numeric-Narrative Divergence Penalty
+            if div_val is not None and float(div_val) < -0.3:
+                divergence_penalty = 10
+                logger.warning(f"Narrative Divergence Penalty for {self.symbol}: Management too bullish vs financials ({div_val})")
         else:
             # Synthetic Narrative Fallback: Derive from Financial Delta
             delta_score = sector_result.get('score', 50)
@@ -93,7 +101,9 @@ class AAEOrchestrator:
             (val_result.get('valuation_score', 50) * 0.10)
         )
         
-        # Apply Forensic Penalty
+        # Apply Penalties
+        master_score -= divergence_penalty
+        
         if forensic['penalty'] > 0:
             master_score -= forensic['penalty']
         
@@ -101,6 +111,7 @@ class AAEOrchestrator:
             "symbol": self.symbol,
             "status": "ACTIVE",
             "master_score": round(max(0, master_score), 1),
+            "divergence_penalty": divergence_penalty,
             "sector": sector_result.get('sector'),
             "market_confirmation": market_result.get('confirmation_status'),
             "narrative_score": round(narrative_score, 1),
