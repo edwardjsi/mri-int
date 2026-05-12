@@ -46,8 +46,8 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [qualityLeaderboard, setQualityLeaderboard] = useState<any[]>([]);
   const [topQualityStocks, setTopQualityStocks] = useState<any[]>([]);
-  const [debatingSymbol, setDebatingSymbol] = useState<string | null>(null);
-  const [debateStatus, setDebateStatus] = useState<{ symbol: string; msg: string } | null>(null);
+  const [auditingSymbol, setAuditingSymbol] = useState<string | null>(null);
+  const [auditStatus, setAuditStatus] = useState<{ symbol: string; msg: string } | null>(null);
   const [aaeCandidates, setAaeCandidates] = useState<any[]>([]);
 
   // Sorting states
@@ -238,17 +238,17 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
   }
 };
 
-  const handleDebate = async (e: React.MouseEvent, symbol: string) => {
+  const handleAudit = async (e: React.MouseEvent, symbol: string) => {
     e.stopPropagation();
-    if (!confirm(`Run GPT Debate for ${symbol}? Results will be emailed to you.`)) return;
-    setDebatingSymbol(symbol);
+    if (!confirm(`Run full 10-Layer AAE Forensic Audit for ${symbol}? Results will be emailed to you.`)) return;
+    setAuditingSymbol(symbol);
     try {
-      const result = await api.triggerDebate(symbol);
-      setDebateStatus({ symbol, msg: result.message || 'Debate started — check your email shortly.' });
+      const result = await api.triggerAaeReport(symbol);
+      setAuditStatus({ symbol, msg: result.message || 'Audit started — check your email shortly.' });
     } catch (err: any) {
-      alert('Debate failed: ' + err.message);
+      alert('Audit failed: ' + err.message);
     } finally {
-      setDebatingSymbol(null);
+      setAuditingSymbol(null);
     }
   };
 
@@ -547,77 +547,77 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
 
       <section className="section" style={{ marginTop: '24px' }}>
         <h3 className="section-title">💎 Fundamental Quality Leaderboard (QIF)</h3>
-<p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
-            {debateStatus && (
-              <div style={{
-                marginTop: '10px', padding: '10px 14px', borderRadius: '8px',
-                background: '#22c55e20', border: '1px solid #22c55e40', color: '#86efac',
-                fontSize: '12px', fontWeight: 600
-              }}>
-                📊 Debate queued for <b>{debateStatus.symbol}</b> — {debateStatus.msg}
-                <button onClick={() => setDebateStatus(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#86efac', cursor: 'pointer', fontSize: '12px' }}>✕</button>
-              </div>
-            )}
-            <div className="table-container" style={{ marginTop: '16px' }}>
-            <table className="data-table">
-<thead>
-            <tr>
-              <th onClick={() => handleQifSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', qifSort)}</th>
-              <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Verdict {sortIcon('score', qifSort)}</th>
-              <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Score {sortIcon('score', qifSort)}</th>
-              <th onClick={() => handleQifSort('score_change')} style={{ cursor: 'pointer' }}>Change {sortIcon('score_change', qifSort)}</th>
-              <th onClick={() => handleQifSort('velocity')} style={{ cursor: 'pointer' }}>Velocity {sortIcon('velocity', qifSort)}</th>
-              <th>Trend</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applySort(qualityLeaderboard, qifSort).map(s => (
-                        <tr key={s.symbol + '_qif'} onClick={() => onSelectStock({ ...s, symbol: s.symbol })} className="clickable-row">
-                            <td className="font-bold">{s.symbol}</td>
-                            <td>
-                                <span style={{ 
-                                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
-                                    background: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))) + '20',
-                                    color: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))),
-                                    border: `1px solid ${s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))}40`
-                                }}>
-                                    {s.category}
-                                </span>
-                            </td>
-                            <td><span className="score-badge">{parseFloat(s.score).toFixed(1)}</span></td>
-                            <td>
-                                <span style={{ color: s.score_change >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                                    {s.score_change >= 0 ? '+' : ''}{parseFloat(s.score_change).toFixed(1)}
-                                </span>
-                            </td>
-<td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
-              <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
-              <td>
-                <button
-                  onClick={(e) => handleDebate(e, s.symbol)}
-                  disabled={debatingSymbol === s.symbol}
-                  style={{
-                    background: debatingSymbol === s.symbol ? '#64748b' : '#7c3aed',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '3px 10px',
-                    fontSize: '11px',
-                    cursor: debatingSymbol === s.symbol ? 'not-allowed' : 'pointer',
-                    fontWeight: 700,
-                  }}
-                >
-                  {debatingSymbol === s.symbol ? '⏳...' : '📊 Debate'}
-                </button>
-              </td>
-            </tr>
-                    ))}
-{(!qualityLeaderboard.length) && (
-              <tr><td colSpan={7} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
-            )}
-                </tbody>
-            </table>
+        <p className="section-subtitle">Top-rated business quality verdicts from the institutional framework.</p>
+        {auditStatus && (
+          <div style={{
+            marginTop: '10px', padding: '10px 14px', borderRadius: '8px',
+            background: '#22c55e20', border: '1px solid #22c55e40', color: '#86efac',
+            fontSize: '12px', fontWeight: 600
+          }}>
+            🔬 Audit queued for <b>{auditStatus.symbol}</b> — {auditStatus.msg}
+            <button onClick={() => setAuditStatus(null)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#86efac', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+          </div>
+        )}
+        <div className="table-container" style={{ marginTop: '16px' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th onClick={() => handleQifSort('symbol')} style={{ cursor: 'pointer' }}>Symbol {sortIcon('symbol', qifSort)}</th>
+                <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Verdict {sortIcon('score', qifSort)}</th>
+                <th onClick={() => handleQifSort('score')} style={{ cursor: 'pointer' }}>Score {sortIcon('score', qifSort)}</th>
+                <th onClick={() => handleQifSort('score_change')} style={{ cursor: 'pointer' }}>Change {sortIcon('score_change', qifSort)}</th>
+                <th onClick={() => handleQifSort('velocity')} style={{ cursor: 'pointer' }}>Velocity {sortIcon('velocity', qifSort)}</th>
+                <th>Trend</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applySort(qualityLeaderboard, qifSort).map(s => (
+                <tr key={s.symbol + '_qif'} onClick={() => onSelectStock({ ...s, symbol: s.symbol })} className="clickable-row">
+                  <td className="font-bold">{s.symbol}</td>
+                  <td>
+                    <span style={{ 
+                      padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold',
+                      background: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))) + '20',
+                      color: (s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))),
+                      border: `1px solid ${s.score >= 80 ? '#22c55e' : (s.score >= 70 ? '#a855f7' : (s.score >= 60 ? '#eab308' : '#ef4444'))}40`
+                    }}>
+                      {s.category}
+                    </span>
+                  </td>
+                  <td><span className="score-badge">{parseFloat(s.score).toFixed(1)}</span></td>
+                  <td>
+                    <span style={{ color: s.score_change >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                      {s.score_change >= 0 ? '+' : ''}{parseFloat(s.score_change).toFixed(1)}
+                    </span>
+                  </td>
+                  <td>{parseFloat(s.velocity || 0).toFixed(2)}</td>
+                  <td>{s.score_change > 5 ? '🚀 BREAKOUT' : (s.velocity > 2 ? '📈 IMPROVING' : 'STABLE')}</td>
+                  <td>
+                    <button
+                      onClick={(e) => handleAudit(e, s.symbol)}
+                      disabled={auditingSymbol === s.symbol}
+                      style={{
+                        background: auditingSymbol === s.symbol ? '#64748b' : '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '3px 10px',
+                        fontSize: '11px',
+                        cursor: auditingSymbol === s.symbol ? 'not-allowed' : 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {auditingSymbol === s.symbol ? '⏳...' : '🤖 AAE Audit'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {(!qualityLeaderboard.length) && (
+                <tr><td colSpan={7} className="empty-state">No quality analysis data found. Run Step 7.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

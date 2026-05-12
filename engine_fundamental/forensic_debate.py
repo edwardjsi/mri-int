@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 class ForensicDebateEngine:
     """
-    AAE V3 Layer 8: Forensic Debate.
-    Synthesizes a Bull vs. Bear debate to stress-test the rerating hypothesis.
+    AAE V3 Layers 9 & 10: Institutional Stress Test.
+    Provides contrasting Bear and Bull perspectives for final human decision-making.
     """
     
     def __init__(self, symbol):
@@ -18,63 +18,29 @@ class ForensicDebateEngine:
         http_client = httpx.Client()
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), http_client=http_client)
 
-    def run_debate(self, context_data):
-        """
-        Runs a multi-agent debate and returns a synthesized conviction score.
-        context_data: The output from AAEOrchestrator.
-        """
-        logger.info(f"Starting Forensic Debate for {self.symbol}...")
-        
-        # 1. The Bull Case
-        bull_prompt = f"""
-        You are an Institutional Bull Analyst. Argue why {self.symbol} is a high-conviction rerating candidate.
+    def run_bear_layer(self, context_data):
+        """Layer 9: The Short-Seller / Forensic Bear perspective."""
+        logger.info(f"Starting Layer 9 (Bear) for {self.symbol}...")
+        prompt = f"""
+        You are a Short-Seller / Forensic Bear Analyst. 
         Context: {context_data}
-        Focus on: Structural inflections, narrative momentum, and market confirmation.
-        Be aggressive and evidence-based.
+        Task: Argue why {self.symbol} is a 'Value Trap' or a cyclical peak.
+        Constraint: Provide exactly 5 concise bullet points. No introductory or concluding text.
+        Focus: Margin risks, valuation extremes, sector fatigue, or hidden traps.
         """
-        bull_case = self.get_llm_response(bull_prompt)
-        
-        # 2. The Bear Case
-        bear_prompt = f"""
-        You are a Short-Seller / Forensic Bear Analyst. Argue why {self.symbol} is a 'Value Trap' or a cyclical peak.
+        return self.get_llm_response(prompt)
+
+    def run_bull_layer(self, context_data):
+        """Layer 10: The Institutional Bull perspective."""
+        logger.info(f"Starting Layer 10 (Bull) for {self.symbol}...")
+        prompt = f"""
+        You are an Institutional Bull Analyst.
         Context: {context_data}
-        Focus on: Margin risks, valuation extremes, sector fatigue, and historical false positives.
-        Try to find the 'hidden trap' in the Bull thesis.
+        Task: Argue why {self.symbol} is a high-conviction rerating candidate.
+        Constraint: Provide exactly 5 concise bullet points. No introductory or concluding text.
+        Focus: Structural inflections, narrative momentum, or market confirmation leadership.
         """
-        bear_case = self.get_llm_response(bear_prompt)
-        
-        # 3. The Judicial Synthesis
-        judge_prompt = f"""
-        You are the Chief Investment Officer (CIO). Synthesize the following debate for {self.symbol}.
-        
-        BULL CASE:
-        {bull_case}
-        
-        BEAR CASE:
-        {bear_case}
-        
-        VERDICT:
-        1. Conviction Score (0-100)
-        2. Final Verdict (REJECT / NEUTRAL / HIGH CONVICTION)
-        3. Critical Risk Factor to watch.
-        
-        Return in JSON format: {{"conviction_score": int, "verdict": str, "critical_risk": str, "summary": str}}
-        """
-        verdict_raw = self.get_llm_response(judge_prompt, json_mode=True)
-        
-        import json
-        try:
-            verdict = json.loads(verdict_raw)
-        except:
-            logger.error(f"Failed to parse Judge verdict for {self.symbol}")
-            verdict = {"conviction_score": 50, "verdict": "ERROR", "critical_risk": "N/A", "summary": verdict_raw}
-            
-        logger.info(f"Forensic Debate Complete for {self.symbol}. Conviction: {verdict['conviction_score']}")
-        return {
-            "bull_case": bull_case,
-            "bear_case": bear_case,
-            "verdict": verdict
-        }
+        return self.get_llm_response(prompt)
 
     def get_llm_response(self, prompt, json_mode=False):
         response = self.client.chat.completions.create(

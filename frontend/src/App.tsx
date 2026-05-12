@@ -146,10 +146,10 @@ function QualityVerdict({ symbol }: { symbol: string }) {
 
 /* ─── Stock Details Modal ────────────────────────────────── */
 function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
-  const [debating, setDebating] = useState(false);
-  const [debateStatus, setDebateStatus] = useState<string | null>(null);
   const [aaeData, setAaeData] = useState<any>(null);
   const [aaeLoading, setAaeLoading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [reportStatus, setReportStatus] = useState<string | null>(null);
 
   useEffect(() => {
     setAaeLoading(true);
@@ -161,30 +161,15 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
       .finally(() => setAaeLoading(false));
   }, [stock.symbol]);
 
-  const handleTriggerDebate = async () => {
-    if (!confirm(`Trigger AI Forensic Debate for ${stock.symbol}? This will analyze guidance vs reality and email you a deep-dive report.`)) return;
-    setDebating(true);
-    setDebateStatus(null);
-    try {
-      const res = await api.triggerDebate(stock.symbol);
-      setDebateStatus(res.message || "Debate triggered! Check your email in a few minutes.");
-    } catch (err: any) {
-      setDebateStatus("Failed to start debate. Ensure this stock has fundamental data.");
-      console.error(err);
-    } finally {
-      setDebating(false);
-    }
-  };
-
-  const [emailing, setEmailing] = useState(false);
-  const handleEmailAAE = async () => {
+  const handleEmailAaeReport = async () => {
+    if (!confirm(`Email the detailed 10-Layer AAE Forensic Audit for ${stock.symbol}?`)) return;
     setEmailing(true);
-    setDebateStatus(null);
+    setReportStatus(null);
     try {
-      const res = await api.emailAaeReport(stock.symbol);
-      setDebateStatus(res.message || "Forensic memo queued for delivery! Check your inbox.");
+      const res = await api.triggerAaeReport(stock.symbol);
+      setReportStatus(res.message || "Forensic memo queued for delivery! Check your inbox.");
     } catch (err: any) {
-      setDebateStatus("Failed to send email. Ensure background tasks are enabled.");
+      setReportStatus("Failed to send email. Ensure background tasks are enabled.");
       console.error(err);
     } finally {
       setEmailing(false);
@@ -232,66 +217,60 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
               <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🧠 AAE Institutional Performance</span>
               <span style={{ fontSize: '20px', fontWeight: '900', color: aaeData.master_score >= 80 ? '#22c55e' : '#60a5fa' }}>{aaeData.master_score}</span>
             </div>
-            {aaeData.debate_summary && (
-              <p style={{ fontSize: '13px', color: '#e2e8f0', lineHeight: '1.5', margin: 0, fontStyle: 'italic' }}>
-                "{aaeData.debate_summary}"
-              </p>
-            )}
             <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
                <span style={{ fontSize: '10px', padding: '2px 6px', background: '#312e81', borderRadius: '4px', color: '#a5b4fc', border: '1px solid #4338ca' }}>
-                 Conviction: {aaeData.debate_conviction || 'MEDIUM'}
+                 Structural: {aaeData.status || 'ACTIVE'}
                </span>
                <span style={{ fontSize: '10px', padding: '2px 6px', background: '#312e81', borderRadius: '4px', color: '#a5b4fc', border: '1px solid #4338ca' }}>
                  V3 Scan: {aaeData.market_confirmation || 'PENDING'}
                </span>
             </div>
+
+            {aaeData.bull_case && aaeData.bear_case && (
+              <div style={{ marginTop: '16px', display: 'grid', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
+                <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', textTransform: 'uppercase', marginBottom: '4px' }}>🐻 Layer 9: Bear Agent</div>
+                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{aaeData.bear_case}</div>
+                </div>
+                <div style={{ padding: '10px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '6px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', marginBottom: '4px' }}>🐂 Layer 10: Bull Agent</div>
+                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{aaeData.bull_case}</div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {debateStatus && (
+        {reportStatus && (
           <div style={{
             marginTop: '1.5rem',
             padding: '12px',
             borderRadius: '8px',
-            background: debateStatus.includes('Failed') ? '#ef444415' : '#22c55e15',
-            border: `1px solid ${debateStatus.includes('Failed') ? '#ef444440' : '#22c55e40'}`,
-            color: debateStatus.includes('Failed') ? '#fca5a5' : '#86efac',
+            background: reportStatus.includes('Failed') ? '#ef444415' : '#22c55e15',
+            border: `1px solid ${reportStatus.includes('Failed') ? '#ef444440' : '#22c55e40'}`,
+            color: reportStatus.includes('Failed') ? '#fca5a5' : '#86efac',
             fontSize: '12px',
             textAlign: 'center'
           }}>
-            {debateStatus}
+            {reportStatus}
           </div>
         )}
 
         <div className="modal-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
           <button
             className="btn-secondary"
-            onClick={handleTriggerDebate}
-            disabled={debating}
-            style={{
-              flex: 1,
-              background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.3)'
-            }}
-          >
-            {debating ? '🧠 Analyzing 8-Layers...' : '🚀 Run AAE 8-Layer Forensic Test'}
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={handleEmailAAE}
+            onClick={handleEmailAaeReport}
             disabled={emailing}
             style={{
-              flex: 1,
-              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              flex: 2,
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
               color: 'white',
-              border: '1px solid #334155',
-              fontWeight: 'bold'
+              border: '1px solid #4338ca',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)'
             }}
           >
-            {emailing ? '📨 Sending...' : '📩 Email Forensic Memo'}
+            {emailing ? '📨 Queuing Audit...' : '🤖 Run 10-Layer AAE Audit'}
           </button>
           <button className="btn-primary" onClick={onClose} style={{ flex: 1 }}>Close Report</button>
         </div>
@@ -1640,7 +1619,7 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                         onClick={(e) => { e.stopPropagation(); onSelectStock(r); }}
                         style={{ padding: '4px 8px', fontSize: '11px', background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', border: 'none' }}
                       >
-                        🔬 Audit
+                        🤖 AAE Audit
                       </button>
                     </td>
                   </tr>
@@ -1928,7 +1907,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
               <div style={{ textAlign: 'center', padding: '2rem' }}>
                 <div className="loading" style={{ margin: '0 auto 1rem' }}></div>
                 <p>Running AAE V3 Pipeline...</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>(Analyzing Structural Delta, Narrative Sentiment, and running Forensic Debate)</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>(Analyzing Structural Delta, Narrative Sentiment, and running 10-Layer Institutional Audit)</p>
               </div>
             ) : digitalTwinResult ? (
               <div className="aae-results">
@@ -1946,9 +1925,9 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                         </div>
                       </div>
                       <div className="metric-box" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Debate Conviction</div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Institutional Conviction</div>
                         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>
-                          {digitalTwinResult.debate_conviction || 'N/A'}
+                          {digitalTwinResult.master_score >= 80 ? 'HIGH' : digitalTwinResult.master_score >= 60 ? 'STABLE' : 'WATCH'}
                         </div>
                       </div>
                     </div>
@@ -1962,15 +1941,16 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                       </div>
                     )}
 
-                    {digitalTwinResult.debate_summary && (
+                    {digitalTwinResult.bull_case && (
+                      <div style={{ marginBottom: '1.5rem', background: '#f0fdf4', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
+                        <strong style={{ display: 'block', color: '#166534', marginBottom: '0.5rem' }}>Layer 10: Institutional Bull Case</strong>
+                        <p style={{ fontSize: '0.9rem', color: '#14532d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{digitalTwinResult.bull_case}</p>
+                      </div>
+                    )}
+                    {digitalTwinResult.bear_case && (
                       <div style={{ marginBottom: '1.5rem', background: '#fef2f2', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Forensic Debate Synthesis</strong>
-                        <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: 1.5 }}>{digitalTwinResult.debate_summary}</p>
-                        {digitalTwinResult.risk_summary && (
-                          <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 }}>
-                            Critical Risk: {digitalTwinResult.risk_summary}
-                          </div>
-                        )}
+                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Layer 9: Forensic Bear Case</strong>
+                        <p style={{ fontSize: '0.9rem', color: '#7f1d1d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{digitalTwinResult.bear_case}</p>
                       </div>
                     )}
 
@@ -2008,7 +1988,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                                   <td style={{ padding: '8px 4px', fontWeight: 'bold', color: h.master_score >= 70 ? '#10b981' : h.master_score >= 50 ? '#f59e0b' : '#ef4444' }}>
                                     {h.master_score}
                                   </td>
-                                  <td style={{ padding: '8px 4px' }}>{h.debate_conviction || '-'}</td>
+                                  <td style={{ padding: '8px 4px' }}>{h.market_confirmation || '-'}</td>
                                   <td style={{ padding: '8px 4px', fontSize: '0.7rem' }}>{h.scan_source}</td>
                                 </tr>
                               ))}
@@ -2037,7 +2017,6 @@ function PerxPage() {
   const [tab, setTab] = useState<PerxTab>('scan');
   const [query, setQuery] = useState('');
   const [symbol, setSymbol] = useState('');
-  const [includeDebate, setIncludeDebate] = useState(true);
   const [loading, setLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -2137,7 +2116,7 @@ function PerxPage() {
     if (!targetSym) { setStatus('Select a company first.'); return; }
     setLoading(true); setStatus(null);
     try {
-      const result = await api.scanPerx(targetSym, includeDebate);
+      const result = await api.scanPerx(targetSym);
       setActiveReport(result);
       setStatus(`PERX report generated.`);
       loadData();
@@ -2204,7 +2183,7 @@ function PerxPage() {
     if (!symA || !symB) { setStatus('Select two companies.'); return; }
     setComparing(true); setStatus(null);
     try {
-      const res = await api.comparePerx(symA, symB, includeDebate);
+      const res = await api.comparePerx(symA, symB);
       if (res && res.comparison) {
         setComparison(res.comparison);
       } else {
@@ -2356,18 +2335,6 @@ function PerxPage() {
                     </div>
                   </div>
                 </div>
-
-                {report.institutional_forensic_review && !report.institutional_forensic_review.unavailable && (
-                  <div style={{ marginBottom: '24px' }}>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Institutional Forensic Review</div>
-                    <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #1e293b' }}>
-                      <p style={{ fontSize: '13px', lineHeight: '1.6', margin: '0 0 12px 0' }}>{report.institutional_forensic_review.guidance_vs_reality}</p>
-                      <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 'bold' }}>
-                        Verdict: {report.institutional_forensic_review.verdict?.buy_recommendation} | Score: {report.institutional_forensic_review.verdict?.score}/10
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Sector Intelligence</div>

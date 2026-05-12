@@ -15,14 +15,16 @@ logger = logging.getLogger(__name__)
 class AAEOrchestrator:
     """
     AAE V3 Master Orchestrator.
-    Synthesizes Governance, Structural Delta, Narrative, Ownership, and Market layers.
+    Synthesizes a 10-layer institutional forensic intelligence pipeline.
+    Layers 0-7: Deterministic Forensic Audit.
+    Layers 9-10: Multi-agent AI Stress Test (Bear vs. Bull).
     """
     
     def __init__(self, symbol):
         self.symbol = symbol.upper()
 
     def run_full_scan(self):
-        logger.info(f"Starting AAE V3 Full Scan for {self.symbol}...")
+        logger.info(f"Starting AAE V3 10-Layer Scan for {self.symbol}...")
         
         # Layer 0: Governance Kill Switch
         gov = GovernanceEngine(self.symbol)
@@ -68,7 +70,7 @@ class AAEOrchestrator:
                 divergence_penalty = 10
                 logger.warning(f"Narrative Divergence Penalty for {self.symbol}: Management too bullish vs financials ({div_val})")
         else:
-            # Synthetic Narrative Fallback: Derive from Financial Delta
+            # Synthetic Narrative Fallback
             delta_score = sector_result.get('score', 50)
             if delta_score >= 75:
                 narrative_score = 65
@@ -93,6 +95,7 @@ class AAEOrchestrator:
         graveyard = GraveyardEngine(self.symbol)
         forensic = graveyard.evaluate_penalty()
         
+        # Master Score Calculation (Deterministic)
         master_score = (
             (sector_result.get('score', 50) * 0.30) +
             (narrative_score * 0.25) +
@@ -103,10 +106,26 @@ class AAEOrchestrator:
         
         # Apply Penalties
         master_score -= divergence_penalty
-        
         if forensic['penalty'] > 0:
             master_score -= forensic['penalty']
         
+        # Layer 9 & 10: AI Stress Test Agents
+        debate_engine = ForensicDebateEngine(self.symbol)
+        
+        # Prepare context for AI agents
+        ai_context = {
+            "symbol": self.symbol,
+            "master_score": master_score,
+            "sector": sector_result.get('sector'),
+            "financial_delta": sector_result.get('reasons'),
+            "narrative_summary": narrative_summary,
+            "valuation": val_result.get('reasons'),
+            "market_confirmation": market_result.get('confirmation_status')
+        }
+        
+        bear_case = debate_engine.run_bear_layer(ai_context)
+        bull_case = debate_engine.run_bull_layer(ai_context)
+
         result = {
             "symbol": self.symbol,
             "status": "ACTIVE",
@@ -117,31 +136,24 @@ class AAEOrchestrator:
             "narrative_score": round(narrative_score, 1),
             "reasons": sector_result.get('reasons', []) + market_result.get('reasons', []) + own_result.get('reasons', []) + val_result.get('reasons', []),
             
-            # Granular Layer Data for Reporting
+            # 10-Layer Results
+            "bear_case": bear_case, # Layer 9
+            "bull_case": bull_case, # Layer 10
+            
             "layers": {
                 "governance": gov_data,
-                "structural_delta": {
-                    "score": sector_result.get('score'),
-                    "patterns": sector_result.get('patterns_detected', []),
-                    "margin_inflection": sector_result.get('margin_inflection')
-                },
-                "ownership": {
-                    "score": own_result.get('score'),
-                    "fii_trend": own_result.get('fii_trend'),
-                    "dii_trend": own_result.get('dii_trend')
-                },
+                "structural_delta": sector_result,
+                "ownership": own_result,
                 "narrative": {
                     "score": round(narrative_score, 1),
                     "summary": narrative_summary,
                     "source": narrative_source
                 },
-                "valuation": {
-                    "score": val_result.get('valuation_score'),
-                    "trailing_pe": val_result.get('trailing_pe'),
-                    "sector_pe": val_result.get('sector_pe')
-                },
+                "valuation": val_result,
                 "market": market_result,
-                "forensic": forensic
+                "forensic": forensic,
+                "bear_agent": bear_case,
+                "bull_agent": bull_case
             }
         }
         
@@ -151,18 +163,7 @@ class AAEOrchestrator:
         if narrative_summary:
             result["reasons"].insert(0, f"Narrative: {narrative_summary}")
             
-        # Layer 8: Forensic Debate (Stress Test) - Only for high scorers
-        if master_score > 70:
-            debate_engine = ForensicDebateEngine(self.symbol)
-            debate_result = debate_engine.run_debate(result)
-            verdict = debate_result['verdict']
-            result['debate_conviction'] = verdict.get('conviction_score')
-            result['risk_summary'] = verdict.get('critical_risk')
-            result['debate_summary'] = verdict.get('summary')
-            result['layers']['debate'] = verdict
-            logger.info(f"Forensic Debate Complete for {self.symbol}. Verdict: {verdict.get('verdict')}")
-            
-        logger.info(f"AAE Scan Complete for {self.symbol}. Master Score: {result['master_score']}")
+        logger.info(f"AAE 10-Layer Scan Complete for {self.symbol}. Master Score: {result['master_score']}")
         return result
 
 if __name__ == "__main__":

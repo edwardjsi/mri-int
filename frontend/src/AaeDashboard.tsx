@@ -90,10 +90,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
           --teal: #0f766e;
           --green: #16803d;
           --amber: #a15c00;
-          --red: #b42318;
-          --violet: #6251a3;
-          --shadow: 0 14px 35px rgba(28, 39, 49, 0.08);
-          background: var(--page);
+          background: var(--bg);
           color: var(--ink);
           font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           font-size: 14px;
@@ -108,8 +105,9 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
           min-height: 100vh;
         }
         .aae-sidebar {
-          background: #14222f;
-          color: #dfe8ef;
+          background: var(--bg);
+          border-right: 1px solid var(--line);
+          color: var(--ink);
           padding: 22px 18px;
           display: flex;
           flex-direction: column;
@@ -119,27 +117,28 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
           height: 100vh;
         }
         .aae-brand { display: grid; gap: 4px; }
-        .aae-brand-title { font-size: 17px; font-weight: 760; letter-spacing: 0; }
-        .aae-brand-subtitle { color: #98a9b6; font-size: 12px; }
+        .aae-brand-title { font-size: 17px; font-weight: 760; letter-spacing: 0; color: var(--blue); }
+        .aae-brand-subtitle { color: var(--muted); font-size: 11px; }
         .aae-nav { display: grid; gap: 6px; }
         .aae-nav button {
-          width: 100%; border: 0; background: transparent; color: #bfccd6;
+          width: 100%; border: 0; background: transparent; color: var(--muted);
           display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px;
           text-align: left; padding: 10px 10px; border-radius: 7px; cursor: pointer; font-size: 14px;
+          transition: all 0.2s;
         }
-        .aae-nav button.active, .aae-nav button:hover { background: #213446; color: #ffffff; }
+        .aae-nav button.active, .aae-nav button:hover { background: var(--soft); color: var(--ink); }
         .aae-nav-icon {
-          width: 22px; height: 22px; border: 1px solid rgba(255,255,255,0.18); border-radius: 6px;
-          display: grid; place-items: center; font-size: 11px; font-weight: 760; color: #dbe7ef;
+          width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 6px;
+          display: grid; place-items: center; font-size: 11px; font-weight: 760; color: var(--blue);
         }
-        .aae-nav-count { color: #94a7b7; font-size: 12px; }
-        .aae-sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 16px; display: grid; gap: 10px; }
-        .aae-status-line { display: flex; justify-content: space-between; gap: 8px; color: #b9c8d3; font-size: 12px; }
-        .aae-main { min-width: 0; display: grid; grid-template-rows: auto 1fr; }
+        .aae-nav-count { color: var(--muted); font-size: 11px; }
+        .aae-sidebar-footer { margin-top: auto; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; }
+        .aae-status-line { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; }
+        .aae-main { min-width: 0; display: grid; grid-template-rows: auto 1fr; background: var(--bg); }
         .aae-topbar {
-          height: 70px; background: rgba(255,255,255,0.92); border-bottom: 1px solid var(--line);
+          height: 70px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid var(--line);
           display: grid; grid-template-columns: minmax(240px, 1fr) auto; align-items: center; gap: 18px;
-          padding: 0 26px; position: sticky; top: 0; z-index: 3; backdrop-filter: blur(12px);
+          padding: 0 26px; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px);
         }
         .aae-search {
           max-width: 560px; display: grid; grid-template-columns: 32px 1fr; align-items: center;
@@ -148,59 +147,62 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
         .aae-search input { border: 0; outline: 0; background: transparent; color: var(--ink); min-width: 0; font-size: 14px;}
         .aae-top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
         .aae-primary-button, .aae-quiet-button {
-          border: 1px solid transparent; min-height: 36px; border-radius: 7px; padding: 0 12px; font-weight: 680; cursor: pointer; font-size: 14px;
+          border: 1px solid transparent; min-height: 36px; border-radius: 7px; padding: 0 12px; font-weight: 680; cursor: pointer; font-size: 13px;
+          transition: all 0.2s;
         }
-        .aae-primary-button { background: var(--blue); color: #fff; }
-        .aae-quiet-button { background: #fff; border-color: var(--line); color: var(--ink); }
+        .aae-primary-button { background: var(--blue); color: #000; }
+        .aae-quiet-button { background: var(--soft); border-color: var(--line); color: var(--ink); }
         .aae-content { padding: 24px 26px 34px; display: grid; gap: 20px; }
         .aae-page-head { display: grid; grid-template-columns: minmax(260px, 1fr) auto; gap: 18px; align-items: end; }
-        .aae-page-head h1 { font-size: 25px; letter-spacing: 0; line-height: 1.2; }
-        .aae-subtle { color: var(--muted); line-height: 1.5; }
+        .aae-page-head h1 { font-size: 24px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; }
+        .aae-subtle { color: var(--muted); line-height: 1.5; font-size: 13px; }
         .aae-filters { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-        .aae-select { border: 1px solid var(--line); background: #fff; min-height: 36px; border-radius: 7px; padding: 0 10px; color: var(--ink); font-size: 14px;}
+        .aae-select { border: 1px solid var(--line); background: var(--soft); min-height: 36px; border-radius: 7px; padding: 0 10px; color: var(--ink); font-size: 13px; outline: none;}
         
         .aae-metric-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 12px; }
-        .aae-panel, .aae-metric, .aae-candidate { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
-        .aae-metric { padding: 14px; display: grid; gap: 8px; min-height: 108px; }
-        .aae-metric-label { color: var(--muted); font-size: 12px; font-weight: 680; text-transform: uppercase; }
-        .aae-metric-value { font-size: 28px; font-weight: 800; line-height: 1; }
-        .aae-metric-foot { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; }
+        .aae-panel, .aae-metric, .aae-candidate { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+        .aae-metric { padding: 14px; display: grid; gap: 8px; min-height: 108px; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%); }
+        .aae-metric-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .aae-metric-value { font-size: 28px; font-weight: 800; line-height: 1; color: var(--ink); }
+        .aae-metric-foot { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; }
         
         .aae-positive { color: var(--green); }
         .aae-warning { color: var(--amber); }
         .aae-danger { color: var(--red); }
         
         .aae-dashboard-grid { display: grid; grid-template-columns: minmax(520px, 1.28fr) minmax(360px, 0.72fr); gap: 16px; align-items: start; }
-        .aae-panel { min-width: 0; overflow: hidden; }
+        .aae-panel { min-width: 0; overflow: hidden; background: var(--panel); }
         .aae-panel-head { min-height: 58px; border-bottom: 1px solid var(--line); padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
         .aae-panel-title { display: grid; gap: 3px; }
-        .aae-panel-title h2 { font-size: 16px; letter-spacing: 0; }
+        .aae-panel-title h2 { font-size: 15px; font-weight: 700; }
         .aae-panel-body { padding: 16px; }
         
-        .aae-tabs { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: #fff; }
-        .aae-tabs button { border: 0; background: transparent; padding: 8px 11px; cursor: pointer; color: var(--muted); min-height: 34px; font-size: 13px;}
-        .aae-tabs button.active { color: var(--ink); background: var(--soft); font-weight: 720; }
+        .aae-tabs { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--soft); }
+        .aae-tabs button { border: 0; background: transparent; padding: 8px 11px; cursor: pointer; color: var(--muted); min-height: 34px; font-size: 12px; transition: all 0.2s; }
+        .aae-tabs button.active { color: var(--ink); background: var(--blue); color: #000; font-weight: 720; }
         
         .aae-candidate-list { display: grid; gap: 10px; }
-        .aae-candidate { box-shadow: none; display: grid; grid-template-columns: 54px minmax(160px, 1fr) repeat(2, minmax(82px, 0.45fr)) 112px; align-items: center; gap: 10px; padding: 12px; }
-        .aae-rank { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; background: #eef6f3; color: var(--teal); font-weight: 820; }
+        .aae-candidate { border-radius: 10px; display: grid; grid-template-columns: 54px minmax(160px, 1fr) repeat(2, minmax(82px, 0.45fr)) 112px; align-items: center; gap: 10px; padding: 12px; transition: transform 0.2s; cursor: pointer; }
+        .aae-candidate:hover { transform: translateX(4px); background: var(--soft); }
+        .aae-rank { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; background: rgba(45, 212, 191, 0.1); color: var(--teal); font-weight: 820; border: 1px solid rgba(45, 212, 191, 0.2); }
         .aae-company-cell { min-width: 0; display: grid; gap: 4px; }
-        .aae-ticker { font-weight: 820; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .aae-company-name { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .aae-ticker { font-weight: 820; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+        .aae-company-name { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .aae-score-cell { display: grid; gap: 5px; min-width: 0; }
-        .aae-score-label { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 680; }
-        .aae-score-number { font-size: 18px; font-weight: 820; }
+        .aae-score-label { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 700; }
+        .aae-score-number { font-size: 17px; font-weight: 820; color: var(--blue); }
         
-        .aae-bar { width: 100%; height: 7px; border-radius: 999px; background: #e8edf2; overflow: hidden; }
+        .aae-bar { width: 100%; height: 6px; border-radius: 999px; background: var(--soft); overflow: hidden; }
         .aae-bar span { display: block; height: 100%; border-radius: inherit; background: var(--teal); }
         .aae-bar.blue span { background: var(--blue); }
         .aae-bar.amber span { background: var(--amber); }
         
-        .aae-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; border-radius: 999px; padding: 0 9px; font-size: 12px; font-weight: 760; border: 1px solid transparent; white-space: nowrap; }
-        .aae-badge.green { color: #0f5d2e; background: #e8f6ee; border-color: #c8e7d3; }
-        .aae-badge.blue { color: #174d82; background: #e8f1fa; border-color: #c9dbec; }
-        .aae-badge.amber { color: #875000; background: #fff3df; border-color: #f3d7a5; }
-        .aae-badge.red { color: #9b1c14; background: #fdecea; border-color: #f5c8c3; }
+        .aae-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 22px; border-radius: 999px; padding: 0 9px; font-size: 11px; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
+        .aae-badge.green { color: var(--green); background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); }
+        .aae-badge.blue { color: var(--blue); background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2); }
+        .aae-badge.amber { color: var(--amber); background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
+        .aae-badge.red { color: var(--red); background: rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.2); }
+        .aae-badge.violet { color: var(--violet); background: rgba(167, 139, 250, 0.1); border-color: rgba(167, 139, 250, 0.2); }
         .aae-badge.gray { color: #52606d; background: #edf1f4; border-color: #dae2e8; }
         
         .aae-event-list { display: grid; gap: 10px; }
@@ -211,22 +213,23 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
         .aae-mini-note { color: var(--muted); font-size: 12px; line-height: 1.4; }
         
         /* Modal Overlay */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); padding: 20px; }
-        .modal-content { background: #fff; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border-radius: 12px; position: relative; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: 0; font-size: 24px; cursor: pointer; color: var(--muted); }
-        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(12px); padding: 20px; }
+        .modal-content { background: #1e293b; color: #f8fafc; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border-radius: 16px; border: 1px solid var(--line); position: relative; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: 0; font-size: 24px; cursor: pointer; color: var(--muted); transition: color 0.2s; }
+        .modal-close:hover { color: var(--ink); }
+        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: var(--ink); }
         .modal-header-meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
         .stock-symbol { font-size: 18px; font-weight: 820; color: var(--blue); }
         .stock-sector { color: var(--muted); font-size: 14px; }
         
-        .metric-box { background: var(--soft); padding: 18px; border-radius: 10px; border: 1px solid var(--line); }
-        .metric-label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 720; margin-bottom: 6px; }
-        .metric-value-large { font-size: 32px; font-weight: 820; }
+        .metric-box { background: var(--soft); padding: 18px; border-radius: 12px; border: 1px solid var(--line); }
+        .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 720; margin-bottom: 6px; letter-spacing: 0.05em; }
+        .metric-value-large { font-size: 32px; font-weight: 820; color: var(--ink); }
         
         .aae-results-grid { display: grid; gap: 24px; }
-        .aae-summary-card { background: #fff1f0; border-left: 4px solid var(--red); padding: 16px; border-radius: 8px; }
-        .aae-summary-title { font-weight: 800; color: #991b1b; margin-bottom: 8px; display: block; }
-        .aae-summary-text { font-size: 14px; color: #450a0a; line-height: 1.6; }
+        .aae-summary-card { background: rgba(56, 189, 248, 0.05); border-left: 4px solid var(--blue); padding: 16px; border-radius: 8px; border: 1px solid var(--line); }
+        .aae-summary-title { font-weight: 800; color: var(--blue); margin-bottom: 8px; display: block; font-size: 13px; text-transform: uppercase; }
+        .aae-summary-text { font-size: 14px; color: var(--ink); line-height: 1.6; opacity: 0.9; }
         
         .loading-pulse { width: 40px; height: 40px; background: var(--blue); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; margin: 0 auto 16px; }
         @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
@@ -419,7 +422,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
                   <div className="loading-pulse"></div>
                   <p style={{ fontWeight: 720 }}>Synchronizing Institutional Intelligence...</p>
-                  <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>Running Narrative Sentiment, Structural Delta & Forensic Debate</p>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>Running Narrative Sentiment, Structural Delta & 10-Layer Institutional Audit</p>
                 </div>
               ) : digitalTwinResult ? (
                 <div className="aae-results-grid">
@@ -432,30 +435,29 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                     <>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                         <div className="metric-box">
-                          <div className="metric-label">Master Score</div>
+                          <div className="metric-label">AAE Master Score</div>
                           <div className="metric-value-large" style={{ color: digitalTwinResult.master_score >= 80 ? 'var(--green)' : 'var(--blue)' }}>
                             {digitalTwinResult.master_score}
                           </div>
                         </div>
                         <div className="metric-box">
-                          <div className="metric-label">Debate Conviction</div>
-                          <div className="metric-value-large" style={{ color: 'var(--violet)' }}>
-                            {digitalTwinResult.debate_conviction || 'N/A'}
+                          <div className="metric-label">V3 Scan Status</div>
+                          <div className="metric-value-large" style={{ color: 'var(--teal)' }}>
+                            {digitalTwinResult.status || 'ACTIVE'}
                           </div>
                         </div>
                       </div>
 
-                      {digitalTwinResult.debate_summary && (
-                        <div className="aae-summary-card">
-                          <strong className="aae-summary-title">Forensic Verdict</strong>
-                          <p className="aae-summary-text">{digitalTwinResult.debate_summary}</p>
-                          {digitalTwinResult.risk_summary && (
-                            <div style={{ marginTop: '12px', fontSize: '13px', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase' }}>
-                              ⚠️ Critical Risk: {digitalTwinResult.risk_summary}
-                            </div>
-                          )}
+                      <div className="aae-summary-card">
+                        <strong className="aae-summary-title">Institutional Truth Layer</strong>
+                        <p className="aae-summary-text">
+                          High-conviction 8-layer forensic audit complete. System cross-referenced Structural Delta, Narrative Sentiment, and Ownership confirmation to generate the master rerating score.
+                        </p>
+                        <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
+                          <span className="aae-badge blue">Forensic Source: {digitalTwinResult.narrative_source || 'SYNTHETIC_PROXY'}</span>
+                          {digitalTwinResult.divergence_penalty > 0 && <span className="aae-badge red">Divergence Penalty: -{digitalTwinResult.divergence_penalty} pts</span>}
                         </div>
-                      )}
+                      </div>
 
                       {digitalTwinResult.reasons && digitalTwinResult.reasons.length > 0 && (
                         <div>
@@ -470,7 +472,34 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                         </div>
                       )}
 
-                      <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+                      {digitalTwinResult.bull_case && digitalTwinResult.bear_case && (
+                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+                          <div className="metric-label" style={{ marginBottom: '16px' }}>Institutional Stress Test (Layers 9 & 10)</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                            <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '16px', borderRadius: '10px' }}>
+                              <div style={{ fontSize: '11px', color: '#ef4444', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                🐻 Layer 9: Bear Agent
+                              </div>
+                              <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                                {digitalTwinResult.bear_case}
+                              </div>
+                            </div>
+                            <div style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '16px', borderRadius: '10px' }}>
+                              <div style={{ fontSize: '11px', color: '#22c55e', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                🐂 Layer 10: Bull Agent
+                              </div>
+                              <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                                {digitalTwinResult.bull_case}
+                              </div>
+                            </div>
+                          </div>
+                          <p style={{ fontSize: '11px', color: 'var(--muted)', fontStyle: 'italic', marginTop: '12px', textAlign: 'center' }}>
+                            "Deterministic audit complete. AI agents provided for multi-perspective stress testing. User discretion advised."
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', marginTop: '24px' }}>
                         <div className="metric-label" style={{ marginBottom: '12px' }}>Score Trajectory</div>
                         {digitalTwinHistoryLoading ? (
                           <p className="aae-subtle">Fetching history...</p>
@@ -507,7 +536,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                           disabled={emailing}
                           style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', border: '1px solid #4338ca', padding: '12px', borderRadius: '8px', color: 'white', fontWeight: 700, cursor: 'pointer' }}
                         >
-                          {emailing ? '📨 Sending...' : '📩 Email 8-Layer Forensic Memo'}
+                          {emailing ? '📨 Sending...' : '🤖 Run 10-Layer AAE Audit'}
                         </button>
                       </div>
                     </>

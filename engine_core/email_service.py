@@ -261,7 +261,7 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
         (narrative_label, layers.get("narrative", {}).get("score", "N/A"), "Market sentiment & Themes"),
         ("Market Confirmation (L5)", layers.get("market", {}).get("score", "N/A"), "Price & Volume leadership"),
         ("Valuation (L6)", layers.get("valuation", {}).get("score", "N/A"), "Risk/Reward asymmetry"),
-        ("Forensic Feedback (L7)", 100 - layers.get("forensic", {}).get("penalty", 0), "Feedback loop & Penalties"),
+        ("Forensic Feedback (L7)", 100 - (layers.get("forensic", {}).get("penalty", 0) if layers.get("forensic") else 0), "Feedback loop & Penalties"),
     ]
 
     for label, score, desc in layer_configs:
@@ -293,16 +293,19 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
 
     reasons_html = "".join([f"<li style='margin-bottom:8px;color:#334155'>{r}</li>" for r in processed_reasons])
 
+    bear_case = result.get("bear_case", "Analysis pending background scan.")
+    bull_case = result.get("bull_case", "Analysis pending background scan.")
+
     return f"""
     <html>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:650px;margin:0 auto;padding:20px;background:#f1f5f9">
         <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border-top:8px solid {score_color}">
             
             <div style="text-align:right;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em">
-                AAE V3 Forensic Intelligence
+                AAE V3 10-Layer Institutional Intelligence
             </div>
 
-            <h1 style="margin:0 0 4px;font-size:28px;color:#0f172a">{symbol} 8-Layer Institutional Forensic Audit</h1>
+            <h1 style="margin:0 0 4px;font-size:28px;color:#0f172a">{symbol} 10-Layer Institutional Forensic Audit</h1>
             <p style="margin:0 0 24px;color:#64748b;font-size:14px">Sector: {sector} | Date: {date.today().strftime('%B %d, %Y')}</p>
 
             <div style="display:flex;align-items:center;background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:28px">
@@ -317,9 +320,9 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
             </div>
 
             <p style="color:#334155;line-height:1.6">Hi {client_name},</p>
-            <p style="color:#334155;line-height:1.6">Our 8-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. Below is the multi-layered institutional scorecard breakdown:</p>
+            <p style="color:#334155;line-height:1.6">Our 10-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. Below is the multi-perspective institutional breakdown:</p>
 
-            <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:24px">Institutional Layer Breakdown</h3>
+            <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:24px">Institutional Layer Breakdown (L0 - L7)</h3>
             <table style="width:100%;border-collapse:collapse;margin:16px 0">
                 <thead>
                     <tr style="background:#f8fafc">
@@ -340,24 +343,21 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
                 {reasons_html}
             </ul>
 
-            {f'''
-            <div style="background:#0f172a;color:#f8fafc;padding:24px;border-radius:12px;margin:32px 0">
-                <h3 style="margin:0 0 12px;color:#38bdf8;font-size:14px;text-transform:uppercase;letter-spacing:0.05em">Layer 8: Forensic Stress Test (Debate)</h3>
-                <div style="display:flex;margin-bottom:16px;border-bottom:1px solid #1e293b;padding-bottom:12px">
-                    <div style="flex:1">
-                        <span style="font-size:11px;color:#94a3b8;text-transform:uppercase">AI Conviction</span>
-                        <div style="font-size:24px;font-weight:700;color:#f8fafc">{debate_conviction}/100</div>
+            <div style="margin-top:32px">
+                <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px">Institutional Stress Test (Layers 9 & 10)</h3>
+                <div style="display:grid;grid-template-columns:1fr;gap:20px;margin-top:16px">
+                    <div style="background:#fff1f2;border:1px solid #fecaca;padding:20px;border-radius:12px">
+                        <div style="font-size:11px;color:#e11d48;font-weight:800;text-transform:uppercase;margin-bottom:8px">🐻 Layer 9: Bear Agent (Forensic Short)</div>
+                        <p style="font-size:13px;color:#4b5563;line-height:1.6;margin:0;white-space:pre-wrap">{bear_case}</p>
                     </div>
-                    <div style="flex:2;text-align:right">
-                        <span style="font-size:11px;color:#ef4444;text-transform:uppercase">Critical Risk</span>
-                        <div style="font-size:14px;font-weight:700;color:#fca5a5">{risk_summary}</div>
+                    <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:20px;border-radius:12px">
+                        <div style="font-size:11px;color:#16a34a;font-weight:800;text-transform:uppercase;margin-bottom:8px">🐂 Layer 10: Bull Agent (High Conviction)</div>
+                        <p style="font-size:13px;color:#4b5563;line-height:1.6;margin:0;white-space:pre-wrap">{bull_case}</p>
                     </div>
                 </div>
-                <p style="margin:0;font-size:15px;line-height:1.7;font-style:italic;color:#e2e8f0">"{result.get('debate_summary', 'Forensic stress test complete.')}"</p>
             </div>
-            ''' if master_score > 70 else ''}
 
-            <div style="background:#eff6ff;padding:20px;border-radius:12px;border:1px solid #bfdbfe">
+            <div style="background:#eff6ff;padding:20px;border-radius:12px;border:1px solid #bfdbfe;margin-top:32px">
                 <h4 style="margin:0 0 10px;color:#1e40af;font-size:13px;text-transform:uppercase">Understanding Your Report</h4>
                 <div style="font-size:13px;color:#1e3a8a;line-height:1.5">
                     <p style="margin:0 0 8px"><b>Structural Delta</b>: Measures if the company's fundamentals are actually improving (margins, growth) or if it's just price momentum.</p>
@@ -386,7 +386,7 @@ def send_aae_report_email(recipient_email: str, client_name: str, result: dict) 
     """
     symbol = result.get("symbol", "UNKNOWN")
     master_score = result.get("master_score", 0)
-    subject = f"8-Layer Forensic Audit: {symbol} | Master Alpha {master_score}/100"
+    subject = f"10-Layer Forensic Audit: {symbol} | Master Alpha {master_score}/100"
     html_body = build_aae_report_email_html(client_name, result)
     return send_email_custom(recipient_email=recipient_email, subject=subject, html_body=html_body)
 

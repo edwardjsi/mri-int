@@ -334,11 +334,10 @@ export const api = {
   getTopImprovers: (limit: number = 20) => apiFetch(`/fundamental/improvers?limit=${limit}`),
   getTrajectoryAlerts: () => apiFetch('/fundamental/alerts'),
   triggerQualityRecompute: (symbol: string) => apiFetch(`/fundamental/recompute/${symbol}`, { method: 'POST' }),
-  triggerDebate: (symbol: string) => apiFetch(`/fundamental/debate/${symbol}`, { method: 'POST' }),
 
   // PERX
-  scanPerx: (symbol: string, includeDebate: boolean = false) =>
-    apiFetch(`/perx/scan/${encodeURIComponent(symbol)}?include_debate=${includeDebate ? 'true' : 'false'}`, { method: 'POST' }),
+  scanPerx: (symbol: string) =>
+    apiFetch(`/perx/scan/${encodeURIComponent(symbol)}?include_debate=false`, { method: 'POST' }),
   getPerxReport: (reportId: string) => apiFetch(`/perx/report/${reportId}`),
   getRecentPerxReports: (limit: number = 10) => apiFetch(`/perx/recent?limit=${limit}`),
   emailPerxReport: (reportId: string) => apiFetch(`/perx/email/${reportId}`, { method: 'POST' }),
@@ -350,8 +349,8 @@ export const api = {
     ).toString();
     return apiFetch(`/perx/archive?${qs}`);
   },
-  comparePerx: (symbolA: string, symbolB: string, includeDebate: boolean = false) =>
-    apiFetch(`/perx/compare?symbol_a=${encodeURIComponent(symbolA)}&symbol_b=${encodeURIComponent(symbolB)}&include_debate=${includeDebate}`, { method: 'POST' }),
+  comparePerx: (symbolA: string, symbolB: string) =>
+    apiFetch(`/perx/compare?symbol_a=${encodeURIComponent(symbolA)}&symbol_b=${encodeURIComponent(symbolB)}&include_debate=false`, { method: 'POST' }),
   getPerxPdfUrl: (reportId: string) => `/api/perx/report/${reportId}/pdf`,
   
   // AAE V3
@@ -359,7 +358,7 @@ export const api = {
   getAaeTopCandidates: () => apiFetch('/aae/top-candidates'),
   getAaeHistory: (symbol: string) => apiFetch(`/aae/history/${symbol}`),
   emailAaeReport: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
-  triggerDebate: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
+  triggerAaeReport: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
   getSectorHeatmap: () => apiFetch('/aae/sectors/heatmap'),
 };
 

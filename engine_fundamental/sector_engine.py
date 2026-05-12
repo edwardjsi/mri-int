@@ -24,6 +24,20 @@ class BaseSectorEngine:
                     df[col] = pd.to_numeric(df[col], errors='coerce')
         return df
 
+    def get_sector_valuation_benchmark(self):
+        """Calculate median PE for all stocks in this symbol's sector."""
+        query = """
+            SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY v.trailing_pe) as median_pe
+            FROM aae_results_snapshot v
+            JOIN aae_sector_mapping m ON v.symbol = m.symbol
+            WHERE m.sector_id = (SELECT sector_id FROM aae_sector_mapping WHERE symbol = %s)
+            AND v.trailing_pe > 0
+        """
+        res = fetch_df(query, (self.symbol,))
+        if res is not None and not res.empty:
+            return res.iloc[0]['median_pe']
+        return None
+
     def get_sector_context(self):
         query_map = """
             SELECT i.sector_id, i.sector_name, i.nse_ticker
@@ -33,7 +47,7 @@ class BaseSectorEngine:
         """
         mapping = fetch_df(query_map, (self.symbol,))
         if mapping is None or mapping.empty:
-            return {"tailwind_multiplier": 1.0, "sector_name": "Unknown", "sector_rs": None}
+            return {"tailwind_multiplier": 1.0, "sector_name": "Unknown", "sector_rs": None, "sector_alpha": 0}
 
         sector_id = int(mapping.iloc[0]['sector_id'])
         sector_name = mapping.iloc[0]['sector_name']
@@ -52,7 +66,7 @@ class BaseSectorEngine:
         if hist is not None and not hist.empty:
             ema50 = hist.iloc[0]['ema_50']
             ema200 = hist.iloc[0]['ema_200']
-            sector_rs = hist.iloc[0]['relative_strength_90d']
+            sector_rs = float(hist.iloc[0]['relative_strength_90d']) if hist.iloc[0]['relative_strength_90d'] else None
             
             if pd.notnull(ema50) and pd.notnull(ema200):
                 if ema50 > ema200:
@@ -63,7 +77,8 @@ class BaseSectorEngine:
         return {
             "tailwind_multiplier": tailwind_multiplier,
             "sector_name": sector_name,
-            "sector_rs": sector_rs
+            "sector_rs": sector_rs,
+            "sector_median_pe": self.get_sector_valuation_benchmark()
         }
 
     def evaluate(self):
