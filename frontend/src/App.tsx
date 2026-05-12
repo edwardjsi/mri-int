@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import AdminDashboard from './AdminDashboard';
+import AaeDashboard from './AaeDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -163,6 +164,21 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
     }
   };
 
+  const [emailing, setEmailing] = useState(false);
+  const handleEmailAAE = async () => {
+    setEmailing(true);
+    setDebateStatus(null);
+    try {
+      const res = await api.emailAaeReport(stock.symbol);
+      setDebateStatus(res.message || "Forensic memo queued for delivery! Check your inbox.");
+    } catch (err: any) {
+      setDebateStatus("Failed to send email. Ensure background tasks are enabled.");
+      console.error(err);
+    } finally {
+      setEmailing(false);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -226,6 +242,20 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
             }}
           >
             {debating ? '🧠 Analyzing 8-Layers...' : '🚀 Run AAE 8-Layer Forensic Test'}
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={handleEmailAAE}
+            disabled={emailing}
+            style={{
+              flex: 1,
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              color: 'white',
+              border: '1px solid #334155',
+              fontWeight: 'bold'
+            }}
+          >
+            {emailing ? '📨 Sending...' : '📩 Email Forensic Memo'}
           </button>
           <button className="btn-primary" onClick={onClose} style={{ flex: 1 }}>Close Report</button>
         </div>
@@ -2490,7 +2520,7 @@ function PerxPage() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow' | 'perx'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow' | 'perx' | 'aae'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2511,6 +2541,10 @@ function App() {
       return <LoginPage onLogin={() => { setAuthed(true); setShowAuthPane(false); }} onCancel={() => setShowAuthPane(false)} />;
     }
     return <LandingPage onRequestAuth={() => setShowAuthPane(true)} />;
+  }
+
+  if (page === 'aae') {
+    return <AaeDashboard onBack={() => setPage('dashboard')} />;
   }
 
   return (
@@ -2541,6 +2575,9 @@ function App() {
           </button>
           <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
             <span className="nav-icon">🏛️</span> PERX
+          </button>
+          <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
+            <span className="nav-icon">🧬</span> AAE Console
           </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
