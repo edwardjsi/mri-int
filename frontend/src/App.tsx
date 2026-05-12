@@ -1512,6 +1512,9 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     try {
       const res = await api.getHoldingsStatus();
       setStatus(res);
+      if (res && res.holdings) {
+        setRiskResults(res);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -1610,7 +1613,8 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                   <th onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>MRI Score {getSortIcon('score')}</th>
                   <th onClick={() => handleSort('alignment')} style={{ cursor: 'pointer' }}>Status {getSortIcon('alignment')}</th>
                   <th onClick={() => handleSort('below_200ema')} style={{ cursor: 'pointer' }}>Trend {getSortIcon('below_200ema')}</th>
-                  <th>AAE Test</th>
+                  <th onClick={() => handleSort('aae_score')} style={{ cursor: 'pointer' }}>AAE Master {getSortIcon('aae_score')}</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1622,12 +1626,21 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                     <td>{r.alignment}</td>
                     <td>{r.below_200ema ? '⚠️ Below 200 EMA' : '✅ Healthy Trend'}</td>
                     <td>
+                      {r.aae_score ? (
+                        <span className="score-badge" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', color: '#a5b4fc', border: '1px solid #4338ca' }}>
+                          {r.aae_score}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>Not Scanned</span>
+                      )}
+                    </td>
+                    <td>
                       <button 
                         className="btn-primary" 
                         onClick={(e) => { e.stopPropagation(); onSelectStock(r); }}
                         style={{ padding: '4px 8px', fontSize: '11px', background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', border: 'none' }}
                       >
-                        🧠 8-Layer Test
+                        🔬 Audit
                       </button>
                     </td>
                   </tr>

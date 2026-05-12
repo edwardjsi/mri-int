@@ -136,6 +136,15 @@ def _analyze(holdings, conn):
     """, (symbol_tuple,))
     prices_by_symbol = {r["symbol"]: r for r in cur.fetchall()}
 
+    # 4b. AAE Master Scores from snapshot
+    cur.execute("""
+        SELECT DISTINCT ON (symbol) symbol, master_score
+        FROM aae_results_snapshot
+        WHERE symbol IN %s
+        ORDER BY symbol, scanned_at DESC
+    """, (symbol_tuple,))
+    aae_scores_by_symbol = {r["symbol"]: r["master_score"] for r in cur.fetchall()}
+
     cur.close()
 
     # 5. Per-holding analysis
@@ -210,6 +219,7 @@ def _analyze(holdings, conn):
             "pnl_pct": float(pnl_pct) if pnl_pct is not None else None,
             "weight_pct": float(round(weight * 100, 2)),
             "score": score,
+            "aae_score": aae_scores_by_symbol.get(sym),
             "conditions": None,
             "below_200ema": below_ema200,
             "ema_50": float(ema_50) if ema_50 else None,
