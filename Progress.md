@@ -17,6 +17,7 @@
 #### 2. Enhanced Institutional Reporting ✅
 - [x] Overhauled `AAEOrchestrator` to capture granular scores for all 8 forensic layers.
 - [x] Redesigned the **AAE Forensic Email Report** with a professional layer-by-layer breakdown table.
+- [x] **Transparency Fix**: Added `narrative_source` flag to explicitly label reports as **OFFICIAL_TRANSCRIPT** or **SYNTHETIC_PROXY**.
 - [x] **Unified Forensic Endpoints**: Mapped all legacy debate/test buttons to the new AAE V3 8-layer engine.
 - [x] Updated email subject branding to **"8-Layer Forensic Audit"** for immediate clarity.
 - [x] Verified 95+ symbols successfully audited in the production `aae_results_snapshot`.

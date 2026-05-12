@@ -7,8 +7,9 @@
   - **AAE Integration**: Joined the portfolio review engine with the `aae_results_snapshot` table to surface Master Scores directly in the Audit table.
   - **Engine Enhancement**: Updated `AAEOrchestrator` to capture granular scores for all 8 forensic layers (Governance, Structural Delta, Ownership, etc.).
   - **Professional Reporting**: Redesigned the AAE Forensic Email template to feature a neat layer-by-layer breakdown table and updated subject to "8-Layer Forensic Audit".
-  - **Endpoint Unification**: Mapped all legacy "Forensic Test" buttons to the new AAE V3 8-layer engine to ensure reporting consistency.
-- **Result**: The "Digital Twin" is now fully visible in the Risk Audit page, and users receive unified, data-rich forensic reports in their inbox.
+  - **Transparency Engine**: Implemented `narrative_source` labeling to distinguish between **OFFICIAL_TRANSCRIPT** and **SYNTHETIC_PROXY** intelligence in all reports.
+  - **Narrative Backfill**: Created `narrative_scraper.py` and successfully backfilled institutional narrative intelligence for top holdings (**HAL, VOLTAMP, KPIGREEN, CPPLUS**).
+- **Result**: The "Digital Twin" is now fully visible in the Risk Audit page, and users receive transparent, unified, data-rich forensic reports in their inbox.
 
 ---
 3: ## **May 12, 2026: AAE V3 Stabilization & UI Sync**
