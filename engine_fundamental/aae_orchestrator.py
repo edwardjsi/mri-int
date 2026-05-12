@@ -89,7 +89,33 @@ class AAEOrchestrator:
             "sector": sector_result.get('sector'),
             "market_confirmation": market_result.get('confirmation_status'),
             "narrative_score": round(narrative_score, 1),
-            "reasons": sector_result.get('reasons', []) + market_result.get('reasons', []) + own_result.get('reasons', []) + val_result.get('reasons', [])
+            "reasons": sector_result.get('reasons', []) + market_result.get('reasons', []) + own_result.get('reasons', []) + val_result.get('reasons', []),
+            
+            # Granular Layer Data for Reporting
+            "layers": {
+                "governance": gov_data,
+                "structural_delta": {
+                    "score": sector_result.get('score'),
+                    "patterns": sector_result.get('patterns_detected', []),
+                    "margin_inflection": sector_result.get('margin_inflection')
+                },
+                "ownership": {
+                    "score": own_result.get('score'),
+                    "fii_trend": own_result.get('fii_trend'),
+                    "dii_trend": own_result.get('dii_trend')
+                },
+                "narrative": {
+                    "score": round(narrative_score, 1),
+                    "summary": narrative_summary
+                },
+                "valuation": {
+                    "score": val_result.get('valuation_score'),
+                    "trailing_pe": val_result.get('trailing_pe'),
+                    "sector_pe": val_result.get('sector_pe')
+                },
+                "market": market_result,
+                "forensic": forensic
+            }
         }
         
         if forensic['reason']:
@@ -106,6 +132,7 @@ class AAEOrchestrator:
             result['debate_conviction'] = verdict.get('conviction_score')
             result['risk_summary'] = verdict.get('critical_risk')
             result['debate_summary'] = verdict.get('summary')
+            result['layers']['debate'] = verdict
             logger.info(f"Forensic Debate Complete for {self.symbol}. Verdict: {verdict.get('verdict')}")
             
         logger.info(f"AAE Scan Complete for {self.symbol}. Master Score: {result['master_score']}")

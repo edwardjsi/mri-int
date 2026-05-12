@@ -247,15 +247,32 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
     
     score_color = "#22c55e" if master_score >= 75 else "#f59e0b" if master_score >= 60 else "#ef4444"
     
-    # Identify the "Why Insufficient history" logic for the email
-    processed_reasons = []
-    for r in reasons:
-        if "Insufficient history" in r:
-            processed_reasons.append(f"<b>{r}</b>: The system requires at least 2 quarters of governance data to establish a trend. This is a data-freshness lag, not a fundamental flaw.")
-        else:
-            processed_reasons.append(r)
+    layers = result.get("layers", {})
+    
+    # Layer Breakdown HTML
+    layer_rows = ""
+    layer_configs = [
+        ("Governance (L0)", layers.get("governance", {}).get("risk_score", "N/A"), "Integrity & Compliance check"),
+        ("Structural Delta (L1&2)", layers.get("structural_delta", {}).get("score", "N/A"), "Earnings & Margin inflection"),
+        ("Ownership (L3)", layers.get("ownership", {}).get("score", "N/A"), "FII/DII flow trajectory"),
+        ("Narrative (L4)", layers.get("narrative", {}).get("score", "N/A"), "Market sentiment & Themes"),
+        ("Market Confirmation (L5)", layers.get("market", {}).get("score", "N/A"), "Price & Volume leadership"),
+        ("Valuation (L6)", layers.get("valuation", {}).get("score", "N/A"), "Risk/Reward asymmetry"),
+        ("Forensic Feedback (L7)", 100 - layers.get("forensic", {}).get("penalty", 0), "Feedback loop & Penalties"),
+    ]
 
-    reasons_html = "".join([f"<li style='margin-bottom:8px;color:#334155'>{r}</li>" for r in processed_reasons])
+    for label, score, desc in layer_configs:
+        try:
+            s_val = float(score) if score is not None and score != "N/A" else 0
+            s_color = "#22c55e" if s_val >= 75 else "#f59e0b" if s_val >= 40 else "#ef4444"
+        except:
+            s_color = "#64748b"
+        
+        layer_rows += f"""
+        <tr>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#0f172a"><b>{label}</b><br/><span style="font-size:11px;color:#94a3b8">{desc}</span></td>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;color:{s_color}">{score}</td>
+        </tr>"""
 
     return f"""
     <html>
@@ -281,35 +298,59 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
             </div>
 
             <p style="color:#334155;line-height:1.6">Hi {client_name},</p>
-            <p style="color:#334155;line-height:1.6">Our 8-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. This engine synthesizes quarterly financials, governance risks, institutional footprints, and narrative shifts into a single institutional-grade verdict.</p>
+            <p style="color:#334155;line-height:1.6">Our 8-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. Below is the multi-layered institutional scorecard breakdown:</p>
+
+            <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:24px">Institutional Layer Breakdown</h3>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+                <thead>
+                    <tr style="background:#f8fafc">
+                        <th style="padding:10px;text-align:left;font-size:12px;color:#64748b;text-transform:uppercase">Intelligence Layer</th>
+                        <th style="padding:10px;text-align:right;font-size:12px;color:#64748b;text-transform:uppercase">Conviction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {layer_rows}
+                </tbody>
+            </table>
 
             <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:32px">Key Drivers & Inflections</h3>
             <ul style="padding-left:20px;margin:16px 0">
                 {reasons_html}
             </ul>
 
-            <div style="background:#0f172a;color:#f8fafc;padding:20px;border-radius:12px;margin:32px 0">
-                <h3 style="margin:0 0 8px;color:#38bdf8;font-size:14px;text-transform:uppercase">Layer 8: Forensic Debate Verdict</h3>
-                <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#cbd5e1">Conviction: <b>{debate_conviction}/100</b></p>
-                <p style="margin:0;font-size:15px;line-height:1.6;font-style:italic">"{risk_summary}"</p>
+            {f'''
+            <div style="background:#0f172a;color:#f8fafc;padding:24px;border-radius:12px;margin:32px 0">
+                <h3 style="margin:0 0 12px;color:#38bdf8;font-size:14px;text-transform:uppercase;letter-spacing:0.05em">Layer 8: Forensic Stress Test (Debate)</h3>
+                <div style="display:flex;margin-bottom:16px;border-bottom:1px solid #1e293b;padding-bottom:12px">
+                    <div style="flex:1">
+                        <span style="font-size:11px;color:#94a3b8;text-transform:uppercase">AI Conviction</span>
+                        <div style="font-size:24px;font-weight:700;color:#f8fafc">{debate_conviction}/100</div>
+                    </div>
+                    <div style="flex:2;text-align:right">
+                        <span style="font-size:11px;color:#ef4444;text-transform:uppercase">Critical Risk</span>
+                        <div style="font-size:14px;font-weight:700;color:#fca5a5">{risk_summary}</div>
+                    </div>
+                </div>
+                <p style="margin:0;font-size:15px;line-height:1.7;font-style:italic;color:#e2e8f0">"{result.get('debate_summary', 'Forensic stress test complete.')}"</p>
             </div>
+            ''' if master_score > 70 else ''}
 
             <div style="background:#eff6ff;padding:20px;border-radius:12px;border:1px solid #bfdbfe">
-                <h4 style="margin:0 0 10px;color:#1e40af;font-size:13px;text-transform:uppercase">User's Guide to the Numbers</h4>
+                <h4 style="margin:0 0 10px;color:#1e40af;font-size:13px;text-transform:uppercase">Understanding Your Report</h4>
                 <div style="font-size:13px;color:#1e3a8a;line-height:1.5">
-                    <p style="margin:0 0 8px"><b>EMA 50 > 200</b>: Confirms the stock is in a "Structural Uptrend." The short-term trend is stronger than the long-term, showing institutional accumulation.</p>
-                    <p style="margin:0 0 8px"><b>Relative Strength (RS)</b>: Measures if the stock is a "leader" or a "lagger" vs the Nifty 50. High RS means big money is picking this stock over the index.</p>
-                    <p style="margin:0"><b>PE (Valuation)</b>: High PE isn't always bad for growth stocks, but AAE flags it to remind you that you are paying for future earnings today.</p>
+                    <p style="margin:0 0 8px"><b>Structural Delta</b>: Measures if the company's fundamentals are actually improving (margins, growth) or if it's just price momentum.</p>
+                    <p style="margin:0 0 8px"><b>Governance (L0)</b>: A pass/fail filter. We look for pledges, high debt, or promoter exits before recommending.</p>
+                    <p style="margin:0"><b>Ownership</b>: Tracks the "Big Hands" (FII/DII). We only want to be where institutions are currently accumulating.</p>
                 </div>
             </div>
 
             <div style="margin-top:32px;text-align:center">
-                <a href="{FRONTEND_URL}/watchlist" style="background:#0f172a;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block">View on Digital Twin Dashboard</a>
+                <a href="{FRONTEND_URL}/watchlist" style="background:#0f172a;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block">Open Digital Twin Dashboard</a>
             </div>
 
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:40px 0 20px">
             <p style="font-size:11px;color:#94a3b8;text-align:center;line-height:1.5">
-                DISCLAIMER: This is a quantitative forensic report. It is not financial advice or a solicitation to buy. MRI analyzes historical and current data patterns only.
+                DISCLAIMER: This is a quantitative forensic report generated by MRI AAE V3. It is not financial advice.
             </p>
         </div>
     </body>
