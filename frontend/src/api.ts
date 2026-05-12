@@ -359,6 +359,7 @@ export const api = {
   getAaeTopCandidates: () => apiFetch('/aae/top-candidates'),
   getAaeHistory: (symbol: string) => apiFetch(`/aae/history/${symbol}`),
   emailAaeReport: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
+  getSectorHeatmap: () => apiFetch('/aae/sectors/heatmap'),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

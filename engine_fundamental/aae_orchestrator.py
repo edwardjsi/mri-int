@@ -59,7 +59,8 @@ class AAEOrchestrator:
             
         # Layer 5: Market Confirmation
         market = MarketConfirmationEngine(self.symbol)
-        market_result = market.evaluate()
+        sector_rs = sector_result.get('sector_rs')
+        market_result = market.evaluate(sector_rs=sector_rs)
         
         # Layer 6: Valuation Asymmetry
         valuation = ValuationEngine(self.symbol)

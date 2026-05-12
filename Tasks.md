@@ -110,7 +110,7 @@
 
 ## 🚧 Upcoming: AAE Phase 3 Enhancements
 - [ ] **Sector Comparison Index Layer** (See `docs/SECTOR_COMPARISON_PLAN.md`)
-  - [ ] Step 1: Database & Seed Data (Schema expansion for indices).
-  - [ ] Step 2: Collector & Automation (yfinance index fetcher).
-  - [ ] Step 3: Analytical Engine (Sector Tailwind, Relative Momentum, Peer Spread).
-  - [ ] Step 4: UI / Frontend (Sector Heatmap API and React Lens integration).
+  - [x] Step 1: Database & Seed Data (Schema expansion for indices).
+  - [x] Step 2: Collector & Automation (yfinance index fetcher).
+  - [x] Step 3: Analytical Engine (Sector Tailwind, Relative Momentum, Peer Spread).
+  - [x] Step 4: UI / Frontend (Sector Heatmap API and React Lens integration).

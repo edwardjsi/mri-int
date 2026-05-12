@@ -69,6 +69,44 @@ class ValuationEngine:
         latest['ttm_ebitda'] = ttm_ebitda
         return latest
 
+    def get_peer_median_pe(self):
+        query_map = "SELECT sector_id FROM aae_sector_mapping WHERE symbol = %s"
+        mapping = fetch_df(query_map, (self.symbol,))
+        if mapping is None or mapping.empty:
+            return None
+        sector_id = int(mapping.iloc[0]['sector_id'])
+        
+        query = """
+            WITH latest_prices AS (
+                SELECT symbol, close
+                FROM daily_prices
+                WHERE date = (SELECT MAX(date) FROM daily_prices)
+            ),
+            ttm_eps AS (
+                SELECT symbol, SUM(eps) as total_eps
+                FROM (
+                    SELECT symbol, eps,
+                           ROW_NUMBER() OVER(PARTITION BY symbol ORDER BY year DESC, quarter DESC) as rn
+                    FROM aae_quarterly_financials
+                ) t
+                WHERE rn <= 4
+                GROUP BY symbol
+                HAVING SUM(eps) > 0
+            )
+            SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (p.close / e.total_eps)) as median_pe
+            FROM aae_sector_mapping m
+            JOIN latest_prices p ON m.symbol = p.symbol
+            JOIN ttm_eps e ON m.symbol = e.symbol
+            WHERE m.sector_id = %s
+        """
+        try:
+            df = fetch_df(query, (sector_id,))
+            if df is not None and not df.empty and pd.notnull(df.iloc[0]['median_pe']):
+                return float(df.iloc[0]['median_pe'])
+        except Exception as e:
+            logger.error(f"Failed to calculate peer PE for {self.symbol}: {e}")
+        return None
+
     def evaluate(self):
         """
         Compute valuation asymmetry score.
@@ -98,6 +136,22 @@ class ValuationEngine:
             score -= 10
             reasons.append(f"High absolute PE: {pe:.1f}x")
             
+        peer_pe = self.get_peer_median_pe()
+        if peer_pe and pe > 0:
+            if pe < (peer_pe * 0.8):
+                score += 15
+                reasons.append(f"Discount to Sector Peer Median ({pe:.1f}x vs {peer_pe:.1f}x)")
+            elif pe > (peer_pe * 1.5):
+                score -= 15
+                reasons.append(f"Premium to Sector Peer Median ({pe:.1f}x vs {peer_pe:.1f}x)")
+                
+        return {
+            "valuation_score": min(100, max(0, score)),
+            "reasons": reasons,
+            "ttm_eps": eps,
+            "pe_ratio": pe,
+            "peer_median_pe": peer_pe
+        }
         # PEG ratio proxy (PE / Revenue Growth)
         # We need growth from delta engine ideally
         

@@ -16,13 +16,15 @@ class MarketConfirmationEngine:
 
     def get_latest_indicators(self):
         query = """
-            SELECT * FROM stock_scores 
-            WHERE symbol = %s 
-            ORDER BY date DESC LIMIT 1
+            SELECT s.*, m.relative_strength 
+            FROM stock_scores s
+            LEFT JOIN market_regime m ON s.symbol = m.symbol AND s.date = m.date
+            WHERE s.symbol = %s 
+            ORDER BY s.date DESC LIMIT 1
         """
         return fetch_df(query, (self.symbol,))
 
-    def evaluate(self):
+    def evaluate(self, sector_rs=None):
         df = self.get_latest_indicators()
         if df is None or df.empty:
             return {"score": 50, "reasons": ["No technical data available"]}
@@ -41,6 +43,13 @@ class MarketConfirmationEngine:
         if latest.get('condition_rs'):
             score += 15
             reasons.append("Relative Strength Confirmation")
+            
+        # 2b. Relative Momentum Alpha (Outperforming Sector)
+        stock_rs = latest.get('relative_strength')
+        if pd.notnull(stock_rs) and pd.notnull(sector_rs):
+            if float(stock_rs) > float(sector_rs):
+                score += 10
+                reasons.append("Sector Alpha (Outperforming Peers)")
             
         # 3. Near Highs (Accumulation Zone)
         if latest.get('condition_6m_high'):

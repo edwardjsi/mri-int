@@ -3,6 +3,7 @@ import os
 import sys
 from engine_fundamental.transcript_discovery import TranscriptDiscoveryAgent
 from engine_fundamental.aae_orchestrator import AAEOrchestrator
+from engine_fundamental.sector_collector import fetch_and_store_sector_history
 from engine_core.db import get_connection, fetch_df
 import json
 
@@ -18,6 +19,10 @@ def run_aae_production_cycle():
     4. Persist to Snapshot
     """
     logger.info("Starting AAE V3 Production Cycle...")
+    
+    # Step 0: Ingest Sector Index History for Relative Benchmarking
+    logger.info("Step 0: Fetching Sector Indices History...")
+    fetch_and_store_sector_history()
     
     # Step 1: Identify Candidates for Discovery
     discovery = TranscriptDiscoveryAgent()

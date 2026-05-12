@@ -1,15 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from './api';
 
 export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [sectors, setSectors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getAaeTopCandidates()
-      .then(setCandidates)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.getAaeTopCandidates().catch(() => []),
+      api.getSectorHeatmap().catch(() => [])
+    ])
+    .then(([candData, sectorData]) => {
+      setCandidates(candData);
+      setSectors(sectorData);
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -235,27 +242,58 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                 </div>
               </div>
 
-              <div className="aae-panel">
-                <div className="aae-panel-head">
-                  <div className="aae-panel-title">
-                    <h2>Live Intelligence Stream</h2>
-                    <p className="aae-subtle">Top Drivers & Reasons from the V3 Engine.</p>
-                  </div>
-                  <span className="aae-badge gray">Live</span>
-                </div>
-                <div className="aae-panel-body aae-event-list">
-                  {candidates.slice(0, 5).map((cand, idx) => (
-                    <div className="aae-event-row" key={'event'+idx}>
-                      <div className="aae-event-time">{cand.symbol}</div>
-                      <div className="aae-event-main">
-                        <strong>Master Score: {cand.master_score}</strong>
-                        <span className="aae-mini-note">
-                          {cand.reasons ? (typeof cand.reasons === 'string' ? JSON.parse(cand.reasons) : cand.reasons).slice(0,2).join(" • ") : 'No specific drivers'}
-                        </span>
-                      </div>
-                      <span className={`aae-badge ${cand.master_score >= 80 ? 'green' : 'blue'}`}>Score</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="aae-panel">
+                  <div className="aae-panel-head">
+                    <div className="aae-panel-title">
+                      <h2>Live Intelligence Stream</h2>
+                      <p className="aae-subtle">Top Drivers & Reasons from the V3 Engine.</p>
                     </div>
-                  ))}
+                    <span className="aae-badge gray">Live</span>
+                  </div>
+                  <div className="aae-panel-body aae-event-list">
+                    {candidates.slice(0, 5).map((cand, idx) => (
+                      <div className="aae-event-row" key={'event'+idx}>
+                        <div className="aae-event-time">{cand.symbol}</div>
+                        <div className="aae-event-main">
+                          <strong>Master Score: {cand.master_score}</strong>
+                          <span className="aae-mini-note">
+                            {cand.reasons ? (typeof cand.reasons === 'string' ? JSON.parse(cand.reasons) : cand.reasons).slice(0,2).join(" • ") : 'No specific drivers'}
+                          </span>
+                        </div>
+                        <span className={`aae-badge ${cand.master_score >= 80 ? 'green' : 'blue'}`}>Score</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="aae-panel">
+                  <div className="aae-panel-head">
+                    <div className="aae-panel-title">
+                      <h2>Sector Lens</h2>
+                      <p className="aae-subtle">Phase 3 Relative Benchmark (90d RS).</p>
+                    </div>
+                    <span className="aae-badge blue">Heatmap</span>
+                  </div>
+                  <div className="aae-panel-body aae-event-list">
+                    {sectors.map((sec, idx) => {
+                      const rs = Number(sec.relative_strength_90d) || 0;
+                      const uptrend = sec.ema_50 > sec.ema_200;
+                      return (
+                        <div className="aae-event-row" key={'sec'+idx}>
+                          <div className="aae-event-time" style={{ width: '80px', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sec.sector_name}</div>
+                          <div className="aae-event-main">
+                            <strong>{sec.nse_ticker}</strong>
+                            <span className="aae-mini-note">
+                              {uptrend ? '📈 Uptrend' : '📉 Downtrend'} • 90d RS: {(rs * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          <span className={`aae-badge ${rs > 0 ? 'green' : 'red'}`}>{rs > 0 ? 'Leading' : 'Lagging'}</span>
+                        </div>
+                      )
+                    })}
+                    {sectors.length === 0 && !loading && <p className="aae-subtle" style={{ padding: '12px' }}>No sector data yet.</p>}
+                  </div>
                 </div>
               </div>
             </section>

@@ -24,6 +24,48 @@ class BaseSectorEngine:
                     df[col] = pd.to_numeric(df[col], errors='coerce')
         return df
 
+    def get_sector_context(self):
+        query_map = """
+            SELECT i.sector_id, i.sector_name, i.nse_ticker
+            FROM aae_sector_mapping m
+            JOIN aae_sector_indices i ON m.sector_id = i.sector_id
+            WHERE m.symbol = %s
+        """
+        mapping = fetch_df(query_map, (self.symbol,))
+        if mapping is None or mapping.empty:
+            return {"tailwind_multiplier": 1.0, "sector_name": "Unknown", "sector_rs": None}
+
+        sector_id = int(mapping.iloc[0]['sector_id'])
+        sector_name = mapping.iloc[0]['sector_name']
+
+        query_hist = """
+            SELECT ema_50, ema_200, relative_strength_90d
+            FROM aae_sector_history
+            WHERE sector_id = %s AND ema_50 IS NOT NULL AND ema_200 IS NOT NULL
+            ORDER BY date DESC LIMIT 1
+        """
+        hist = fetch_df(query_hist, (sector_id,))
+        
+        tailwind_multiplier = 1.0
+        sector_rs = None
+        
+        if hist is not None and not hist.empty:
+            ema50 = hist.iloc[0]['ema_50']
+            ema200 = hist.iloc[0]['ema_200']
+            sector_rs = hist.iloc[0]['relative_strength_90d']
+            
+            if pd.notnull(ema50) and pd.notnull(ema200):
+                if ema50 > ema200:
+                    tailwind_multiplier = 1.2
+                elif ema50 < ema200:
+                    tailwind_multiplier = 0.8
+                    
+        return {
+            "tailwind_multiplier": tailwind_multiplier,
+            "sector_name": sector_name,
+            "sector_rs": sector_rs
+        }
+
     def evaluate(self):
         raise NotImplementedError("Subclasses must implement evaluate()")
 
@@ -57,7 +99,20 @@ class ManufacturingEngine(BaseSectorEngine):
             score += 10
             reasons.append("Efficiency Improvement (Asset Turns)")
             
-        return {"score": min(100, score), "reasons": reasons, "sector": "Manufacturing"}
+        # Incorporate Sector Tailwind
+        ctx = self.get_sector_context()
+        score = score * ctx["tailwind_multiplier"]
+        if ctx["tailwind_multiplier"] > 1.0:
+            reasons.append("Sector Tailwind (Uptrending)")
+        elif ctx["tailwind_multiplier"] < 1.0:
+            reasons.append("Sector Headwind (Downtrending)")
+            
+        return {
+            "score": min(100, score),
+            "reasons": reasons,
+            "sector": ctx["sector_name"] if ctx["sector_name"] != "Unknown" else "Manufacturing",
+            "sector_rs": ctx["sector_rs"]
+        }
 
 class BankEngine(BaseSectorEngine):
     """
@@ -91,7 +146,20 @@ class BankEngine(BaseSectorEngine):
             score += 5
             reasons.append("Diversifying Income (Non-Interest Mix UP)")
             
-        return {"score": min(100, score), "reasons": reasons, "sector": "Banking"}
+        # Incorporate Sector Tailwind
+        ctx = self.get_sector_context()
+        score = score * ctx["tailwind_multiplier"]
+        if ctx["tailwind_multiplier"] > 1.0:
+            reasons.append("Sector Tailwind (Uptrending)")
+        elif ctx["tailwind_multiplier"] < 1.0:
+            reasons.append("Sector Headwind (Downtrending)")
+            
+        return {
+            "score": min(100, score), 
+            "reasons": reasons, 
+            "sector": ctx["sector_name"] if ctx["sector_name"] != "Unknown" else "Banking",
+            "sector_rs": ctx["sector_rs"]
+        }
 
 class ElectricalEngine(BaseSectorEngine):
     """
