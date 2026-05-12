@@ -148,6 +148,18 @@ function QualityVerdict({ symbol }: { symbol: string }) {
 function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
   const [debating, setDebating] = useState(false);
   const [debateStatus, setDebateStatus] = useState<string | null>(null);
+  const [aaeData, setAaeData] = useState<any>(null);
+  const [aaeLoading, setAaeLoading] = useState(false);
+
+  useEffect(() => {
+    setAaeLoading(true);
+    api.getAaeScan(stock.symbol)
+      .then(res => {
+        if (res && !res.error) setAaeData(res);
+      })
+      .catch(() => {})
+      .finally(() => setAaeLoading(false));
+  }, [stock.symbol]);
 
   const handleTriggerDebate = async () => {
     if (!confirm(`Trigger AI Forensic Debate for ${stock.symbol}? This will analyze guidance vs reality and email you a deep-dive report.`)) return;
@@ -211,6 +223,30 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
         />
 
         <QualityVerdict symbol={stock.symbol} />
+
+        {aaeLoading && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>🔄 Fetching Institutional AAE Data...</div>}
+        
+        {aaeData && (
+          <div style={{ marginTop: '1.5rem', padding: '16px', borderRadius: '8px', background: '#1e1b4b', border: '1px solid #4338ca' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🧠 AAE Institutional Performance</span>
+              <span style={{ fontSize: '20px', fontWeight: '900', color: aaeData.master_score >= 80 ? '#22c55e' : '#60a5fa' }}>{aaeData.master_score}</span>
+            </div>
+            {aaeData.debate_summary && (
+              <p style={{ fontSize: '13px', color: '#e2e8f0', lineHeight: '1.5', margin: 0, fontStyle: 'italic' }}>
+                "{aaeData.debate_summary}"
+              </p>
+            )}
+            <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+               <span style={{ fontSize: '10px', padding: '2px 6px', background: '#312e81', borderRadius: '4px', color: '#a5b4fc', border: '1px solid #4338ca' }}>
+                 Conviction: {aaeData.debate_conviction || 'MEDIUM'}
+               </span>
+               <span style={{ fontSize: '10px', padding: '2px 6px', background: '#312e81', borderRadius: '4px', color: '#a5b4fc', border: '1px solid #4338ca' }}>
+                 V3 Scan: {aaeData.market_confirmation || 'PENDING'}
+               </span>
+            </div>
+          </div>
+        )}
 
         {debateStatus && (
           <div style={{
