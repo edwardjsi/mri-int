@@ -229,7 +229,107 @@ def build_stee_signal_email_html(client_name, trades, regime):
     return html
 
 
+    return html
+
+
+def build_aae_report_email_html(client_name: str, result: dict) -> str:
+    """
+    Build a high-conviction institutional email for an AAE V3 Forensic Scan.
+    Includes numerical scores, thematic drivers, and human-readable jargon explanations.
+    """
+    symbol = result.get("symbol", "UNKNOWN")
+    master_score = result.get("master_score", 0)
+    sector = result.get("sector", "General")
+    market_confirmation = result.get("market_confirmation", "PENDING")
+    debate_conviction = result.get("debate_conviction", "N/A")
+    risk_summary = result.get("risk_summary", "N/A")
+    reasons = result.get("reasons", [])
+    
+    score_color = "#22c55e" if master_score >= 75 else "#f59e0b" if master_score >= 60 else "#ef4444"
+    
+    # Identify the "Why Insufficient history" logic for the email
+    processed_reasons = []
+    for r in reasons:
+        if "Insufficient history" in r:
+            processed_reasons.append(f"<b>{r}</b>: The system requires at least 2 quarters of governance data to establish a trend. This is a data-freshness lag, not a fundamental flaw.")
+        else:
+            processed_reasons.append(r)
+
+    reasons_html = "".join([f"<li style='margin-bottom:8px;color:#334155'>{r}</li>" for r in processed_reasons])
+
+    return f"""
+    <html>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:650px;margin:0 auto;padding:20px;background:#f1f5f9">
+        <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border-top:8px solid {score_color}">
+            
+            <div style="text-align:right;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em">
+                AAE V3 Forensic Intelligence
+            </div>
+
+            <h1 style="margin:0 0 4px;font-size:28px;color:#0f172a">{symbol} Institutional Review</h1>
+            <p style="margin:0 0 24px;color:#64748b;font-size:14px">Sector: {sector} | Date: {date.today().strftime('%B %d, %Y')}</p>
+
+            <div style="display:flex;align-items:center;background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:28px">
+                <div style="flex:1">
+                    <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700">Master Alpha Score</div>
+                    <div style="font-size:48px;font-weight:800;color:{score_color}">{master_score}<span style="font-size:20px;color:#94a3b8">/100</span></div>
+                </div>
+                <div style="flex:1;text-align:right">
+                    <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700">Market Status</div>
+                    <div style="font-size:18px;font-weight:700;color:{'#22c55e' if market_confirmation == 'CONFIRMED' else '#f59e0b'}">{market_confirmation}</div>
+                </div>
+            </div>
+
+            <p style="color:#334155;line-height:1.6">Hi {client_name},</p>
+            <p style="color:#334155;line-height:1.6">Our 8-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. This engine synthesizes quarterly financials, governance risks, institutional footprints, and narrative shifts into a single institutional-grade verdict.</p>
+
+            <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:32px">Key Drivers & Inflections</h3>
+            <ul style="padding-left:20px;margin:16px 0">
+                {reasons_html}
+            </ul>
+
+            <div style="background:#0f172a;color:#f8fafc;padding:20px;border-radius:12px;margin:32px 0">
+                <h3 style="margin:0 0 8px;color:#38bdf8;font-size:14px;text-transform:uppercase">Layer 8: Forensic Debate Verdict</h3>
+                <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#cbd5e1">Conviction: <b>{debate_conviction}/100</b></p>
+                <p style="margin:0;font-size:15px;line-height:1.6;font-style:italic">"{risk_summary}"</p>
+            </div>
+
+            <div style="background:#eff6ff;padding:20px;border-radius:12px;border:1px solid #bfdbfe">
+                <h4 style="margin:0 0 10px;color:#1e40af;font-size:13px;text-transform:uppercase">User's Guide to the Numbers</h4>
+                <div style="font-size:13px;color:#1e3a8a;line-height:1.5">
+                    <p style="margin:0 0 8px"><b>EMA 50 > 200</b>: Confirms the stock is in a "Structural Uptrend." The short-term trend is stronger than the long-term, showing institutional accumulation.</p>
+                    <p style="margin:0 0 8px"><b>Relative Strength (RS)</b>: Measures if the stock is a "leader" or a "lagger" vs the Nifty 50. High RS means big money is picking this stock over the index.</p>
+                    <p style="margin:0"><b>PE (Valuation)</b>: High PE isn't always bad for growth stocks, but AAE flags it to remind you that you are paying for future earnings today.</p>
+                </div>
+            </div>
+
+            <div style="margin-top:32px;text-align:center">
+                <a href="{FRONTEND_URL}/watchlist" style="background:#0f172a;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block">View on Digital Twin Dashboard</a>
+            </div>
+
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:40px 0 20px">
+            <p style="font-size:11px;color:#94a3b8;text-align:center;line-height:1.5">
+                DISCLAIMER: This is a quantitative forensic report. It is not financial advice or a solicitation to buy. MRI analyzes historical and current data patterns only.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+
+def send_aae_report_email(recipient_email: str, client_name: str, result: dict) -> bool:
+    """
+    Send an AAE Forensic Report email.
+    """
+    symbol = result.get("symbol", "UNKNOWN")
+    master_score = result.get("master_score", 0)
+    subject = f"AAE Forensic Review: {symbol} | Master Alpha {master_score}/100"
+    html_body = build_aae_report_email_html(client_name, result)
+    return send_email_custom(recipient_email=recipient_email, subject=subject, html_body=html_body)
+
+
 def build_perx_report_email_html(client_name: str, report: dict) -> str:
+
     """Build HTML email body for a PERX institutional report."""
     header = report.get("header", {})
     summary = report.get("executive_summary", "")
