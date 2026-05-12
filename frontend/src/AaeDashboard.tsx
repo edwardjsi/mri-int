@@ -451,7 +451,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                       <div className="aae-summary-card">
                         <strong className="aae-summary-title">Institutional Truth Layer</strong>
                         <p className="aae-summary-text">
-                          High-conviction 8-layer forensic audit complete. System cross-referenced Structural Delta, Narrative Sentiment, and Ownership confirmation to generate the master rerating score.
+                          High-conviction 10-layer forensic audit complete. System cross-referenced Structural Delta, Narrative Sentiment, and Ownership confirmation to generate the master rerating score.
                         </p>
                         <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--muted)', display: 'flex', gap: '8px' }}>
                           <span className="aae-badge blue">Forensic Source: {digitalTwinResult.narrative_source || 'SYNTHETIC_PROXY'}</span>

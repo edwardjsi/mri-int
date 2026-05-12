@@ -523,7 +523,7 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <h2 style={{ fontSize: '2.2rem', color: '#ffffff', marginBottom: '16px' }}>AAE V3: Catch Re-Ratings Early</h2>
           <p style={{ color: '#94a3b8', fontSize: '1.2rem' }}>The PE Expander Institutions Fear.</p>
-          <p style={{ color: '#64748b' }}>Finds structural shifts pre-consensus (80% quant, 20% AI forensics).</p>
+          <p style={{ color: '#64748b' }}>Finds structural shifts pre-consensus (80% quant, 20% AAE forensics).</p>
         </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '48px' }}>
@@ -536,7 +536,7 @@ function LandingPage({ onRequestAuth }: { onRequestAuth: () => void }) {
         </div>
         
         <div className="panel-card" style={{ padding: '32px', borderLeft: '4px solid #60a5fa' }}>
-          <h3 style={{ color: '#60a5fa', marginBottom: '16px' }}>🧠 AI Forensic Boost</h3>
+          <h3 style={{ color: '#60a5fa', marginBottom: '16px' }}>🧠 Institutional Forensic Boost</h3>
           <p style={{ color: '#94a3b8' }}>Tracks theme saturation (e.g., de-leveraging pivots), numeric divergences, and learns from historical "Value Traps" to refine real-time scoring.</p>
         </div>
       </section>
@@ -1900,7 +1900,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
             <h2 className="modal-title">🤖 Digital Twin: AAE V3 Scan</h2>
             <div className="modal-header-meta" style={{ marginBottom: '1.5rem' }}>
               <span className="stock-symbol">{digitalTwinStock}</span>
-              <span className="stock-sector" style={{ marginLeft: '10px' }}>8-Layer Institutional Analysis</span>
+              <span className="stock-sector" style={{ marginLeft: '10px' }}>10-Layer Institutional Audit</span>
             </div>
             
             {digitalTwinLoading ? (
