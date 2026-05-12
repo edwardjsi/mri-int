@@ -16,9 +16,9 @@ class MarketConfirmationEngine:
 
     def get_latest_indicators(self):
         query = """
-            SELECT s.*, m.relative_strength 
+            SELECT s.*, dp.rs_90d as relative_strength 
             FROM stock_scores s
-            LEFT JOIN market_regime m ON s.symbol = m.symbol AND s.date = m.date
+            LEFT JOIN daily_prices dp ON s.symbol = dp.symbol AND s.date = dp.date
             WHERE s.symbol = %s 
             ORDER BY s.date DESC LIMIT 1
         """
