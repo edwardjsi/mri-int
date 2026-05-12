@@ -329,6 +329,9 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
             </table>
 
             <h3 style="color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:32px">Key Drivers & Inflections</h3>
+            <div style="margin:12px 0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em">
+                <b>Layer 4 Source:</b> {narrative_source.replace('_', ' ')}
+            </div>
             <ul style="padding-left:20px;margin:16px 0">
                 {reasons_html}
             </ul>
