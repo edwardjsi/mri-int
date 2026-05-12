@@ -107,3 +107,10 @@
 - [x] **Portfolio Manager:** Built rule-based sizing (Kelly Criterion) and drawdown protection.
 - [x] **Alerting:** Automated "Explosive Improver" triggers in `quality_alerts.py`.
 - [x] **Validation:** Built `quality_backtest.py` to prove the "Quality Improves First" edge.
+
+## 🚧 Upcoming: AAE Phase 3 Enhancements
+- [ ] **Sector Comparison Index Layer** (See `docs/SECTOR_COMPARISON_PLAN.md`)
+  - [ ] Step 1: Database & Seed Data (Schema expansion for indices).
+  - [ ] Step 2: Collector & Automation (yfinance index fetcher).
+  - [ ] Step 3: Analytical Engine (Sector Tailwind, Relative Momentum, Peer Spread).
+  - [ ] Step 4: UI / Frontend (Sector Heatmap API and React Lens integration).
