@@ -35,7 +35,7 @@ class OwnershipEngine:
     def evaluate(self):
         df = self.get_holding_history()
         if df is None or df.empty or len(df) < 2:
-            return {"score": 50, "reasons": ["Insufficient history"]}
+            return {"score": 50, "reasons": ["Insufficient Ownership History (Establish trend over 2+ quarters)"]}
             
         # Chronological
         df = df.iloc[::-1].reset_index(drop=True)
