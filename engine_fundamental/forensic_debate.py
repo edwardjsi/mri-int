@@ -14,7 +14,9 @@ class ForensicDebateEngine:
     
     def __init__(self, symbol):
         self.symbol = symbol.upper()
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        import httpx
+        http_client = httpx.Client()
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), http_client=http_client)
 
     def run_debate(self, context_data):
         """

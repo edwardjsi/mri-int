@@ -70,106 +70,110 @@ def search_universe(q: str, conn=Depends(get_db)):
 
 @router.get("", response_model=List[WatchlistItem])
 def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
+    client_id = str(client["id"])
+    logger.info(f"Fetching watchlist for client: {client_id}")
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    # Fetch symbols from watchlist
-    cur.execute("SELECT symbol FROM client_watchlist WHERE client_id = %s::uuid", (str(client["id"]),))
-    rows = cur.fetchall()
-    
-    if not rows:
+    try:
+        # Fetch symbols from watchlist
+        cur.execute("SELECT symbol FROM client_watchlist WHERE client_id = %s::uuid", (client_id,))
+        rows = cur.fetchall()
+        
+        if not rows:
+            logger.info(f"Watchlist empty for client: {client_id}")
+            cur.close()
+            return []
+
+        # Fetch latest scores and prices
+        cur.execute("""
+            SELECT 
+                cw.symbol,
+                ss.score,
+                ss.condition_ema_50_200,
+                ss.condition_ema_200_slope,
+                ss.condition_6m_high,
+                ss.condition_volume,
+                ss.condition_rs,
+                dp.close as current_price,
+                CASE 
+                    WHEN dp.close > dp.ema_200 THEN 'BULL'
+                    WHEN dp.close < dp.ema_200 THEN 'BEAR'
+                    ELSE 'NEUTRAL'
+                END as trend_alignment,
+                (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found,
+                cw.breakout_candidate,
+                ps.perx_score,
+                ps.lifecycle_stage as perx_lifecycle
+            FROM client_watchlist cw
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) 
+                    symbol, total_score as score, date,
+                    condition_ema_50_200, condition_ema_200_slope,
+                    condition_6m_high, condition_volume, condition_rs
+                FROM stock_scores 
+                ORDER BY symbol, date DESC
+            ) ss ON ss.symbol = cw.symbol
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, close, ema_200, date
+                FROM daily_prices
+                ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = cw.symbol
+            LEFT JOIN perx_scores ps ON cw.symbol = ps.symbol
+            WHERE cw.client_id = %s::uuid
+        """, (client_id,))
+        
+        data = cur.fetchall()
         cur.close()
-        return []
-
-    is_dict_sym = isinstance(rows[0], dict)
-    symbols = [row["symbol"] if is_dict_sym else row[0] for row in rows]
-    
-    # Fetch latest scores and prices (using LEFT JOIN so we don't lose new symbols)
-    cur.execute("""
-        SELECT 
-            cw.symbol,
-            ss.score,
-            ss.condition_ema_50_200,
-            ss.condition_ema_200_slope,
-            ss.condition_6m_high,
-            ss.condition_volume,
-            ss.condition_rs,
-            dp.close as current_price,
-            CASE 
-                WHEN dp.close > dp.ema_200 THEN 'BULL'
-                WHEN dp.close < dp.ema_200 THEN 'BEAR'
-                ELSE 'NEUTRAL'
-            END as trend_alignment,
-            (dp.close IS NULL AND cw.created_at < (NOW() - INTERVAL '5 minutes')) as is_not_found,
-            cw.breakout_candidate,
-            ps.perx_score,
-            ps.lifecycle_stage as perx_lifecycle
-        FROM client_watchlist cw
-        LEFT JOIN (
-            SELECT DISTINCT ON (symbol) 
-                symbol, total_score as score, date,
-                condition_ema_50_200, condition_ema_200_slope,
-                condition_6m_high, condition_volume, condition_rs
-            FROM stock_scores 
-            ORDER BY symbol, date DESC
-        ) ss ON ss.symbol = cw.symbol
-        LEFT JOIN (
-            SELECT DISTINCT ON (symbol) symbol, close, ema_200, date
-            FROM daily_prices
-            ORDER BY symbol, date DESC
-        ) dp ON dp.symbol = cw.symbol
-        LEFT JOIN perx_scores ps ON cw.symbol = ps.symbol
-        WHERE cw.client_id = %s::uuid
-    """, (str(client["id"]),))
-    
-    data = cur.fetchall()
-    cur.close()
-    
-    results = []
-    for row in data:
-        # Determine if row is dict (RealDictCursor) or tuple
-        is_dict = isinstance(row, dict)
-        sym = row["symbol"] if is_dict else row[0]
         
-        price = None
-        score = None
-        trend = None
-        conditions = None
-        breakout_candidate = row["breakout_candidate"] if is_dict else row[10]
-        
-        if row:
+        results = []
+        for row in data:
             try:
-                price_raw = row["current_price"] if is_dict else row[7]
-                price = float(price_raw) if price_raw is not None else None
+                sym = row.get("symbol", "UNKNOWN")
                 
-                score = row["score"] if is_dict else row[1]
-                trend = row["trend_alignment"] if is_dict else row[8]
+                # Robust extraction with type casting
+                def safe_float(val):
+                    try: return float(val) if val is not None else None
+                    except: return None
 
-                # Extract conditions
-                has_conditions = (row["condition_ema_50_200"] is not None) if is_dict else (row[2] is not None)
-                if has_conditions:
-                    conditions = {
-                        "ema_50_above_200": bool(row["condition_ema_50_200"] if is_dict else row[2]),
-                        "ema_200_slope_positive": bool(row["condition_ema_200_slope"] if is_dict else row[3]),
-                        "at_6m_high": bool(row["condition_6m_high"] if is_dict else row[4]),
-                        "volume_surge": bool(row["condition_volume"] if is_dict else row[5]),
-                        "relative_strength": bool(row["condition_rs"] if is_dict else row[6]),
-                    }
-            except (IndexError, KeyError, TypeError):
-                pass
+                def safe_bool(val):
+                    return bool(val) if val is not None else False
 
-        results.append(WatchlistItem(
-            symbol=sym,
-            price=price,
-            score=score,
-            trend_alignment=trend,
-            conditions=conditions,
-            breakout_candidate=bool(breakout_candidate),
-            is_not_found=row["is_not_found"] if is_dict else False,
-            perx_score=float(row["perx_score"]) if (is_dict and row["perx_score"]) else (float(row[11]) if not is_dict and row[11] else None),
-            perx_lifecycle=row["perx_lifecycle"] if is_dict else row[12]
-        ))
-        
-    return results
+                price = safe_float(row.get("current_price"))
+                score = row.get("score") # Int or None
+                trend = row.get("trend_alignment", "NEUTRAL")
+                
+                conditions = None
+                if row.get("condition_ema_50_200") is not None:
+                    conditions = ScoreConditions(
+                        ema_50_above_200=safe_bool(row.get("condition_ema_50_200")),
+                        ema_200_slope_positive=safe_bool(row.get("condition_ema_200_slope")),
+                        at_6m_high=safe_bool(row.get("condition_6m_high")),
+                        volume_surge=safe_bool(row.get("condition_volume")),
+                        relative_strength=safe_bool(row.get("condition_rs"))
+                    )
+
+                results.append(WatchlistItem(
+                    symbol=sym,
+                    price=price,
+                    score=score,
+                    trend_alignment=trend,
+                    conditions=conditions,
+                    breakout_candidate=safe_bool(row.get("breakout_candidate")),
+                    is_not_found=safe_bool(row.get("is_not_found")),
+                    perx_score=safe_float(row.get("perx_score")),
+                    perx_lifecycle=row.get("perx_lifecycle")
+                ))
+            except Exception as row_err:
+                logger.error(f"Error processing watchlist row for {row.get('symbol')}: {row_err}")
+                # Append minimal item so we don't break the whole list
+                results.append(WatchlistItem(symbol=row.get('symbol', 'ERROR')))
+                
+        return results
+
+    except Exception as e:
+        logger.error(f"Watchlist API fatal error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error fetching watchlist")
+
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks, client=Depends(get_current_client), conn=Depends(get_db)):

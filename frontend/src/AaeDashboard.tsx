@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 
 export default function AaeDashboard({ onBack }: { onBack: () => void }) {
+  const [allCandidates, setAllCandidates] = useState<any[]>([]);
+  const [watchlistSymbols, setWatchlistSymbols] = useState<string[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [sectors, setSectors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -10,15 +12,27 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     Promise.all([
       api.getAaeTopCandidates().catch(() => []),
-      api.getSectorHeatmap().catch(() => [])
+      api.getSectorHeatmap().catch(() => []),
+      api.getWatchlist().catch(() => [])
     ])
-    .then(([candData, sectorData]) => {
-      setCandidates(candData);
+    .then(([candData, sectorData, watchlistData]) => {
+      setAllCandidates(candData);
+      setCandidates(candData); // Default view
       setSectors(sectorData);
+      setWatchlistSymbols((watchlistData || []).map((w: any) => w.symbol));
     })
     .catch(console.error)
     .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (filterUniverse === 'Watchlist') {
+      const filtered = allCandidates.filter(c => watchlistSymbols.includes(c.symbol));
+      setCandidates(filtered);
+    } else {
+      setCandidates(allCandidates);
+    }
+  }, [filterUniverse, allCandidates, watchlistSymbols]);
 
   return (
     <div className="aae-console-wrapper">

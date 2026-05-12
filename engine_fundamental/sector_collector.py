@@ -67,7 +67,9 @@ def fetch_and_store_sector_history():
             nsei_df.rename(columns={'Date': 'date', 'Close': 'close_price'}, inplace=True)
             nsei_df['date'] = pd.to_datetime(nsei_df['date']).dt.date
             
-        for sector_id, ticker in indices:
+        for row in indices:
+            sector_id = row['sector_id']
+            ticker = row['nse_ticker']
             logger.info(f"Fetching history for {ticker} (ID: {sector_id})")
             
             # Fetch 2 years of data to ensure valid EMA 200 and RS 90d

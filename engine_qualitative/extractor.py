@@ -4,10 +4,13 @@ import json
 def get_openai_client():
     try:
         from openai import OpenAI
+        import httpx
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return None
-        return OpenAI(api_key=api_key)
+        # Use a custom http_client to avoid the 'proxies' vs 'proxy' argument conflict
+        http_client = httpx.Client()
+        return OpenAI(api_key=api_key, http_client=http_client)
     except Exception as e:
         print(f"Error initializing OpenAI client: {e}")
         return None
