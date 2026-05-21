@@ -236,6 +236,13 @@ def compute_indicators(df, idx_df):
             s_df['rolling_high_6m'] - s_df['close']
         ) / s_df['rolling_high_6m']
 
+        # Approximate Weekly RSI (70 trading days) using 5-day diff
+        delta_w = s_df["close"].diff(5)
+        gain_w = delta_w.where(delta_w > 0, 0).rolling(window=14).mean()
+        loss_w = (-delta_w.where(delta_w < 0, 0)).rolling(window=14).mean()
+        rs_w = gain_w / (loss_w + 1e-9)
+        s_df["weekly_rsi_14"] = 100 - (100 / (1 + rs_w))
+
         # Breakout state classification
         def _classify_breakout(row):
             # Active breakout
@@ -243,6 +250,7 @@ def compute_indicators(df, idx_df):
                 row.get('condition_breakout_10d')
                 and row.get('vol_multiplier', 0) >= 1.3
                 and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
+                and row.get('weekly_rsi_14', 0) >= 60
             ):
                 return 'BROKEN_OUT'
             # Ready‑to‑breakout (Volatility Contraction Pattern)
@@ -251,6 +259,7 @@ def compute_indicators(df, idx_df):
                 and row.get('price_range_5d', 1) <= 0.025
                 and row.get('vol_multiplier', 1) <= 0.85
                 and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
+                and row.get('weekly_rsi_14', 0) >= 50
             ):
                 return 'READY_TO_BREAKOUT'
             return 'CONSOLIDATING'

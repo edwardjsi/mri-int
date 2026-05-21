@@ -107,8 +107,8 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
     signals = []
 
     # ── SELL SIGNALS ──
-    # If regime is BEAR, signal SELL for all open positions
-    if regime == "BEAR":
+    # If regime is BEARISH, signal SELL for all open positions
+    if regime == "BEARISH":
         for sym in open_positions:
             price_data = prices.get(sym, {})
             signals.append({
@@ -150,11 +150,11 @@ def generate_signals_for_client(cur, client_id, regime, scores, prices, signal_d
     pending_sells = {s["symbol"] for s in signals if s["action"] == "SELL"}
     effective_positions = len(open_positions - pending_sells)
 
-    if (regime == "BULL" or regime == "NEUTRAL") and effective_positions < MAX_POSITIONS:
+    if (regime == "BULLISH" or regime == "NEUTRAL" or regime == "SIDEWAYS") and effective_positions < MAX_POSITIONS:
         slots = MAX_POSITIONS - effective_positions
         # Top scoring stocks not already held, passing liquidity gate
-        # In NEUTRAL regime, we require score >= 85
-        current_threshold = MIN_BUY_SCORE if regime == "BULL" else 85
+        # In NEUTRAL/SIDEWAYS regime, we require score >= 85
+        current_threshold = MIN_BUY_SCORE if regime == "BULLISH" else 85
         eligible = [
             s for s in scores
             if s["total_score"] >= current_threshold

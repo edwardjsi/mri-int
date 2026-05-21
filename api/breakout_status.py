@@ -51,3 +51,40 @@ def get_breakout_map(conn=Depends(get_db)):
         return {}
     finally:
         cur.close()
+
+@router.get("/radar")
+def get_breakout_radar(conn=Depends(get_db)):
+    """
+    Return all stocks that are in ANY user's watchlist or portfolio
+    and are currently flagged as READY_TO_BREAKOUT or BROKEN_OUT.
+    """
+    query = """
+        SELECT 
+            dp.symbol, 
+            dp.close, 
+            dp.volume, 
+            dp.ema_50, 
+            dp.ema_200, 
+            dp.breakout_state,
+            (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
+            (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders
+        FROM daily_prices dp
+        WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
+          AND dp.breakout_state IN ('READY_TO_BREAKOUT', 'BROKEN_OUT')
+          AND (
+              EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
+              OR 
+              EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true)
+          )
+        ORDER BY dp.breakout_state, dp.symbol;
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(query)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        log.error(f"Breakout radar error: {e}")
+        return []
+    finally:
+        cur.close()

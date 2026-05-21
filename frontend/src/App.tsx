@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import BreakoutBadge from './BreakoutBadge';
+import BreakoutRadar from './BreakoutRadar';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -2538,7 +2539,7 @@ function PerxPage() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'admin' | 'shadow' | 'perx' | 'aae'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2591,6 +2592,9 @@ function App() {
           <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
             <span className="nav-icon">👀</span> Watchlist
           </button>
+          <button className={`nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>
+            <span className="nav-icon">🚀</span> Breakout Radar
+          </button>
           <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
             <span className="nav-icon">🏛️</span> PERX
           </button>
@@ -2627,6 +2631,7 @@ function App() {
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
+          {page === 'breakout' && <BreakoutRadar onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
@@ -2644,6 +2649,7 @@ function App() {
         <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>🚀 Swing</button>
         <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>🛡️ Audit</button>
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>👀 Watchlist</button>
+        <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>🚀 Breakout Radar</button>
         <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>🏛️ PERX</button>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }}>🚪 Logout</button>
       </nav>
