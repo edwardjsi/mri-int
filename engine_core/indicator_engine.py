@@ -289,7 +289,7 @@ def compute_indicators(df, idx_df):
                 merged["stock_ret"] = merged["close"] / merged["close"].shift(90)
                 merged["idx_ret"] = merged["idx_close"] / merged["idx_close"].shift(90)
                 merged["rs_90d"] = (merged["stock_ret"] / merged["idx_ret"]) * 100
-                s_df = pd.merge(s_df, merged[["date", "rs_90d"]], on="date", how="left")
+                s_df = pd.merge(s_df.drop(columns=["rs_90d"], errors='ignore'), merged[["date", "rs_90d"]], on="date", how="left")
 
         s_df = s_df.replace({np.nan: None})
 
