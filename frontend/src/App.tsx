@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import BreakoutBadge from './BreakoutBadge';
-import BreakoutRadar from './BreakoutRadar';
+import BreakoutRadarPage from './BreakoutRadarPage';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -184,7 +184,7 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h3 className="modal-title" style={{ marginBottom: '4px' }}>{stock.symbol}</h3>
-            <BreakoutBadge state={stock.conditions?.breakout_10d ? 'READY_TO_BREAKOUT' : (stock.is_breakout ? 'BROKEN_OUT' : 'CONSOLIDATING')} />
+            <BreakoutBadge state={stock.breakout_state || (stock.conditions?.breakout_10d ? 'READY_TO_BREAKOUT' : (stock.is_breakout ? 'BROKEN_OUT' : 'CONSOLIDATING'))} />
             <div className="card-meta">Detailed MRI Intelligence Report</div>
           </div>
           <button className="link-btn" onClick={onClose} style={{ fontSize: '24px' }}>&times;</button>
@@ -793,7 +793,7 @@ function SignalCard({ signal, totalCapital, onAction, onSelectStock }: {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="signal-symbol">{signal.symbol}</span>
             {isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '9px', marginTop: '2px' }}>🚀 GOLDEN SETUP</span>}
-            <BreakoutBadge state={signal.conditions?.breakout_10d ? 'READY_TO_BREAKOUT' : (signal.is_breakout ? 'BROKEN_OUT' : 'CONSOLIDATING')} />
+            <BreakoutBadge state={signal.breakout_state || (signal.conditions?.breakout_10d ? 'READY_TO_BREAKOUT' : (signal.is_breakout ? 'BROKEN_OUT' : 'CONSOLIDATING'))} />
           </div>
           <span className={`signal-badge ${isBuy ? 'badge-buy' : 'badge-sell'}`}>{signal.action}</span>
         </div>
@@ -2631,7 +2631,7 @@ function App() {
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
-          {page === 'breakout' && <BreakoutRadar onSelectStock={setSelectedStock} />}
+          {page === 'breakout' && <BreakoutRadarPage onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
