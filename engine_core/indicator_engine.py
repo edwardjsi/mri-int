@@ -243,6 +243,13 @@ def compute_indicators(df, idx_df):
         rs_w = gain_w / (loss_w + 1e-9)
         s_df["weekly_rsi_14"] = 100 - (100 / (1 + rs_w))
 
+        # Standard MACD (12, 26, 9)
+        ema_12 = s_df["close"].ewm(span=12, adjust=False).mean()
+        ema_26 = s_df["close"].ewm(span=26, adjust=False).mean()
+        s_df["macd_line"] = ema_12 - ema_26
+        s_df["macd_signal"] = s_df["macd_line"].ewm(span=9, adjust=False).mean()
+        s_df["macd_hist"] = s_df["macd_line"] - s_df["macd_signal"]
+
         # Breakout state classification
         def _classify_breakout(row):
             # Active breakout
@@ -251,6 +258,7 @@ def compute_indicators(df, idx_df):
                 and row.get('vol_multiplier', 0) >= 1.3
                 and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
                 and row.get('weekly_rsi_14', 0) >= 60
+                and row.get('macd_hist', 0) > 0  # Standard MACD Positive Cross
             ):
                 return 'BROKEN_OUT'
             # Ready‑to‑breakout (Volatility Contraction Pattern)
@@ -260,6 +268,7 @@ def compute_indicators(df, idx_df):
                 and row.get('vol_multiplier', 1) <= 0.85
                 and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
                 and row.get('weekly_rsi_14', 0) >= 50
+                and row.get('macd_hist', 0) > 0  # Standard MACD Positive Cross
             ):
                 return 'READY_TO_BREAKOUT'
             return 'CONSOLIDATING'
