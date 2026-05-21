@@ -17,7 +17,7 @@ NSE_HOLIDAYS_2026 = [
     date(2026, 4, 6),    # Good Friday
     date(2026, 4, 14),   # Dr. Baba Saheb Ambedkar Jayanti
     date(2026, 5, 1),    # Maharashtra Day
-    date(2026, 5, 21),   # Buddha Pournima
+    # date(2026, 5, 21),   # Buddha Pournima – not a market holiday
     date(2026, 8, 15),   # Independence Day
     date(2026, 8, 27),   # Ganesh Chaturthi
     date(2026, 10, 2),   # Mahatma Gandhi Jayanti
