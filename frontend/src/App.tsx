@@ -2620,6 +2620,7 @@ function App() {
                 page === 'history' ? 'Trade History' :
                   page === 'riskaudit' ? 'Portfolio Risk Audit' :
                     page === 'watchlist' ? 'Stock Watchlist' :
+                      page === 'breakout' ? 'Breakout Radar' :
                       page === 'perx' ? 'PERX Institutional Scan' :
                       page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
           </h1>
