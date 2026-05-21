@@ -23,6 +23,7 @@ from api.watchlist import router as watchlist_router
 from api.admin import router as admin_router
 from api.fundamental import router as fundamental_router
 from api.perx import router as perx_router
+from api.aae import router as aae_router
 from api.breakout_status import router as breakout_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
