@@ -628,3 +628,20 @@ Decision:
 2. Extract breakout UI representation into a dedicated `BreakoutBadge` component.
 Reason: Decoupling the breakout status from the main signal feed improves frontend responsiveness when checking individual stocks in the StockDetailsModal, and allows independent iteration of the breakout detection logic.
 Status: FINAL.
+
+## Decision 091 — Shared API Client for All Frontend Data Fetching
+Date: 2026-05-21
+Decision:
+1. All frontend API calls MUST use the shared `apiFetch()` helper from `api.ts`, not raw `fetch()`.
+2. The auth token is stored under the key `mri_token` in localStorage — no other key is valid.
+Reason: Raw `fetch()` calls bypass the shared auth header injection, API base URL resolution, and session-expiry redirect. The `BreakoutRadar` component was using `localStorage.getItem('token')` (wrong key — should be `mri_token`) and sending `Authorization: Bearer null`, causing a silent 401 on every request. Adding `getBreakoutRadar()` to the `api` object and calling it through `apiFetch` fixes this permanently.
+Status: FINAL.
+
+## Decision 092 — Mobile Navigation: Icon-Only with Full Page Coverage
+Date: 2026-05-21
+Decision:
+1. Mobile bottom nav displays only emoji icons; page names appear via native `title` tooltip on hover/long-press.
+2. All 10 pages from the desktop sidebar are present in the mobile nav (Dashboard, Swing Momentum, History, Risk Audit, Watchlist, Breakout Radar, PERX, AAE Console, Platform Intelligence [admin], Logout).
+3. Swing Momentum icon changed from 🚀 to 🔄 to eliminate collision with Breakout Radar (🚀).
+Reason: The previous mobile nav had only 7 links, missing History, Performance, AAE Console, and Platform Intelligence. Icons-only keeps the bar compact enough to fit 10 items, and the 🔄 icon better represents the swing/cycle concept.
+Status: FINAL.

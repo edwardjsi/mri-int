@@ -26,6 +26,33 @@
 
 ---
 
+## 📅 Session: May 21, 2026 — Frontend: Breakout Radar Auth Fix & Mobile Nav Revamp
+**Session Start:** 20:40 IST
+**Session End:** 21:10 IST
+
+### What Was Done This Session
+
+#### 1. Breakout Radar Page Auth Fix ✅
+- [x] Added `getBreakoutRadar()` method to `frontend/src/api.ts` using shared `apiFetch` helper.
+- [x] Fixed `frontend/src/BreakoutRadar.tsx` — replaced raw `fetch()` with `api.getBreakoutRadar()`.
+  - **Root cause**: raw fetch used `localStorage.getItem('token')` but auth token is stored under key `mri_token`, sending `Authorization: Bearer null` (silent 401).
+
+#### 2. Mobile Navigation Revamp ✅
+- [x] Expanded mobile bottom nav from 7 to 10 links, now covering all desktop sidebar pages: Dashboard, Swing Momentum, History, Risk Audit, Watchlist, Breakout Radar, PERX, AAE Console, Platform Intelligence (admin), Logout.
+- [x] Switched to icon-only buttons with native `title` tooltips for hover labels.
+- [x] Changed Swing Momentum icon from 🚀 to 🔄 (swing/cycle) — 🚀 now exclusive to Breakout Radar.
+
+#### 3. Documentation ✅
+- [x] Added `breakout_task_doc.md` — 8-milestone task tracker for breakout feature implementation.
+- [x] Added `breakout_identification_plan.md` — detailed math/architecture spec for breakout classification engine.
+- [x] Updated `Progress.md` (this entry).
+- [x] Updated `Decisions.md` with Decision 091 (Shared API Client) and Decision 092 (Mobile Nav Icon-Only).
+
+### 📌 Current Milestone
+- Frontend fixes complete. Breakout Radar page ready for production deployment after rebuild.
+
+---
+
 ## 📅 Session: May 12, 2026 — 8-Layer Forensic Integration & Risk Audit Fix
 **Session Start:** 15:30 IST
 **Session End:** 16:00 IST

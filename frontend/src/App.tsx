@@ -885,7 +885,7 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
 
   return (
     <div className="shadow-momentum">
-      <h2 className="section-title">🚀 Swing Momentum (Shadow Picks)</h2>
+      <h2 className="section-title">🔄 Swing Momentum (Shadow Picks)</h2>
       <p className="section-subtitle">
         The Top 10 highest-scoring stocks today. These ignore the Market Regime filter to help you identify
         active momentum even in Bear markets.
@@ -2578,7 +2578,7 @@ function App() {
             <span className="nav-icon">🏠</span> Dashboard
           </button>
           <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
-            <span className="nav-icon">🚀</span> Swing Momentum
+            <span className="nav-icon">🔄</span> Swing Momentum
           </button>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
             <span className="nav-icon">📋</span> History
@@ -2646,13 +2646,18 @@ function App() {
       )}
 
       <nav className="mobile-nav">
-        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>🏠 Dash</button>
-        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>🚀 Swing</button>
-        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>🛡️ Audit</button>
-        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>👀 Watchlist</button>
-        <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>🚀 Breakout Radar</button>
-        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>🏛️ PERX</button>
-        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }}>🚪 Logout</button>
+        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')} title="Dashboard">🏠</button>
+        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')} title="Swing Momentum">🔄</button>
+        <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')} title="History">📋</button>
+        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')} title="Risk Audit">🛡️</button>
+        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')} title="Watchlist">👀</button>
+        <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
+        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
+        <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
+        {isAdmin() && (
+          <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
+        )}
+        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }} title="Logout">🚪</button>
       </nav>
     </div>
   );

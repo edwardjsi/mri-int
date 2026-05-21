@@ -296,6 +296,10 @@ export const api = {
             method: 'DELETE',
         }),
     searchStocks: (q: string) => apiFetch(`/watchlist/search?q=${q}`),
+
+    // Breakout Radar
+    getBreakoutRadar: () => apiFetch('/breakout/radar'),
+
     uploadWatchlistCsv: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);

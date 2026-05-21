@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
 
 export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
@@ -6,24 +7,10 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRadar = async () => {
-      try {
-        const response = await fetch('/api/breakout/radar', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setRadarData(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch radar data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRadar();
+    api.getBreakoutRadar()
+      .then(data => setRadarData(data || []))
+      .catch(err => console.error('Failed to fetch radar data', err))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="loading">Scanning for Breakouts...</div>;
