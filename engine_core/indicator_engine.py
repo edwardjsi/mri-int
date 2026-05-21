@@ -313,6 +313,7 @@ def compute_indicators(df, idx_df):
                     "atr_14": row.get("atr_14"),
                     "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
                     "condition_price_quality": row.get("price_quality"),
+                    "breakout_state": row.get("breakout_state", "CONSOLIDATING")
                 }
             )
 
