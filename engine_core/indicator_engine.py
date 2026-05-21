@@ -6,7 +6,12 @@ import pandas as pd
 from psycopg2.extras import execute_batch
 
 from engine_core.db import get_connection
-from engine_core.email_service import send_alert_email
+try:
+    from engine_core.email_service import send_alert_email
+except Exception:  # pragma: no cover
+    def send_alert_email(subject, body):
+        # No‑op placeholder when email services are unavailable (e.g., during unit tests)
+        pass
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -215,13 +220,65 @@ def compute_indicators(df, idx_df):
         tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         s_df["atr_14"] = tr.rolling(window=14).mean()
         
-        # 7-Step System expansion
-        s_df["condition_breakout_10d"] = (s_df["close"] > s_df["high_10d"]).fillna(False).astype(bool)
-        # Price Quality (Close Range): (Close - Low) / (High - Low)
-        s_df["price_quality"] = (s_df["close"] - s_df["low"]) / (s_df["high"] - s_df["low"] + 1e-9)
-        s_df["condition_price_quality"] = (s_df["price_quality"].fillna(0) >= 0.7).astype(bool)
+        # Compute additional metrics for breakout classification
+        # 5‑day price range percentage (volatility contraction)
+        price_range_5d = (
+            s_df['high'].rolling(5).max() - s_df['low'].rolling(5).min()
+        ) / s_df['low'].rolling(5).min().replace({0: None})
+        s_df['price_range_5d'] = price_range_5d
 
-        if not idx_df.empty:
+        # Volume multiplier vs 20‑day average
+        s_df['vol_multiplier'] = s_df['volume'] / s_df['avg_volume_20d']
+
+        # Proximity to 6‑month high (fraction of distance)
+        s_df['proximity_to_high'] = (
+            s_df['rolling_high_6m'] - s_df['close']
+        ) / s_df['rolling_high_6m']
+
+        # Breakout state classification
+        def _classify_breakout(row):
+            # Active breakout
+            if (
+                row.get('condition_breakout_10d')
+                and row.get('vol_multiplier', 0) >= 1.3
+                and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
+            ):
+                return 'BROKEN_OUT'
+            # Ready‑to‑breakout (Volatility Contraction Pattern)
+            if (
+                row.get('proximity_to_high', 1) <= 0.03
+                and row.get('price_range_5d', 1) <= 0.025
+                and row.get('vol_multiplier', 1) <= 0.85
+                and row['close'] > row.get('ema_50', 0) > row.get('ema_200', 0)
+            ):
+                return 'READY_TO_BREAKOUT'
+            return 'CONSOLIDATING'
+
+        s_df['breakout_state'] = s_df.apply(_classify_breakout, axis=1)
+
+        for _, row in s_df.tail(PERSIST_ROWS).iterrows():
+            updates.append(
+                {
+                    "symbol": row["symbol"],
+                    "date": row["date"],
+                    "ema_10": row.get("ema_10"),
+                    "ema_20": row.get("ema_20"),
+                    "ema_50": row.get("ema_50"),
+                    "ema_200": row.get("ema_200"),
+                    "rsi_14": row.get("rsi_14") if row.get("rsi_14") is not None else 50,
+                    "below_200ema": bool(row.get("below_200ema", False)),
+                    "ema_200_slope_20": row.get("ema_200_slope_20"),
+                    "rolling_high_6m": row.get("rolling_high_6m"),
+                    "avg_volume_20d": row.get("avg_volume_20d"),
+                    "rs_90d": row.get("rs_90d"),
+                    "high_10d": row.get("high_10d"),
+                    "low_5d": row.get("low_5d"),
+                    "atr_14": row.get("atr_14"),
+                    "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
+                    "condition_price_quality": row.get("price_quality"),
+                    "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
+                }
+            )
             merged = pd.merge(
                 s_df[["date", "close"]],
                 idx_df[["date", "idx_close"]],
@@ -341,7 +398,8 @@ def update_db_with_indicators(updates, max_retries=3):
                         low_5d = %(low_5d)s,
                         atr_14 = %(atr_14)s,
                         condition_breakout_10d = %(condition_breakout_10d)s,
-                        condition_price_quality = %(condition_price_quality)s
+                        condition_price_quality = %(condition_price_quality)s,
+                        breakout_state = %(breakout_state)s
                     WHERE symbol = %(symbol)s AND date = %(date)s
                 """
                 execute_batch(cur, sql, updates, page_size=2000)

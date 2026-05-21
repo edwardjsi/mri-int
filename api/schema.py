@@ -233,6 +233,10 @@ def ensure_required_tables(conn) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stock_scores_date_desc ON stock_scores(date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_market_regime_date ON market_regime(date DESC);")
 
+    # 12c. Breakout State column for daily_prices and stock_scores
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
+    cur.execute("ALTER TABLE stock_scores ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
+
     # 12b. Migration: 7-Step System Expansion
     score_cols = [
         ("condition_breakout_10d", "BOOLEAN"),

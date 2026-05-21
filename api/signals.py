@@ -317,3 +317,38 @@ def get_screener(
             for s in stocks
         ],
     }
+    @router.get("/breakouts")
+    def get_breakout_signals(conn=Depends(get_db)):
+        """Return latest breakout classification for all symbols.
+        Includes symbols with non‑null breakout_state on the most recent date.
+        """
+        cur = conn.cursor()
+        # Get latest date in daily_prices
+        cur.execute("SELECT MAX(date) FROM daily_prices")
+        latest_date_row = cur.fetchone()
+        latest_date = latest_date_row[0] if latest_date_row else None
+        if not latest_date:
+            cur.close()
+            return {"date": None, "breakouts": []}
+        # Fetch symbols with breakout_state
+        cur.execute(
+            """
+            SELECT symbol, breakout_state, close, volume
+            FROM daily_prices
+            WHERE date = %s AND breakout_state IS NOT NULL
+            ORDER BY breakout_state DESC, symbol ASC
+            """,
+            (latest_date,)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        breakouts = []
+        for r in rows:
+            symbol, state, close, volume = r
+            breakouts.append({
+                "symbol": symbol,
+                "state": state,
+                "close": float(close) if close is not None else None,
+                "volume": int(volume) if volume is not None else None,
+            })
+        return {"date": str(latest_date), "breakouts": breakouts}
