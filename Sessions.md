@@ -1,6 +1,18 @@
 # **MRI Sessions Log**
 
-## **May 12, 2026: 8-Layer Forensic Integration & Risk Audit Fix**
+## **May 21, 2026: UI Enhancements & Breakout API Addition**
+- **Objective**: Improve UI feedback for breakout events and fix pipeline execution blocks.
+- **Actions**:
+  - **Market-Holiday Fix**: Removed an incorrect holiday (Buddha Pournima, 2026-05-21) from `scripts/check_market_holiday.py` so the daily pipeline executes on this valid trading day.
+  - **UI Enhancement**: Created `BreakoutBadge` component (`frontend/src/BreakoutBadge.tsx`) with a tooltip and smooth hover transition.
+  - **Frontend Integration**: Rendered the new `BreakoutBadge` inside the `StockDetailsModal` header (`frontend/src/App.tsx`).
+  - **API Expansion**: Added a read-only `breakout-status` endpoint in `api/breakout_status.py` and registered it in `api/main.py`. Minor adjustments to `api/schema.py` to keep OpenAPI spec in sync.
+  - **Engine Hotfixes**: Fixed a duplicate `rs_90d` column merge issue (drop-if-exists) and a `KeyError` by adding `breakout_state` to the second updates dict in `engine_core/indicator_engine.py`.
+  - **Docker Reliability**: Switched Dockerfile build step to use `npm ci` instead of `npm install` for deterministic, non-interactive builds, and locked npm dependencies in `package-lock.json`.
+  - **Build Script Hygiene**: Cleaned up bash scripts in `run_indicators.sh`.
+- **Result**: The UI now clearly surfaces breakout status with hover context, the indicator engine runs without column/key errors, and Docker builds are deterministic. The pipeline was also unblocked for the trading day.
+
+---## **May 12, 2026: 8-Layer Forensic Integration & Risk Audit Fix**
 - **Objective**: Fix the Risk Audit dashboard visibility and deliver high-conviction 8-layer forensic reports via email and UI.
 - **Actions**:
   - **Risk Audit Repair**: Resolved the `RiskAuditPage` rendering bug by ensuring holdings analysis is fetched and populated on component mount.

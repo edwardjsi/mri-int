@@ -37,6 +37,7 @@ INDICATOR_COLUMNS = (
     ("atr_14", "NUMERIC"),
     ("condition_breakout_10d", "BOOLEAN"),
     ("condition_price_quality", "NUMERIC"),
+    ("breakout_state", "VARCHAR(30) DEFAULT 'CONSOLIDATING'"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing

@@ -612,3 +612,19 @@ Decision:
 3. Inject the AAE master controller as "Step 9" in the existing `pipeline_cloud.sh` to ensure daily execution.
 Reason: The AAE V3 is compute-heavy (LLM tokens + multi-agent debate). Integrating it strictly as an on-demand "Digital Twin" for Watchlist items, plus a top-20 automated daily run, controls API costs while maximizing visibility where the user cares most.
 Status: FINAL.
+
+## Decision 089 — Deterministic Frontend Builds
+Date: 2026-05-21
+Decision:
+1. Switch `npm install` to `npm ci` in the Dockerfile.
+2. Commit `package-lock.json` to version control.
+Reason: Ensures deterministic, non-interactive frontend builds across all environments, eliminating "it works on my machine" issues and preventing unexpected dependency updates from breaking production deployments.
+Status: FINAL.
+
+## Decision 090 — Decoupled Breakout Status API
+Date: 2026-05-21
+Decision:
+1. Implement a dedicated, read-only endpoint `/api/breakout-status`.
+2. Extract breakout UI representation into a dedicated `BreakoutBadge` component.
+Reason: Decoupling the breakout status from the main signal feed improves frontend responsiveness when checking individual stocks in the StockDetailsModal, and allows independent iteration of the breakout detection logic.
+Status: FINAL.

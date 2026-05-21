@@ -2,6 +2,30 @@
 
 ---
 
+## 📅 Session: May 21, 2026 — UI Enhancements & Breakout Engine Fixes
+**Session Start:** 12:00 IST
+**Session End:** 14:00 IST
+
+### What Was Done This Session
+
+#### 1. Market Pipeline Fix ✅
+- [x] Corrected `scripts/check_market_holiday.py` by commenting out a spurious May 21 holiday, unblocking the trading day pipeline.
+
+#### 2. Breakout Status UI & API ✅
+- [x] Added `frontend/src/BreakoutBadge.tsx` with smooth hover transition and tooltips.
+- [x] Integrated `BreakoutBadge` into `StockDetailsModal` header in `frontend/src/App.tsx`.
+- [x] Implemented `/api/breakout-status` read-only endpoint (`api/breakout_status.py`) and registered it.
+
+#### 3. Indicator Engine & Build Stability ✅
+- [x] Fixed duplicate `rs_90d` column merge bug in `engine_core/indicator_engine.py`.
+- [x] Fixed `KeyError` on `breakout_state` in the indicator engine's update dictionary.
+- [x] Upgraded `Dockerfile` to use `npm ci` for deterministic, locked dependencies (`package-lock.json`).
+
+### 📌 Current Milestone
+- UI and Breakout pipeline fixes complete.
+
+---
+
 ## 📅 Session: May 12, 2026 — 8-Layer Forensic Integration & Risk Audit Fix
 **Session Start:** 15:30 IST
 **Session End:** 16:00 IST
