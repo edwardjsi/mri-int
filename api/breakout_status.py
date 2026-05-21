@@ -10,36 +10,20 @@ log = logging.getLogger(__name__)
 def get_breakout_map(conn=Depends(get_db)):
     """
     Return a dict {symbol: "READY_TO_BREAKOUT" | "BROKEN_OUT" | "CONSOLIDATING"}.
-    Logic mirrors the existing breakout UI:
-      • READY_TO_BREAKOUT – all five breakout conditions are true.
-      • BROKEN_OUT      – the symbol is already flagged as a breakout candidate.
-      • CONSOLIDATING   – none of the above.
+    Pulls directly from the engine-calculated `breakout_state` column in the daily_prices table.
     """
     query = """
         SELECT
             cw.symbol,
-            CASE
-                WHEN ss.condition_ema_50_200
-                 AND ss.condition_ema_200_slope
-                 AND ss.condition_6m_high
-                 AND ss.condition_volume
-                 AND ss.condition_rs
-                THEN 'READY_TO_BREAKOUT'
-                WHEN cw.breakout_candidate THEN 'BROKEN_OUT'
-                ELSE 'CONSOLIDATING'
-            END AS state
+            COALESCE(dp.breakout_state, 'CONSOLIDATING') AS state
         FROM client_watchlist cw
         LEFT JOIN (
             SELECT DISTINCT ON (symbol)
                 symbol,
-                condition_ema_50_200,
-                condition_ema_200_slope,
-                condition_6m_high,
-                condition_volume,
-                condition_rs
-            FROM stock_scores
+                breakout_state
+            FROM daily_prices
             ORDER BY symbol, date DESC
-        ) ss ON ss.symbol = cw.symbol;
+        ) dp ON dp.symbol = cw.symbol;
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:

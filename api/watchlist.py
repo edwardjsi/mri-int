@@ -32,6 +32,7 @@ class WatchlistItem(BaseModel):
     trend_alignment: Optional[str] = None
     conditions: Optional[ScoreConditions] = None
     breakout_candidate: bool = False
+    breakout_state: Optional[str] = None
     is_not_found: bool = False
     is_pending: bool = False
     perx_score: Optional[float] = None
@@ -95,6 +96,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 ss.condition_volume,
                 ss.condition_rs,
                 dp.close as current_price,
+                dp.breakout_state,
                 CASE 
                     WHEN dp.close > dp.ema_200 THEN 'BULL'
                     WHEN dp.close < dp.ema_200 THEN 'BEAR'
@@ -114,7 +116,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 ORDER BY symbol, date DESC
             ) ss ON ss.symbol = cw.symbol
             LEFT JOIN (
-                SELECT DISTINCT ON (symbol) symbol, close, ema_200, date
+                SELECT DISTINCT ON (symbol) symbol, close, ema_200, date, breakout_state
                 FROM daily_prices
                 ORDER BY symbol, date DESC
             ) dp ON dp.symbol = cw.symbol
@@ -159,6 +161,7 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                     trend_alignment=trend,
                     conditions=conditions,
                     breakout_candidate=safe_bool(row.get("breakout_candidate")),
+                    breakout_state=row.get("breakout_state"),
                     is_not_found=safe_bool(row.get("is_not_found")),
                     perx_score=safe_float(row.get("perx_score")),
                     perx_lifecycle=row.get("perx_lifecycle")

@@ -20,7 +20,7 @@ def get_shadow_signals(conn=Depends(get_db)):
                    s.condition_ema_50_200, s.condition_ema_200_slope,
                    s.condition_6m_high, s.condition_volume, s.condition_rs,
                    s.condition_breakout_10d, s.condition_price_quality,
-                   dp.close
+                   dp.close, dp.breakout_state
             FROM public.stock_scores s
             LEFT JOIN public.daily_prices dp
               ON dp.symbol = s.symbol AND dp.date = s.date
@@ -37,8 +37,9 @@ def get_shadow_signals(conn=Depends(get_db)):
                 sym, score, dt = r['symbol'], r['total_score'], r['date']
                 c_ema, c_slope, c_high, c_vol, c_rs = r['condition_ema_50_200'], r['condition_ema_200_slope'], r['condition_6m_high'], r['condition_volume'], r['condition_rs']
                 c_breakout, c_quality, close = r['condition_breakout_10d'], r['condition_price_quality'], r['close']
+                breakout_state = r.get('breakout_state', 'CONSOLIDATING')
             else:
-                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs, c_breakout, c_quality, close = r
+                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs, c_breakout, c_quality, close, breakout_state = r
             
             # Explicitly force breakout detection
             is_breakout = bool(c_high and c_vol)
@@ -54,7 +55,8 @@ def get_shadow_signals(conn=Depends(get_db)):
                 "condition_breakout_10d": bool(c_breakout),
                 "condition_price_quality": bool(c_quality),
                 "close": float(close) if close is not None else None,
-                "is_breakout": is_breakout
+                "is_breakout": is_breakout,
+                "breakout_state": breakout_state
             })
             
         latest_date = rows[0]["date"] if is_dict and rows else (rows[0][2] if rows else None)
@@ -105,7 +107,7 @@ def get_todays_signals(
                ca.action_taken, ca.actual_price, ca.quantity,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
                ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
-               ss.condition_breakout_10d, ss.condition_price_quality
+               ss.condition_breakout_10d, ss.condition_price_quality, dp.breakout_state
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
@@ -116,6 +118,7 @@ def get_todays_signals(
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
         ) ss ON true
+        LEFT JOIN daily_prices dp ON dp.symbol = cs.symbol AND dp.date = cs.date
         WHERE cs.client_id = %s
           AND cs.date = (SELECT MAX(date) FROM client_signals WHERE client_id = %s)
         ORDER BY cs.action, cs.score DESC
@@ -139,6 +142,7 @@ def get_todays_signals(
                 "client_action": s["action_taken"] if is_dict else s[8],
                 "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
                 "quantity": s["quantity"] if is_dict else s[10],
+                "breakout_state": s.get("breakout_state", "CONSOLIDATING") if is_dict else (s[18] if len(s) > 18 else "CONSOLIDATING"),
                 "conditions": {
                     "ema_50_above_200": bool(s["condition_ema_50_200"] if is_dict else s[11]),
                     "ema_200_slope_positive": bool(s["condition_ema_200_slope"] if is_dict else s[12]),
@@ -166,7 +170,7 @@ def get_pending_signals(
                cs.score, cs.regime, cs.reason,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
                ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
-               ss.condition_breakout_10d, ss.condition_price_quality
+               ss.condition_breakout_10d, ss.condition_price_quality, dp.breakout_state
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
@@ -177,6 +181,7 @@ def get_pending_signals(
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
         ) ss ON true
+        LEFT JOIN daily_prices dp ON dp.symbol = cs.symbol AND dp.date = cs.date
         WHERE cs.client_id = %s
           AND ca.id IS NULL
         ORDER BY cs.date DESC, cs.action, cs.score DESC
@@ -224,7 +229,7 @@ def get_signal_history(
                ca.action_taken, ca.actual_price, ca.quantity,
                ss.condition_ema_50_200, ss.condition_ema_200_slope,
                ss.condition_6m_high, ss.condition_volume, ss.condition_rs,
-               ss.condition_breakout_10d, ss.condition_price_quality
+               ss.condition_breakout_10d, ss.condition_price_quality, dp.breakout_state
         FROM client_signals cs
         LEFT JOIN client_actions ca ON ca.signal_id = cs.id
         LEFT JOIN LATERAL (
@@ -235,6 +240,7 @@ def get_signal_history(
             WHERE symbol = cs.symbol AND date = cs.date
             LIMIT 1
         ) ss ON true
+        LEFT JOIN daily_prices dp ON dp.symbol = cs.symbol AND dp.date = cs.date
         WHERE cs.client_id = %s
           AND cs.date >= CURRENT_DATE - INTERVAL '%s days'
         ORDER BY cs.date DESC, cs.action, cs.symbol
@@ -257,6 +263,7 @@ def get_signal_history(
             "client_action": s["action_taken"] if is_dict else s[8],
             "actual_price": float(s["actual_price"] if is_dict else s[9]) if (s["actual_price"] if is_dict else s[9]) else None,
             "quantity": s["quantity"] if is_dict else s[10],
+                "breakout_state": s.get("breakout_state", "CONSOLIDATING") if is_dict else (s[18] if len(s) > 18 else "CONSOLIDATING"),
             "conditions": {
                 "ema_50_above_200": bool(s["condition_ema_50_200"] if is_dict else s[11]),
                 "ema_200_slope_positive": bool(s["condition_ema_200_slope"] if is_dict else s[12]),
