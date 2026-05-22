@@ -405,10 +405,39 @@ def _build_perx_email_investor_context(inv_ctx: dict) -> str:
     earnings = inv_ctx.get("earnings_momentum", {})
     ownership = inv_ctx.get("ownership", {})
     liquidity = inv_ctx.get("liquidity", {})
+    peg = inv_ctx.get("peg_ratio", {})
+    ev = inv_ctx.get("ev_ebitda", {})
+    inst = inv_ctx.get("institutional_flow", {})
+    analogs = inv_ctx.get("historical_analogs", {})
+    catalyst = inv_ctx.get("catalyst_questions", [])
     pre_mortem = inv_ctx.get("pre_mortem", {})
     risks = pre_mortem.get("risks", [])
 
     # Grade badge
+    # Build extra table rows for PEG, EV/EBITDA, Institutional Flow
+    peg_row = ''
+    if peg.get('peg_ratio'):
+        peg_row = f'<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>PEG Ratio</b></td>\n'
+        peg_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0">{peg["peg_ratio"]}x</td>\n'
+        peg_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">EPS Growth: {peg.get("eps_growth_pct", "N/A")}% | {peg.get("verdict", "")}</td>\n'
+        peg_row += '</tr>'
+
+    ev_row = ''
+    if ev.get('ev_ebitda'):
+        ev_row = f'<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>EV/EBITDA</b></td>\n'
+        ev_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0">{ev["ev_ebitda"]}x</td>\n'
+        ev_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">Net Debt/EBITDA: {ev.get("net_debt_ebitda", "N/A")}x | {ev.get("verdict", "")}</td>\n'
+        ev_row += '</tr>'
+
+    inst_row = ''
+    if inst.get('fii_holding_pct') or inst.get('dii_holding_pct'):
+        fii_label = inst.get('fii_trend', str(inst.get('fii_holding_pct', 'N/A')))
+        dii_label = inst.get('dii_trend', str(inst.get('dii_holding_pct', 'N/A')))
+        inst_row = f'<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>Inst. Flow</b></td>\n'
+        inst_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0">FII {fii_label}</td>\n'
+        inst_row += f'    <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">DII {dii_label} | {inst.get("verdict", "")}</td>\n'
+        inst_row += '</tr>'
+
     html = f"""
     <div style="background:#f8fafc;border-radius:12px;padding:16px;margin:18px 0;border-top:4px solid {grade_color}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -438,6 +467,9 @@ def _build_perx_email_investor_context(inv_ctx: dict) -> str:
                 <td style="padding:8px;border-bottom:1px solid #e2e8f0">₹{liquidity.get('avg_daily_turnover_cr', 'N/A')}Cr</td>
                 <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">{liquidity.get('verdict', '')}</td>
             </tr>
+{peg_row}
+{ev_row}
+{inst_row}
         </table>
     """
 

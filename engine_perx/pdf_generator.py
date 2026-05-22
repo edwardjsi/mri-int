@@ -96,6 +96,19 @@ def generate_perx_pdf(report: dict) -> BytesIO:
             ["Ownership", ownership.get('promoter_trend', 'N/A'), f"Gov Score: {ownership.get('governance_score', 'N/A')} | Pledged: {ownership.get('pledged_pct', 'N/A')}%"],
             ["Liquidity", f"₹{liquidity.get('avg_daily_turnover_cr', 'N/A')}Cr", f"50L Position: {liquidity.get('days_to_build_50lac_position', 'N/A')} days"],
         ]
+
+        peg = inv_ctx.get('peg_ratio', {})
+        if peg.get('peg_ratio'):
+            inv_data.append(["PEG Ratio", f"{peg['peg_ratio']}x", f"EPS Growth: {peg.get('eps_growth_pct', 'N/A')}%"])
+        ev = inv_ctx.get('ev_ebitda', {})
+        if ev.get('ev_ebitda'):
+            inv_data.append(["EV/EBITDA", f"{ev['ev_ebitda']}x", f"Net Debt/EBITDA: {ev.get('net_debt_ebitda', 'N/A')}x"])
+        inst = inv_ctx.get('institutional_flow', {})
+        if inst.get('fii_holding_pct') or inst.get('dii_holding_pct'):
+            fii_str = f"FII {inst.get('fii_trend', 'N/A')} ({inst.get('fii_change_qoq', '')}%)" if inst.get('fii_change_qoq') else f"FII: {inst.get('fii_holding_pct', 'N/A')}%"
+            dii_str = f"DII {inst.get('dii_trend', 'N/A')} ({inst.get('dii_change_qoq', '')}%)" if inst.get('dii_change_qoq') else f"DII: {inst.get('dii_holding_pct', 'N/A')}%"
+            inv_data.append(["Institutional Flow", fii_str, dii_str])
+
         inv_table = Table(inv_data, colWidths=[100, 120, 230])
         inv_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.hexColor("#f1f5f9")),
@@ -116,6 +129,31 @@ def generate_perx_pdf(report: dict) -> BytesIO:
             elements.append(Paragraph("<b>Risk Pre-Mortem</b>", label_style))
             for risk in risks:
                 elements.append(Paragraph(f"• {risk}", text_style))
+            elements.append(Spacer(1, 10))
+
+        # Catalyst Questions
+        catalyst = inv_ctx.get('catalyst_questions', [])
+        if catalyst:
+            elements.append(Paragraph("<b>Catalyst Checklist</b>", label_style))
+            elements.append(Paragraph("What to investigate next to build (or break) the rerating thesis:", text_style))
+            for q in catalyst[:4]:
+                elements.append(Paragraph(f"→ {q}", text_style))
+            homework = inv_ctx.get('homework_note', '')
+            if homework:
+                elements.append(Spacer(1, 6))
+                elements.append(Paragraph(f"<i>{homework}</i>", text_style))
+            elements.append(Spacer(1, 15))
+
+        # Historical Analogs
+        analogs = inv_ctx.get('historical_analogs', {})
+        analog_list = analogs.get('analogs', [])
+        if analog_list:
+            elements.append(Paragraph("<b>Historical Rerating Analogs</b>", label_style))
+            for a in analog_list[:3]:
+                elements.append(Paragraph(f"  {a.get('symbol', '?')} | Score: {a.get('score', 'N/A')} | {a.get('scan_date', '')}", text_style))
+            hw = analogs.get('homework', '')
+            if hw:
+                elements.append(Paragraph(hw, text_style))
             elements.append(Spacer(1, 15))
 
     # 6. Final Verdict

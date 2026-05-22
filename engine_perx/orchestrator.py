@@ -161,6 +161,8 @@ def _build_report_payload(
     forensic_review: dict[str, Any],
     previous_report: dict[str, Any] | None = None,
     investor_context: dict[str, Any] | None = None,
+    cur=None,
+    current_price: float | None = None,
 ) -> dict[str, Any]:
     stee_score = compute_stee_setup_score(mri_snapshot)
     trajectory_support = compute_trajectory_support(quality_snapshot)
@@ -176,6 +178,13 @@ def _build_report_payload(
     lifecycle_stage = classify_lifecycle_stage(perx_score, mri_snapshot, quality_snapshot, fragility_snapshot)
     narrative_intensity = narrative_intensity_label(perx_score)
     analogs = get_historical_analogs(perx_score, lifecycle_stage)
+
+    # Compute investor context inside where perx_score and lifecycle_stage are known
+    if investor_context is None and cur is not None:
+        investor_context = get_all_investor_context(
+            cur, symbol, current_price=current_price,
+            current_perx_score=perx_score, current_lifecycle=lifecycle_stage,
+        )
 
     # Contextual evaluation against prior report
     prior_context = "No previous institutional evaluation found in your archive."
@@ -289,12 +298,8 @@ def generate_perx_report(
     # Calculate Sector Intelligence (V3)
     sector_intelligence = get_sector_context(cur, base_symbol, sector)
     
-    # Calculate Investor Context (valuation, earnings, ownership, liquidity)
-    current_price = None
-    if mri_snapshot:
-        current_price = mri_snapshot.get("close")
-    investor_context = get_all_investor_context(cur, base_symbol, current_price=current_price)
-    
+    # Calculate Investor Context & build report
+    current_price = mri_snapshot.get("close") if mri_snapshot else None
     forensic_review = _build_forensic_review(base_symbol, include_debate=include_debate)
     report = _build_report_payload(
         base_symbol,
@@ -306,7 +311,8 @@ def generate_perx_report(
         regime_snapshot,
         forensic_review,
         previous_report=previous_report,
-        investor_context=investor_context,
+        cur=cur,
+        current_price=current_price,
     )
 
     report_id = None

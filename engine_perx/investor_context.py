@@ -578,6 +578,324 @@ def compute_investor_grade(
     }
 
 
+def get_peg_ratio(cur, base_symbol: str, current_pe: float | None = None) -> dict[str, Any]:
+    """
+    Calculate PEG ratio (P/E ÷ EPS growth rate).
+    
+    PEG < 1 = undervalued relative to growth
+    PEG > 2 = expensive relative to growth
+    
+    Uses EPS growth from aae_quarterly_financials (YoY comparison of trailing 4-quarter EPS).
+    """
+    result: dict[str, Any] = {
+        "peg_ratio": None,
+        "eps_growth_pct": None,
+        "verdict": "Insufficient data for PEG calculation.",
+        "homework": "If PEG is unavailable, check if the company recently had a capital raise or buyback that distorted EPS."
+    }
+
+    cur.execute(
+        """
+        SELECT year, quarter, eps
+        FROM aae_quarterly_financials
+        WHERE symbol = %s AND eps IS NOT NULL AND eps > 0
+        ORDER BY year DESC, quarter DESC
+        LIMIT 8
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if len(rows) >= 8:
+        latest_4 = [safe_float(r.get("eps") if isinstance(r, dict) else r[2]) for r in rows[:4]]
+        prev_4 = [safe_float(r.get("eps") if isinstance(r, dict) else r[2]) for r in rows[4:8]]
+        ttm_latest = sum(latest_4)
+        ttm_prev = sum(prev_4)
+
+        if ttm_prev > 0:
+            eps_growth = ((ttm_latest - ttm_prev) / ttm_prev) * 100
+            result["eps_growth_pct"] = round(eps_growth, 1)
+
+            if current_pe and eps_growth > 0:
+                peg = current_pe / eps_growth
+                result["peg_ratio"] = round(peg, 2)
+
+                if peg < 1.0:
+                    result["verdict"] = f"PEG {peg:.1f}x — earnings growth outpaces valuation. Favorable."
+                    result["homework"] = f"Track next 2 quarters: EPS growth needs to stay above {eps_growth:.0f}% to defend current PE."
+                elif peg < 2.0:
+                    result["verdict"] = f"PEG {peg:.1f}x — reasonable valuation relative to growth."
+                    result["homework"] = f"If growth decelerates below {eps_growth:.0f}%, the PEG rises above 2x. Watch next quarterly EPS."
+                else:
+                    result["verdict"] = f"PEG {peg:.1f}x — premium valuation vs growth rate. Strong execution needed."
+                    result["homework"] = f"PEG above 2x means you need EPS growth of {eps_growth:.0f}%+ to justify current price. Confirm next 2 quarters deliver."
+            elif current_pe and eps_growth <= 0:
+                result["verdict"] = f"EPS declining ({eps_growth:.1f}%) — PEG is undefined. Stress on current multiple."
+                result["homework"] = "Watch for margin improvement or cost restructuring to reverse EPS decline."
+
+    return result
+
+
+def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Calculate EV/EBITDA proxy using available data.
+    
+    Checks fundamental_financials for debt, cash, EBITDA, and any market_cap column.
+    Falls back to instructive homework for the user.
+    """
+    result: dict[str, Any] = {
+        "ev_ebitda": None,
+        "market_cap_cr": None,
+        "net_debt_ebitda": None,
+        "verdict": "Insufficient data for EV/EBITDA calculation.",
+        "homework": "For accurate EV/EBITDA: get shares outstanding from annual report, multiply by current price, subtract net debt, divide by EBITDA."
+    }
+
+    # Check what columns exist in fundamental_financials
+    cur.execute(
+        """
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = 'fundamental_financials' 
+        AND column_name IN ('market_cap', 'shares_outstanding', 'total_debt', 'cash_equivalents', 'ebitda')
+        """
+    )
+    existing_cols = [r[0] for r in cur.fetchall()]
+
+    # Build dynamic query based on available columns
+    select_cols = []
+    for col in ['total_debt', 'cash_equivalents', 'ebitda', 'market_cap']:
+        if col in existing_cols:
+            select_cols.append(f"ff.{col}")
+
+    if not select_cols:
+        # Just get close price for the homework instruction
+        cur.execute(
+            "SELECT close FROM daily_prices WHERE symbol = %s ORDER BY date DESC LIMIT 1",
+            (base_symbol,),
+        )
+        price_row = cur.fetchone()
+        if price_row:
+            close = safe_float(price_row.get("close") if isinstance(price_row, dict) else price_row[0])
+            result["homework"] = f"Current price ₹{close:.2f}. EV/EBITDA needs: shares outstanding (annual report) × {close:.2f} = market cap, + debt - cash, / EBITDA."
+        return result
+
+    query = f"""
+        SELECT dp.close, {', '.join(select_cols)}, ff.year
+        FROM daily_prices dp
+        LEFT JOIN fundamental_financials ff ON ff.symbol = dp.symbol AND ff.year = (SELECT MAX(year) FROM fundamental_financials WHERE symbol = %s)
+        WHERE dp.symbol = %s
+        ORDER BY dp.date DESC
+        LIMIT 1
+    """
+    cur.execute(query, (base_symbol, base_symbol))
+    row = cur.fetchone()
+    if not row:
+        return result
+
+    # Parse row — order is close, then select_cols in order, then year
+    cols_list = ["close"] + [c.replace("ff.", "") for c in select_cols] + ["year"]
+    if isinstance(row, dict):
+        r_dict = row
+    else:
+        r_dict = {col: row[i] for i, col in enumerate(cols_list) if i < len(row)}
+
+    close = safe_float(r_dict.get("close"))
+    total_debt = safe_float(r_dict.get("total_debt")) if "total_debt" in r_dict else None
+    cash = safe_float(r_dict.get("cash_equivalents")) if "cash_equivalents" in r_dict else None
+    ebitda = safe_float(r_dict.get("ebitda")) if "ebitda" in r_dict else None
+    mcap_stored = safe_float(r_dict.get("market_cap")) if "market_cap" in r_dict else None
+
+    if close <= 0:
+        return result
+
+    # Market cap in crores
+    mcap_cr = None
+    if mcap_stored and mcap_stored > 0:
+        mcap_cr = mcap_stored  # assume already in Cr from DB
+
+    if mcap_cr and total_debt and total_debt > 0 and cash is not None and ebitda and ebitda > 0:
+        ev_cr = mcap_cr + total_debt - cash
+        ev_ebitda = ev_cr / ebitda
+        result["ev_ebitda"] = round(ev_ebitda, 2)
+        result["market_cap_cr"] = round(mcap_cr, 2)
+        net_debt = total_debt - cash
+        result["net_debt_ebitda"] = round(net_debt / ebitda, 2) if ebitda > 0 else None
+
+        verdict_parts = []
+        if ev_ebitda < 8:
+            verdict_parts.append(f"EV/EBITDA {ev_ebitda:.1f}x — below average for Indian industrials")
+        elif ev_ebitda < 15:
+            verdict_parts.append(f"EV/EBITDA {ev_ebitda:.1f}x — in line with market")
+        else:
+            verdict_parts.append(f"EV/EBITDA {ev_ebitda:.1f}x — premium valuation")
+
+        if result["net_debt_ebitda"] is not None:
+            ndebt = result["net_debt_ebitda"]
+            if ndebt < 0:
+                verdict_parts.append("Net cash position — low balance sheet risk")
+            elif ndebt < 2:
+                verdict_parts.append(f"Manageable net debt ({ndebt:.1f}x EBITDA)")
+            else:
+                verdict_parts.append(f"⚠️ Elevated net debt ({ndebt:.1f}x EBITDA) — refinancing risk if rates stay high")
+
+        result["verdict"] = " | ".join(verdict_parts)
+        result["homework"] = f"If EV/EBITDA is {ev_ebitda:.0f}x+, the rerating case rests on EBITDA compounding at 15%+ yearly. Track next 2 quarterly EBITDA prints."
+    else:
+        missing = []
+        if not mcap_cr: missing.append("market cap")
+        if not total_debt or total_debt <= 0: missing.append("debt")
+        if cash is None: missing.append("cash")
+        if not ebitda or ebitda <= 0: missing.append("EBITDA")
+        result["homework"] = f"EV/EBITDA needs: {', '.join(missing)}. Check annual report and input manually."
+
+    return result
+
+
+def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Check FII/DII holding changes from aae_governance_metrics.
+    """
+    result: dict[str, Any] = {
+        "fii_holding_pct": None,
+        "dii_holding_pct": None,
+        "fii_change_qoq": None,
+        "dii_change_qoq": None,
+        "verdict": "No institutional holding data available.",
+        "homework": "Check quarterly shareholding pattern (BSE/NSE public data) for latest FII/DII movements."
+    }
+
+    cur.execute(
+        """
+        SELECT fiscal_year, fiscal_quarter, fii_holding_pct, dii_holding_pct
+        FROM aae_governance_metrics
+        WHERE symbol = %s AND (fii_holding_pct IS NOT NULL OR dii_holding_pct IS NOT NULL)
+        ORDER BY fiscal_year DESC, fiscal_quarter DESC
+        LIMIT 4
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if not rows:
+        return result
+
+    parsed = []
+    for r in rows:
+        r_dict = r if isinstance(r, dict) else {
+            "year": r[0], "quarter": r[1],
+            "fii_pct": r[2] if len(r) > 2 else None,
+            "dii_pct": r[3] if len(r) > 3 else None,
+        }
+        parsed.append({
+            "year": int(r_dict.get("year", 0)),
+            "quarter": int(r_dict.get("quarter", 0)),
+            "fii": safe_float(r_dict.get("fii_pct")),
+            "dii": safe_float(r_dict.get("dii_pct")),
+        })
+
+    latest = parsed[0]
+    result["fii_holding_pct"] = latest["fii"] if latest["fii"] > 0 else None
+    result["dii_holding_pct"] = latest["dii"] if latest["dii"] > 0 else None
+
+    if len(parsed) >= 2:
+        prev = parsed[1]
+        fii_chg = latest["fii"] - prev["fii"] if latest["fii"] and prev["fii"] else None
+        dii_chg = latest["dii"] - prev["dii"] if latest["dii"] and prev["dii"] else None
+
+        result["fii_change_qoq"] = round(fii_chg, 2) if fii_chg is not None else None
+        result["dii_change_qoq"] = round(dii_chg, 2) if dii_chg is not None else None
+
+        verdict_parts = []
+        if fii_chg is not None:
+            direction = "ADDING" if fii_chg > 0.5 else ("REDUCING" if fii_chg < -0.5 else "STABLE")
+            result["fii_trend"] = direction
+            verdict_parts.append(f"FII {direction} ({fii_chg:+.2f}%)")
+        if dii_chg is not None:
+            direction = "ADDING" if dii_chg > 0.5 else ("REDUCING" if dii_chg < -0.5 else "STABLE")
+            result["dii_trend"] = direction
+            verdict_parts.append(f"DII {direction} ({dii_chg:+.2f}%)")
+
+        if verdict_parts:
+            result["verdict"] = " | ".join(verdict_parts)
+            if fii_chg is not None and fii_chg < -2:
+                result["verdict"] += " ⚠️"
+            elif dii_chg is not None and dii_chg > 2:
+                result["verdict"] += " (DII buying may indicate value-seeking by domestic funds)"
+
+        result["homework"] = "If FIIs reducing while DIIs buying — classic Indian market pattern. Watch next 2 quarters for confirmation."
+
+    return result
+
+
+def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str, current_symbol: str) -> dict[str, Any]:
+    """
+    Query perx_reports history to find similar past rerating candidates and their outcomes.
+    """
+    result: dict[str, Any] = {
+        "analogs": [],
+        "verdict": "No historical rerating analogs found in archive.",
+        "homework": "Track this stock's price vs narrative over the next 3-6 months."
+    }
+
+    score_low = max(0, current_perx_score - 15)
+    score_high = min(100, current_perx_score + 15)
+
+    cur.execute(
+        """
+        SELECT symbol, company_name, lifecycle_phase, perx_score::float,
+               generated_at::date as scan_date,
+               report_data::jsonb->>'final_institutional_verdict' as verdict
+        FROM perx_reports
+        WHERE symbol != %s
+          AND perx_score BETWEEN %s AND %s
+          AND lifecycle_phase = %s
+          AND generated_at >= NOW() - INTERVAL '90 days'
+        ORDER BY generated_at DESC
+        LIMIT 5
+        """,
+        (current_symbol, score_low, score_high, current_lifecycle),
+    )
+    rows = cur.fetchall()
+    if not rows:
+        # Broader: same lifecycle, any score
+        cur.execute(
+            """
+            SELECT symbol, company_name, lifecycle_phase, perx_score::float,
+                   generated_at::date as scan_date,
+                   report_data::jsonb->>'final_institutional_verdict' as verdict
+            FROM perx_reports
+            WHERE symbol != %s
+              AND lifecycle_phase = %s
+              AND generated_at >= NOW() - INTERVAL '90 days'
+            ORDER BY perx_score DESC
+            LIMIT 5
+            """,
+            (current_symbol, current_lifecycle),
+        )
+        rows = cur.fetchall()
+
+    if rows:
+        analogs = []
+        for r in rows:
+            r_dict = r if isinstance(r, dict) else {
+                "symbol": r[0], "company_name": r[1], "phase": r[2],
+                "score": r[3], "date": r[4], "verdict": r[5],
+            }
+            analogs.append({
+                "symbol": r_dict.get("symbol"),
+                "company_name": r_dict.get("company_name"),
+                "score": r_dict.get("score"),
+                "scan_date": str(r_dict.get("scan_date") or ""),
+                "verdict_snippet": (r_dict.get("verdict") or "")[:120] + "..." if r_dict.get("verdict") else "",
+            })
+        result["analogs"] = analogs
+        names = ", ".join(a["symbol"] for a in analogs[:3])
+        result["verdict"] = f"{len(analogs)} comparable candidates: {names}. Monitor their price action for thesis clues."
+        result["homework"] = f"Add {names} to watchlist. If they re-rated UP after scanning, your thesis has precedent. If DOWN, re-examine."
+
+    return result
+
+
+
+
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None) -> dict[str, Any]:
     """
     Master function that runs all four context engines and returns a unified investor context block.
