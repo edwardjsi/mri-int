@@ -126,6 +126,26 @@ class AAEOrchestrator:
         bear_case = debate_engine.run_bear_layer(ai_context)
         bull_case = debate_engine.run_bull_layer(ai_context)
 
+        # Data quality check: count how many engine layers returned real data
+        score_sources = [
+            sector_result.get('score'),
+            narrative_score,
+            market_result.get('score'),
+            own_result.get('score'),
+            val_result.get('valuation_score'),
+        ]
+        real_layer_count = sum(1 for s in score_sources 
+            if s is not None and isinstance(s, (int, float)) and s not in (50, 0))
+        
+        data_quality_warning = None
+        if real_layer_count <= 1:
+            data_quality_warning = (
+                f"⚠️ Only {real_layer_count}/5 engine layers returned real data for {self.symbol}. "
+                "The master score is heavily influenced by default values. "
+                "Check if this symbol has been ingested into all AAE data pipelines."
+            )
+            logger.warning(data_quality_warning)
+
         result = {
             "symbol": self.symbol,
             "status": "ACTIVE",
@@ -135,6 +155,12 @@ class AAEOrchestrator:
             "market_confirmation": market_result.get('confirmation_status'),
             "narrative_score": round(narrative_score, 1),
             "reasons": sector_result.get('reasons', []) + market_result.get('reasons', []) + own_result.get('reasons', []) + val_result.get('reasons', []),
+            
+            "data_quality": {
+                "layers_with_real_data": real_layer_count,
+                "total_engine_layers": 5,
+                "warning": data_quality_warning,
+            },
             
             # 10-Layer Results
             "bear_case": bear_case, # Layer 9

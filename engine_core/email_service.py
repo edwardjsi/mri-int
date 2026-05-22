@@ -249,6 +249,17 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
     
     layers = result.get("layers", {})
     
+    # Data quality warning (if engine layers have insufficient data)
+    dq = result.get("data_quality", {})
+    dq_warning = dq.get("warning")
+    if dq_warning:
+        dq_warning_html = f"""<div style="background:#fef3c7;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #fde68a">
+            <h3 style="margin:0 0 8px;color:#92400e;font-size:13px">Data Quality Warning</h3>
+            <p style="margin:0;font-size:12px;color:#78350f">{dq_warning}</p>
+        </div>"""
+    else:
+        dq_warning_html = ""
+
     # Layer Breakdown HTML
     layer_rows = ""
     narrative_source = layers.get("narrative", {}).get("source", "SYNTHETIC_PROXY")
@@ -261,12 +272,30 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
         (narrative_label, layers.get("narrative", {}).get("score", "N/A"), "Market sentiment & Themes"),
         ("Market Confirmation (L5)", layers.get("market", {}).get("score", "N/A"), "Price & Volume leadership"),
         ("Valuation (L6)", layers.get("valuation", {}).get("score", "N/A"), "Risk/Reward asymmetry"),
-        ("Forensic Feedback (L7)", 100 - (layers.get("forensic", {}).get("penalty", 0) if layers.get("forensic") else 0), "Feedback loop & Penalties"),
+        ("Forensic Feedback (L7)", None, "Feedback loop & Penalties"),
     ]
 
+    # Count how many layers actually have real data (not N/A / missing)
+    real_layers = 0
     for label, score, desc in layer_configs:
         try:
-            s_val = float(score) if score is not None and score != "N/A" else 0
+            s_val = float(score)
+            real_layers += 1
+        except (ValueError, TypeError):
+            pass
+
+    # L7 (Forensic) only displays a score if at least 2 other layers have data
+    forensic_raw = layers.get("forensic", {})
+    if real_layers >= 2 and forensic_raw:
+        forensic_score = 100 - forensic_raw.get("penalty", 0)
+    else:
+        forensic_score = "N/A"
+
+    for label, score, desc in layer_configs:
+        # Use forensic_score for L7 instead of the raw calc
+        display_score = forensic_score if "L7" in label else score
+        try:
+            s_val = float(display_score) if display_score is not None and display_score != "N/A" else 0
             s_color = "#22c55e" if s_val >= 75 else "#f59e0b" if s_val >= 40 else "#ef4444"
         except:
             s_color = "#64748b"
@@ -274,7 +303,7 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
         layer_rows += f"""
         <tr>
             <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#0f172a"><b>{label}</b><br/><span style="font-size:11px;color:#94a3b8">{desc}</span></td>
-            <td style="padding:10px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;color:{s_color}">{score}</td>
+            <td style="padding:10px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;color:{s_color}">{display_score}</td>
         </tr>"""
 
     # Identify the "Why Insufficient history" logic for the email
@@ -318,6 +347,8 @@ def build_aae_report_email_html(client_name: str, result: dict) -> str:
                     <div style="font-size:18px;font-weight:700;color:{'#22c55e' if market_confirmation == 'CONFIRMED' else '#f59e0b'}">{market_confirmation}</div>
                 </div>
             </div>
+
+            {dq_warning_html}
 
             <p style="color:#334155;line-height:1.6">Hi {client_name},</p>
             <p style="color:#334155;line-height:1.6">Our 10-layer **Amritkaal Alpha Engine (AAE)** has completed a forensic deep-dive into <b>{symbol}</b>. Below is the multi-perspective institutional breakdown:</p>
