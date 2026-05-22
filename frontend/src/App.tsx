@@ -229,14 +229,10 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
                </span>
             </div>
 
-            {aaeData.bull_case && aaeData.bear_case && (
-              <div style={{ marginTop: '16px', display: 'grid', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
-                <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', textTransform: 'uppercase', marginBottom: '4px' }}>🐻 Layer 9: Bear Case (top signal)</div>
-                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{(aaeData.bear_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (aaeData.bear_case || '').split('\n')[0]}</div>
-                </div>
+            {aaeData.bull_case && (
+              <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
                 <div style={{ padding: '10px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '6px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', marginBottom: '4px' }}>🐂 Layer 10: Bull Case (top signal)</div>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', marginBottom: '4px' }}>🐂 Top Bull Case</div>
                   <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{(aaeData.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (aaeData.bull_case || '').split('\n')[0]}</div>
                 </div>
               </div>
@@ -1946,14 +1942,8 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
                     {digitalTwinResult.bull_case && (
                       <div style={{ marginBottom: '1.5rem', background: '#f0fdf4', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
-                        <strong style={{ display: 'block', color: '#166534', marginBottom: '0.5rem' }}>Layer 10: Institutional Bull Case (top signal)</strong>
+                        <strong style={{ display: 'block', color: '#166534', marginBottom: '0.5rem' }}>🐂 Top Bull Case</strong>
                         <p style={{ fontSize: '0.9rem', color: '#14532d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{(digitalTwinResult.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bull_case || '').split('\n')[0]}</p>
-                      </div>
-                    )}
-                    {digitalTwinResult.bear_case && (
-                      <div style={{ marginBottom: '1.5rem', background: '#fef2f2', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Layer 9: Forensic Bear Case (top signal)</strong>
-                        <p style={{ fontSize: '0.9rem', color: '#7f1d1d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{(digitalTwinResult.bear_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bear_case || '').split('\n')[0]}</p>
                       </div>
                     )}
 

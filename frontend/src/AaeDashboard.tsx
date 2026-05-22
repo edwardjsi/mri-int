@@ -472,25 +472,15 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
                         </div>
                       )}
 
-                      {digitalTwinResult.bull_case && digitalTwinResult.bear_case && (
+                      {digitalTwinResult.bull_case && (
                         <div style={{ marginTop: '24px', borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
-                          <div className="metric-label" style={{ marginBottom: '12px' }}>Institutional Stress Test (Layers 9 &amp; 10)</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                            <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '16px', borderRadius: '10px' }}>
-                              <div style={{ fontSize: '11px', color: '#ef4444', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
-                                🐻 Layer 9: Bear Case (top signal)
-                              </div>
-                              <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                                {(digitalTwinResult.bear_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bear_case || '').split('\n')[0]}
-                              </div>
+                          <div className="metric-label" style={{ marginBottom: '12px' }}>Institutional Bull Signal</div>
+                          <div style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '16px', borderRadius: '10px', marginBottom: '16px' }}>
+                            <div style={{ fontSize: '11px', color: '#22c55e', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+                              🐂 Top Bull Case
                             </div>
-                            <div style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '16px', borderRadius: '10px' }}>
-                              <div style={{ fontSize: '11px', color: '#22c55e', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
-                                🐂 Layer 10: Bull Case (top signal)
-                              </div>
-                              <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                                {(digitalTwinResult.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bull_case || '').split('\n')[0]}
-                              </div>
+                            <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                              {(digitalTwinResult.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bull_case || '').split('\n')[0]}
                             </div>
                           </div>
                           <div style={{ textAlign: 'center' }}>
