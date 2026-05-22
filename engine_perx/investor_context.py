@@ -148,7 +148,7 @@ def get_valuation_context(cur, base_symbol: str, current_price: float | None = N
         # 3. Historical PE percentile (5-year proxy using yearly financials)
         cur.execute(
             """
-            SELECT year, close
+            SELECT EXTRACT(YEAR FROM date) as year, close
             FROM daily_prices
             WHERE symbol = %s
             ORDER BY date DESC
