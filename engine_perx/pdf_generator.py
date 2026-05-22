@@ -72,6 +72,52 @@ def generate_perx_pdf(report: dict) -> BytesIO:
     elements.append(st)
     elements.append(Spacer(1, 15))
 
+    # 5b. Investor Context Section
+    inv_ctx = report.get('investor_context')
+    if inv_ctx:
+        elements.append(Paragraph("INVESTOR CONTEXT", header_style))
+        
+        inv_grade = inv_ctx.get('investor_grade', {})
+        grade = inv_grade.get('grade', 'N/A')
+        grade_summary = inv_grade.get('summary', '')
+        elements.append(Paragraph(f"<b>Investor Grade: {grade}</b>", value_style))
+        elements.append(Paragraph(grade_summary, text_style))
+        elements.append(Spacer(1, 10))
+
+        valuation = inv_ctx.get('valuation', {})
+        earnings = inv_ctx.get('earnings_momentum', {})
+        ownership = inv_ctx.get('ownership', {})
+        liquidity = inv_ctx.get('liquidity', {})
+
+        inv_data = [
+            ["Factor", "Metric", "Detail"],
+            ["Valuation (P/E)", f"{valuation.get('pe_ratio', 'N/A')}x", f"Sector: {valuation.get('sector_median_pe', 'N/A')}x | Hist: {valuation.get('pe_percentile_vs_history', 'N/A')}%ile"],
+            ["Earnings Momentum", earnings.get('acceleration', 'N/A'), f"Rev: {earnings.get('revenue_growth_4q_pct', 'N/A')}% | Profit: {earnings.get('profit_growth_4q_pct', 'N/A')}%"],
+            ["Ownership", ownership.get('promoter_trend', 'N/A'), f"Gov Score: {ownership.get('governance_score', 'N/A')} | Pledged: {ownership.get('pledged_pct', 'N/A')}%"],
+            ["Liquidity", f"₹{liquidity.get('avg_daily_turnover_cr', 'N/A')}Cr", f"50L Position: {liquidity.get('days_to_build_50lac_position', 'N/A')} days"],
+        ]
+        inv_table = Table(inv_data, colWidths=[100, 120, 230])
+        inv_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.hexColor("#f1f5f9")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.hexColor("#475569")),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.hexColor("#e2e8f0"))
+        ]))
+        elements.append(inv_table)
+        elements.append(Spacer(1, 10))
+
+        # Pre-Mortem Risks
+        pre_mortem = inv_ctx.get('pre_mortem', {})
+        risks = pre_mortem.get('risks', [])
+        if risks:
+            elements.append(Paragraph("<b>Risk Pre-Mortem</b>", label_style))
+            for risk in risks:
+                elements.append(Paragraph(f"• {risk}", text_style))
+            elements.append(Spacer(1, 15))
+
     # 6. Final Verdict
     elements.append(Paragraph("FINAL INSTITUTIONAL VERDICT", header_style))
     elements.append(Paragraph(report['final_institutional_verdict'], text_style))

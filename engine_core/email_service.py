@@ -391,6 +391,68 @@ def send_aae_report_email(recipient_email: str, client_name: str, result: dict) 
     return send_email_custom(recipient_email=recipient_email, subject=subject, html_body=html_body)
 
 
+def _build_perx_email_investor_context(inv_ctx: dict) -> str:
+    """Build the investor context HTML block for PERX email."""
+    if not inv_ctx:
+        return ""
+    
+    inv_grade = inv_ctx.get("investor_grade", {})
+    grade = inv_grade.get("grade", "N/A")
+    grade_summary = inv_grade.get("summary", "")
+    grade_color = "#22c55e" if grade == "A" else "#f59e0b" if grade == "B" else "#ef4444"
+    
+    valuation = inv_ctx.get("valuation", {})
+    earnings = inv_ctx.get("earnings_momentum", {})
+    ownership = inv_ctx.get("ownership", {})
+    liquidity = inv_ctx.get("liquidity", {})
+    pre_mortem = inv_ctx.get("pre_mortem", {})
+    risks = pre_mortem.get("risks", [])
+
+    # Grade badge
+    html = f"""
+    <div style="background:#f8fafc;border-radius:12px;padding:16px;margin:18px 0;border-top:4px solid {grade_color}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="font-size:28px;font-weight:800;color:{grade_color}">Grade {grade}</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">{grade_summary}</div>
+        </div>
+    
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tr style="background:#f1f5f9">
+                <th style="padding:8px;text-align:left">Factor</th>
+                <th style="padding:8px;text-align:left">Metric</th>
+                <th style="padding:8px;text-align:left">Detail</th>
+            </tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>Valuation</b></td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0">P/E {valuation.get('pe_ratio', 'N/A')}x</td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">Sector median {valuation.get('sector_median_pe', 'N/A')}x | {valuation.get('verdict', '')}</td>
+            </tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>Earnings</b></td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0">{earnings.get('acceleration', 'N/A')}</td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">Rev {earnings.get('revenue_growth_4q_pct', 'N/A')}% | Profit {earnings.get('profit_growth_4q_pct', 'N/A')}%</td>
+            </tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>Ownership</b></td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0">Promoter {ownership.get('promoter_trend', 'N/A')}</td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">Gov Score {ownership.get('governance_score', 'N/A')}/100 | Pledged {ownership.get('pledged_pct', 'N/A')}%</td>
+            </tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>Liquidity</b></td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0">₹{liquidity.get('avg_daily_turnover_cr', 'N/A')}Cr</td>
+                <td style="padding:8px;border-bottom:1px solid #e2e8f0;color:#475569">{liquidity.get('verdict', '')}</td>
+            </tr>
+        </table>
+    """
+
+    # Pre-Mortem Risks
+    if risks:
+        html += """<div style="background:#fef2f2;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #fecaca">
+            <h3 style="margin:0 0 10px;color:#991b1b;font-size:13px">⚠️ Thesis Pre-Mortem</h3>"""
+        for risk in risks:
+            html += f'<p style="margin:4px 0;font-size:12px;color:#b91c1c">• {risk}</p>'
+        html += "</div>"
+
+    html += "</div>"
+    return html
+
+
 def build_perx_report_email_html(client_name: str, report: dict) -> str:
 
     """Build HTML email body for a PERX institutional report."""
@@ -401,6 +463,7 @@ def build_perx_report_email_html(client_name: str, report: dict) -> str:
     verdict = report.get("final_institutional_verdict", "")
     engine_outputs = report.get("engine_outputs", {})
     forensic = report.get("institutional_forensic_review", {})
+    investor_context = report.get("investor_context", {})
 
     symbol = header.get("symbol") or report.get("symbol", "UNKNOWN")
     company_name = header.get("company_name") or report.get("company_name") or symbol
@@ -474,6 +537,9 @@ def build_perx_report_email_html(client_name: str, report: dict) -> str:
             </table>
 
             {forensic_block}
+
+            <!-- Investor Context Block -->
+            {_build_perx_email_investor_context(investor_context)}
 
             <div style="background:#ecfeff;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #a5f3fc">
                 <h3 style="margin:0 0 8px;color:#155e75">Final Institutional Verdict</h3>

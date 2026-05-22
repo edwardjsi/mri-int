@@ -20,6 +20,7 @@ from engine_perx.scoring import (
     compute_trajectory_support,
     narrative_intensity_label,
 )
+from engine_perx.investor_context import get_all_investor_context
 from engine_perx.sector import get_sector_context
 from engine_qualitative.debate import run_debate
 
@@ -159,6 +160,7 @@ def _build_report_payload(
     regime_snapshot: dict[str, Any],
     forensic_review: dict[str, Any],
     previous_report: dict[str, Any] | None = None,
+    investor_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     stee_score = compute_stee_setup_score(mri_snapshot)
     trajectory_support = compute_trajectory_support(quality_snapshot)
@@ -203,6 +205,7 @@ def _build_report_payload(
             quality_snapshot,
             lifecycle_stage,
             fragility_snapshot,
+            investor_context=investor_context,
         ),
         "narrative_transition": build_narrative_transition(
             symbol,
@@ -222,8 +225,10 @@ def _build_report_payload(
             narrative_intensity,
             sector_intelligence,
             analogs,
+            investor_context=investor_context,
         ),
         "institutional_forensic_review": forensic_review,
+        "investor_context": investor_context,
         "lifecycle": {
             "stage": lifecycle_stage,
             "narrative_intensity": narrative_intensity,
@@ -284,6 +289,12 @@ def generate_perx_report(
     # Calculate Sector Intelligence (V3)
     sector_intelligence = get_sector_context(cur, base_symbol, sector)
     
+    # Calculate Investor Context (valuation, earnings, ownership, liquidity)
+    current_price = None
+    if mri_snapshot:
+        current_price = mri_snapshot.get("close")
+    investor_context = get_all_investor_context(cur, base_symbol, current_price=current_price)
+    
     forensic_review = _build_forensic_review(base_symbol, include_debate=include_debate)
     report = _build_report_payload(
         base_symbol,
@@ -294,7 +305,8 @@ def generate_perx_report(
         financial_history,
         regime_snapshot,
         forensic_review,
-        previous_report=previous_report
+        previous_report=previous_report,
+        investor_context=investor_context,
     )
 
     report_id = None

@@ -1062,3 +1062,35 @@
 1. **Debate Trigger Verification:** Test the full debate flow end-to-end
 2. **Frontend Build:** Ensure the updated React bundle is deployed
 3. **Backtest Snapshot Lock:** Complete canonical backtest restoration
+
+---
+
+## 📅 Session: May 22, 2026 — Investor-Grade Context Layer (Valuation, Earnings, Ownership, Liquidity)
+**Session Start:** 15:00 IST
+**Session End:** 17:00 IST
+
+### What Was Done This Session
+
+#### 1. New Module — `engine_perx/investor_context.py` ✅
+- [x] `get_valuation_context()` — P/E ratio via TTM EPS (`aae_quarterly_financials` or `fundamental_financials` fallback), sector median P/E via `aae_sector_mapping`, 5-year historical percentile.
+- [x] `get_earnings_momentum()` — revenue/profit growth H2 vs H1 (quarterly) or YoY (annual fallback), acceleration/deceleration detection.
+- [x] `get_ownership_signals()` — promoter trend (BUYING/SELLING/STABLE), governance score, pledged % from `aae_governance_metrics`.
+- [x] `get_liquidity_profile()` — avg daily turnover in crores, days to build ₹50L position.
+- [x] `compute_investor_grade()` — A/B/C classification based on critical issues, warnings, and flags across all 4 pillars.
+- [x] `get_all_investor_context()` — master function returning unified block with pre-mortem risk assessment.
+
+#### 2. Engine Wiring ✅
+- [x] `report_builder.py` — `build_executive_summary()` and `build_engine_outputs()` accept optional `investor_context`.
+- [x] `orchestrator.py` — `_build_report_payload()` passes `investor_context` through; `generate_perx_report()` calls `get_all_investor_context()`.
+
+#### 3. PDF & Email Output ✅
+- [x] `pdf_generator.py` — Added "Investor Context" table and "Risk Pre-Mortem" bullet section.
+- [x] `email_service.py` — Added `_build_perx_email_investor_context()` helper; wired into PERX email HTML template.
+
+### 📌 Current Milestone
+- Investor context layer is complete and automatically included in every PERX report generation.
+
+### Constraints
+- **No new DB tables** — all data sourced from existing `aae_quarterly_financials`, `aae_governance_metrics`, `aae_sector_mapping`, `fundamental_financials`, `daily_prices`.
+- **No new API endpoints** — data flows through existing `POST /api/perx/scan/{symbol}` and comparison endpoints.
+- **No PERX score formula changes** — Investor Grade is a separate badge, not part of the 0-100 score.

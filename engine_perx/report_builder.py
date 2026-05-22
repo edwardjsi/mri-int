@@ -12,6 +12,7 @@ def build_executive_summary(
     quality_snapshot: dict,
     lifecycle_stage: str,
     fragility_snapshot: dict,
+    investor_context: dict | None = None,
 ) -> str:
     parts = [
         f"{symbol} is currently classified in the {lifecycle_stage} phase.",
@@ -19,6 +20,24 @@ def build_executive_summary(
         f"QIF business quality stands at {int(float(quality_snapshot.get('score') or 0))}/100 with category {quality_snapshot.get('category', 'UNKNOWN')}.",
         f"Current fragility is {fragility_snapshot.get('level', 'UNKNOWN').lower()}, which shapes how durable the rerating case appears from current evidence.",
     ]
+
+    # Append investor context to summary if available
+    if investor_context:
+        inv_grade = investor_context.get("investor_grade", {})
+        grade = inv_grade.get("grade", "")
+        if grade:
+            parts.append(f"Investor Grade: {grade}.")
+
+        valuation = investor_context.get("valuation", {})
+        pe_val = valuation.get("pe_ratio")
+        if pe_val:
+            parts.append(f"Trading at P/E {pe_val}x.")
+
+        earnings = investor_context.get("earnings_momentum", {})
+        accel = earnings.get("acceleration", "")
+        if accel in ("ACCELERATING", "DECELERATING"):
+            parts.append(f"Earnings momentum {accel.lower()}.")
+
     return " ".join(parts)
 
 
@@ -72,6 +91,7 @@ def build_engine_outputs(
     narrative_intensity: str,
     sector_intelligence: dict,
     analogs: list[str],
+    investor_context: dict | None = None,
 ) -> dict:
     avg_volume = float(mri_snapshot.get("avg_volume_20d") or 0)
     volume = float(mri_snapshot.get("volume") or 0)
@@ -110,8 +130,9 @@ def build_engine_outputs(
             "institutional_suitability": "Strong" if perx_score >= 75 else "Developing" if perx_score >= 60 else "Early",
             "market_regime": regime_snapshot.get("classification"),
         },
+        "investor": investor_context,
         "fragility": fragility_snapshot,
-        "analogs": analogs
+        "analogs": analogs,
     }
 
 

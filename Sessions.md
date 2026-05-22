@@ -1,5 +1,32 @@
 # **MRI Sessions Log**
 
+## **May 22, 2026: Investor-Grade Context Layer (Valuation, Earnings, Ownership, Liquidity)**
+
+- **Objective**: Surface a standalone "Investor Grade" badge alongside PERX score without modifying the score formula.
+- **Actions**:
+  - **New Module** (`engine_perx/investor_context.py`):
+    - `get_valuation_context()` — computes P/E vs sector median (via `aae_sector_mapping`) and 5-year historical percentile.
+    - `get_earnings_momentum()` — detects revenue/profit acceleration/deceleration from `aae_quarterly_financials` and `fundamental_financials`.
+    - `get_ownership_signals()` — analyzes promoter trend (buying/selling/stable), governance score, and pledged shares % from `aae_governance_metrics`.
+    - `get_liquidity_profile()` — calculates average daily turnover in crores and days to build a ₹50L position.
+    - `compute_investor_grade()` — classifies A/B/C based on concerns across all 4 pillars.
+    - `get_all_investor_context()` — master function returning unified block with pre-mortem risk assessment.
+  - **Engine Wiring** (`engine_perx/report_builder.py`, `orchestrator.py`):
+    - `build_executive_summary()` now appends Investor Grade, P/E, and earnings momentum.
+    - `build_engine_outputs()` includes `"investor"` key in output dict.
+    - `_build_report_payload()` receives and passes `investor_context` throughout.
+    - `generate_perx_report()` calls `get_all_investor_context()` after quality snapshot fetch.
+  - **PDF Output** (`engine_perx/pdf_generator.py`):
+    - Added "Investor Context" table (Valuation, Earnings, Ownership, Liquidity rows).
+    - Added "Risk Pre-Mortem" list of bullet-point risks.
+  - **Email Output** (`engine_core/email_service.py`):
+    - Added `_build_perx_email_investor_context()` helper with grade badge, factor table, and pre-mortem warnings.
+    - Wired into `build_perx_report_email_html()`.
+- **Result**: Every PERX report now includes valuation, earnings momentum, ownership trend, liquidity profile, an A/B/C Investor Grade, and a deterministic risk pre-mortem. Zero new DB tables, zero new API endpoints, zero changes to the PERX score formula.
+- **Next Step**: Monitor live reports for data coverage and consider adding sector-specific valuation models.
+
+---
+
 ## **May 21, 2026: UI Enhancements & Breakout API Addition**
 - **Objective**: Improve UI feedback for breakout events and fix pipeline execution blocks.
 - **Actions**:
