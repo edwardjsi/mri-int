@@ -896,15 +896,37 @@ def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
 
 
 
-def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None) -> dict[str, Any]:
+def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
+                              current_perx_score: float | None = None,
+                              current_lifecycle: str | None = None) -> dict[str, Any]:
     """
-    Master function that runs all four context engines and returns a unified investor context block.
+    Master function that runs all context engines and returns a unified investor context block.
     """
     valuation = get_valuation_context(cur, base_symbol, current_price)
     earnings = get_earnings_momentum(cur, base_symbol)
     ownership = get_ownership_signals(cur, base_symbol)
     liquidity = get_liquidity_profile(cur, base_symbol)
     grade = compute_investor_grade(valuation, earnings, ownership, liquidity)
+
+    # PEG ratio (uses current PE from valuation)
+    peg = get_peg_ratio(cur, base_symbol, current_pe=valuation.get("pe_ratio"))
+
+    # EV/EBITDA (proxy — depends on fundamental_financials columns)
+    ev_ebitda = get_ev_ebitda(cur, base_symbol)
+
+    # Institutional flow (FII/DII changes)
+    inst_flow = get_institutional_flow(cur, base_symbol)
+
+    # Historical analogs from perx_reports archive
+    analogs = {}
+    if current_perx_score is not None and current_lifecycle:
+        analogs = get_rerating_analogs(cur, current_perx_score, current_lifecycle, base_symbol)
+    else:
+        analogs = {
+            "analogs": [],
+            "verdict": "PERX score or lifecycle not provided for analog matching.",
+            "homework": "Run a PERX scan first to enable historical analog matching."
+        }
 
     # Build pre-mortem risk section
     pre_mortem_risks = []
@@ -918,16 +940,48 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         pre_mortem_risks.append("High promoter pledge — margin call risk if price declines.")
     if liquidity.get("avg_daily_turnover_cr") is not None and liquidity["avg_daily_turnover_cr"] < 1:
         pre_mortem_risks.append("Low liquidity may cause slippage on entry/exit beyond modeled levels.")
+    if inst_flow.get("fii_trend") == "REDUCING" and inst_flow.get("dii_trend") != "ADDING":
+        pre_mortem_risks.append("Foreign institutions reducing exposure — potential headwind for rerating momentum.")
+    if peg.get("peg_ratio") and peg["peg_ratio"] > 3:
+        pre_mortem_risks.append(f"PEG ratio at {peg['peg_ratio']:.1f}x — growth is not keeping pace with valuation.")
+    if ev_ebitda.get("net_debt_ebitda") and ev_ebitda["net_debt_ebitda"] > 3:
+        pre_mortem_risks.append("Elevated net debt/EBITDA — balance sheet could constrain future rerating.")
     if not pre_mortem_risks:
         pre_mortem_risks.append("No deterministic pre-mortem flags from current data — key risk remains execution durability.")
+
+    # Catalyst questions — what the user should watch for rerating to materialize
+    catalyst_questions = []
+    pe_val = valuation.get("pe_ratio")
+    if pe_val and valuation.get("pe_percentile_vs_history") and valuation["pe_percentile_vs_history"] >= 80:
+        catalyst_questions.append(f"At P/E {pe_val}x (top of 5-year range), the rerating case rests on earnings compounding. Are net profits growing faster than the P/E multiple being paid?")
+    if earnings.get("acceleration") == "DECELERATING":
+        catalyst_questions.append("Revenue/profit decelerating. What would reverse this? New client wins? Margin expansion? Price hikes passing through?")
+    elif earnings.get("acceleration") == "STABLE" and earnings.get("revenue_growth_4q_pct") and earnings["revenue_growth_4q_pct"] > 0:
+        catalyst_questions.append(f"Revenue growing at {earnings['revenue_growth_4q_pct']:.0f}% YoY. Can this sustain another 4 quarters? Check order book or management guidance.")
+    if ownership.get("promoter_trend") == "BUYING":
+        catalyst_questions.append("Promoters are buying — strong insider signal. Confirm this is open market purchase (not ESOP or rights issue).")
+    if inst_flow.get("fii_trend") == "ADDING":
+        catalyst_questions.append(f"FIIs added {inst_flow['fii_change_qoq']:.1f}% — institutional confidence signal. Confirm via latest shareholding pattern filing.")
+    if ev_ebitda.get("ev_ebitda") and ev_ebitda["ev_ebitda"] < 12:
+        catalyst_questions.append(f"EV/EBITDA {ev_ebitda['ev_ebitda']:.1f}x leaves room for rerating IF EBITDA compounds. Can you identify 3 drivers of EBITDA growth for next 12 months?")
+    if ownership.get("governance_score") and ownership["governance_score"] < 40:
+        catalyst_questions.append(f"Governance score {ownership['governance_score']:.0f}/100 is low. Review: related party transactions, auditor qualifications, or promoter litigation.")
+    if not catalyst_questions:
+        catalyst_questions.append("No specific catalyst flags from current data. Key question remains: what needs to happen in the next 4 quarters for institutional perception to shift from current lifecycle ({}?) to the next stage?".format(current_lifecycle or "unknown"))
 
     return {
         "valuation": valuation,
         "earnings_momentum": earnings,
         "ownership": ownership,
         "liquidity": liquidity,
+        "peg_ratio": peg,
+        "ev_ebitda": ev_ebitda,
+        "institutional_flow": inst_flow,
+        "historical_analogs": analogs,
         "investor_grade": grade,
         "pre_mortem": {
             "risks": pre_mortem_risks,
         },
+        "catalyst_questions": catalyst_questions,
+        "homework_note": "The questions above are what an analyst would investigate next — use them to build conviction if answers are favorable, or as a checklist to disqualify if red flags surface.",
     }
