@@ -232,12 +232,12 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
             {aaeData.bull_case && aaeData.bear_case && (
               <div style={{ marginTop: '16px', display: 'grid', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
                 <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', textTransform: 'uppercase', marginBottom: '4px' }}>🐻 Layer 9: Bear Agent</div>
-                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{aaeData.bear_case}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', textTransform: 'uppercase', marginBottom: '4px' }}>🐻 Layer 9: Bear Case (top signal)</div>
+                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{(aaeData.bear_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (aaeData.bear_case || '').split('\n')[0]}</div>
                 </div>
                 <div style={{ padding: '10px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '6px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', marginBottom: '4px' }}>🐂 Layer 10: Bull Agent</div>
-                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{aaeData.bull_case}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', marginBottom: '4px' }}>🐂 Layer 10: Bull Case (top signal)</div>
+                  <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>{(aaeData.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (aaeData.bull_case || '').split('\n')[0]}</div>
                 </div>
               </div>
             )}
@@ -1946,14 +1946,14 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
                     {digitalTwinResult.bull_case && (
                       <div style={{ marginBottom: '1.5rem', background: '#f0fdf4', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
-                        <strong style={{ display: 'block', color: '#166534', marginBottom: '0.5rem' }}>Layer 10: Institutional Bull Case</strong>
-                        <p style={{ fontSize: '0.9rem', color: '#14532d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{digitalTwinResult.bull_case}</p>
+                        <strong style={{ display: 'block', color: '#166534', marginBottom: '0.5rem' }}>Layer 10: Institutional Bull Case (top signal)</strong>
+                        <p style={{ fontSize: '0.9rem', color: '#14532d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{(digitalTwinResult.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bull_case || '').split('\n')[0]}</p>
                       </div>
                     )}
                     {digitalTwinResult.bear_case && (
                       <div style={{ marginBottom: '1.5rem', background: '#fef2f2', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Layer 9: Forensic Bear Case</strong>
-                        <p style={{ fontSize: '0.9rem', color: '#7f1d1d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{digitalTwinResult.bear_case}</p>
+                        <strong style={{ display: 'block', color: '#b91c1c', marginBottom: '0.5rem' }}>Layer 9: Forensic Bear Case (top signal)</strong>
+                        <p style={{ fontSize: '0.9rem', color: '#7f1d1d', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{(digitalTwinResult.bear_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (digitalTwinResult.bear_case || '').split('\n')[0]}</p>
                       </div>
                     )}
 
@@ -2047,6 +2047,8 @@ function PerxPage() {
   const [archivePage, setArchivePage] = useState(0);
   const [archiveFilter, setArchiveFilter] = useState({ symbol: '', lifecycle: '', minScore: '', maxScore: '' });
   const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveSortField, setArchiveSortField] = useState<string | null>('created_at');
+  const [archiveSortDir, setArchiveSortDir] = useState<'asc' | 'desc'>('desc');
 
   // 1. Safe Data Loading
   const loadData = async () => {
@@ -2512,15 +2514,31 @@ function PerxPage() {
           <table style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155' }}>
-                <th style={{ padding: '12px' }}>Symbol</th>
-                <th style={{ padding: '12px' }}>Score</th>
-                <th style={{ padding: '12px' }}>Stage</th>
+                {(['created_at', 'symbol', 'perx_score', 'lifecycle_stage'] as const).map(field => {
+                  const labels: Record<string, string> = { created_at: 'Date', symbol: 'Symbol', perx_score: 'Score', lifecycle_stage: 'Stage' };
+                  const active = archiveSortField === field;
+                  return (
+                    <th key={field} style={{ padding: '12px', cursor: 'pointer', userSelect: 'none', minWidth: field === 'created_at' ? '110px' : undefined }}
+                      onClick={() => { if (active) setArchiveSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setArchiveSortField(field); setArchiveSortDir(field === 'created_at' ? 'desc' : 'asc'); } }}>
+                      {labels[field]} {active ? (archiveSortDir === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                  );
+                })}
                 <th style={{ padding: '12px' }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {archiveRows.map(r => (
+              {[...archiveRows].sort((a, b) => {
+                if (!archiveSortField) return 0;
+                const av = a[archiveSortField], bv = b[archiveSortField];
+                if (av == null && bv == null) return 0;
+                if (av == null) return 1;
+                if (bv == null) return -1;
+                const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+                return archiveSortDir === 'asc' ? cmp : -cmp;
+              }).map(r => (
                 <tr key={r.id} style={{ borderBottom: '1px solid #0f172a' }}>
+                  <td style={{ padding: '12px', color: '#94a3b8', fontSize: '13px' }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}</td>
                   <td style={{ padding: '12px' }}>{r.symbol}</td>
                   <td style={{ padding: '12px', fontWeight: 700, color: '#3b82f6' }}>{r.perx_score}</td>
                   <td style={{ padding: '12px' }}>{r.lifecycle_stage}</td>
