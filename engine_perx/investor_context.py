@@ -106,7 +106,7 @@ def get_valuation_context(cur, base_symbol: str, current_price: float | None = N
             price = safe_float(row.get("close") if isinstance(row, dict) else row[0])
 
     if price and ttm_eps and ttm_eps > 0:
-        pe = price / ttm_eps
+        pe = safe_float(price) / safe_float(ttm_eps)
         result["pe_ratio"] = round(pe, 2)
 
         # 2. Sector median P/E via aae_sector_mapping
@@ -193,7 +193,7 @@ def get_valuation_context(cur, base_symbol: str, current_price: float | None = N
                 for yr, close_price in yearly_close.items():
                     np_val = profits_by_year.get(yr)
                     if np_val and np_val > 0:
-                        yearly_pes_list.append(close_price / np_val)
+                        yearly_pes_list.append(safe_float(close_price) / safe_float(np_val))
 
                 if yearly_pes_list:
                     yearly_pes_list.sort()
