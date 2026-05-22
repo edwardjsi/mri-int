@@ -39,33 +39,44 @@ def get_breakout_map(conn=Depends(get_db)):
 @router.get("/radar")
 def get_breakout_radar(conn=Depends(get_db)):
     """
-    Return all stocks in any user's watchlist or portfolio with their
-    current breakout state (BROKEN_OUT / READY_TO_BREAKOUT / CONSOLIDATING).
+    Return: (1) all watchlist/portfolio stocks with their breakout state,
+    plus (2) any BROKEN_OUT or READY_TO_BREAKOUT stocks from the full
+    universe that aren't already in a watchlist (for discovery).
     """
     query = """
-        SELECT 
-            dp.symbol, 
-            dp.close, 
-            dp.volume, 
-            dp.ema_50, 
-            dp.ema_200, 
-            dp.breakout_state,
-            (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
-            (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders
-        FROM daily_prices dp
-        WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
-          AND (
-              EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
-              OR 
-              EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true)
-          )
+        SELECT symbol, close, volume, ema_50, ema_200, breakout_state, watchers, holders
+        FROM (
+            SELECT 
+                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state,
+                (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
+                (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
+                0 as sort_grp
+            FROM daily_prices dp
+            WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
+              AND (EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
+                   OR EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true))
+
+            UNION
+
+            SELECT 
+                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state,
+                (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
+                (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
+                1 as sort_grp
+            FROM daily_prices dp
+            WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
+              AND dp.breakout_state IN ('BROKEN_OUT', 'READY_TO_BREAKOUT')
+              AND NOT (EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
+                       OR EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true))
+        ) combined
         ORDER BY 
-            CASE dp.breakout_state
+            sort_grp,
+            CASE breakout_state
                 WHEN 'BROKEN_OUT' THEN 1
                 WHEN 'READY_TO_BREAKOUT' THEN 2
                 ELSE 3
             END,
-            dp.symbol;
+            symbol;
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:

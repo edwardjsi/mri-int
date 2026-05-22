@@ -80,17 +80,17 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
       <style>{`
         /* Scoped CSS for AAE Console to avoid clashing with main App */
         .aae-console-wrapper {
-          --ink: #17202a;
-          --muted: #64707d;
-          --line: #dbe1e7;
-          --panel: #ffffff;
-          --page: #f4f6f8;
-          --soft: #eef3f7;
-          --blue: #255e9c;
-          --teal: #0f766e;
-          --green: #16803d;
-          --amber: #a15c00;
-          background: var(--bg);
+          --ink: #f8fafc;
+          --muted: #94a3b8;
+          --line: #1e293b;
+          --panel: #0f172a;
+          --page: #0b1120;
+          --soft: #1e293b;
+          --blue: #38bdf8;
+          --teal: #2dd4bf;
+          --green: #4ade80;
+          --amber: #fbbf24;
+          background: var(--panel);
           color: var(--ink);
           font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           font-size: 14px;
@@ -105,7 +105,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
           min-height: 100vh;
         }
         .aae-sidebar {
-          background: var(--bg);
+          background: var(--panel);
           border-right: 1px solid var(--line);
           color: var(--ink);
           padding: 22px 18px;
@@ -134,7 +134,7 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
         .aae-nav-count { color: var(--muted); font-size: 11px; }
         .aae-sidebar-footer { margin-top: auto; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; }
         .aae-status-line { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; }
-        .aae-main { min-width: 0; display: grid; grid-template-rows: auto 1fr; background: var(--bg); }
+        .aae-main { min-width: 0; display: grid; grid-template-rows: auto 1fr; background: var(--panel); }
         .aae-topbar {
           height: 70px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid var(--line);
           display: grid; grid-template-columns: minmax(240px, 1fr) auto; align-items: center; gap: 18px;
