@@ -213,7 +213,8 @@ def compute_indicators(df, idx_df):
         # STEE Indicators
         s_df["high_10d"] = s_df["high"].rolling(window=10).max().shift(1)
         s_df["low_5d"] = s_df["low"].rolling(window=5).min().shift(1)
-        
+        s_df["condition_breakout_10d"] = s_df["close"] > s_df["high_10d"]
+
         # ATR Calculation
         tr1 = s_df["high"] - s_df["low"]
         tr2 = (s_df["high"] - s_df["close"].shift(1)).abs()

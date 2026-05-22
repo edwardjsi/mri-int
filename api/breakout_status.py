@@ -39,8 +39,8 @@ def get_breakout_map(conn=Depends(get_db)):
 @router.get("/radar")
 def get_breakout_radar(conn=Depends(get_db)):
     """
-    Return all stocks that are in ANY user's watchlist or portfolio
-    and are currently flagged as READY_TO_BREAKOUT or BROKEN_OUT.
+    Return all stocks in the full universe that are currently
+    flagged as READY_TO_BREAKOUT or BROKEN_OUT, regardless of watchlist.
     """
     query = """
         SELECT 
@@ -55,11 +55,6 @@ def get_breakout_radar(conn=Depends(get_db)):
         FROM daily_prices dp
         WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
           AND dp.breakout_state IN ('READY_TO_BREAKOUT', 'BROKEN_OUT')
-          AND (
-              EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
-              OR 
-              EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true)
-          )
         ORDER BY dp.breakout_state, dp.symbol;
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
