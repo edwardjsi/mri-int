@@ -1287,3 +1287,12 @@ Functions that query non-existent columns must be caught AND rolled back at the 
 | `prde_feature_snapshots` | 9 |
 | `prde_final_scores` | 9 |
 
+
+## Milestone 2 — AAE Event & Document Foundation 🟢 (MINIMAL STEP DONE)
+- [x] **All 4 event tables already exist** in `api/schema.py` (`aae_documents`, `aae_document_chunks`, `aae_events`, `aae_event_evidence`)
+- [x] **Ingestion script proven** — manually ingested TCS Q4 FY2026 results document
+- [x] **Chunking works** — 2,832 char document split into 2 chunks
+- [x] **Idempotency proven** — re-ingestion produces `[UPDATED]`, same doc_id
+
+**Next**: Extract structured events from the document, or wire the existing Milestone 3 agents.
+

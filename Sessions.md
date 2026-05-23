@@ -675,3 +675,18 @@ User-led retrospective evaluating the entire platform from three perspectives: s
   - Add skipped companies (DIVISLAB, HDFCBANK, NESTLEIND, SUNPHARMA, WIPRO) once they have 5 years of yfinance data
   - Wire PRDE scores into PERX reports as additional intelligence layer
   - Begin Milestone 2: Event foundation (document ingestion schema)
+
+## **May 23, 2026 (Later): Milestone 2 — Event Document Ingestion Proven**
+
+- **Objective**: Complete the smallest Milestone 2 step — prove a filing can be ingested, chunked, and linked to a company.
+- **Actions**:
+  1. Created realistic TCS Q4 FY2026 quarterly results document (2,832 chars) with accurate financial data matching our PRDE snapshots
+  2. Ingested via `scripts/ingest_aae_document.py` → doc_id=1, auto-chunked into 2 segments (~324 + ~276 tokens)
+  3. Proved idempotency: re-ingestion produces `[UPDATED]` not `[NEW]`, same doc_id
+  4. Verified all 4 event tables in Neon:
+     - `aae_documents`: 1 row (TCS FILING FY2026 Q4)
+     - `aae_document_chunks`: 2 rows
+     - `aae_events`: 0 rows (ready for agent-based extraction)
+     - `aae_event_evidence`: 0 rows
+- **Result**: Milestone 2's done criteria met — a filing can be ingested, chunked, and linked to a company. The full event pipeline (extraction → evidence linking) is ready for the next step.
+- **Next Step**: Populate `aae_events` by extracting structured events from the ingested document, or skip to testing the existing structural signal agents (Milestone 3).
