@@ -1,7 +1,7 @@
 from api.deps import get_db
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from api.auth import get_current_client
-from engine_fundamental.aae_orchestrator import AAEOrchestrator
+from engine_core.aae_re_rating_orchestrator import ReRatingOrchestrator
 from engine_core.email_service import send_aae_report_email
 import json
 import logging
@@ -32,37 +32,36 @@ def get_sector_heatmap(conn=Depends(get_db)):
         cur.close()
 
 
-def _persist_scan(result: dict, scan_source: str, conn):
+def _persist_rerating_profile(profile: dict, conn):
     """
-    Persist every AAE scan to:
-      1. aae_scan_history   — append-only timeline (never overwritten)
-      2. aae_results_snapshot — latest-state cache (upserted)
+    Persist a Re-Rating Candidate Profile to:
+      1. aae_re_rating_profiles — versioned master record
+      2. aae_results_snapshot   — legacy snapshot cache (for top-candidates backward compat)
     """
-    if result.get("status") == "REJECTED":
-        return  # Don't persist kill-switch rejections
+    if profile.get("status") == "REJECTED":
+        return
 
-    symbol = result["symbol"]
+    symbol = profile["symbol"]
     cur = conn.cursor()
     try:
-        # 1. Append to history (immutable log)
-        cur.execute("""
-            INSERT INTO public.aae_scan_history (
-                symbol, master_score, sector, market_confirmation,
-                debate_conviction, risk_summary, reasons, scan_source
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            symbol,
-            result.get("master_score"),
-            result.get("sector"),
-            result.get("market_confirmation"),
-            result.get("debate_conviction"),
-            result.get("risk_summary"),
-            json.dumps(result.get("reasons", [])),
-            scan_source,
-        ))
+        # 1. Upsert re-rating profile (versioned)
+        cur.execute(
+            """
+            INSERT INTO public.aae_re_rating_profiles (symbol, profile, thesis_version, thesis_hash)
+            VALUES (%s, %s, 1, %s)
+            ON CONFLICT (symbol) DO UPDATE SET
+                profile         = EXCLUDED.profile,
+                thesis_version  = public.aae_re_rating_profiles.thesis_version + 1,
+                thesis_hash     = EXCLUDED.thesis_hash,
+                updated_at      = NOW()
+            RETURNING thesis_version
+            """,
+            (symbol, psycopg2.extras.Json(profile), profile.get("thesis", {}).get("summary", "")[:32]),
+        )
+        version = cur.fetchone()["thesis_version"]
 
-        # 2. Upsert latest snapshot
+        # 2. Upsert legacy snapshot cache
+        scores = profile.get("financial_fingerprint", {})
         cur.execute("""
             INSERT INTO public.aae_results_snapshot (
                 symbol, master_score, sector, valuation_status,
@@ -78,16 +77,18 @@ def _persist_scan(result: dict, scan_source: str, conn):
                 updated_at = NOW()
         """, (
             symbol,
-            result.get("master_score"),
-            result.get("sector"),
-            result.get("valuation_status"),
-            result.get("ownership_status"),
-            json.dumps(result.get("reasons", [])),
+            profile.get("rerating_probability_score"),
+            profile.get("macro_alignment", {}).get("sector"),
+            scores.get("valuation_status"),
+            scores.get("ownership_status"),
+            json.dumps([r for r in profile.get("thesis", {}).get("reasons", [])]),
         ))
+
         conn.commit()
+        logger.info(f"Persisted Re-Rating Profile for {symbol} (v{version})")
     except Exception as e:
         conn.rollback()
-        logger.error(f"Failed to persist AAE scan for {symbol}: {e}")
+        logger.error(f"Failed to persist Re-Rating Profile for {symbol}: {e}")
     finally:
         cur.close()
 
@@ -95,27 +96,52 @@ def _persist_scan(result: dict, scan_source: str, conn):
 @router.get("/scan/{symbol}")
 async def get_aae_scan(symbol: str, client=Depends(get_current_client), conn=Depends(get_db)):
     """
-    Trigger a full AAE V3 institutional scan for a symbol.
-    Result is persisted to aae_scan_history + aae_results_snapshot.
+    Build a full Re-Rating Candidate Profile for a symbol.
+    Result is persisted to aae_re_rating_profiles + aae_results_snapshot.
     """
     try:
-        orchestrator = AAEOrchestrator(symbol)
-        result = orchestrator.run_full_scan()
-        _persist_scan(result, "MANUAL", conn)
-        return result
+        orchestrator = ReRatingOrchestrator(symbol)
+        profile = orchestrator.build_profile()
+        _persist_rerating_profile(profile, conn)
+        return profile
     except Exception as e:
-        logger.error(f"AAE Scan failed for {symbol}: {e}")
+        logger.error(f"AAE scan failed for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/top-candidates")
 async def get_aae_top_candidates(client=Depends(get_current_client)):
     """
-    Fetch top AAE V3 candidates from the pre-computed snapshot.
+    Fetch top AAE candidates ranked by re-rating probability score.
+    Uses the aae_re_rating_profiles cache (populated by every scan).
     """
     from engine_core.db import fetch_df
     try:
+        # Fetch re-rating profiles and extract in Python for reliable casting
+        query = "SELECT symbol, profile FROM aae_re_rating_profiles ORDER BY symbol"
+        df = fetch_df(query)
+        if df is not None and not df.empty:
+            candidates = []
+            for _, r in df.iterrows():
+                p = r["profile"]
+                if isinstance(p, str):
+                    import json as _json
+                    p = _json.loads(p)
+                candidates.append({
+                    "symbol": r["symbol"],
+                    "master_score": p.get("rerating_probability_score"),
+                    "sector": p.get("macro_alignment", {}).get("sector"),
+                    "thesis_summary": p.get("thesis", {}).get("summary"),
+                    "risk_level": p.get("risk_level"),
+                    "macro_outlook": p.get("macro_alignment", {}).get("outlook"),
+                })
+            return sorted(candidates, key=lambda x: x["master_score"] or 0, reverse=True)[:20]
+    except Exception as e:
+        logger.warning(f"Re-rating profile query failed: {e}")
+
+        # Fallback: legacy snapshot
+    try:
         query = """
-            SELECT symbol, master_score, sector, valuation_status, 
+            SELECT symbol, master_score, sector, valuation_status,
                    ownership_status, reasons
             FROM aae_results_snapshot
             ORDER BY master_score DESC
@@ -167,19 +193,19 @@ async def email_aae_report(
     conn=Depends(get_db)
 ):
     """
-    Trigger a full AAE V3 scan and email the detailed forensic report to the client.
+    Build a Re-Rating Profile and email the detailed forensic report.
     """
     try:
-        orchestrator = AAEOrchestrator(symbol)
-        result = orchestrator.run_full_scan()
-        
-        # Persist the scan
-        _persist_scan(result, "EMAIL_REQUEST", conn)
-        
+        orchestrator = ReRatingOrchestrator(symbol)
+        profile = orchestrator.build_profile()
+
+        # Persist the profile
+        _persist_rerating_profile(profile, conn)
+
         # Send email in background
-        background_tasks.add_task(send_aae_report_email, client["email"], client.get("name", "Investor"), result)
-        
-        return {"status": "SUCCESS", "message": f"Forensic report for {symbol} has been queued for email to {client['email']}."}
+        background_tasks.add_task(send_aae_report_email, client["email"], client.get("name", "Investor"), profile)
+
+        return {"status": "SUCCESS", "message": f"Re-Rating Profile for {symbol} queued for email to {client['email']}."}
     except Exception as e:
         logger.error(f"Failed to email AAE report for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
