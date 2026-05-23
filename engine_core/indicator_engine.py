@@ -291,6 +291,10 @@ def compute_indicators(df, idx_df):
                     "rolling_high_6m": row.get("rolling_high_6m"),
                     "avg_volume_20d": row.get("avg_volume_20d"),
                     "rs_90d": row.get("rs_90d"),
+                    "rs_21d": row.get("rs_21d"),
+                    "rs_63d": row.get("rs_63d"),
+                    "rs_126d": row.get("rs_126d"),
+                    "rs_252d": row.get("rs_252d"),
                     "high_10d": row.get("high_10d"),
                     "low_5d": row.get("low_5d"),
                     "atr_14": row.get("atr_14"),
@@ -309,7 +313,17 @@ def compute_indicators(df, idx_df):
                 merged["stock_ret"] = merged["close"] / merged["close"].shift(90)
                 merged["idx_ret"] = merged["idx_close"] / merged["idx_close"].shift(90)
                 merged["rs_90d"] = (merged["stock_ret"] / merged["idx_ret"]) * 100
-                s_df = pd.merge(s_df.drop(columns=["rs_90d"], errors='ignore'), merged[["date", "rs_90d"]], on="date", how="left")
+                # Multi-timeframe RS
+                for window, col in [(21, "rs_21d"), (63, "rs_63d"), (126, "rs_126d"), (252, "rs_252d")]:
+                    if len(merged) > window:
+                        merged["stock_ret_w"] = merged["close"] / merged["close"].shift(window)
+                        merged["idx_ret_w"] = merged["idx_close"] / merged["idx_close"].shift(window)
+                        merged[col] = (merged["stock_ret_w"] / merged["idx_ret_w"]) * 100
+                merge_cols = ["date", "rs_90d", "rs_21d", "rs_63d", "rs_126d", "rs_252d"]
+                s_df = pd.merge(
+                    s_df.drop(columns=[c for c in merge_cols if c != "date"], errors='ignore'),
+                    merged[merge_cols], on="date", how="left"
+                )
 
         s_df = s_df.replace({np.nan: None})
 
@@ -328,6 +342,10 @@ def compute_indicators(df, idx_df):
                     "rolling_high_6m": row.get("rolling_high_6m"),
                     "avg_volume_20d": row.get("avg_volume_20d"),
                     "rs_90d": row.get("rs_90d"),
+                    "rs_21d": row.get("rs_21d"),
+                    "rs_63d": row.get("rs_63d"),
+                    "rs_126d": row.get("rs_126d"),
+                    "rs_252d": row.get("rs_252d"),
                     "high_10d": row.get("high_10d"),
                     "low_5d": row.get("low_5d"),
                     "atr_14": row.get("atr_14"),
@@ -415,6 +433,10 @@ def update_db_with_indicators(updates, max_retries=3):
                         rolling_high_6m = %(rolling_high_6m)s,
                         avg_volume_20d = %(avg_volume_20d)s,
                         rs_90d = %(rs_90d)s,
+                        rs_21d = %(rs_21d)s,
+                        rs_63d = %(rs_63d)s,
+                        rs_126d = %(rs_126d)s,
+                        rs_252d = %(rs_252d)s,
                         high_10d = %(high_10d)s,
                         low_5d = %(low_5d)s,
                         atr_14 = %(atr_14)s,

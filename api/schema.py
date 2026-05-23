@@ -235,6 +235,10 @@ def ensure_required_tables(conn) -> None:
 
     # 12c. Breakout State column for daily_prices and stock_scores
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_21d NUMERIC;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_63d NUMERIC;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_126d NUMERIC;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_252d NUMERIC;")
     cur.execute("ALTER TABLE stock_scores ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
 
     # 12b. Migration: 7-Step System Expansion

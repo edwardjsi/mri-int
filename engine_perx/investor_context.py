@@ -1107,6 +1107,115 @@ def get_cashflow_health(cur, base_symbol: str) -> dict[str, Any]:
     result["homework"] = " | ".join(homework_parts)
     return result
 
+def get_rs_multi_timeframe(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Analyze multi-timeframe relative strength (1m, 3m, 6m, 12m).
+    
+    RS > 100 = outperforming NIFTY
+    RS < 100 = underperforming NIFTY
+    
+    Classifies trend as:
+      - STRONG_UPTREND: all timeframes > 100
+      - IMPROVING: shorter timeframes > longer timeframes
+      - WEAKENING: shorter timeframes < longer timeframes
+      - STRONG_DOWNTREND: all timeframes < 100
+      - INSUFFICIENT_DATA: not enough data
+    """
+    result: dict[str, Any] = {
+        "rs_21d": None,
+        "rs_63d": None,
+        "rs_126d": None,
+        "rs_252d": None,
+        "trend": "INSUFFICIENT_DATA",
+        "verdict": "Multi-timeframe RS data not available.",
+        "homework": "",
+    }
+
+    cur.execute(
+        """
+        SELECT rs_21d, rs_63d, rs_126d, rs_252d
+        FROM daily_prices
+        WHERE symbol = %s AND rs_90d IS NOT NULL
+        ORDER BY date DESC
+        LIMIT 1
+        """,
+        (base_symbol,),
+    )
+    row = cur.fetchone()
+    if not row:
+        return result
+
+    if isinstance(row, dict):
+        rs_21 = safe_float(row.get("rs_21d"))
+        rs_63 = safe_float(row.get("rs_63d"))
+        rs_126 = safe_float(row.get("rs_126d"))
+        rs_252 = safe_float(row.get("rs_252d"))
+    else:
+        rs_21 = safe_float(row[0]) if len(row) > 0 else None
+        rs_63 = safe_float(row[1]) if len(row) > 1 else None
+        rs_126 = safe_float(row[2]) if len(row) > 2 else None
+        rs_252 = safe_float(row[3]) if len(row) > 3 else None
+
+    rs_vals = {"21d": rs_21, "63d": rs_63, "126d": rs_126, "252d": rs_252}
+    # Only store if > 0 (valid RS)
+    for period_name, val in rs_vals.items():
+        if val and val > 0:
+            result[f"rs_{period_name}"] = round(val, 1)
+
+    available = {k: v for k, v in rs_vals.items() if v and v > 0}
+    if len(available) < 2:
+        result["verdict"] = "Insufficient timeframe data for trend classification."
+        return result
+
+    all_over_100 = all(v > 100 for v in available.values())
+    all_under_100 = all(v < 100 for v in available.values())
+
+    # Sort timeframes: short → long
+    sorted_periods = sorted(available.keys(), key=lambda x: {"21d": 1, "63d": 2, "126d": 3, "252d": 4}.get(x, 5))
+    sorted_vals = [available[p] for p in sorted_periods]
+
+    if all_over_100:
+        result["trend"] = "STRONG_UPTREND"
+        result["verdict"] = "Outperforming across all timeframes — broad institutional demand."
+    elif all_under_100:
+        result["trend"] = "STRONG_DOWNTREND"
+        result["verdict"] = "Underperforming across all timeframes — institutional distribution."
+    elif sorted_vals[-1] > 100 and sorted_vals[0] > 100:
+        result["trend"] = "UPTREND"
+        result["verdict"] = "Outperforming on all short-to-medium timeframes."
+    elif sorted_vals[0] > sorted_vals[-1]:
+        # Short-term RS > long-term RS = improving
+        improving = sorted_vals[0] > sorted_vals[-1] * 1.05
+        if improving:
+            result["trend"] = "IMPROVING"
+            result["verdict"] = "RS improving — short-term outperformance leading. Early rerating signal."
+        else:
+            result["trend"] = "MIXED"
+            result["verdict"] = "Mixed RS across timeframes — no clear trend."
+    elif sorted_vals[-1] > sorted_vals[0]:
+        weakening = sorted_vals[-1] > sorted_vals[0] * 1.05
+        if weakening:
+            result["trend"] = "WEAKENING"
+            result["verdict"] = "RS weakening — short-term underperformance vs long-term. Caution."
+        else:
+            result["trend"] = "MIXED"
+            result["verdict"] = "Mixed RS across timeframes — no clear trend."
+    else:
+        result["trend"] = "MIXED"
+        result["verdict"] = "Mixed RS across timeframes — no clear trend."
+
+    result["homework"] = {
+        "STRONG_UPTREND": "Look for pullback to 50-EMA as entry opportunity. Momentum is on your side.",
+        "IMPROVING": "Confirm with delivery volume. Improving RS + delivery expansion = strong setup.",
+        "WEAKENING": "Check if underperformance is sector-wide or stock-specific. Reduce position size if stock-specific.",
+        "STRONG_DOWNTREND": "Avoid catching falling knives. Wait for RS to stabilize above 90 before considering entry.",
+        "UPTREND": "Trend is intact. Trail stops below nearest timeframe's RS threshold.",
+        "MIXED": "Wait for RS convergence across timeframes before adding conviction.",
+    }.get(result["trend"], "")
+
+    return result
+
+
 
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
                               current_perx_score: float | None = None,
@@ -1159,6 +1268,19 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
                      "ocf_growth_pct": None, "ocf_consistency": "UNKNOWN",
                      "verdict": "Cash flow data unavailable.", "homework": ""}
 
+    # Multi-timeframe relative strength (1m, 3m, 6m, 12m)
+    try:
+        rs_mtf = get_rs_multi_timeframe(cur, base_symbol)
+    except Exception as e:
+        logger.warning(f"Multi-timeframe RS failed for {base_symbol}: {e}")
+        if hasattr(cur, 'connection') and cur.connection:
+            try:
+                cur.connection.rollback()
+            except Exception:
+                pass
+        rs_mtf = {"rs_21d": None, "rs_63d": None, "rs_126d": None, "rs_252d": None,
+                   "trend": "INSUFFICIENT_DATA", "verdict": "RS data unavailable.", "homework": ""}
+
     # Historical analogs from perx_reports archive
     try:
         analogs = {}
@@ -1193,6 +1315,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         pre_mortem_risks.append(f"Weak cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality concern.")
     if cashflow.get("ocf_consistency") == "DECLINING":
         pre_mortem_risks.append("Operating cash flow declining — external financing may be needed.")
+    if rs_mtf.get("trend") == "STRONG_DOWNTREND":
+        pre_mortem_risks.append("Stock underperforming across all timeframes — institutional distribution underway.")
+    elif rs_mtf.get("trend") == "WEAKENING":
+        pre_mortem_risks.append("RS weakening — short-term underperformance emerging vs long-term trend.")
     if peg.get("peg_ratio") and peg["peg_ratio"] > 3:
         pre_mortem_risks.append(f"PEG ratio at {peg['peg_ratio']:.1f}x — growth is not keeping pace with valuation.")
     if ev_ebitda.get("net_debt_ebitda") and ev_ebitda["net_debt_ebitda"] > 3:
@@ -1217,6 +1343,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         catalyst_questions.append(f"FCF yield at {cashflow['fcf_yield_pct']:.1f}% — strong cash generation relative to capital. Can this compound over next 3 years?")
     if cashflow.get("ocf_ebitda_ratio") and cashflow["ocf_ebitda_ratio"] > 0.8:
         catalyst_questions.append(f"High cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality is strong. Confirm this is structural (not one-off working capital release).")
+    if rs_mtf.get("trend") == "IMPROVING":
+        catalyst_questions.append("RS improving across timeframes — early rerating signal. Confirm with volume expansion and delivery data.")
+    elif rs_mtf.get("trend") == "STRONG_UPTREND":
+        catalyst_questions.append("Strong multi-timeframe outperformance. Trend is established — key risk is mean reversion if broader market weakens.")
     if ev_ebitda.get("ev_ebitda") and ev_ebitda["ev_ebitda"] < 12:
         catalyst_questions.append(f"EV/EBITDA {ev_ebitda['ev_ebitda']:.1f}x leaves room for rerating IF EBITDA compounds. Can you identify 3 drivers of EBITDA growth for next 12 months?")
     if ownership.get("governance_score") and ownership["governance_score"] < 40:
@@ -1233,6 +1363,7 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "ev_ebitda": ev_ebitda,
         "institutional_flow": inst_flow,
         "cashflow_health": cashflow,
+        "rs_multi_timeframe": rs_mtf,
         "historical_analogs": analogs,
         "investor_grade": grade,
         "pre_mortem": {
