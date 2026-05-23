@@ -601,5 +601,217 @@ def ensure_required_tables(conn) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_symbol_date ON public.aae_scan_history(symbol, scanned_at DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_score ON public.aae_scan_history(master_score DESC);")
     
+    ensure_prde_tables(cur)
+    ensure_aae_event_tables(cur)
+    
     conn.commit()
     cur.close()
+
+
+def ensure_prde_tables(cur) -> None:
+    """Ensure PRDE (Platform for Re-rating Detection Engine) tables exist.
+
+    These tables form the deterministic financial fingerprint foundation
+    that feeds verifiable data into the AAE pipeline.
+
+    Called by:
+      - api/schema.py ensure_required_tables() at API startup
+      - engine_core/prde_feature_engine.py before generating snapshots
+    """
+    # PRDE Companies — registry of companies in the PRDE universe
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_companies (
+            id          SERIAL PRIMARY KEY,
+            ticker      VARCHAR(20)  NOT NULL UNIQUE,
+            name        VARCHAR(255),
+            country     VARCHAR(10)  DEFAULT 'IN',
+            sector      VARCHAR(100),
+            industry    VARCHAR(100),
+            is_active   BOOLEAN      DEFAULT TRUE,
+            created_at  TIMESTAMPTZ  DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_companies_ticker ON public.prde_companies(ticker);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_companies_sector ON public.prde_companies(sector);")
+
+    # PRDE Annual Financials — P&L and balance sheet per fiscal year
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_financials_annual (
+            id              SERIAL PRIMARY KEY,
+            company_id      INT          NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            fiscal_year     INT          NOT NULL,
+            revenue         NUMERIC(18,2),
+            ebitda          NUMERIC(18,2),
+            pat             NUMERIC(18,2),
+            roce            NUMERIC(8,4),
+            capex           NUMERIC(18,2),
+            employee_cost   NUMERIC(18,2),
+            total_assets    NUMERIC(18,2),
+            created_at      TIMESTAMPTZ  DEFAULT NOW(),
+            UNIQUE(company_id, fiscal_year)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_fin_year ON public.prde_financials_annual(company_id, fiscal_year);")
+
+    # PRDE Annual Ratios — valuation and efficiency ratios per fiscal year
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_ratios_annual (
+            id              SERIAL PRIMARY KEY,
+            company_id      INT          NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            fiscal_year     INT          NOT NULL,
+            pe              NUMERIC(12,4),
+            ev_ebitda       NUMERIC(12,4),
+            pb              NUMERIC(12,4),
+            debt_equity     NUMERIC(12,4),
+            created_at      TIMESTAMPTZ  DEFAULT NOW(),
+            UNIQUE(company_id, fiscal_year)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_ratios_year ON public.prde_ratios_annual(company_id, fiscal_year);")
+
+    # PRDE Feature Snapshots — immutable, content-addressed feature vectors
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.prde_feature_snapshots (
+            id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            company_id      INT          NOT NULL REFERENCES public.prde_companies(id) ON DELETE CASCADE,
+            run_id          UUID         NOT NULL,
+            feature_hash    VARCHAR(64)  NOT NULL,
+            features        JSONB        NOT NULL,
+            created_at      TIMESTAMPTZ  DEFAULT NOW(),
+            UNIQUE(company_id, feature_hash)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_snapshots_company ON public.prde_feature_snapshots(company_id, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prde_snapshots_run ON public.prde_feature_snapshots(run_id);")
+
+
+def ensure_aae_event_tables(cur) -> None:
+    """Ensure AAE document and event schema tables exist.
+
+    These tables support the event-driven architecture: document ingestion,
+    chunked text storage, normalized event objects, and evidence linking.
+    """
+    # Documents — metadata for filings, transcripts, presentations
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_documents (
+            id              SERIAL PRIMARY KEY,
+            symbol          VARCHAR(20)  NOT NULL,
+            doc_type        VARCHAR(50)  NOT NULL,  -- FILING, TRANSCRIPT, PRESENTATION, ANNOUNCEMENT, REPORT
+            source_url      TEXT,
+            title           VARCHAR(500),
+            doc_date        DATE         NOT NULL,
+            fiscal_year     INT,
+            fiscal_quarter  INT,
+            raw_text        TEXT,
+            processed_at    TIMESTAMPTZ  DEFAULT NOW(),
+            created_at      TIMESTAMPTZ  DEFAULT NOW(),
+            UNIQUE(symbol, doc_type, doc_date, title)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_docs_symbol_date ON public.aae_documents(symbol, doc_date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_docs_type ON public.aae_documents(doc_type);")
+
+    # Document chunks — tokenized segments for retrieval and AI processing
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_document_chunks (
+            id              SERIAL PRIMARY KEY,
+            document_id     INT          NOT NULL REFERENCES public.aae_documents(id) ON DELETE CASCADE,
+            chunk_index     INT          NOT NULL,
+            chunk_text      TEXT         NOT NULL,
+            token_count     INT,
+            created_at      TIMESTAMPTZ  DEFAULT NOW(),
+            UNIQUE(document_id, chunk_index)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_chunks_doc ON public.aae_document_chunks(document_id);")
+
+    # Events — normalized event objects extracted from documents
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_events (
+            id              SERIAL PRIMARY KEY,
+            symbol          VARCHAR(20)  NOT NULL,
+            event_type      VARCHAR(50)  NOT NULL,
+            event_subtype   VARCHAR(100),
+            title           VARCHAR(500),
+            description     TEXT,
+            confidence      NUMERIC(4,3) DEFAULT 0.0,
+            event_date      DATE,
+            source_doc_id   INT          REFERENCES public.aae_documents(id) ON DELETE SET NULL,
+            metadata        JSONB,
+            created_at      TIMESTAMPTZ  DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_events_symbol_date ON public.aae_events(symbol, event_date DESC NULLS LAST);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_events_type ON public.aae_events(event_type);")
+
+    # Event evidence — source references linking events to document snippets
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_event_evidence (
+            id              SERIAL PRIMARY KEY,
+            event_id        INT          NOT NULL REFERENCES public.aae_events(id) ON DELETE CASCADE,
+            document_id     INT          NOT NULL REFERENCES public.aae_documents(id) ON DELETE CASCADE,
+            chunk_id        INT          REFERENCES public.aae_document_chunks(id) ON DELETE SET NULL,
+            snippet         TEXT,
+            page_ref        VARCHAR(50),
+            relevance_score NUMERIC(4,3),
+            created_at      TIMESTAMPTZ  DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_evidence_event ON public.aae_event_evidence(event_id);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_evidence_doc ON public.aae_event_evidence(document_id);")
+
+    # Analyst Feedback — human review of machine-generated theses
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_analyst_feedback (
+            id              SERIAL PRIMARY KEY,
+            symbol          VARCHAR(20)  NOT NULL,
+            client_id       UUID         REFERENCES clients(id) ON DELETE SET NULL,
+            action          VARCHAR(20)  NOT NULL,  -- ACCEPT, REJECT, MODIFY
+            justification   TEXT,
+            original_thesis JSONB,
+            modified_thesis JSONB,
+            profile_version INT,
+            created_at      TIMESTAMPTZ  DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_feedback_symbol ON public.aae_analyst_feedback(symbol, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_feedback_client ON public.aae_analyst_feedback(client_id);")
+
+    # Historical Case Library — labeled re-rating cases for calibration
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_case_library (
+            id              SERIAL PRIMARY KEY,
+            symbol          VARCHAR(20)  NOT NULL,
+            case_type       VARCHAR(20)  NOT NULL,  -- SUCCESS, FALSE_POSITIVE, MISSED
+            entry_date      DATE,
+            exit_date       DATE,
+            pre_score       NUMERIC(5,2),
+            post_return_pct NUMERIC(8,2),
+            time_to_rerate_months INT,
+            notes           TEXT,
+            features_snapshot JSONB,
+            created_at      TIMESTAMPTZ  DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_cases_symbol ON public.aae_case_library(symbol);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_cases_type ON public.aae_case_library(case_type);")
