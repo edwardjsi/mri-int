@@ -23,6 +23,8 @@ RISK_PER_TRADE_PCT = 0.01  # 1% risk
 MIN_ADTV = 100_000_000     # ₹10 Cr
 MAX_GAP_UP_PCT = 4.0       # 4% max gap on breakout
 MAX_ATR_MULT = 2.0         # 2.0x ATR max candle range
+ATR_STOP_MULT = 2.0         # 2.0x ATR for stop distance
+ATR_SIZE_MULT = 1.5         # 1.5x ATR for position size calculation (minimum risk per share)
 
 def get_latest_regime(cur):
     cur.execute("SELECT classification, ema_200 FROM market_regime ORDER BY date DESC LIMIT 1")
@@ -118,8 +120,11 @@ def process_entries(cur, regime_row, watchlist, clients):
             continue
 
         # 5. Generate Signal for each client
-        # Stop Loss = Lowest Low of last 5 candles (low_5d)
-        stop_loss = float(stock["low_5d"] or low)
+        # Stop Loss = max(Lowest Low of last 5 candles, Close - 2x ATR)
+        # ATR-based stop prevents getting shaken out on normal volatility
+        low_5d = float(stock["low_5d"] or low)
+        atr_stop = close - (ATR_STOP_MULT * atr) if atr > 0 else low_5d
+        stop_loss = max(low_5d, atr_stop)
         
         # Ensure SL is valid (below entry)
         if stop_loss >= close:
@@ -128,8 +133,12 @@ def process_entries(cur, regime_row, watchlist, clients):
                            {'symbol': sym, 'close': close, 'stop_loss': stop_loss})
             stop_loss = close * 0.95 # Fallback to 5% SL
             
-        risk_per_share = close - stop_loss
-        target_2r = close + (2 * risk_per_share)
+        # Risk per share: use ATR-based minimum so volatile stocks size down
+        # max(price_to_stop, 1.5 * ATR) ensures position sizing adapts to volatility
+        risk_per_share_raw = close - stop_loss
+        min_risk_per_share = ATR_SIZE_MULT * atr if atr > 0 else risk_per_share_raw
+        risk_per_share = max(risk_per_share_raw, min_risk_per_share)
+        target_2r = close + (2 * risk_per_share_raw)  # Target based on actual stop distance
 
         for client in clients:
             client_id = client["id"]
@@ -173,6 +182,7 @@ def process_exits(cur, latest_prices):
     """
     Handle exits for open trades:
     1. Hard Stop: Close < Stop Loss
+    1b. Trailing Stop: After 1R profit, tighten stop to 0.5R below current price
     2. Partial Profit: 50% exit at 2R
     3. Trailing Stop: Close < EMA 10
     """
@@ -198,6 +208,21 @@ def process_exits(cur, latest_prices):
             logger.info(f"🛑 STOP LOSS: {sym} closed at {curr_price:.2f}")
             log_audit_event(cur, 'TRADE_EXIT', 'INFO', f"Stop Loss hit for {sym}", {'id': trade['id'], 'price': curr_price})
             continue
+
+        # 1b. Trailing Stop after 1R profit
+        entry_price = float(trade["entry_price"])
+        risk_per_share = entry_price - float(trade["stop_loss"])
+        if risk_per_share > 0:
+            price_gain_r = (curr_price - entry_price) / risk_per_share
+            if price_gain_r >= TRAIL_ACTIVATE_AT_R:
+                trail_stop = curr_price - (TRAIL_DISTANCE_R * risk_per_share)
+                current_stop = float(trade["stop_loss"])
+                if trail_stop > current_stop:
+                    cur.execute("UPDATE swing_trades SET stop_loss = %s WHERE id = %s AND stop_loss < %s",
+                               (trail_stop, trade["id"], trail_stop))
+                    log_audit_event(cur, 'TRAIL_UPDATE', 'INFO',
+                                   f'Trailing stop moved to {trail_stop:.2f} ({price_gain_r:.1f}R)',
+                                   {'id': trade['id'], 'trail': trail_stop, 'r_gained': round(price_gain_r, 1)})
 
         # 2. Partial Profit (at 2R)
         if trade["status"] == 'OPEN' and curr_price >= float(trade["take_profit_2r"]):

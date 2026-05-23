@@ -1107,6 +1107,145 @@ def get_cashflow_health(cur, base_symbol: str) -> dict[str, Any]:
     result["homework"] = " | ".join(homework_parts)
     return result
 
+def get_management_quality(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Assess management quality from governance and leadership signals.
+    
+    Uses a weighted composite of:
+      - Governance score (base)
+      - Auditor flags (qualified opinion = penalty)
+      - CFO exits (leadership instability = penalty)
+      - Related party transactions (tunneling risk = penalty)
+      - Pledged shares (promoter distress = penalty)
+      - Governance score trend (direction)
+    """
+    result: dict[str, Any] = {
+        "quality_score": None,
+        "quality_rating": "UNKNOWN",
+        "auditor_concern": False,
+        "cfo_turnover": False,
+        "related_party_risk": False,
+        "pledge_concern": False,
+        "trend": "STABLE",
+        "verdict": "Management quality data not available.",
+        "homework": "",
+    }
+
+    # Get latest 4 quarters of governance data + auditor/cfo/related_party flags
+    cur.execute(
+        """
+        SELECT promoter_holding_pct, pledged_shares_pct, auditor_flag, cfo_exit_flag,
+               related_party_risk, governance_score
+        FROM aae_governance_metrics
+        WHERE symbol = %s
+        ORDER BY fiscal_year DESC, fiscal_quarter DESC
+        LIMIT 4
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if not rows:
+        return result
+
+    parsed = []
+    for r in rows:
+        if isinstance(r, dict):
+            parsed.append({
+                "promoter_pct": safe_float(r.get("promoter_holding_pct")),
+                "pledged_pct": safe_float(r.get("pledged_shares_pct")),
+                "auditor_flag": bool(r.get("auditor_flag", False)),
+                "cfo_exit_flag": bool(r.get("cfo_exit_flag", False)),
+                "related_party_risk": bool(r.get("related_party_risk", False)),
+                "gov_score": safe_float(r.get("governance_score")),
+            })
+        else:
+            parsed.append({
+                "promoter_pct": safe_float(r[0]) if len(r) > 0 else None,
+                "pledged_pct": safe_float(r[1]) if len(r) > 1 else None,
+                "auditor_flag": bool(r[2]) if len(r) > 2 else False,
+                "cfo_exit_flag": bool(r[3]) if len(r) > 3 else False,
+                "related_party_risk": bool(r[4]) if len(r) > 4 else False,
+                "gov_score": safe_float(r[5]) if len(r) > 5 else None,
+            })
+
+    latest = parsed[0]
+    deductions = 0
+    flags = []
+    homework_parts = []
+
+    # Auditor flag
+    if latest["auditor_flag"]:
+        deductions += 15
+        result["auditor_concern"] = True
+        flags.append("qualified auditor opinion")
+        homework_parts.append("Qualified audit opinion is a red flag — verify what the auditor questioned (revenue recognition, related parties, or going concern).")
+
+    # CFO exit flag
+    if latest["cfo_exit_flag"]:
+        deductions += 10
+        result["cfo_turnover"] = True
+        flags.append("CFO turnover detected")
+        homework_parts.append("CFO exits in consecutive quarters indicate instability. Check if a new CFO has been appointed and their background.")
+
+    # Related party risk
+    if latest["related_party_risk"]:
+        deductions += 15
+        result["related_party_risk"] = True
+        flags.append("related party concerns")
+        homework_parts.append("Related party transactions can indicate tunneling risk. Review the annual report for details on the largest RPTs.")
+
+    # Pledged shares
+    pledged = latest["pledged_pct"]
+    if pledged and pledged > 30:
+        deductions += 15
+        result["pledge_concern"] = True
+        flags.append(f"{pledged:.0f}% promoter shares pledged")
+        homework_parts.append("High promoter pledge is a distress signal. If the stock falls sharply, lenders may sell pledged shares, creating a cascade.")
+    elif pledged and pledged > 10:
+        deductions += 5
+        result["pledge_concern"] = True
+        flags.append(f"{pledged:.0f}% promoter shares pledged")
+        homework_parts.append("Moderate promoter pledge. Ensure pledged shares are for business purposes (not promoter's personal margin funding).")
+
+    # Governance score base
+    gov = latest["gov_score"] if latest["gov_score"] and latest["gov_score"] > 0 else 50
+    base_score = min(gov, 80)  # Cap base at 80 since gov scores tend to cluster at 50
+
+    # Governance trend
+    if len(parsed) >= 2:
+        prev_gov = parsed[1]["gov_score"]
+        if prev_gov and prev_gov > 0 and gov and gov > 0:
+            diff = gov - prev_gov
+            if diff > 5:
+                result["trend"] = "IMPROVING"
+            elif diff < -5:
+                result["trend"] = "DECLINING"
+                deductions += 5
+                flags.append("governance score declining")
+
+    quality_score = max(0, min(100, base_score - deductions))
+    result["quality_score"] = round(quality_score, 1)
+
+    if quality_score >= 70:
+        result["quality_rating"] = "GOOD"
+        verdict_base = "Management quality appears sound."
+    elif quality_score >= 50:
+        result["quality_rating"] = "ACCEPTABLE"
+        verdict_base = "Management quality acceptable but has areas to monitor."
+    else:
+        result["quality_rating"] = "POOR"
+        verdict_base = "Management quality concerns — proceed with caution."
+
+    if flags:
+        result["verdict"] = f"{verdict_base} Flags: {', '.join(flags)}."
+    else:
+        result["verdict"] = f"{verdict_base} No governance flags detected."
+
+    result["homework"] = " ".join(homework_parts)
+    return result
+
+
+
 def get_rs_multi_timeframe(cur, base_symbol: str) -> dict[str, Any]:
     """
     Analyze multi-timeframe relative strength (1m, 3m, 6m, 12m).
@@ -1282,6 +1421,21 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         rs_mtf = {"rs_21d": None, "rs_63d": None, "rs_126d": None, "rs_252d": None,
                    "trend": "INSUFFICIENT_DATA", "verdict": "RS data unavailable.", "homework": ""}
 
+    # Management quality (governance score, auditor flags, CFO exits, related party risks)
+    try:
+        mgmt_quality = get_management_quality(cur, base_symbol)
+    except Exception as e:
+        logger.warning(f"Management quality failed for {base_symbol}: {e}")
+        if hasattr(cur, 'connection') and cur.connection:
+            try:
+                cur.connection.rollback()
+            except Exception:
+                pass
+        mgmt_quality = {"quality_score": None, "quality_rating": "UNKNOWN",
+                         "auditor_concern": False, "cfo_turnover": False,
+                         "related_party_risk": False, "pledge_concern": False,
+                         "trend": "STABLE", "verdict": "Data unavailable.", "homework": ""}
+
     # Historical analogs from perx_reports archive
     try:
         analogs = {}
@@ -1320,6 +1474,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         pre_mortem_risks.append("Stock underperforming across all timeframes — institutional distribution underway.")
     elif rs_mtf.get("trend") == "WEAKENING":
         pre_mortem_risks.append("RS weakening — short-term underperformance emerging vs long-term trend.")
+    if mgmt_quality.get("quality_rating") == "POOR":
+        pre_mortem_risks.append(f"Poor management quality (score {mgmt_quality['quality_score']:.0f}/100) — {mgmt_quality.get('verdict', '')[:80]}")
+    elif mgmt_quality.get("quality_rating") == "ACCEPTABLE" and mgmt_quality.get("trend") == "DECLINING":
+        pre_mortem_risks.append("Management quality declining — governance trend needs close monitoring.")
     if peg.get("peg_ratio") and peg["peg_ratio"] > 3:
         pre_mortem_risks.append(f"PEG ratio at {peg['peg_ratio']:.1f}x — growth is not keeping pace with valuation.")
     if ev_ebitda.get("net_debt_ebitda") and ev_ebitda["net_debt_ebitda"] > 3:
@@ -1348,6 +1506,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         catalyst_questions.append("RS improving across timeframes — early rerating signal. Confirm with volume expansion and delivery data.")
     elif rs_mtf.get("trend") == "STRONG_UPTREND":
         catalyst_questions.append("Strong multi-timeframe outperformance. Trend is established — key risk is mean reversion if broader market weakens.")
+    if mgmt_quality.get("quality_rating") == "GOOD" and mgmt_quality.get("trend") == "IMPROVING":
+        catalyst_questions.append("Management quality improving (governance score trending up) — this can drive rerating if financials follow.")
+    if mgmt_quality.get("auditor_concern"):
+        catalyst_questions.append("Qualified audit opinion — this is a potential value trap catalyst. If resolved, the stock could re-rate sharply.")
     if ev_ebitda.get("ev_ebitda") and ev_ebitda["ev_ebitda"] < 12:
         catalyst_questions.append(f"EV/EBITDA {ev_ebitda['ev_ebitda']:.1f}x leaves room for rerating IF EBITDA compounds. Can you identify 3 drivers of EBITDA growth for next 12 months?")
     if ownership.get("governance_score") and ownership["governance_score"] < 40:
@@ -1406,6 +1568,7 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "institutional_flow": inst_flow,
         "cashflow_health": cashflow,
         "rs_multi_timeframe": rs_mtf,
+        "management_quality": mgmt_quality,
         "historical_analogs": analogs,
         "sector_cycle": sector_cycle,
         "investor_grade": grade,

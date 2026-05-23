@@ -59,6 +59,7 @@ def _collect_data_warnings(report: dict, symbol: str) -> list[dict]:
         ("historical_analogs", "Historical Analogs", "No archived PERX reports at similar lifecycle stage"),
         ("cashflow_health", "Cash Flow Health", "Operating cash flow or free cash flow not available for this symbol"),
         ("rs_multi_timeframe", "Multi-Timeframe RS", "Relative strength data for multiple timeframes not yet computed. Run indicator pipeline first."),
+        ("management_quality", "Management Quality", "Governance and leadership data not available. Run AAE governance pipeline first."),
     ]
 
     for key, label, reason in checks:
