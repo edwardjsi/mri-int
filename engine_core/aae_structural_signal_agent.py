@@ -170,6 +170,51 @@ class StructuralSignalAgent:
         finally:
             conn.close()
 
+    def persist_signals(self) -> dict[str, Any]:
+        """Evaluate signals and persist to aae_structural_signals table.
+
+        Returns the evaluated result with version number.
+        """
+        result = self.evaluate()
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT COALESCE(MAX(version), 0) + 1 AS v FROM public.aae_structural_signals WHERE symbol = %s",
+                    (self.symbol,),
+                )
+                row = cur.fetchone()
+                next_version = row["v"] if isinstance(row, dict) else row[0]
+
+                cur.execute(
+                    """
+                    INSERT INTO public.aae_structural_signals
+                        (symbol, version, signal_vector, conviction_score, active_signals,
+                         active_count, high_conviction, total_events, justifications, verdict)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        self.symbol,
+                        next_version,
+                        json.dumps(result.get("signal_vector", {})),
+                        result.get("conviction_score", 0.0),
+                        result.get("active_signals", []),
+                        result.get("active_count", 0),
+                        result.get("high_conviction", False),
+                        result.get("total_events_analyzed", 0),
+                        json.dumps(result.get("justifications", [])),
+                        result.get("verdict", ""),
+                    ),
+                )
+                conn.commit()
+                result["persisted_version"] = next_version
+                return result
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
     def _empty_result(self, reason: str) -> dict:
         return {
             "symbol": self.symbol,
@@ -201,10 +246,11 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="AAE Structural Signal Agent")
     parser.add_argument("--symbol", required=True, help="Ticker symbol")
+    parser.add_argument("--persist", action="store_true", help="Persist signals to database")
     args = parser.parse_args()
 
     agent = StructuralSignalAgent(args.symbol)
-    result = agent.evaluate()
+    result = agent.persist_signals() if args.persist else agent.evaluate()
     print(json.dumps(result, indent=2, default=str))
 
 

@@ -815,3 +815,24 @@ def ensure_aae_event_tables(cur) -> None:
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_cases_symbol ON public.aae_case_library(symbol);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_cases_type ON public.aae_case_library(case_type);")
+
+    # Structural Signals — versioned six-signal vector snapshots
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_structural_signals (
+            symbol              VARCHAR(20) NOT NULL,
+            version             INT NOT NULL DEFAULT 1,
+            signal_vector       JSONB NOT NULL,
+            conviction_score    NUMERIC(5,2) NOT NULL DEFAULT 0.0,
+            active_signals      TEXT[] DEFAULT '{}',
+            active_count        INT NOT NULL DEFAULT 0,
+            high_conviction     BOOLEAN DEFAULT FALSE,
+            total_events        INT NOT NULL DEFAULT 0,
+            justifications      JSONB,
+            verdict             TEXT,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (symbol, version)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_struct_sig_symbol_version ON public.aae_structural_signals(symbol, version DESC);")
