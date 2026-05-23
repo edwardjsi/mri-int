@@ -150,7 +150,7 @@ def generate_perx_pdf(report: dict) -> BytesIO:
         if analog_list:
             elements.append(Paragraph("<b>Historical Rerating Analogs</b>", label_style))
             for a in analog_list[:3]:
-                elements.append(Paragraph(f"  {a.get('symbol', '?')} | Score: {a.get('score', 'N/A')} | {a.get('scan_date', '')}", text_style))
+                elements.append(Paragraph(f"  {a.get('symbol', '?')} | Score: {a.get('perx_score', 'N/A')}/100 | {a.get('date', '')}", text_style))
             hw = analogs.get('homework', '')
             if hw:
                 elements.append(Paragraph(hw, text_style))

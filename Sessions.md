@@ -1,3 +1,31 @@
+## **May 23, 2026: Four Missing PERX Functions + Email/PDF Rendering Fixes**
+
+**Objective**: Complete the four analytical modules missing from the PERX investor context engine (previous session's single_find_and_replace silently failed), and fix PDF/email rendering mismatches.
+
+**Actions**:
+  - **Four New Functions Written** (`engine_perx/investor_context.py`):
+    - `get_peg_ratio()` — PEG = P/E ÷ EPS growth rate. Uses 8 trailing quarters from `aae_quarterly_financials`. Threshold: <1x favorable, 1-2x reasonable, >2x premium. Includes actionable `homework` string.
+    - `get_ev_ebitda()` — EV/EBITDA proxy with dynamic SQL column discovery (`information_schema.columns`). Computes `net_debt_ebitda` for balance sheet leverage assessment.
+    - `get_institutional_flow()` — FII/DII holding \% changes from `aae_governance_metrics`. QoQ trend (ADDING/REDUCING/STABLE). Flags FIIs exiting without DII buying.
+    - `get_rerating_analogs()` — Queries `perx_reports` for same lifecycle + similar score (±15 pts). Falls back to broader match (same lifecycle, any score).
+  - **Pre-mortem \& Catalyst Integration**:
+    - Pre-mortem already included PEG >3x, net debt/EBITDA >3, FII-reducing-without-DII flags.
+    - Catalyst questions already covered PEG, EV/EBITDA, FII flow triggers.
+  - **PDF Fix** (`engine_perx/pdf_generator.py`):
+    - Fixed analog key names: `score` → `perx_score`, `scan_date` → `date` to match new function output.
+  - **Email Enhancement** (`engine_core/email_service.py`):
+    - Added **Catalyst Questions** block (blue card with → items and homework note).
+    - Added **Historical Analogs** block (purple card with symbol, perx_score, date, homework).
+    - Both sections conditionally render (only when data exists).
+  - **Architecture Confirmation**:
+    - Platform is ~90\% deterministic / ~10\% AI. The 10\% AI is used only for management narrative/debate synthesis. All core metrics (P/E, PEG, EV/EBITDA, FII/DII, promoter trend) are 100\% deterministic SQL.
+
+**Result**: PERX investor context engine is complete with all 8 analytical modules. PDF and email render analogs, catalyst questions, PEG, EV/EBITDA correctly. All files compile clean.
+
+**Next Step**: Verify PERX scan for GRAPHITE and AAE for TRITURBINE in production, then commit and push.
+
+---
+
 # **MRI Sessions Log**
 
 ## **May 22, 2026: Investor-Grade Context Layer (Valuation, Earnings, Ownership, Liquidity)**

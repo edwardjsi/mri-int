@@ -512,6 +512,30 @@ def _build_perx_email_investor_context(inv_ctx: dict) -> str:
             html += f'<p style="margin:4px 0;font-size:12px;color:#b91c1c">• {risk}</p>'
         html += "</div>"
 
+    # Catalyst Questions
+    if catalyst:
+        html += """<div style="background:#eff6ff;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #bfdbfe">
+            <h3 style="margin:0 0 10px;color:#1e40af;font-size:13px">🔍 Catalyst Checklist</h3>
+            <p style="margin:0 0 8px;font-size:12px;color:#1e3a8a">What to investigate next to build (or break) the rerating thesis:</p>"""
+        for q in catalyst[:4]:
+            html += f'<p style="margin:4px 0;font-size:12px;color:#1e40af">→ {q}</p>'
+        homework = inv_ctx.get('homework_note', '')
+        if homework:
+            html += f'<p style="margin:8px 0 0;font-size:11px;color:#64748b;font-style:italic">{homework}</p>'
+        html += "</div>"
+
+    # Historical Analogs
+    analog_list = analogs.get("analogs", [])
+    if analog_list:
+        html += """<div style="background:#f5f3ff;border-radius:12px;padding:16px;margin:18px 0;border:1px solid #ddd6fe">
+            <h3 style="margin:0 0 10px;color:#5b21b6;font-size:13px">📈 Historical Rerating Analogs</h3>"""
+        for a in analog_list[:3]:
+            html += f'<p style="margin:4px 0;font-size:12px;color:#4c1d95">{a.get("symbol", "?")} | Score: {a.get("perx_score", "N/A")}/100 | {a.get("date", "")}</p>'
+        hw = analogs.get("homework", "")
+        if hw:
+            html += f'<p style="margin:8px 0 0;font-size:11px;color:#64748b;font-style:italic">{hw}</p>'
+        html += "</div>"
+
     html += "</div>"
     return html
 

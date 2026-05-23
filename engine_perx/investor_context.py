@@ -578,6 +578,382 @@ def compute_investor_grade(
     }
 
 
+
+
+def get_peg_ratio(cur, base_symbol: str, current_pe: float | None = None) -> dict[str, Any]:
+    """
+    Calculate PEG ratio = P/E ÷ EPS growth rate.
+    
+    Uses trailing 8 quarters of EPS data from aae_quarterly_financials
+    to compute trailing 12-month EPS growth.
+    """
+    result: dict[str, Any] = {
+        "peg_ratio": None,
+        "eps_growth_pct": None,
+        "verdict": "Insufficient EPS history for PEG calculation.",
+        "homework": "",
+    }
+
+    pe = current_pe
+    if pe is None or pe <= 0:
+        return result
+
+    # Get trailing 8 quarters of EPS
+    cur.execute(
+        """
+        SELECT eps, year, quarter
+        FROM aae_quarterly_financials
+        WHERE symbol = %s AND eps IS NOT NULL AND eps > 0
+        ORDER BY year DESC, quarter DESC
+        LIMIT 8
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if len(rows) < 8:
+        return result
+
+    # Split into latest 4 quarters (TTM) and prior 4 quarters
+    # rows are already DESC, so first 4 = latest TTM, next 4 = prior TTM
+    latest_ttm = sum(safe_float(r.get("eps") if isinstance(r, dict) else r[0]) for r in rows[:4])
+    prior_ttm = sum(safe_float(r.get("eps") if isinstance(r, dict) else r[0]) for r in rows[4:8])
+
+    if prior_ttm <= 0:
+        return result
+
+    eps_growth_pct = ((latest_ttm - prior_ttm) / prior_ttm) * 100
+    result["eps_growth_pct"] = round(eps_growth_pct, 1)
+
+    if eps_growth_pct > 0:
+        peg = pe / (eps_growth_pct / 100)  # divide by growth rate in decimal
+        result["peg_ratio"] = round(peg, 2)
+
+        if peg < 1.0:
+            result["verdict"] = f"PEG {peg:.2f}x — undervalued relative to growth (PEG < 1.0). Favorable rerating setup."
+            result["homework"] = "Confirm EPS growth sustainability. Check if growth is from one-time items or recurring operations."
+        elif peg < 2.0:
+            result["verdict"] = f"PEG {peg:.2f}x — reasonable valuation for growth (PEG 1-2x). Rerating possible if growth accelerates."
+            result["homework"] = "Watch for EPS growth acceleration in next 2 quarters — even 5% CAGR improvement could shift PEG below 1x."
+        else:
+            result["verdict"] = f"PEG {peg:.2f}x — premium growth valuation. Full rerating depends on growth sustaining above current trajectory."
+            result["homework"] = "The current PE already prices in growth. Rerating requires GROWTH ACCELERATION, not just sustained growth."
+    else:
+        result["verdict"] = f"EPS declining ({eps_growth_pct:.1f}%) — PEG is undefined. Rerating thesis requires earnings turnaround first."
+        result["homework"] = "What is causing the earnings decline? Is it cyclical, one-time, or structural? Look for margin stabilization before expecting rerating."
+
+    return result
+
+
+def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Calculate Enterprise Value / EBITDA proxy from fundamental_financials.
+    
+    Dynamically detects available columns to handle schema variations.
+    Falls back gracefully when columns are missing.
+    """
+    result: dict[str, Any] = {
+        "ev_ebitda": None,
+        "market_cap_cr": None,
+        "net_debt_ebitda": None,
+        "verdict": "EV/EBITDA unavailable — required columns not found in fundamental_financials.",
+        "homework": "",
+    }
+
+    # First, detect what columns are available in fundamental_financials
+    cur.execute(
+        """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'fundamental_financials'
+          AND column_name IN ('market_cap', 'total_debt', 'cash_equivalents', 'ebitda')
+        """,
+    )
+    available_cols = [row[0] if isinstance(row, (list, tuple)) else row.get("column_name", "") for row in cur.fetchall()]
+    available_set = set(available_cols)
+
+    if not available_set:
+        return result
+
+    # Build query dynamically based on available columns
+    select_cols = ["year"]
+    if "market_cap" in available_set:
+        select_cols.append("market_cap")
+    if "total_debt" in available_set:
+        select_cols.append("total_debt")
+    if "cash_equivalents" in available_set:
+        select_cols.append("cash_equivalents")
+    if "ebitda" in available_set:
+        select_cols.append("ebitda")
+
+    query = f"""
+        SELECT {', '.join(select_cols)}
+        FROM fundamental_financials
+        WHERE symbol = %s
+        ORDER BY year DESC
+        LIMIT 1
+    """
+    cur.execute(query, (base_symbol,))
+    row = cur.fetchone()
+    if not row:
+        return result
+
+    rdict = dict(row) if isinstance(row, dict) else {col: row[i] for i, col in enumerate(select_cols)}
+
+    market_cap = safe_float(rdict.get("market_cap"))
+    total_debt = safe_float(rdict.get("total_debt"))
+    cash_eq = safe_float(rdict.get("cash_equivalents"))
+    ebitda = safe_float(rdict.get("ebitda"))
+
+    # Market cap in crores (if raw value is in lakhs or raw)
+    if market_cap and market_cap > 0:
+        # Assume raw value might be in actual rupees — convert to crores
+        if market_cap > 1_000_000_000_000:  # > 1000 Cr already? No, adjust
+            market_cap_cr = round(market_cap / 10_000_000, 2)
+        else:
+            market_cap_cr = round(market_cap, 2)
+        result["market_cap_cr"] = market_cap_cr
+
+        if ebitda and ebitda > 0:
+            # Enterprise Value = Market Cap + Total Debt - Cash
+            if total_debt > 0 and cash_eq >= 0:
+                ev = market_cap_cr + (total_debt / 10_000_000) - (cash_eq / 10_000_000)
+            else:
+                ev = market_cap_cr
+                if total_debt > 0:
+                    ev += total_debt / 10_000_000
+
+            ebitda_cr = ebitda / 10_000_000 if ebitda > 100_000_000 else ebitda
+            ev_ebitda_ratio = ev / ebitda_cr if ebitda_cr > 0 else None
+            result["ev_ebitda"] = round(ev_ebitda_ratio, 2) if ev_ebitda_ratio else None
+
+            # Net Debt / EBITDA
+            if total_debt > 0 and cash_eq >= 0:
+                net_debt_cr = (total_debt - cash_eq) / 10_000_000
+                result["net_debt_ebitda"] = round(net_debt_cr / ebitda_cr, 2) if ebitda_cr > 0 else None
+
+    # Build verdict
+    ev_val = result.get("ev_ebitda")
+    nd_val = result.get("net_debt_ebitda")
+    verdict_parts = []
+
+    if ev_val:
+        if ev_val < 10:
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — reasonable (typically <12x for mid-caps)")
+        elif ev_val < 20:
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — elevated but plausible for growth names")
+        else:
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — premium valuation, common in high-growth sectors")
+
+    if nd_val is not None:
+        if nd_val < 0:
+            verdict_parts.append("Net cash position — clean balance sheet")
+        elif nd_val < 1.5:
+            verdict_parts.append(f"Net debt/EBITDA {nd_val:.1f}x — low leverage")
+        elif nd_val < 3:
+            verdict_parts.append(f"Net debt/EBITDA {nd_val:.2f}x — moderate leverage")
+        else:
+            verdict_parts.append(f"Net debt/EBITDA {nd_val:.2f}x — elevated leverage, monitor")
+
+    if verdict_parts:
+        result["verdict"] = " | ".join(verdict_parts)
+        result["homework"] = "EV/EBITDA is a sector-dependent metric. Compare with direct peers (not just market) for rerating potential."
+    else:
+        result["verdict"] = "EV/EBITDA data found but insufficient for analysis."
+
+    return result
+
+
+def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Analyze FII/DII holding percentage changes from aae_governance_metrics.
+    
+    Tracks quarterly institutional ownership shifts to detect smart money flow.
+    """
+    result: dict[str, Any] = {
+        "fii_holding_pct": None,
+        "dii_holding_pct": None,
+        "fii_change_qoq": None,
+        "dii_change_qoq": None,
+        "fii_trend": "UNKNOWN",
+        "dii_trend": "UNKNOWN",
+        "verdict": "",
+        "homework": "",
+    }
+
+    cur.execute(
+        """
+        SELECT fiscal_year, fiscal_quarter, fii_holding_pct, dii_holding_pct
+        FROM aae_governance_metrics
+        WHERE symbol = %s
+          AND (fii_holding_pct IS NOT NULL OR dii_holding_pct IS NOT NULL)
+        ORDER BY fiscal_year DESC, fiscal_quarter DESC
+        LIMIT 4
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if len(rows) < 2:
+        result["verdict"] = "Insufficient institutional holding data for trend analysis."
+        return result
+
+    parsed = []
+    for r in rows:
+        r_dict = r if isinstance(r, dict) else {
+            "fiscal_year": r[0], "fiscal_quarter": r[1],
+            "fii": r[2] if len(r) > 2 else None,
+            "dii": r[3] if len(r) > 3 else None,
+        }
+        parsed.append({
+            "year": int(r_dict.get("fiscal_year", 0)),
+            "quarter": int(r_dict.get("fiscal_quarter", 0)),
+            "fii": safe_float(r_dict.get("fii")),
+            "dii": safe_float(r_dict.get("dii")),
+        })
+
+    latest = parsed[0]
+    prev = parsed[1]
+
+    # Latest holdings
+    if latest["fii"] > 0:
+        result["fii_holding_pct"] = latest["fii"]
+    if latest["dii"] > 0:
+        result["dii_holding_pct"] = latest["dii"]
+
+    # QoQ changes
+    if latest["fii"] > 0 and prev["fii"] > 0:
+        change = latest["fii"] - prev["fii"]
+        result["fii_change_qoq"] = round(change, 2)
+        result["fii_trend"] = "ADDING" if change > 0.5 else ("REDUCING" if change < -0.5 else "STABLE")
+
+    if latest["dii"] > 0 and prev["dii"] > 0:
+        change = latest["dii"] - prev["dii"]
+        result["dii_change_qoq"] = round(change, 2)
+        result["dii_trend"] = "ADDING" if change > 0.5 else ("REDUCING" if change < -0.5 else "STABLE")
+
+    # Build verdict
+    verdict_parts = []
+    homework_parts = []
+
+    if result["fii_trend"] == "ADDING":
+        verdict_parts.append(f"FIIs adding (+{result['fii_change_qoq']:.1f}% QoQ)")
+        homework_parts.append("FIIs are accumulating — confirm via latest shareholding pattern on BSE/NSE")
+    elif result["fii_trend"] == "REDUCING":
+        verdict_parts.append(f"FIIs reducing ({result['fii_change_qoq']:+.1f}% QoQ)")
+        homework_parts.append("FIIs reducing — check if this is sector-wide or stock-specific")
+
+    if result["dii_trend"] == "ADDING":
+        verdict_parts.append(f"DIIs adding (+{result['dii_change_qoq']:.1f}% QoQ)")
+        homework_parts.append("Domestic institutions are stepping in — bullish local conviction")
+    elif result["dii_trend"] == "REDUCING":
+        verdict_parts.append(f"DIIs reducing ({result['dii_change_qoq']:+.1f}% QoQ)")
+
+    if result["fii_trend"] == "REDUCING" and result["dii_trend"] != "ADDING":
+        verdict_parts.append("⚠️ FIIs exiting without DII buying — potential headwind")
+        homework_parts.append("Critical: No domestic buyers absorbing FII exit. This creates downward price pressure.")
+
+    result["verdict"] = " | ".join(verdict_parts) if verdict_parts else "Institutional holding data available but no clear trend."
+    result["homework"] = " | ".join(homework_parts)
+
+    return result
+
+
+def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
+                         exclude_symbol: str | None = None) -> dict[str, Any]:
+    """
+    Find historical peers at same lifecycle stage and similar PERX score.
+    
+    Returns top 5 most recent analogs from perx_reports archive.
+    """
+    result: dict[str, Any] = {
+        "analogs": [],
+        "verdict": "No historical analogs found for this lifecycle/score combination.",
+        "homework": "Build a personal watchlist of stocks that have successfully re-rated through this lifecycle stage.",
+    }
+
+    score_lower = current_perx_score - 15
+    score_upper = current_perx_score + 15
+
+    # Exact match: same lifecycle, similar score
+    params: list[Any] = [current_lifecycle, score_lower, score_upper]
+    exclude_clause = ""
+    if exclude_symbol:
+        exclude_clause = " AND symbol != %s"
+        params.append(exclude_symbol)
+
+    cur.execute(
+        f"""
+        SELECT symbol, perx_score, lifecycle_stage, created_at, summary
+        FROM perx_reports
+        WHERE lifecycle_stage = %s
+          AND perx_score BETWEEN %s AND %s
+          {exclude_clause}
+        ORDER BY created_at DESC
+        LIMIT 5
+        """,
+        params,
+    )
+    rows = cur.fetchall()
+
+    if rows:
+        analogs = []
+        for r in rows:
+            r_dict = r if isinstance(r, dict) else {
+                "symbol": r[0], "perx_score": r[1], "lifecycle_stage": r[2],
+                "created_at": r[3], "summary": r[4] if len(r) > 4 else None,
+            }
+            analogs.append({
+                "symbol": r_dict.get("symbol"),
+                "perx_score": safe_float(r_dict.get("perx_score")),
+                "lifecycle_stage": r_dict.get("lifecycle_stage"),
+                "date": str(r_dict.get("created_at", ""))[:10],
+                "summary": r_dict.get("summary", "")[:120] if r_dict.get("summary") else "",
+            })
+        result["analogs"] = analogs
+        result["verdict"] = f"Found {len(analogs)} historical analogs in same lifecycle stage ({current_lifecycle}) with similar PERX score (±15 pts)."
+        result["homework"] = "Review each analog's score trajectory since the report date. Did PERX scores rise or fall from this lifecycle stage?"
+        return result
+
+    # Broader match: same lifecycle, any score
+    params_broader = [current_lifecycle]
+    exclude_clause_b = ""
+    if exclude_symbol:
+        exclude_clause_b = " AND symbol != %s"
+        params_broader.append(exclude_symbol)
+
+    cur.execute(
+        f"""
+        SELECT symbol, perx_score, lifecycle_stage, created_at, summary
+        FROM perx_reports
+        WHERE lifecycle_stage = %s
+          {exclude_clause_b}
+        ORDER BY created_at DESC
+        LIMIT 5
+        """,
+        params_broader,
+    )
+    broader_rows = cur.fetchall()
+
+    if broader_rows:
+        analogs = []
+        for r in broader_rows:
+            r_dict = r if isinstance(r, dict) else {
+                "symbol": r[0], "perx_score": r[1], "lifecycle_stage": r[2],
+                "created_at": r[3], "summary": r[4] if len(r) > 4 else None,
+            }
+            analogs.append({
+                "symbol": r_dict.get("symbol"),
+                "perx_score": safe_float(r_dict.get("perx_score")),
+                "lifecycle_stage": r_dict.get("lifecycle_stage"),
+                "date": str(r_dict.get("created_at", ""))[:10],
+                "summary": r_dict.get("summary", "")[:120] if r_dict.get("summary") else "",
+            })
+        result["analogs"] = analogs
+        result["verdict"] = f"No exact score match (±15 pts). Showing {len(analogs)} broader analogs in same lifecycle stage ({current_lifecycle})."
+        result["homework"] = "The score range is wide — focus on analogs from the same QUARTILE (within 25 pts of current score)."
+
+    return result
+
+
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
                               current_perx_score: float | None = None,
                               current_lifecycle: str | None = None) -> dict[str, Any]:
