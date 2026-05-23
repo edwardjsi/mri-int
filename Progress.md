@@ -1094,3 +1094,71 @@
 - **No new DB tables** — all data sourced from existing `aae_quarterly_financials`, `aae_governance_metrics`, `aae_sector_mapping`, `fundamental_financials`, `daily_prices`.
 - **No new API endpoints** — data flows through existing `POST /api/perx/scan/{symbol}` and comparison endpoints.
 - **No PERX score formula changes** — Investor Grade is a separate badge, not part of the 0-100 score.
+
+
+---
+
+## 📅 Session: May 23, 2026 — Cash Flow Health Module + Transaction Crash Fix
+**Session Start:** 08:30 IST
+**Session End:** 09:30 IST
+
+### What Was Done This Session
+
+#### 1. Cash Flow Health — Schema + Backfill ✅
+- [x] Added  and  columns to  table (CREATE TABLE + ALTER TABLE IF NOT EXISTS in ).
+- [x] Created  — fetches annual Operating Cash Flow and Free Cash Flow from yfinance for all 874 symbols in .
+- [x] Backfill running: 3074/3598 rows populated with cash flow data.
+
+#### 2. Critical Transaction-Abort Bug Fix ✅
+- [x] **Root Cause:**  queried / columns that don't exist in . PostgreSQL aborted the transaction, then ALL subsequent queries (incl. the final INSERT into ) failed with current transaction is aborted.
+- [x] **Fix 1:** Added  in ALL try/except blocks in  (PEG, EV/EBITDA, institutional flow, analogs).
+- [x] **Fix 2:** Replaced  — no longer queries missing FII/DII columns. Uses available  and  from  as institutional proxy.
+- [x] **Fix 3:** Replaced  — computes market cap proxy from  close price + / from  (book-based EV). No longer depends on non-existent , ,  columns.
+
+#### 3. Tested Against GRAPHITE ✅
+- [x] PERX scan completes without any crash
+- [x] All 4 new modules return gracefully (even when data is missing)
+- [x] No more current transaction is aborted errors
+- [x] EV/EBITDA now computes correctly (GRAPHITE: 1.1x)
+
+### 📌 Key Lesson
+Functions that query non-existent columns must be caught AND rolled back at the connection level — catching the Python exception is not enough because PostgreSQL keeps the transaction in aborted state.
+
+### ⏳ Left for Next Session
+1. Complete cash flow backfill (currently at 3074/3598 rows)
+2. Add  function to  once backfill completes
+3. Wire cash flow into PERX pre-mortem, catalyst questions, PDF, and email templates
+
+
+---
+
+## 📅 Session: May 23, 2026 — Cash Flow Health Module + Transaction Crash Fix
+**Session Start:** 08:30 IST
+**Session End:** 09:30 IST
+
+### What Was Done This Session
+
+#### 1. Cash Flow Health — Schema + Backfill ✅
+- [x] Added `operating_cashflow` and `free_cashflow` columns to `fundamental_financials` table (CREATE TABLE + ALTER TABLE IF NOT EXISTS in `api/schema.py`).
+- [x] Created `scripts/backfill_cashflow.py` — fetches annual Operating Cash Flow and Free Cash Flow from yfinance for all 874 symbols in `fundamental_financials`.
+- [x] Backfill in progress: 3074/3598 rows populated with cash flow data.
+
+#### 2. Critical Transaction-Abort Bug Fix ✅
+- [x] **Root Cause:** `get_institutional_flow()` queried `fii_holding_pct`/`dii_holding_pct` columns that don't exist in `aae_governance_metrics`. PostgreSQL aborted the transaction, then ALL subsequent queries failed with "current transaction is aborted."
+- [x] **Fix 1:** Added `cur.connection.rollback()` in ALL try/except blocks in `get_all_investor_context()` (PEG, EV/EBITDA, institutional flow, analogs).
+- [x] **Fix 2:** Replaced `get_institutional_flow()` — no longer queries missing FII/DII columns. Uses available promoter and governance data.
+- [x] **Fix 3:** Replaced `get_ev_ebitda()` — computes market cap proxy from daily_prices + financials debt/equity. No longer depends on non-existent columns.
+
+#### 3. Tested Against GRAPHITE ✅
+- [x] PERX scan completes without any crash
+- [x] All 4 new modules return gracefully (even when data is missing)
+- [x] No more "current transaction is aborted" errors
+- [x] EV/EBITDA now computes correctly (GRAPHITE: 1.1x)
+
+### 📌 Key Lesson
+Functions that query non-existent columns must be caught AND rolled back at the connection level. Catching the Python exception is not enough — PostgreSQL keeps the transaction in aborted state.
+
+### ⏳ Left for Next Session
+1. Complete cash flow backfill
+2. Add `get_cashflow_health()` function to `investor_context.py` once backfill completes
+3. Wire cash flow into PERX pre-mortem, catalyst questions, PDF, and email templates

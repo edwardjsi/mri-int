@@ -538,3 +538,18 @@
 - **Completed**: Added scoped styling, connected the live `/api/aae/top-candidates` endpoint, and added navigation to sidebar.
 - **Completed**: Restored broken AAE action button layout in `StockDetailsModal` and integrated the "Email Forensic Memo" feature.
 - **Identified Gap**: Confirmed we currently lack relative sector performance benchmarking. `sector_engine.py` applies hardcoded rules to stocks independently but does not ingest sector indices for relative valuation/momentum comparison.
+
+## Session: May 23, 2026 — Cash Flow Module + Transaction Crash Fix
+
+### Summary
+Fixed a critical bug where PERX scan crashed for any symbol due to PostgreSQL transaction abort cascade. The root cause was `get_institutional_flow()` querying non-existent columns in `aae_governance_metrics`. Also added cash flow schema columns and backfill script.
+
+### Files Modified
+- `api/schema.py` — Added `operating_cashflow`, `free_cashflow` columns to `fundamental_financials`
+- `scripts/backfill_cashflow.py` — NEW: fetches annual OCF/FCF from yfinance for all 874 symbols
+- `engine_perx/investor_context.py` — Fixed ALL 4 try/except blocks to call `cur.connection.rollback()`; replaced `get_institutional_flow()` to use available data; replaced `get_ev_ebitda()` to compute from existing columns
+
+### Lessons
+- Always detect available columns before querying (use `information_schema.columns`)
+- Always rollback the connection when catching DB errors in a transaction
+- Indian stock data via yfinance does NOT provide FII/DII breakdowns
