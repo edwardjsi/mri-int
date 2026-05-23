@@ -948,6 +948,166 @@ def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
     return result
 
 
+def get_cashflow_health(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Analyze operating cash flow and free cash flow quality from fundamental_financials.
+    
+    Key metrics:
+      - OCF/EBITDA ratio: how much EBITDA converts to actual cash (>0.8 = good)
+      - FCF/OCF ratio: how much operating cash survives capex (>0.5 = good)
+      - FCF yield: free cash flow / price (proxy for shareholder value creation)
+      - OCF trend: year-over-year direction
+    """
+    result: dict[str, Any] = {
+        "ocf_ebitda_ratio": None,
+        "fcf_ocf_ratio": None,
+        "fcf_yield_pct": None,
+        "ocf_growth_pct": None,
+        "ocf_consistency": "UNKNOWN",
+        "verdict": "Cash flow data not available.",
+        "homework": "",
+    }
+
+    # Get latest 3 years of cash flow + ebitda + close price
+    cur.execute(
+        """
+        SELECT f.year, f.ebitda, f.operating_cashflow, f.free_cashflow
+        FROM fundamental_financials f
+        WHERE f.symbol = %s
+          AND (f.operating_cashflow IS NOT NULL OR f.free_cashflow IS NOT NULL)
+        ORDER BY f.year DESC
+        LIMIT 3
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+
+    if not rows:
+        return result
+
+    # Get current price
+    cur.execute(
+        """
+        SELECT close FROM daily_prices
+        WHERE symbol = %s
+        ORDER BY date DESC LIMIT 1
+        """,
+        (base_symbol,),
+    )
+    price_row = cur.fetchone()
+    price = safe_float(price_row.get("close") if isinstance(price_row, dict) else price_row[0]) if price_row else None
+
+    # Parse rows
+    entries = []
+    for r in rows:
+        if isinstance(r, dict):
+            entries.append({
+                "year": int(r.get("year", 0)),
+                "ebitda": safe_float(r.get("ebitda")),
+                "ocf": safe_float(r.get("operating_cashflow")),
+                "fcf": safe_float(r.get("free_cashflow")),
+            })
+        else:
+            entries.append({
+                "year": int(r[0]),
+                "ebitda": safe_float(r[1]) if len(r) > 1 else None,
+                "ocf": safe_float(r[2]) if len(r) > 2 else None,
+                "fcf": safe_float(r[3]) if len(r) > 3 else None,
+            })
+
+    latest = entries[0]
+    verdict_parts = []
+    homework_parts = []
+
+    # OCF/EBITDA ratio (cash conversion quality)
+    if latest["ocf"] and latest["ebitda"] and latest["ebitda"] > 0:
+        ocf_ebitda = latest["ocf"] / latest["ebitda"]
+        result["ocf_ebitda_ratio"] = round(ocf_ebitda, 2)
+
+        if ocf_ebitda >= 0.8:
+            verdict_parts.append(f"Healthy cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
+        elif ocf_ebitda >= 0.5:
+            verdict_parts.append(f"Moderate cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
+            homework_parts.append("OCF below EBITDA — check if working capital is increasing or if there are non-cash charges inflating EBITDA.")
+        else:
+            verdict_parts.append(f"Weak cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
+            homework_parts.append("⚠️ EBITDA is significantly higher than operating cash flow. Earnings quality concern — investigate receivables and inventory buildup.")
+
+    # FCF/OCF ratio (how much OCF survives capex)
+    if latest["fcf"] and latest["ocf"] and latest["ocf"] > 0:
+        fcf_ocf = latest["fcf"] / latest["ocf"]
+        result["fcf_ocf_ratio"] = round(fcf_ocf, 2)
+
+        if fcf_ocf >= 0.7:
+            verdict_parts.append("Low capex intensity — high proportion of OCF flows to shareholders")
+        elif fcf_ocf >= 0.3:
+            verdict_parts.append("Moderate capex intensity")
+        else:
+            verdict_parts.append("High capex intensity — significant reinvestment")
+            if fcf_ocf < 0:
+                homework_parts.append("⚠️ Free cash flow is negative. Company is spending more on capex than it generates from operations — check if this is growth capex or maintenance.")
+
+    # FCF yield (FCF / market cap proxy)
+    if latest["fcf"] and price and latest["fcf"] > 0:
+        # Get equity from same year for rough market cap proxy
+        cur.execute(
+            "SELECT equity FROM fundamental_financials WHERE symbol = %s AND year = %s",
+            (base_symbol, latest["year"]),
+        )
+        eq_row = cur.fetchone()
+        equity = safe_float(eq_row.get("equity") if isinstance(eq_row, dict) else eq_row[0]) if eq_row else None
+
+        if equity and equity > 0:
+            # Rough shares outstanding = equity / book value per share (approximate)
+            # Instead use price * (equity / book_value_per_share) as market cap
+            # Simplest: treat FCF / (price * shares_outstanding)
+            # We don't have shares outstanding. Use: FCF / (Equity * price/book_ratio)
+            # Simplest safe approach: compare FCF to enterprise value (debt + equity)
+            cur.execute(
+                "SELECT debt FROM fundamental_financials WHERE symbol = %s AND year = %s",
+                (base_symbol, latest["year"]),
+            )
+            debt_row = cur.fetchone()
+            debt = safe_float(debt_row.get("debt") if isinstance(debt_row, dict) else debt_row[0]) if debt_row else 0
+
+            ev = (debt + equity)  # book-based enterprise value
+            if ev > 0:
+                fcf_yield = (latest["fcf"] / ev) * 100
+                result["fcf_yield_pct"] = round(fcf_yield, 2)
+
+                if fcf_yield >= 8:
+                    verdict_parts.append(f"Strong FCF yield ({fcf_yield:.1f}%) — cash generation relative to capital employed")
+                elif fcf_yield >= 4:
+                    verdict_parts.append(f"Healthy FCF yield ({fcf_yield:.1f}%)")
+                elif fcf_yield >= 2:
+                    verdict_parts.append(f"Modest FCF yield ({fcf_yield:.1f}%)")
+                else:
+                    verdict_parts.append(f"Low FCF yield ({fcf_yield:.1f}%)")
+
+    # OCF year-over-year trend
+    if len(entries) >= 2 and latest["ocf"] and entries[1]["ocf"] and entries[1]["ocf"] > 0:
+        ocf_growth = ((latest["ocf"] - entries[1]["ocf"]) / entries[1]["ocf"]) * 100
+        result["ocf_growth_pct"] = round(ocf_growth, 1)
+
+        if ocf_growth > 10:
+            result["ocf_consistency"] = "GROWING"
+            verdict_parts.append(f"OCF growing ({ocf_growth:.0f}% YoY)")
+        elif ocf_growth > -5:
+            result["ocf_consistency"] = "STABLE"
+            verdict_parts.append(f"OCF stable ({ocf_growth:.0f}% YoY)")
+        else:
+            result["ocf_consistency"] = "DECLINING"
+            verdict_parts.append(f"OCF declining ({ocf_growth:.0f}% YoY)")
+            homework_parts.append("⚠️ Operating cash flow is shrinking. If this persists, the company may need external financing to sustain operations.")
+
+    if not verdict_parts:
+        verdict_parts.append("Cash flow data available but insufficient for trend analysis.")
+
+    result["verdict"] = " | ".join(verdict_parts)
+    result["homework"] = " | ".join(homework_parts)
+    return result
+
+
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
                               current_perx_score: float | None = None,
                               current_lifecycle: str | None = None) -> dict[str, Any]:
@@ -985,6 +1145,20 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         cur.connection.rollback()
         inst_flow = {"fii_holding_pct": None, "dii_holding_pct": None, "fii_change_qoq": None, "dii_change_qoq": None, "fii_trend": "UNKNOWN", "dii_trend": "UNKNOWN", "verdict": "Institutional flow data unavailable.", "homework": ""}
 
+    # Cash flow health (OCF/EBITDA, FCF yield, cash conversion quality)
+    try:
+        cashflow = get_cashflow_health(cur, base_symbol)
+    except Exception as e:
+        logger.warning(f"Cash flow health failed for {base_symbol}: {e}")
+        if hasattr(cur, 'connection') and cur.connection:
+            try:
+                cur.connection.rollback()
+            except Exception:
+                pass
+        cashflow = {"ocf_ebitda_ratio": None, "fcf_ocf_ratio": None, "fcf_yield_pct": None,
+                     "ocf_growth_pct": None, "ocf_consistency": "UNKNOWN",
+                     "verdict": "Cash flow data unavailable.", "homework": ""}
+
     # Historical analogs from perx_reports archive
     try:
         analogs = {}
@@ -1015,6 +1189,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         pre_mortem_risks.append("Low liquidity may cause slippage on entry/exit beyond modeled levels.")
     if inst_flow.get("fii_trend") == "REDUCING" and inst_flow.get("dii_trend") != "ADDING":
         pre_mortem_risks.append("Foreign institutions reducing exposure — potential headwind for rerating momentum.")
+    if cashflow.get("ocf_ebitda_ratio") and cashflow["ocf_ebitda_ratio"] < 0.5:
+        pre_mortem_risks.append(f"Weak cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality concern.")
+    if cashflow.get("ocf_consistency") == "DECLINING":
+        pre_mortem_risks.append("Operating cash flow declining — external financing may be needed.")
     if peg.get("peg_ratio") and peg["peg_ratio"] > 3:
         pre_mortem_risks.append(f"PEG ratio at {peg['peg_ratio']:.1f}x — growth is not keeping pace with valuation.")
     if ev_ebitda.get("net_debt_ebitda") and ev_ebitda["net_debt_ebitda"] > 3:
@@ -1035,6 +1213,10 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         catalyst_questions.append("Promoters are buying — strong insider signal. Confirm this is open market purchase (not ESOP or rights issue).")
     if inst_flow.get("fii_trend") == "ADDING":
         catalyst_questions.append(f"FIIs added {inst_flow['fii_change_qoq']:.1f}% — institutional confidence signal. Confirm via latest shareholding pattern filing.")
+    if cashflow.get("fcf_yield_pct") and cashflow["fcf_yield_pct"] > 5:
+        catalyst_questions.append(f"FCF yield at {cashflow['fcf_yield_pct']:.1f}% — strong cash generation relative to capital. Can this compound over next 3 years?")
+    if cashflow.get("ocf_ebitda_ratio") and cashflow["ocf_ebitda_ratio"] > 0.8:
+        catalyst_questions.append(f"High cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality is strong. Confirm this is structural (not one-off working capital release).")
     if ev_ebitda.get("ev_ebitda") and ev_ebitda["ev_ebitda"] < 12:
         catalyst_questions.append(f"EV/EBITDA {ev_ebitda['ev_ebitda']:.1f}x leaves room for rerating IF EBITDA compounds. Can you identify 3 drivers of EBITDA growth for next 12 months?")
     if ownership.get("governance_score") and ownership["governance_score"] < 40:
@@ -1050,6 +1232,7 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "peg_ratio": peg,
         "ev_ebitda": ev_ebitda,
         "institutional_flow": inst_flow,
+        "cashflow_health": cashflow,
         "historical_analogs": analogs,
         "investor_grade": grade,
         "pre_mortem": {

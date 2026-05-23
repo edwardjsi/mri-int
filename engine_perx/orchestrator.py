@@ -57,6 +57,7 @@ def _collect_data_warnings(report: dict, symbol: str) -> list[dict]:
         ("ev_ebitda", "EV/EBITDA", "Missing fundamental data columns for Enterprise Value"),
         ("institutional_flow", "Institutional Flow", "FII/DII data not available from current data sources"),
         ("historical_analogs", "Historical Analogs", "No archived PERX reports at similar lifecycle stage"),
+        ("cashflow_health", "Cash Flow Health", "Operating cash flow or free cash flow not available for this symbol"),
     ]
 
     for key, label, reason in checks:
