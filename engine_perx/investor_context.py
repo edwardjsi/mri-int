@@ -1219,7 +1219,8 @@ def get_rs_multi_timeframe(cur, base_symbol: str) -> dict[str, Any]:
 
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
                               current_perx_score: float | None = None,
-                              current_lifecycle: str | None = None) -> dict[str, Any]:
+                              current_lifecycle: str | None = None,
+                              sector_intel: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Master function that runs all context engines and returns a unified investor context block.
     """
@@ -1354,6 +1355,47 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
     if not catalyst_questions:
         catalyst_questions.append("No specific catalyst flags from current data. Key question remains: what needs to happen in the next 4 quarters for institutional perception to shift from current lifecycle ({}?) to the next stage?".format(current_lifecycle or "unknown"))
 
+
+    # Sector cycle positioning
+    sector_cycle = {"cycle_stage": "UNKNOWN", "positioning": "", "verdict": ""}
+    if sector_intel and sector_intel.get("status") == "active":
+        breadth = sector_intel.get("industry_breadth", "")
+        rank = sector_intel.get("industry_rank", "")
+        avg = sector_intel.get("avg_sector_mri", 0)
+        top_peers = sector_intel.get("top_peers", [])
+
+        if breadth == "Accumulation":
+            cycle_stage = "EARLY_ACCUMULATION"
+            positioning = "Institutional accumulation phase — momentum likely to follow."
+            verdict = f"Sector breadth is strong (avg MRI {avg:.0f}). Stock rank {rank}."
+            if top_peers:
+                verdict += f" Top peers: {', '.join(top_peers[:3])}."
+            # Add catalyst question
+            catalyst_questions.append("Sector is in accumulation. If this stock is a top-3 peer, rerating can be sector-driven. If a laggard, check what's holding it back.")
+        elif breadth == "Distribution":
+            cycle_stage = "LATE_DISTRIBUTION"
+            positioning = "Broad sector weakness — stock-specific alpha required."
+            verdict = f"Sector breadth is weak (avg MRI {avg:.0f}). Stock rank {rank}."
+            # Add pre-mortem risk
+            if rs_mtf.get("trend") != "STRONG_UPTREND":
+                pre_mortem_risks.append("Sector is in distribution — even strong stocks can get dragged down. Reduce exposure if RS weakens further.")
+        else:
+            cycle_stage = "NEUTRAL"
+            positioning = "Sector neither accumulating nor distributing — stock selection matters most."
+            verdict = f"Sector breadth neutral (avg MRI {avg:.0f}). Stock rank {rank}."
+
+        sector_cycle = {
+            "cycle_stage": cycle_stage,
+            "positioning": positioning,
+            "sector_name": sector_intel.get("sector_name", ""),
+            "industry_breadth": breadth,
+            "avg_sector_mri": avg,
+            "rank": rank,
+            "top_peers": top_peers,
+            "verdict": verdict,
+        }
+
+
     return {
         "valuation": valuation,
         "earnings_momentum": earnings,
@@ -1365,6 +1407,7 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "cashflow_health": cashflow,
         "rs_multi_timeframe": rs_mtf,
         "historical_analogs": analogs,
+        "sector_cycle": sector_cycle,
         "investor_grade": grade,
         "pre_mortem": {
             "risks": pre_mortem_risks,
