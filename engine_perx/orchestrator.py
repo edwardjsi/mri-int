@@ -21,8 +21,61 @@ from engine_perx.scoring import (
     narrative_intensity_label,
 )
 from engine_perx.investor_context import get_all_investor_context
+
+
+class PerxScanError(Exception):
+    """Structured error for PERX scan failures with actionable details."""
+
+    def __init__(self, message: str, error_type: str = "UNKNOWN",
+                 data_source: str | None = None, action: str | None = None):
+        self.message = message
+        self.error_type = error_type
+        self.data_source = data_source
+        self.action = action
+        super().__init__(self.message)
+
+    def to_dict(self) -> dict:
+        return {
+            "error": self.error_type,
+            "detail": self.message,
+            "data_source": self.data_source,
+            "action": self.action,
+        }
 from engine_perx.sector import get_sector_context
 from engine_qualitative.debate import run_debate
+
+
+def _collect_data_warnings(report: dict, symbol: str) -> list[dict]:
+    '''Collect data quality warnings from the report's investor context.'''
+    warnings = []
+    ic = report.get("investor_context", {})
+    if not ic:
+        return warnings
+
+    checks = [
+        ("peg_ratio", "PEG Ratio", "Not enough quarterly EPS data (needs 8 quarters)"),
+        ("ev_ebitda", "EV/EBITDA", "Missing fundamental data columns for Enterprise Value"),
+        ("institutional_flow", "Institutional Flow", "FII/DII data not available from current data sources"),
+        ("historical_analogs", "Historical Analogs", "No archived PERX reports at similar lifecycle stage"),
+    ]
+
+    for key, label, reason in checks:
+        module = ic.get(key, {})
+        if not isinstance(module, dict):
+            continue
+        verdict = module.get("verdict", "")
+        if not verdict:
+            continue
+        lower = verdict.lower()
+        if any(w in lower for w in ["unavailable", "no ", "insufficient", "not available"]):
+            warnings.append({
+                "module": label,
+                "key": key,
+                "detail": verdict[:150],
+                "action": reason,
+            })
+
+    return warnings
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -315,55 +368,67 @@ def generate_perx_report(
         current_price=current_price,
     )
 
+    # If report generation succeeded but investor context has data gaps,
+    # attach a warnings block to the report
+    report["_data_warnings"] = _collect_data_warnings(report, base_symbol)
+
     report_id = None
     if persist:
-        summary = report["executive_summary"]
-        cur.execute(
-            """
-            INSERT INTO perx_reports (
-                client_id, symbol, company_name, perx_score, lifecycle_stage,
-                report_json, summary, include_debate
+        try:
+            summary = report["executive_summary"]
+            cur.execute(
+                """
+                INSERT INTO perx_reports (
+                    client_id, symbol, company_name, perx_score, lifecycle_stage,
+                    report_json, summary, include_debate
+                )
+                VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+                RETURNING id
+                """,
+                (
+                    client_id,
+                    base_symbol,
+                    company_name,
+                    report["header"]["perx_score"],
+                    report["header"]["lifecycle_phase"],
+                    json.dumps(report),
+                    summary,
+                    include_debate,
+                ),
             )
-            VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s)
-            RETURNING id
-            """,
-            (
-                client_id,
-                base_symbol,
-                company_name,
-                report["header"]["perx_score"],
-                report["header"]["lifecycle_phase"],
-                json.dumps(report),
-                summary,
-                include_debate,
-            ),
-        )
-        report_id = cur.fetchone()["id"]
-        cur.execute(
-            """
-            INSERT INTO perx_scores (
-                symbol, latest_report_id, perx_score, lifecycle_stage,
-                narrative_intensity, fragility_level
+            report_id = cur.fetchone()["id"]
+            cur.execute(
+                """
+                INSERT INTO perx_scores (
+                    symbol, latest_report_id, perx_score, lifecycle_stage,
+                    narrative_intensity, fragility_level
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (symbol) DO UPDATE SET
+                    latest_report_id = EXCLUDED.latest_report_id,
+                    perx_score = EXCLUDED.perx_score,
+                    lifecycle_stage = EXCLUDED.lifecycle_stage,
+                    narrative_intensity = EXCLUDED.narrative_intensity,
+                    fragility_level = EXCLUDED.fragility_level,
+                    generated_at = NOW()
+                """,
+                (
+                    base_symbol,
+                    report_id,
+                    report["header"]["perx_score"],
+                    report["header"]["lifecycle_phase"],
+                    report["lifecycle"]["narrative_intensity"],
+                    report["engine_outputs"]["fragility"]["level"],
+                ),
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (symbol) DO UPDATE SET
-                latest_report_id = EXCLUDED.latest_report_id,
-                perx_score = EXCLUDED.perx_score,
-                lifecycle_stage = EXCLUDED.lifecycle_stage,
-                narrative_intensity = EXCLUDED.narrative_intensity,
-                fragility_level = EXCLUDED.fragility_level,
-                generated_at = NOW()
-            """,
-            (
-                base_symbol,
-                report_id,
-                report["header"]["perx_score"],
-                report["header"]["lifecycle_phase"],
-                report["lifecycle"]["narrative_intensity"],
-                report["engine_outputs"]["fragility"]["level"],
-            ),
-        )
-        conn.commit()
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise PerxScanError(
+                message=f"Failed to persist PERX report to database: {e}",
+                error_type="DB_ERROR",
+                action="This is likely a transient database issue. Try the scan again."
+            )
 
     return {
         "report_id": report_id,

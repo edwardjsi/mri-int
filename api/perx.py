@@ -86,15 +86,36 @@ def scan_symbol(
                 symbol=symbol,
             )
 
+        # Check for data warnings in the report
+        data_warnings = result["report"].get("_data_warnings", [])
+
         return {
             "status": "ok",
             "report_id": result["report_id"],
             "report": result["report"],
+            "data_warnings": data_warnings,
         }
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "DATA_MISSING",
+                "detail": str(exc),
+                "action": "Check that the symbol is valid and has market data available."
+            }
+        )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"PERX scan failed: {exc}")
+        # Try to extract structured error
+        err = getattr(exc, "to_dict", None)
+        if err:
+            error_payload = err()
+        else:
+            error_payload = {
+                "error": "PERX_SCAN_FAILED",
+                "detail": str(exc),
+                "action": "This is unexpected. Please try again or contact support."
+            }
+        raise HTTPException(status_code=500, detail=error_payload)
 
 
 @router.get("/report/{report_id}")
