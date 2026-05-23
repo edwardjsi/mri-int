@@ -768,16 +768,11 @@ def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
     return result
 def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
     """
-    Analyze institutional ownership from aae_governance_metrics promoter data.
+    Analyze institutional ownership from available governance data.
     
-    Since Indian stock data sources (yfinance) do not provide FII/DII breakdowns,
-    this function infers institutional interest from:
-      - Promoter holding trend (if they're buying, management is confident)
-      - Governance score (if available)
-      - Pledged shares % (risk signal)
-    
-    The FII/DII fields are retained as None for schema compatibility but the
-    actual analysis comes from available ownership data.
+    Since FII/DII breakdown data is not available from current data sources,
+    this uses promoter holding trends and governance scores as institutional
+    interest proxies.
     """
     result: dict[str, Any] = {
         "fii_holding_pct": None,
@@ -802,36 +797,34 @@ def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
         (base_symbol,),
     )
     rows = cur.fetchall()
-    
+
     if not rows:
         result["verdict"] = "No institutional ownership data available from existing sources."
         result["homework"] = "Check latest shareholding pattern filing on BSE/NSE for FII/DII breakdown."
         return result
 
-    # Extract promoter trend as institutional proxy
     parsed = []
     for r in rows:
-        r_dict = r if isinstance(r, dict) else {
-            "year": r[0], "quarter": r[1],
-            "promoter": r[2] if len(r) > 2 else None,
-            "gov_score": r[3] if len(r) > 3 else None,
-        }
-        parsed.append({
-            "year": int(r_dict.get("year", 0)),
-            "quarter": int(r_dict.get("quarter", 0)),
-            "promoter_pct": safe_float(r_dict.get("promoter")),
-            "gov_score": safe_float(r_dict.get("gov_score")),
-        })
+        if isinstance(r, dict):
+            parsed.append({
+                "year": int(r.get("fiscal_year", 0)),
+                "quarter": int(r.get("fiscal_quarter", 0)),
+                "promoter_pct": safe_float(r.get("promoter_holding_pct")),
+                "gov_score": safe_float(r.get("governance_score")),
+            })
+        else:
+            fields = {"year": int(r[0]), "quarter": int(r[1])}
+            fields["promoter_pct"] = safe_float(r[2]) if len(r) > 2 else None
+            fields["gov_score"] = safe_float(r[3]) if len(r) > 3 else None
+            parsed.append(fields)
 
     latest = parsed[0]
+    verdict_parts = []
 
     # Governance score as quality proxy for institutional interest
     gov = latest["gov_score"]
-    verdict_parts = []
-
     if gov and gov > 60:
         verdict_parts.append(f"Governance score {gov:.0f}/100 — institutional-grade governance")
-        result["verdict"] = " | ".join(verdict_parts)
         result["homework"] = "Good governance attracts institutional flows. Monitor promoter pledge and related-party transactions."
     elif gov and gov > 40:
         verdict_parts.append(f"Governance score {gov:.0f}/100 — acceptable but improvable")
@@ -847,11 +840,11 @@ def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
             result["homework"] = "Promoter buying is the strongest insider signal. Verify open-market purchases vs ESOP/rights."
         elif prom_diff < -1.0:
             verdict_parts.append("Promoters reducing — governance concern")
-            result["homework"] = "Investors should understand WHY promoters are selling. Check if this is for personal diversification or fundamental concern."
+            result["homework"] = "Investors should understand WHY promoters are selling. Check if for personal diversification or fundamental concern."
         else:
             verdict_parts.append("Promoter holding stable")
 
-    if not [p for p in verdict_parts if p]:
+    if not verdict_parts:
         verdict_parts.append("Limited institutional flow data. See shareholding pattern for details.")
         result["homework"] = "Pull the latest quarterly shareholding pattern from BSE/NSE for actual FII/DII changes."
 
@@ -987,6 +980,7 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         inst_flow = get_institutional_flow(cur, base_symbol)
     except Exception as e:
         logger.warning(f"Institutional flow failed for {base_symbol}: {e}")
+        cur.connection.rollback()
         cur.connection.rollback()
         inst_flow = {"fii_holding_pct": None, "dii_holding_pct": None, "fii_change_qoq": None, "dii_change_qoq": None, "fii_trend": "UNKNOWN", "dii_trend": "UNKNOWN", "verdict": "Institutional flow data unavailable.", "homework": ""}
 
