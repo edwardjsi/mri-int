@@ -871,3 +871,16 @@ def ensure_aae_event_tables(cur) -> None:
         """
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_risk_snap_symbol_version ON public.aae_risk_snapshots(symbol, version DESC);")
+
+    # Re-Rating Candidate Profiles — master synthesis of all AAE layers
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_re_rating_profiles (
+            symbol          VARCHAR(20) PRIMARY KEY,
+            profile         JSONB NOT NULL,
+            thesis_version  INT DEFAULT 1,
+            thesis_hash     VARCHAR(32),
+            updated_at      TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )

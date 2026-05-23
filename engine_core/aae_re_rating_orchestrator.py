@@ -1,5 +1,6 @@
 """AAE Re-Rating Candidate Profile Orchestrator.
 
+
 Upgraded orchestrator that combines the existing 10-layer forensic pipeline
 with the new PRDE scoring engine, structural signal agent, macro agent,
 and execution monitoring agent to produce a full Re-Rating Candidate Profile.
@@ -21,7 +22,6 @@ from typing import Any
 from uuid import uuid4
 
 from engine_core.db import get_connection
-from engine_fundamental.aae_orchestrator import AAEOrchestrator  # legacy 10-layer
 from engine_core.prde_scoring_engine import compute_master_score  # PRDE scoring
 from engine_core.aae_structural_signal_agent import StructuralSignalAgent
 from engine_core.aae_macro_agent import MacroCorrelationAgent
@@ -68,6 +68,7 @@ class ReRatingOrchestrator:
 
         # ── Layer C: AAE Legacy 10-Layer Scan ──
         try:
+            from engine_fundamental.aae_orchestrator import AAEOrchestrator  # legacy 10-layer
             legacy = AAEOrchestrator(self.symbol).run_full_scan()
             profile["legacy_forensic"] = {
                 "master_score": legacy.get("master_score"),
@@ -76,8 +77,8 @@ class ReRatingOrchestrator:
             }
             profile["forensic_score"] = legacy.get("master_score", 50.0)
         except Exception as e:
-            logger.warning(f"Legacy forensic scan failed for {self.symbol}: {e}")
-            profile["legacy_forensic"] = {"error": str(e)}
+            logger.warning(f"Legacy forensic scan unavailable for {self.symbol}: {e}")
+            profile["legacy_forensic"] = {"error": str(e), "master_score": 50.0}
             profile["forensic_score"] = 50.0
 
         # ── Layer D: Structural Signals ──
@@ -334,7 +335,7 @@ def batch_scan(limit: int = 20, persist: bool = True) -> list[dict]:
                 """,
                 (limit,),
             )
-            tickers = [row[0] for row in cur.fetchall()]
+            tickers = [row["ticker"] for row in cur.fetchall()]
     finally:
         conn.close()
 
