@@ -262,11 +262,15 @@ def ensure_required_tables(conn) -> None:
             inventory NUMERIC,
             debt NUMERIC,
             equity NUMERIC,
+            operating_cashflow NUMERIC,
+            free_cashflow NUMERIC,
             updated_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(symbol, year)
         );
         """
     )
+    cur.execute("ALTER TABLE public.fundamental_financials ADD COLUMN IF NOT EXISTS operating_cashflow NUMERIC;")
+    cur.execute("ALTER TABLE public.fundamental_financials ADD COLUMN IF NOT EXISTS free_cashflow NUMERIC;")
 
     # Quality Investor Verdicts
     cur.execute(
