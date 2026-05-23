@@ -634,3 +634,44 @@ User-led retrospective evaluating the entire platform from three perspectives: s
 - ATR-based sizing naturally regulates position size by volatility: volatile stocks get smaller positions and vice versa
 - Management quality score relies on `aae_governance_metrics` — symbols without governance data get "UNKNOWN" with clear data_warnings
 
+
+---
+
+## **May 23, 2026: PRDE Milestone 0 + Milestone 1 Completed**
+
+- **Objective**: Complete the long-pending PRDE financial foundation (Milestone 0) and determinisitic scoring baseline (Milestone 1).
+- **Actions**:
+  1. **Fixed fetch_prde_seed_data.py** — yfinance `financials.columns` are pandas Timestamps, not ints. Fixed year extraction and `get_row()` column lookup to use `.year` attribute.
+  2. **Fetched seed data** — 14 of 15 Indian blue-chips from yfinance (TATAMOTORS had no data). 64 annual financial rows spanning 2021–2026.
+  3. **Imported to Neon** — `import_prde_financials.py` upserted 14 companies, 64 financials, 64 ratios. **Idempotency proven** — re-import produced 0 new rows.
+  4. **Fixed verify_prde_import.py** — `engine_core/db.py` uses `RealDictCursor` by default; script assumed tuple-index access. Migrated all queries to named column access.
+  5. **Generated feature snapshots** — `prde_feature_engine.py` generated deterministic snapshots for 9/14 companies (5 with <5yr history skipped). **Idempotency proven** — unchanged hash → same snapshot_id reused.
+  6. **Fixed prde_scoring_engine.py** — `safe_get()` didn't traverse nested dicts; scoring expected feature paths that didn't exist. Rewrote `safe_get()` for nested traversal and updated all 7 component functions to use correct nested paths. Added `abs(capex)` handling for yfinance negative capex convention.
+  7. **Ran scoring** — 9 companies scored. Full breakdown available in `prde_final_scores.components` JSONB.
+- **Scoring Results**:
+  ```
+  Rank  Ticker      Master  Name
+     1  MARUTI        66.0  Maruti Suzuki
+     2  SBIN          55.2  State Bank of India
+     3  ICICIBANK     54.8  ICICI Bank
+     4  HINDUNILVR    52.0  Hindustan Unilever
+     5  HCLTECH       49.8  HCL Technologies
+     6  TCS           48.8  Tata Consultancy Services
+     7  INFY          48.2  Infosys
+     8  BAJFINANCE    43.5  Bajaj Finance
+     9  RELIANCE      33.5  Reliance Industries
+  ```
+- **Bugs Found & Fixed**:
+  - `fetch_prde_seed_data.py`: `years[0]` IndexError when no data returned; yfinance column type mismatch (Timestamp vs int)
+  - `verify_prde_import.py`: RealDictCursor tuple-index assumption (`fetchone()[0]`)
+  - `prde_scoring_engine.py`: `safe_get()` didn't support nested dict traversal; all feature paths used wrong nesting (expected flat keys like `"roce/latest"` instead of `"quality/roce_latest"`)
+  - `prde_final_scores` table: Had old schema from earlier DDL; dropped and recreated
+- **Data Quality Notes**:
+  - 9 of 64 financial rows have NULL revenue (earliest year where yfinance returns NaN)
+  - 25 of 64 have NULL EBITDA (banks like HDFCBANK, ICICIBANK, SBIN, BAJFINANCE don't report EBITDA in yfinance)
+  - PE/EV/EBITDA/PB/Debt-equity values are from `stock.info` (current), not year-specific
+- **Next Steps**:
+  - Add 5 more years of historical data (back to 2017) for deeper CAGR calculations
+  - Add skipped companies (DIVISLAB, HDFCBANK, NESTLEIND, SUNPHARMA, WIPRO) once they have 5 years of yfinance data
+  - Wire PRDE scores into PERX reports as additional intelligence layer
+  - Begin Milestone 2: Event foundation (document ingestion schema)

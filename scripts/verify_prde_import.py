@@ -22,12 +22,14 @@ logger = logging.getLogger("verify_prde")
 
 def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[str]]:
     """Run all verification checks. Returns (passed, messages)."""
+    from engine_core.db import get_connection
+    import psycopg2.extras
     conn = get_connection()
     messages: list[str] = []
     all_passed = True
 
     try:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             # 1. Table existence
             tables = [
                 "prde_companies",
@@ -37,10 +39,10 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
             ]
             for table in tables:
                 cur.execute(
-                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = %s)",
+                    "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = %s) AS exists_flag",
                     (table,),
                 )
-                exists = cur.fetchone()[0]
+                exists = cur.fetchone()["exists_flag"]
                 if exists:
                     messages.append(f"✓ Table public.{table} exists")
                 else:
@@ -48,8 +50,8 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
                     all_passed = False
 
             # 2. Company count
-            cur.execute("SELECT COUNT(*) FROM public.prde_companies WHERE is_active = TRUE")
-            company_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) AS cnt FROM public.prde_companies WHERE is_active = TRUE")
+            company_count = cur.fetchone()["cnt"]
             if company_count >= min_companies:
                 messages.append(f"✓ Companies: {company_count} active (min {min_companies})")
             else:
@@ -70,7 +72,10 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
 
             low_year_companies = []
             for row in company_years:
-                ticker, years, first, last = row
+                ticker = row["ticker"]
+                years = row["years"]
+                first = row["first_year"]
+                last = row["last_year"]
                 if years < min_years:
                     low_year_companies.append(f"{ticker} ({years} years: {first}–{last})")
 
@@ -81,13 +86,13 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
                 messages.append(f"✓ All {company_count} companies have ≥ {min_years} years of data")
 
             # 4. Total financial rows
-            cur.execute("SELECT COUNT(*) FROM public.prde_financials_annual")
-            fin_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) AS cnt FROM public.prde_financials_annual")
+            fin_count = cur.fetchone()["cnt"]
             messages.append(f"✓ Financial rows: {fin_count}")
 
             # 5. Total ratio rows
-            cur.execute("SELECT COUNT(*) FROM public.prde_ratios_annual")
-            rat_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) AS cnt FROM public.prde_ratios_annual")
+            rat_count = cur.fetchone()["cnt"]
             messages.append(f"✓ Ratio rows: {rat_count}")
 
             # 6. Null coverage in critical fields
@@ -98,8 +103,8 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
                 ("total_assets", "prde_financials_annual"),
             ]
             for field, table in critical_fields:
-                cur.execute(f'SELECT COUNT(*) FROM public.{table} WHERE {field} IS NULL')
-                null_count = cur.fetchone()[0]
+                cur.execute(f'SELECT COUNT(*) AS cnt FROM public.{table} WHERE {field} IS NULL')
+                null_count = cur.fetchone()["cnt"]
                 if null_count > 0:
                     pct = round(null_count / max(fin_count, 1) * 100, 1)
                     messages.append(f"⚠ {field}: {null_count} NULL values ({pct}% of {fin_count} rows)")
@@ -122,17 +127,20 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
 
             # 8. Year span summary
             cur.execute("""
-                SELECT MIN(fiscal_year), MAX(fiscal_year) FROM public.prde_financials_annual
+                SELECT MIN(fiscal_year) AS min_year, MAX(fiscal_year) AS max_year FROM public.prde_financials_annual
             """)
-            min_year, max_year = cur.fetchone()
-            messages.append(f"✓ Year span: {min_year} – {max_year}")
+            row = cur.fetchone()
+            messages.append(f"✓ Year span: {row['min_year']} – {row['max_year']}")
 
             # 9. Per-company detail
             messages.append("")
             messages.append(f"{'Ticker':<12} {'Years':>6}  {'First':>6}  {'Last':>6}  {'Revenue (latest)':>18}  {'EBITDA (latest)':>18}")
             messages.append("-" * 85)
             for row in company_years:
-                ticker, years, first, last = row
+                ticker = row["ticker"]
+                years = row["years"]
+                first = row["first_year"]
+                last = row["last_year"]
                 cur.execute("""
                     SELECT revenue, ebitda FROM public.prde_financials_annual f
                     JOIN public.prde_companies c ON c.id = f.company_id
@@ -140,8 +148,8 @@ def run_checks(min_companies: int = 10, min_years: int = 5) -> tuple[bool, list[
                     ORDER BY f.fiscal_year DESC LIMIT 1
                 """, (ticker,))
                 latest = cur.fetchone()
-                rev_str = f"{latest[0]:,.0f}" if latest and latest[0] else "N/A"
-                ebitda_str = f"{latest[1]:,.0f}" if latest and latest[1] else "N/A"
+                rev_str = f"{latest['revenue']:,.0f}" if latest and latest["revenue"] else "N/A"
+                ebitda_str = f"{latest['ebitda']:,.0f}" if latest and latest["ebitda"] else "N/A"
                 messages.append(f"{ticker:<12} {years:>6}  {first:>6}  {last:>6}  {rev_str:>18}  {ebitda_str:>18}")
 
     except Exception as e:

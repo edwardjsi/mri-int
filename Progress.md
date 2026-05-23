@@ -1236,3 +1236,54 @@ Functions that query non-existent columns must be caught AND rolled back at the 
 - Management quality data needs `aae_governance_metrics` backfill for wider coverage
 - Full STEE backtest to validate ATR sizing vs old method
 
+
+## 📅 Session: May 23, 2026 — PRDE Milestone 0 + Milestone 1 Completed
+**Session Start:** 14:30 IST  
+**Session End:** 15:45 IST  
+
+### What Was Done This Session
+
+#### Milestone 0 — PRDE Financial Foundation ✅ (COMPLETED)
+- [x] **Fetched seed data** from yfinance for 14 Indian blue-chips (64 annual rows, 2021–2026)
+- [x] **Imported to Neon** via `import_prde_financials.py` — 14 companies, 64 financials, 64 ratios
+- [x] **Verified idempotency** — re-import produces 0 new rows
+- [x] **Generated deterministic feature snapshots** — 9 companies pass 5-year minimum, content-addressed hashes
+- [x] **Proved snapshot idempotency** — unchanged data → same hash → same snapshot_id
+
+#### Milestone 1 — Deterministic Scoring Baseline ✅ (COMPLETED)
+- [x] **Master Investor Checklist scoring** — 7 components weighted: Operating Leverage (20%), Capital Efficiency (20%), Margin Quality (20%), Growth Quality (15%), Cash Conversion (10%), Balance Sheet (10%), Valuation Gap (5%)
+- [x] **Risk penalty system** — flags for high debt, shrinking margins, negative PAT CAGR, capex intensity
+- [x] **MRI overlay** — 2-5 point boost for strong momentum (>60 MRI score)
+- [x] **Full breakdown in JSONB** — each component stores score + reason in `prde_final_scores.components`
+- [x] **9 companies scored** with transparent inspectable reasons
+
+#### Bugs Fixed
+- `fetch_prde_seed_data.py`: yfinance Timestamp columns, empty-years crash
+- `verify_prde_import.py`: RealDictCursor tuple-index incompatibility
+- `prde_scoring_engine.py`: `safe_get()` nested traversal, wrong feature paths, yfinance negative capex
+- `prde_final_scores` table: Old DDL schema conflict
+
+### 📌 Current Milestone
+- **PRDE Milestone 0 ✅** — Data foundation complete
+- **PRDE Milestone 1 ✅** — Deterministic scoring baseline complete
+- **Next**: Milestone 2 — Event/Document foundation (AAE PRD Phase 1)
+
+### Key Files Created/Modified
+| File | Change |
+|------|--------|
+| `scripts/fetch_prde_seed_data.py` | Fixed yfinance Timestamp handling, empty-data guard |
+| `scripts/verify_prde_import.py` | Rewritten for RealDictCursor compatibility |
+| `engine_core/prde_scoring_engine.py` | Fixed all 7 scoring functions for correct nested feature paths; fixed capex sign; added series-based PE stats |
+| `data/prde_financials_seed.csv` | Created: 64 rows, 14 companies, 2021-2026 |
+| `Sessions.md` | Added session log |
+| `Progress.md` | Updated |
+
+### Data in Database
+| Table | Rows |
+|-------|------|
+| `prde_companies` | 14 |
+| `prde_financials_annual` | 64 |
+| `prde_ratios_annual` | 64 |
+| `prde_feature_snapshots` | 9 |
+| `prde_final_scores` | 9 |
+

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Fetch annual financials from yfinance for Indian blue-chip companies.
 
 Outputs a CSV seed file for PRDE import with columns:
@@ -93,15 +94,31 @@ def fetch_company_financials(ticker: str, name: str, sector: str, industry: str,
     def get_row(df, row_names: list[str], fiscal_year) -> float | None:
         if df is None or df.empty:
             return None
+        # Find the column matching this fiscal year (yfinance uses Timestamp columns)
+        col = None
+        for c in df.columns:
+            c_year = getattr(c, 'year', None) or (int(c) if isinstance(c, (int, float)) else None)
+            if c_year == fiscal_year:
+                col = c
+                break
+        if col is None:
+            return None
         for rn in row_names:
             if rn in df.index:
-                val = df.loc[rn, fiscal_year] if fiscal_year in df.columns else None
+                val = df.loc[rn, col] if col in df.columns else None
                 if val is not None:
                     return safe_float(val)
         return None
 
-    years = [col for col in income.columns if isinstance(col, (int, float)) or str(col).isdigit()]
-    years = sorted([int(y) for y in years if str(y).isdigit()])
+    years = []
+    for col in income.columns:
+        if isinstance(col, (int, float)):
+            years.append(int(col))
+        elif hasattr(col, 'year'):
+            years.append(col.year)
+        elif str(col).isdigit():
+            years.append(int(col))
+    years = sorted(set(years))
 
     if len(years) < min_years:
         logger.warning(f"  {ticker}: only {len(years)} years available, need {min_years}")
@@ -154,7 +171,10 @@ def fetch_company_financials(ticker: str, name: str, sector: str, industry: str,
             "debt_equity":   debt_equity,
         })
 
-    logger.info(f"  {ticker}: {len(rows)} years ({years[0]}–{years[-1]})")
+    logger.info(f"  {ticker}: {len(rows)} years fetched")
+    if rows:
+        yrs = sorted(set(r["fiscal_year"] for r in rows))
+        logger.info(f"  {ticker}: years {yrs[0]}–{yrs[-1]}")
     return rows
 
 

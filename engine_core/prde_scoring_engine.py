@@ -1,5 +1,7 @@
 """PRDE Deterministic Scoring Engine.
 
+
+
 Converts PRDE feature snapshots into transparent, inspectable numeric scores
 using the Master Investor Checklist. No AI/LLM — purely deterministic math.
 
@@ -44,10 +46,19 @@ def clamp(value: float, lo: float = 0.0, hi: float = 100.0) -> float:
 
 
 def safe_get(d: dict, *keys, default=None):
+    """Safely traverse nested dict using sequential keys.
+
+    Example: safe_get(features, 'quality', 'roce_latest')
+    traverses features['quality']['roce_latest'].
+    """
+    current = d
     for k in keys:
-        if k in d and d[k] is not None:
-            return d[k]
-    return default
+        if current is None or not isinstance(current, dict):
+            return default
+        if k not in current or current[k] is None:
+            return default
+        current = current[k]
+    return current
 
 
 # ---------------------------------------------------------------------------
@@ -57,8 +68,8 @@ def safe_get(d: dict, *keys, default=None):
 
 def score_operating_leverage(features: dict) -> tuple[float, str]:
     """Operating leverage: EBITDA grows faster than revenue => fixed-cost efficiency."""
-    ebitda_yoy = safe_get(features, "ebitda_yoy_mean")
-    revenue_yoy = safe_get(features, "revenue_yoy_mean")
+    ebitda_yoy = safe_get(features, "growth", "ebitda_yoy_avg")
+    revenue_yoy = safe_get(features, "growth", "revenue_yoy_avg")
 
     if ebitda_yoy is None or revenue_yoy is None:
         return 50.0, "insufficient data for operating leverage"
@@ -79,8 +90,8 @@ def score_operating_leverage(features: dict) -> tuple[float, str]:
 
 def score_capital_efficiency(features: dict) -> tuple[float, str]:
     """Capital efficiency: ROCE level and trend."""
-    roce_latest = safe_get(features, "roce", "latest")
-    roce_trend = safe_get(features, "roce", "trend_slope")
+    roce_latest = safe_get(features, "quality", "roce_latest")
+    roce_trend = safe_get(features, "quality", "roce_slope")
 
     if roce_latest is None:
         return 50.0, "ROCE data unavailable"
@@ -122,10 +133,9 @@ def score_capital_efficiency(features: dict) -> tuple[float, str]:
 
 
 def score_margin_quality(features: dict) -> tuple[float, str]:
-    """Margin quality: EBITDA margin level, trend, and stability."""
-    margin_latest = safe_get(features, "ebitda_margin", "latest")
-    margin_trend = safe_get(features, "ebitda_margin", "trend_slope")
-    margin_stability = safe_get(features, "ebitda_margin", "stability")
+    """Margin quality: EBITDA margin level and trend."""
+    margin_latest = safe_get(features, "margins", "ebitda_margin_latest")
+    margin_trend = safe_get(features, "margins", "ebitda_margin_slope")
 
     if margin_latest is None:
         return 50.0, "margin data unavailable"
@@ -157,27 +167,15 @@ def score_margin_quality(features: dict) -> tuple[float, str]:
     else:
         trend_desc = "unknown"
 
-    # Stability bonus/penalty
-    if margin_stability is not None:
-        if margin_stability < 0.03:
-            base = min(base + 5, 100)
-            stability_desc = "very stable"
-        elif margin_stability < 0.06:
-            stability_desc = "stable"
-        else:
-            base = max(base - 10, 0)
-            stability_desc = "volatile"
-    else:
-        stability_desc = "unknown"
-
-    return clamp(base), f"{level_desc}, {trend_desc}, {stability_desc}"
+    return clamp(base), f"{level_desc}, {trend_desc}"
 
 
 def score_growth_quality(features: dict) -> tuple[float, str]:
     """Growth quality: CAGR consistency across revenue, EBITDA, PAT."""
-    rev_cagr = safe_get(features, "revenue_cagr_3y")
-    ebitda_cagr = safe_get(features, "ebitda_cagr_3y")
-    pat_cagr = safe_get(features, "pat_cagr_3y")
+    # Use recent CAGR (last 3 years) as full CAGR may be None for many
+    rev_cagr = safe_get(features, "growth", "recent_revenue_cagr")
+    ebitda_cagr = safe_get(features, "growth", "recent_ebitda_cagr")
+    pat_cagr = safe_get(features, "growth", "recent_pat_cagr")
 
     cagrs = [v for v in (rev_cagr, ebitda_cagr, pat_cagr) if v is not None]
 
@@ -227,8 +225,8 @@ def score_growth_quality(features: dict) -> tuple[float, str]:
 
 def score_cash_conversion(features: dict) -> tuple[float, str]:
     """Cash conversion proxy: capex intensity and asset turnover as FCF quality signals."""
-    capex_intensity = safe_get(features, "capex_intensity", "latest")
-    asset_turnover = safe_get(features, "asset_turnover", "latest")
+    capex_intensity = safe_get(features, "operating_leverage", "capex_intensity_latest")
+    asset_turnover = safe_get(features, "quality", "asset_turnover_latest")
 
     if capex_intensity is None and asset_turnover is None:
         return 50.0, "no cash conversion proxy data"
@@ -237,15 +235,17 @@ def score_cash_conversion(features: dict) -> tuple[float, str]:
     reasons = []
 
     if capex_intensity is not None:
-        if capex_intensity < 0.05:
+        # capex_intensity is negative in yfinance (outflow convention)
+        abs_capex = abs(capex_intensity)
+        if abs_capex < 0.05:
             score += 25
-            reasons.append(f"low capex intensity {capex_intensity:.1%} (asset-light)")
-        elif capex_intensity < 0.10:
+            reasons.append(f"low capex intensity {abs_capex:.1%} (asset-light)")
+        elif abs_capex < 0.10:
             score += 10
-            reasons.append(f"moderate capex {capex_intensity:.1%}")
-        elif capex_intensity > 0.25:
+            reasons.append(f"moderate capex {abs_capex:.1%}")
+        elif abs_capex > 0.25:
             score -= 20
-            reasons.append(f"high capex intensity {capex_intensity:.1%} (cash-hungry)")
+            reasons.append(f"high capex intensity {abs_capex:.1%} (cash-hungry)")
 
     if asset_turnover is not None:
         if asset_turnover > 1.5:
@@ -263,8 +263,8 @@ def score_cash_conversion(features: dict) -> tuple[float, str]:
 
 def score_balance_sheet_health(features: dict) -> tuple[float, str]:
     """Balance sheet health: debt/equity level and trend."""
-    de_latest = safe_get(features, "debt_equity", "latest")
-    de_trend = safe_get(features, "debt_equity", "trend_slope")
+    de_latest = safe_get(features, "risk", "debt_equity_latest")
+    de_trend = safe_get(features, "risk", "debt_equity_slope")
 
     if de_latest is None:
         return 50.0, "debt/equity data unavailable"
@@ -307,17 +307,23 @@ def score_balance_sheet_health(features: dict) -> tuple[float, str]:
 
 
 def score_valuation_gap(features: dict) -> tuple[float, str]:
-    """Valuation gap: current PE vs historical band."""
-    pe_latest = safe_get(features, "pe", "latest")
-    pe_mean = safe_get(features, "pe", "mean")
-    pe_min = safe_get(features, "pe", "min")
-    pe_max = safe_get(features, "pe", "max")
+    """Valuation gap: current PE vs historical band from series data."""
+    pe_latest = safe_get(features, "valuation", "pe_latest")
 
-    if pe_latest is None or pe_mean is None:
+    # Compute historical PE stats from series
+    series = features.get("series", [])
+    pe_values = [s.get("pe") for s in series if s.get("pe") is not None]
+    pe_values = [v for v in pe_values if v is not None and v > 0]
+
+    if pe_latest is None or len(pe_values) < 2:
         return 50.0, "valuation data unavailable"
 
+    pe_min = min(pe_values)
+    pe_max = max(pe_values)
+    pe_mean = sum(pe_values) / len(pe_values)
+
     # Percentile within historical range
-    if pe_max is not None and pe_min is not None and pe_max > pe_min:
+    if pe_max > pe_min:
         percentile = (pe_latest - pe_min) / (pe_max - pe_min)
     else:
         percentile = 0.5
@@ -340,8 +346,8 @@ def score_risk_penalty(features: dict) -> tuple[float, list[str]]:
     flags = []
 
     # High debt + deteriorating
-    de_latest = safe_get(features, "debt_equity", "latest")
-    de_trend = safe_get(features, "debt_equity", "trend_slope")
+    de_latest = safe_get(features, "risk", "debt_equity_latest")
+    de_trend = safe_get(features, "risk", "debt_equity_slope")
     if de_latest is not None and de_latest > 1.5:
         penalty += 10
         flags.append(f"high debt/equity ({de_latest:.1f})")
@@ -350,22 +356,22 @@ def score_risk_penalty(features: dict) -> tuple[float, list[str]]:
         flags.append("rapidly increasing leverage")
 
     # Declining margins
-    margin_trend = safe_get(features, "ebitda_margin", "trend_slope")
+    margin_trend = safe_get(features, "margins", "ebitda_margin_slope")
     if margin_trend is not None and margin_trend < -0.03:
         penalty += 10
         flags.append("significant margin compression")
 
     # Negative PAT CAGR
-    pat_cagr = safe_get(features, "pat_cagr_3y")
+    pat_cagr = safe_get(features, "growth", "recent_pat_cagr")
     if pat_cagr is not None and pat_cagr < 0:
         penalty += 8
         flags.append(f"negative PAT CAGR ({pat_cagr:.1%})")
 
     # Extreme capex intensity
-    capex_intensity = safe_get(features, "capex_intensity", "latest")
-    if capex_intensity is not None and capex_intensity > 0.30:
+    capex_intensity = safe_get(features, "operating_leverage", "capex_intensity_latest")
+    if capex_intensity is not None and abs(capex_intensity) > 0.30:
         penalty += 5
-        flags.append(f"very high capex intensity ({capex_intensity:.1%})")
+        flags.append(f"very high capex intensity ({abs(capex_intensity):.1%})")
 
     return penalty, flags
 
