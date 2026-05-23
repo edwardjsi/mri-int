@@ -261,7 +261,7 @@ class SourcingAgent:
                     """,
                     (self.symbol, limit),
                 )
-                doc_ids = [row[0] for row in cur.fetchall()]
+                doc_ids = [row["id"] for row in cur.fetchall()]
 
             results = []
             for doc_id in doc_ids:

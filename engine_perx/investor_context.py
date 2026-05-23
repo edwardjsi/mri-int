@@ -4,7 +4,6 @@ from typing import Any
 import logging
 
 logger = logging.getLogger(__name__)
-from engine_core.engine_result import EngineResult, ENGINE_UNAVAILABLE, wrap_engine_call
 
 def safe_float(v) -> float:
     if v is None:
@@ -647,93 +646,90 @@ def get_peg_ratio(cur, base_symbol: str, current_pe: float | None = None) -> dic
 
 def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
     """
-    Calculate Enterprise Value / EBITDA proxy.
+    Calculate Enterprise Value / EBITDA proxy from fundamental_financials.
     
-    Uses daily_prices for market cap and fundamental_financials for
-    EBITDA and debt. Falls back gracefully when data is missing.
+    Dynamically detects available columns to handle schema variations.
+    Falls back gracefully when columns are missing.
     """
     result: dict[str, Any] = {
         "ev_ebitda": None,
         "market_cap_cr": None,
         "net_debt_ebitda": None,
-        "verdict": "EV/EBITDA unavailable.",
+        "verdict": "EV/EBITDA unavailable — required columns not found in fundamental_financials.",
         "homework": "",
     }
 
-    # Get current price and shares outstanding from daily_prices
+    # First, detect what columns are available in fundamental_financials
     cur.execute(
         """
-        SELECT close
-        FROM daily_prices
-        WHERE symbol = %s
-        ORDER BY date DESC
-        LIMIT 1
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'fundamental_financials'
+          AND column_name IN ('market_cap', 'total_debt', 'cash_equivalents', 'ebitda')
         """,
-        (base_symbol,),
     )
-    price_row = cur.fetchone()
-    if not price_row:
-        result["verdict"] = "No price data available for market cap computation."
+    available_cols = [row[0] if isinstance(row, (list, tuple)) else row.get("column_name", "") for row in cur.fetchall()]
+    available_set = set(available_cols)
+
+    if not available_set:
         return result
 
-    price = safe_float(price_row.get("close") if isinstance(price_row, dict) else price_row[0])
+    # Build query dynamically based on available columns
+    select_cols = ["year"]
+    if "market_cap" in available_set:
+        select_cols.append("market_cap")
+    if "total_debt" in available_set:
+        select_cols.append("total_debt")
+    if "cash_equivalents" in available_set:
+        select_cols.append("cash_equivalents")
+    if "ebitda" in available_set:
+        select_cols.append("ebitda")
 
-    # Get latest year's financial data: ebitda, debt, equity (all exist in schema)
-    cur.execute(
-        """
-        SELECT year, ebitda, debt, equity, revenue
+    query = f"""
+        SELECT {', '.join(select_cols)}
         FROM fundamental_financials
-        WHERE symbol = %s AND ebitda IS NOT NULL
+        WHERE symbol = %s
         ORDER BY year DESC
         LIMIT 1
-        """,
-        (base_symbol,),
-    )
-    fin_row = cur.fetchone()
-    if not fin_row:
-        result["verdict"] = "No fundamental financial data for EV/EBITDA."
+    """
+    cur.execute(query, (base_symbol,))
+    row = cur.fetchone()
+    if not row:
         return result
 
-    if isinstance(fin_row, dict):
-        ebitda = safe_float(fin_row.get("ebitda"))
-        debt = safe_float(fin_row.get("debt"))
-        equity = safe_float(fin_row.get("equity"))
-        revenue = safe_float(fin_row.get("revenue"))
-    else:
-        ebitda = safe_float(fin_row[2]) if len(fin_row) > 2 else None
-        debt = safe_float(fin_row[3]) if len(fin_row) > 3 else None
-        equity = safe_float(fin_row[4]) if len(fin_row) > 4 else None
-        revenue = safe_float(fin_row[5]) if len(fin_row) > 5 else None
+    rdict = dict(row) if isinstance(row, dict) else {col: row[i] for i, col in enumerate(select_cols)}
 
-    if not ebitda or ebitda <= 0:
-        result["verdict"] = f"No positive EBITDA data for {base_symbol}."
-        return result
+    market_cap = safe_float(rdict.get("market_cap"))
+    total_debt = safe_float(rdict.get("total_debt"))
+    cash_eq = safe_float(rdict.get("cash_equivalents"))
+    ebitda = safe_float(rdict.get("ebitda"))
 
-    # Estimate market cap from price and implied shares (using revenue/price heuristic)
-    # Since we don't have shares outstanding, use a rough EV proxy:
-    #   Total Capital Employed = Debt + Equity (from financials)
-    #   This gives us book-based enterprise value
-    #   Then EV/EBITDA = (Debt + Equity) / EBITDA
-    
-    if debt is not None and equity is not None and debt + equity > 0:
-        book_ev_cr = (debt + equity) / 10_000_000  # Convert to crores
-        ebitda_cr = ebitda / 10_000_000
-        
-        ev_ebitda = book_ev_cr / ebitda_cr if ebitda_cr > 0 else None
-        result["ev_ebitda"] = round(ev_ebitda, 2) if ev_ebitda else None
-        
-        # Market cap approximation using price and book equity
-        # Rough: Market Cap = Price-to-Book * Equity
-        # Since we can't get exact shares, we use a conservative book-based EV
-        result["market_cap_cr"] = round(book_ev_cr, 2)
-        
-        # Net Debt / EBITDA using debt directly
-        net_debt_cr = debt / 10_000_000
-        result["net_debt_ebitda"] = round(net_debt_cr / ebitda_cr, 2) if ebitda_cr > 0 else None
-    else:
-        # Fallback: just EBITDA, can't compute EV
-        ebitda_cr = ebitda / 10_000_000
-        result["ev_ebitda"] = round(price / ebitda_cr, 4) if price and ebitda_cr > 0 else None
+    # Market cap in crores (if raw value is in lakhs or raw)
+    if market_cap and market_cap > 0:
+        # Assume raw value might be in actual rupees — convert to crores
+        if market_cap > 1_000_000_000_000:  # > 1000 Cr already? No, adjust
+            market_cap_cr = round(market_cap / 10_000_000, 2)
+        else:
+            market_cap_cr = round(market_cap, 2)
+        result["market_cap_cr"] = market_cap_cr
+
+        if ebitda and ebitda > 0:
+            # Enterprise Value = Market Cap + Total Debt - Cash
+            if total_debt > 0 and cash_eq >= 0:
+                ev = market_cap_cr + (total_debt / 10_000_000) - (cash_eq / 10_000_000)
+            else:
+                ev = market_cap_cr
+                if total_debt > 0:
+                    ev += total_debt / 10_000_000
+
+            ebitda_cr = ebitda / 10_000_000 if ebitda > 100_000_000 else ebitda
+            ev_ebitda_ratio = ev / ebitda_cr if ebitda_cr > 0 else None
+            result["ev_ebitda"] = round(ev_ebitda_ratio, 2) if ev_ebitda_ratio else None
+
+            # Net Debt / EBITDA
+            if total_debt > 0 and cash_eq >= 0:
+                net_debt_cr = (total_debt - cash_eq) / 10_000_000
+                result["net_debt_ebitda"] = round(net_debt_cr / ebitda_cr, 2) if ebitda_cr > 0 else None
 
     # Build verdict
     ev_val = result.get("ev_ebitda")
@@ -741,14 +737,12 @@ def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
     verdict_parts = []
 
     if ev_val:
-        if ev_val < 8:
-            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — reasonable (typically <10x for Indian mid-caps)")
-        elif ev_val < 15:
-            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — moderate (typical range for growing businesses)")
-        elif ev_val < 25:
-            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — elevated, common in high-growth/growth-at-reasonable-price stories")
+        if ev_val < 10:
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — reasonable (typically <12x for mid-caps)")
+        elif ev_val < 20:
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — elevated but plausible for growth names")
         else:
-            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — premium valuation")
+            verdict_parts.append(f"EV/EBITDA {ev_val:.1f}x — premium valuation, common in high-growth sectors")
 
     if nd_val is not None:
         if nd_val < 0:
@@ -758,22 +752,22 @@ def get_ev_ebitda(cur, base_symbol: str) -> dict[str, Any]:
         elif nd_val < 3:
             verdict_parts.append(f"Net debt/EBITDA {nd_val:.2f}x — moderate leverage")
         else:
-            verdict_parts.append(f"Net debt/EBITDA {nd_val:.2f}x — elevated leverage, monitor closely")
+            verdict_parts.append(f"Net debt/EBITDA {nd_val:.2f}x — elevated leverage, monitor")
 
     if verdict_parts:
         result["verdict"] = " | ".join(verdict_parts)
-        result["homework"] = "EV/EBITDA uses book-based enterprise value (Debt + Equity). For exact market-cap-based EV, use a financial data terminal."
+        result["homework"] = "EV/EBITDA is a sector-dependent metric. Compare with direct peers (not just market) for rerating potential."
     else:
         result["verdict"] = "EV/EBITDA data found but insufficient for analysis."
 
     return result
+
+
 def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
     """
-    Analyze institutional ownership from available governance data.
+    Analyze FII/DII holding percentage changes from aae_governance_metrics.
     
-    Since FII/DII breakdown data is not available from current data sources,
-    this uses promoter holding trends and governance scores as institutional
-    interest proxies.
+    Tracks quarterly institutional ownership shifts to detect smart money flow.
     """
     result: dict[str, Any] = {
         "fii_holding_pct": None,
@@ -786,71 +780,83 @@ def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
         "homework": "",
     }
 
-    # Use available governance metrics data
     cur.execute(
         """
-        SELECT fiscal_year, fiscal_quarter, promoter_holding_pct, governance_score
+        SELECT fiscal_year, fiscal_quarter, fii_holding_pct, dii_holding_pct
         FROM aae_governance_metrics
-        WHERE symbol = %s AND (promoter_holding_pct IS NOT NULL OR governance_score IS NOT NULL)
+        WHERE symbol = %s
+          AND (fii_holding_pct IS NOT NULL OR dii_holding_pct IS NOT NULL)
         ORDER BY fiscal_year DESC, fiscal_quarter DESC
         LIMIT 4
         """,
         (base_symbol,),
     )
     rows = cur.fetchall()
-
-    if not rows:
-        result["verdict"] = "No institutional ownership data available from existing sources."
-        result["homework"] = "Check latest shareholding pattern filing on BSE/NSE for FII/DII breakdown."
+    if len(rows) < 2:
+        result["verdict"] = "Insufficient institutional holding data for trend analysis."
         return result
 
     parsed = []
     for r in rows:
-        if isinstance(r, dict):
-            parsed.append({
-                "year": int(r.get("fiscal_year", 0)),
-                "quarter": int(r.get("fiscal_quarter", 0)),
-                "promoter_pct": safe_float(r.get("promoter_holding_pct")),
-                "gov_score": safe_float(r.get("governance_score")),
-            })
-        else:
-            fields = {"year": int(r[0]), "quarter": int(r[1])}
-            fields["promoter_pct"] = safe_float(r[2]) if len(r) > 2 else None
-            fields["gov_score"] = safe_float(r[3]) if len(r) > 3 else None
-            parsed.append(fields)
+        r_dict = r if isinstance(r, dict) else {
+            "fiscal_year": r[0], "fiscal_quarter": r[1],
+            "fii": r[2] if len(r) > 2 else None,
+            "dii": r[3] if len(r) > 3 else None,
+        }
+        parsed.append({
+            "year": int(r_dict.get("fiscal_year", 0)),
+            "quarter": int(r_dict.get("fiscal_quarter", 0)),
+            "fii": safe_float(r_dict.get("fii")),
+            "dii": safe_float(r_dict.get("dii")),
+        })
 
     latest = parsed[0]
+    prev = parsed[1]
+
+    # Latest holdings
+    if latest["fii"] > 0:
+        result["fii_holding_pct"] = latest["fii"]
+    if latest["dii"] > 0:
+        result["dii_holding_pct"] = latest["dii"]
+
+    # QoQ changes
+    if latest["fii"] > 0 and prev["fii"] > 0:
+        change = latest["fii"] - prev["fii"]
+        result["fii_change_qoq"] = round(change, 2)
+        result["fii_trend"] = "ADDING" if change > 0.5 else ("REDUCING" if change < -0.5 else "STABLE")
+
+    if latest["dii"] > 0 and prev["dii"] > 0:
+        change = latest["dii"] - prev["dii"]
+        result["dii_change_qoq"] = round(change, 2)
+        result["dii_trend"] = "ADDING" if change > 0.5 else ("REDUCING" if change < -0.5 else "STABLE")
+
+    # Build verdict
     verdict_parts = []
+    homework_parts = []
 
-    # Governance score as quality proxy for institutional interest
-    gov = latest["gov_score"]
-    if gov and gov > 60:
-        verdict_parts.append(f"Governance score {gov:.0f}/100 — institutional-grade governance")
-        result["homework"] = "Good governance attracts institutional flows. Monitor promoter pledge and related-party transactions."
-    elif gov and gov > 40:
-        verdict_parts.append(f"Governance score {gov:.0f}/100 — acceptable but improvable")
-    elif gov:
-        verdict_parts.append(f"Governance score {gov:.0f}/100 — below institutional threshold")
+    if result["fii_trend"] == "ADDING":
+        verdict_parts.append(f"FIIs adding (+{result['fii_change_qoq']:.1f}% QoQ)")
+        homework_parts.append("FIIs are accumulating — confirm via latest shareholding pattern on BSE/NSE")
+    elif result["fii_trend"] == "REDUCING":
+        verdict_parts.append(f"FIIs reducing ({result['fii_change_qoq']:+.1f}% QoQ)")
+        homework_parts.append("FIIs reducing — check if this is sector-wide or stock-specific")
 
-    # Promoter trend as signal
-    if len(parsed) >= 2:
-        prev = parsed[1]
-        prom_diff = latest["promoter_pct"] - prev["promoter_pct"] if latest["promoter_pct"] and prev["promoter_pct"] else 0
-        if prom_diff > 1.0:
-            verdict_parts.append("Promoters buying — management confidence")
-            result["homework"] = "Promoter buying is the strongest insider signal. Verify open-market purchases vs ESOP/rights."
-        elif prom_diff < -1.0:
-            verdict_parts.append("Promoters reducing — governance concern")
-            result["homework"] = "Investors should understand WHY promoters are selling. Check if for personal diversification or fundamental concern."
-        else:
-            verdict_parts.append("Promoter holding stable")
+    if result["dii_trend"] == "ADDING":
+        verdict_parts.append(f"DIIs adding (+{result['dii_change_qoq']:.1f}% QoQ)")
+        homework_parts.append("Domestic institutions are stepping in — bullish local conviction")
+    elif result["dii_trend"] == "REDUCING":
+        verdict_parts.append(f"DIIs reducing ({result['dii_change_qoq']:+.1f}% QoQ)")
 
-    if not verdict_parts:
-        verdict_parts.append("Limited institutional flow data. See shareholding pattern for details.")
-        result["homework"] = "Pull the latest quarterly shareholding pattern from BSE/NSE for actual FII/DII changes."
+    if result["fii_trend"] == "REDUCING" and result["dii_trend"] != "ADDING":
+        verdict_parts.append("⚠️ FIIs exiting without DII buying — potential headwind")
+        homework_parts.append("Critical: No domestic buyers absorbing FII exit. This creates downward price pressure.")
 
-    result["verdict"] = " | ".join(verdict_parts)
+    result["verdict"] = " | ".join(verdict_parts) if verdict_parts else "Institutional holding data available but no clear trend."
+    result["homework"] = " | ".join(homework_parts)
+
     return result
+
+
 def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
                          exclude_symbol: str | None = None) -> dict[str, Any]:
     """
@@ -948,418 +954,9 @@ def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
     return result
 
 
-def get_cashflow_health(cur, base_symbol: str) -> dict[str, Any]:
-    """
-    Analyze operating cash flow and free cash flow quality from fundamental_financials.
-    
-    Key metrics:
-      - OCF/EBITDA ratio: how much EBITDA converts to actual cash (>0.8 = good)
-      - FCF/OCF ratio: how much operating cash survives capex (>0.5 = good)
-      - FCF yield: free cash flow / price (proxy for shareholder value creation)
-      - OCF trend: year-over-year direction
-    """
-    result: dict[str, Any] = {
-        "ocf_ebitda_ratio": None,
-        "fcf_ocf_ratio": None,
-        "fcf_yield_pct": None,
-        "ocf_growth_pct": None,
-        "ocf_consistency": "UNKNOWN",
-        "verdict": "Cash flow data not available.",
-        "homework": "",
-    }
-
-    # Get latest 3 years of cash flow + ebitda + close price
-    cur.execute(
-        """
-        SELECT f.year, f.ebitda, f.operating_cashflow, f.free_cashflow
-        FROM fundamental_financials f
-        WHERE f.symbol = %s
-          AND (f.operating_cashflow IS NOT NULL OR f.free_cashflow IS NOT NULL)
-        ORDER BY f.year DESC
-        LIMIT 3
-        """,
-        (base_symbol,),
-    )
-    rows = cur.fetchall()
-
-    if not rows:
-        return result
-
-    # Get current price
-    cur.execute(
-        """
-        SELECT close FROM daily_prices
-        WHERE symbol = %s
-        ORDER BY date DESC LIMIT 1
-        """,
-        (base_symbol,),
-    )
-    price_row = cur.fetchone()
-    price = safe_float(price_row.get("close") if isinstance(price_row, dict) else price_row[0]) if price_row else None
-
-    # Parse rows
-    entries = []
-    for r in rows:
-        if isinstance(r, dict):
-            entries.append({
-                "year": int(r.get("year", 0)),
-                "ebitda": safe_float(r.get("ebitda")),
-                "ocf": safe_float(r.get("operating_cashflow")),
-                "fcf": safe_float(r.get("free_cashflow")),
-            })
-        else:
-            entries.append({
-                "year": int(r[0]),
-                "ebitda": safe_float(r[1]) if len(r) > 1 else None,
-                "ocf": safe_float(r[2]) if len(r) > 2 else None,
-                "fcf": safe_float(r[3]) if len(r) > 3 else None,
-            })
-
-    latest = entries[0]
-    verdict_parts = []
-    homework_parts = []
-
-    # OCF/EBITDA ratio (cash conversion quality)
-    if latest["ocf"] and latest["ebitda"] and latest["ebitda"] > 0:
-        ocf_ebitda = latest["ocf"] / latest["ebitda"]
-        result["ocf_ebitda_ratio"] = round(ocf_ebitda, 2)
-
-        if ocf_ebitda >= 0.8:
-            verdict_parts.append(f"Healthy cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
-        elif ocf_ebitda >= 0.5:
-            verdict_parts.append(f"Moderate cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
-            homework_parts.append("OCF below EBITDA — check if working capital is increasing or if there are non-cash charges inflating EBITDA.")
-        else:
-            verdict_parts.append(f"Weak cash conversion (OCF/EBITDA {ocf_ebitda:.2f}x)")
-            homework_parts.append("⚠️ EBITDA is significantly higher than operating cash flow. Earnings quality concern — investigate receivables and inventory buildup.")
-
-    # FCF/OCF ratio (how much OCF survives capex)
-    if latest["fcf"] and latest["ocf"] and latest["ocf"] > 0:
-        fcf_ocf = latest["fcf"] / latest["ocf"]
-        result["fcf_ocf_ratio"] = round(fcf_ocf, 2)
-
-        if fcf_ocf >= 0.7:
-            verdict_parts.append("Low capex intensity — high proportion of OCF flows to shareholders")
-        elif fcf_ocf >= 0.3:
-            verdict_parts.append("Moderate capex intensity")
-        else:
-            verdict_parts.append("High capex intensity — significant reinvestment")
-            if fcf_ocf < 0:
-                homework_parts.append("⚠️ Free cash flow is negative. Company is spending more on capex than it generates from operations — check if this is growth capex or maintenance.")
-
-    # FCF yield (FCF / market cap proxy)
-    if latest["fcf"] and price and latest["fcf"] > 0:
-        # Get equity from same year for rough market cap proxy
-        cur.execute(
-            "SELECT equity FROM fundamental_financials WHERE symbol = %s AND year = %s",
-            (base_symbol, latest["year"]),
-        )
-        eq_row = cur.fetchone()
-        equity = safe_float(eq_row.get("equity") if isinstance(eq_row, dict) else eq_row[0]) if eq_row else None
-
-        if equity and equity > 0:
-            # Rough shares outstanding = equity / book value per share (approximate)
-            # Instead use price * (equity / book_value_per_share) as market cap
-            # Simplest: treat FCF / (price * shares_outstanding)
-            # We don't have shares outstanding. Use: FCF / (Equity * price/book_ratio)
-            # Simplest safe approach: compare FCF to enterprise value (debt + equity)
-            cur.execute(
-                "SELECT debt FROM fundamental_financials WHERE symbol = %s AND year = %s",
-                (base_symbol, latest["year"]),
-            )
-            debt_row = cur.fetchone()
-            debt = safe_float(debt_row.get("debt") if isinstance(debt_row, dict) else debt_row[0]) if debt_row else 0
-
-            ev = (debt + equity)  # book-based enterprise value
-            if ev > 0:
-                fcf_yield = (latest["fcf"] / ev) * 100
-                result["fcf_yield_pct"] = round(fcf_yield, 2)
-
-                if fcf_yield >= 8:
-                    verdict_parts.append(f"Strong FCF yield ({fcf_yield:.1f}%) — cash generation relative to capital employed")
-                elif fcf_yield >= 4:
-                    verdict_parts.append(f"Healthy FCF yield ({fcf_yield:.1f}%)")
-                elif fcf_yield >= 2:
-                    verdict_parts.append(f"Modest FCF yield ({fcf_yield:.1f}%)")
-                else:
-                    verdict_parts.append(f"Low FCF yield ({fcf_yield:.1f}%)")
-
-    # OCF year-over-year trend
-    if len(entries) >= 2 and latest["ocf"] and entries[1]["ocf"] and entries[1]["ocf"] > 0:
-        ocf_growth = ((latest["ocf"] - entries[1]["ocf"]) / entries[1]["ocf"]) * 100
-        result["ocf_growth_pct"] = round(ocf_growth, 1)
-
-        if ocf_growth > 10:
-            result["ocf_consistency"] = "GROWING"
-            verdict_parts.append(f"OCF growing ({ocf_growth:.0f}% YoY)")
-        elif ocf_growth > -5:
-            result["ocf_consistency"] = "STABLE"
-            verdict_parts.append(f"OCF stable ({ocf_growth:.0f}% YoY)")
-        else:
-            result["ocf_consistency"] = "DECLINING"
-            verdict_parts.append(f"OCF declining ({ocf_growth:.0f}% YoY)")
-            homework_parts.append("⚠️ Operating cash flow is shrinking. If this persists, the company may need external financing to sustain operations.")
-
-    if not verdict_parts:
-        verdict_parts.append("Cash flow data available but insufficient for trend analysis.")
-
-    result["verdict"] = " | ".join(verdict_parts)
-    result["homework"] = " | ".join(homework_parts)
-    return result
-
-def get_management_quality(cur, base_symbol: str) -> dict[str, Any]:
-    """
-    Assess management quality from governance and leadership signals.
-    
-    Uses a weighted composite of:
-      - Governance score (base)
-      - Auditor flags (qualified opinion = penalty)
-      - CFO exits (leadership instability = penalty)
-      - Related party transactions (tunneling risk = penalty)
-      - Pledged shares (promoter distress = penalty)
-      - Governance score trend (direction)
-    """
-    result: dict[str, Any] = {
-        "quality_score": None,
-        "quality_rating": "UNKNOWN",
-        "auditor_concern": False,
-        "cfo_turnover": False,
-        "related_party_risk": False,
-        "pledge_concern": False,
-        "trend": "STABLE",
-        "verdict": "Management quality data not available.",
-        "homework": "",
-    }
-
-    # Get latest 4 quarters of governance data + auditor/cfo/related_party flags
-    cur.execute(
-        """
-        SELECT promoter_holding_pct, pledged_shares_pct, auditor_flag, cfo_exit_flag,
-               related_party_risk, governance_score
-        FROM aae_governance_metrics
-        WHERE symbol = %s
-        ORDER BY fiscal_year DESC, fiscal_quarter DESC
-        LIMIT 4
-        """,
-        (base_symbol,),
-    )
-    rows = cur.fetchall()
-    if not rows:
-        return result
-
-    parsed = []
-    for r in rows:
-        if isinstance(r, dict):
-            parsed.append({
-                "promoter_pct": safe_float(r.get("promoter_holding_pct")),
-                "pledged_pct": safe_float(r.get("pledged_shares_pct")),
-                "auditor_flag": bool(r.get("auditor_flag", False)),
-                "cfo_exit_flag": bool(r.get("cfo_exit_flag", False)),
-                "related_party_risk": bool(r.get("related_party_risk", False)),
-                "gov_score": safe_float(r.get("governance_score")),
-            })
-        else:
-            parsed.append({
-                "promoter_pct": safe_float(r[0]) if len(r) > 0 else None,
-                "pledged_pct": safe_float(r[1]) if len(r) > 1 else None,
-                "auditor_flag": bool(r[2]) if len(r) > 2 else False,
-                "cfo_exit_flag": bool(r[3]) if len(r) > 3 else False,
-                "related_party_risk": bool(r[4]) if len(r) > 4 else False,
-                "gov_score": safe_float(r[5]) if len(r) > 5 else None,
-            })
-
-    latest = parsed[0]
-    deductions = 0
-    flags = []
-    homework_parts = []
-
-    # Auditor flag
-    if latest["auditor_flag"]:
-        deductions += 15
-        result["auditor_concern"] = True
-        flags.append("qualified auditor opinion")
-        homework_parts.append("Qualified audit opinion is a red flag — verify what the auditor questioned (revenue recognition, related parties, or going concern).")
-
-    # CFO exit flag
-    if latest["cfo_exit_flag"]:
-        deductions += 10
-        result["cfo_turnover"] = True
-        flags.append("CFO turnover detected")
-        homework_parts.append("CFO exits in consecutive quarters indicate instability. Check if a new CFO has been appointed and their background.")
-
-    # Related party risk
-    if latest["related_party_risk"]:
-        deductions += 15
-        result["related_party_risk"] = True
-        flags.append("related party concerns")
-        homework_parts.append("Related party transactions can indicate tunneling risk. Review the annual report for details on the largest RPTs.")
-
-    # Pledged shares
-    pledged = latest["pledged_pct"]
-    if pledged and pledged > 30:
-        deductions += 15
-        result["pledge_concern"] = True
-        flags.append(f"{pledged:.0f}% promoter shares pledged")
-        homework_parts.append("High promoter pledge is a distress signal. If the stock falls sharply, lenders may sell pledged shares, creating a cascade.")
-    elif pledged and pledged > 10:
-        deductions += 5
-        result["pledge_concern"] = True
-        flags.append(f"{pledged:.0f}% promoter shares pledged")
-        homework_parts.append("Moderate promoter pledge. Ensure pledged shares are for business purposes (not promoter's personal margin funding).")
-
-    # Governance score base
-    gov = latest["gov_score"] if latest["gov_score"] and latest["gov_score"] > 0 else 50
-    base_score = min(gov, 80)  # Cap base at 80 since gov scores tend to cluster at 50
-
-    # Governance trend
-    if len(parsed) >= 2:
-        prev_gov = parsed[1]["gov_score"]
-        if prev_gov and prev_gov > 0 and gov and gov > 0:
-            diff = gov - prev_gov
-            if diff > 5:
-                result["trend"] = "IMPROVING"
-            elif diff < -5:
-                result["trend"] = "DECLINING"
-                deductions += 5
-                flags.append("governance score declining")
-
-    quality_score = max(0, min(100, base_score - deductions))
-    result["quality_score"] = round(quality_score, 1)
-
-    if quality_score >= 70:
-        result["quality_rating"] = "GOOD"
-        verdict_base = "Management quality appears sound."
-    elif quality_score >= 50:
-        result["quality_rating"] = "ACCEPTABLE"
-        verdict_base = "Management quality acceptable but has areas to monitor."
-    else:
-        result["quality_rating"] = "POOR"
-        verdict_base = "Management quality concerns — proceed with caution."
-
-    if flags:
-        result["verdict"] = f"{verdict_base} Flags: {', '.join(flags)}."
-    else:
-        result["verdict"] = f"{verdict_base} No governance flags detected."
-
-    result["homework"] = " ".join(homework_parts)
-    return result
-
-
-
-def get_rs_multi_timeframe(cur, base_symbol: str) -> dict[str, Any]:
-    """
-    Analyze multi-timeframe relative strength (1m, 3m, 6m, 12m).
-    
-    RS > 100 = outperforming NIFTY
-    RS < 100 = underperforming NIFTY
-    
-    Classifies trend as:
-      - STRONG_UPTREND: all timeframes > 100
-      - IMPROVING: shorter timeframes > longer timeframes
-      - WEAKENING: shorter timeframes < longer timeframes
-      - STRONG_DOWNTREND: all timeframes < 100
-      - INSUFFICIENT_DATA: not enough data
-    """
-    result: dict[str, Any] = {
-        "rs_21d": None,
-        "rs_63d": None,
-        "rs_126d": None,
-        "rs_252d": None,
-        "trend": "INSUFFICIENT_DATA",
-        "verdict": "Multi-timeframe RS data not available.",
-        "homework": "",
-    }
-
-    cur.execute(
-        """
-        SELECT rs_21d, rs_63d, rs_126d, rs_252d
-        FROM daily_prices
-        WHERE symbol = %s AND rs_90d IS NOT NULL
-        ORDER BY date DESC
-        LIMIT 1
-        """,
-        (base_symbol,),
-    )
-    row = cur.fetchone()
-    if not row:
-        return result
-
-    if isinstance(row, dict):
-        rs_21 = safe_float(row.get("rs_21d"))
-        rs_63 = safe_float(row.get("rs_63d"))
-        rs_126 = safe_float(row.get("rs_126d"))
-        rs_252 = safe_float(row.get("rs_252d"))
-    else:
-        rs_21 = safe_float(row[0]) if len(row) > 0 else None
-        rs_63 = safe_float(row[1]) if len(row) > 1 else None
-        rs_126 = safe_float(row[2]) if len(row) > 2 else None
-        rs_252 = safe_float(row[3]) if len(row) > 3 else None
-
-    rs_vals = {"21d": rs_21, "63d": rs_63, "126d": rs_126, "252d": rs_252}
-    # Only store if > 0 (valid RS)
-    for period_name, val in rs_vals.items():
-        if val and val > 0:
-            result[f"rs_{period_name}"] = round(val, 1)
-
-    available = {k: v for k, v in rs_vals.items() if v and v > 0}
-    if len(available) < 2:
-        result["verdict"] = "Insufficient timeframe data for trend classification."
-        return result
-
-    all_over_100 = all(v > 100 for v in available.values())
-    all_under_100 = all(v < 100 for v in available.values())
-
-    # Sort timeframes: short → long
-    sorted_periods = sorted(available.keys(), key=lambda x: {"21d": 1, "63d": 2, "126d": 3, "252d": 4}.get(x, 5))
-    sorted_vals = [available[p] for p in sorted_periods]
-
-    if all_over_100:
-        result["trend"] = "STRONG_UPTREND"
-        result["verdict"] = "Outperforming across all timeframes — broad institutional demand."
-    elif all_under_100:
-        result["trend"] = "STRONG_DOWNTREND"
-        result["verdict"] = "Underperforming across all timeframes — institutional distribution."
-    elif sorted_vals[-1] > 100 and sorted_vals[0] > 100:
-        result["trend"] = "UPTREND"
-        result["verdict"] = "Outperforming on all short-to-medium timeframes."
-    elif sorted_vals[0] > sorted_vals[-1]:
-        # Short-term RS > long-term RS = improving
-        improving = sorted_vals[0] > sorted_vals[-1] * 1.05
-        if improving:
-            result["trend"] = "IMPROVING"
-            result["verdict"] = "RS improving — short-term outperformance leading. Early rerating signal."
-        else:
-            result["trend"] = "MIXED"
-            result["verdict"] = "Mixed RS across timeframes — no clear trend."
-    elif sorted_vals[-1] > sorted_vals[0]:
-        weakening = sorted_vals[-1] > sorted_vals[0] * 1.05
-        if weakening:
-            result["trend"] = "WEAKENING"
-            result["verdict"] = "RS weakening — short-term underperformance vs long-term. Caution."
-        else:
-            result["trend"] = "MIXED"
-            result["verdict"] = "Mixed RS across timeframes — no clear trend."
-    else:
-        result["trend"] = "MIXED"
-        result["verdict"] = "Mixed RS across timeframes — no clear trend."
-
-    result["homework"] = {
-        "STRONG_UPTREND": "Look for pullback to 50-EMA as entry opportunity. Momentum is on your side.",
-        "IMPROVING": "Confirm with delivery volume. Improving RS + delivery expansion = strong setup.",
-        "WEAKENING": "Check if underperformance is sector-wide or stock-specific. Reduce position size if stock-specific.",
-        "STRONG_DOWNTREND": "Avoid catching falling knives. Wait for RS to stabilize above 90 before considering entry.",
-        "UPTREND": "Trend is intact. Trail stops below nearest timeframe's RS threshold.",
-        "MIXED": "Wait for RS convergence across timeframes before adding conviction.",
-    }.get(result["trend"], "")
-
-    return result
-
-
-
 def get_all_investor_context(cur, base_symbol: str, current_price: float | None = None,
                               current_perx_score: float | None = None,
-                              current_lifecycle: str | None = None,
-                              sector_intel: dict[str, Any] | None = None) -> dict[str, Any]:
+                              current_lifecycle: str | None = None) -> dict[str, Any]:
     """
     Master function that runs all context engines and returns a unified investor context block.
     """
@@ -1373,68 +970,25 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
     try:
         peg = get_peg_ratio(cur, base_symbol, current_pe=valuation.get("pe_ratio"))
     except Exception as e:
-        logger.warning(f"PEG ratio failed for {base_symbol}: {e}")
         cur.connection.rollback()
+        logger.warning(f"PEG ratio failed for {base_symbol}: {e}")
         peg = {"peg_ratio": None, "eps_growth_pct": None, "verdict": "PEG unavailable.", "homework": ""}
 
     # EV/EBITDA (proxy — depends on fundamental_financials columns)
     try:
         ev_ebitda = get_ev_ebitda(cur, base_symbol)
     except Exception as e:
-        logger.warning(f"EV/EBITDA failed for {base_symbol}: {e}")
         cur.connection.rollback()
+        logger.warning(f"EV/EBITDA failed for {base_symbol}: {e}")
         ev_ebitda = {"ev_ebitda": None, "market_cap_cr": None, "net_debt_ebitda": None, "verdict": "EV/EBITDA unavailable.", "homework": ""}
 
     # Institutional flow (FII/DII changes)
     try:
         inst_flow = get_institutional_flow(cur, base_symbol)
     except Exception as e:
+        cur.connection.rollback()
         logger.warning(f"Institutional flow failed for {base_symbol}: {e}")
-        cur.connection.rollback()
-        cur.connection.rollback()
-        inst_flow = {"fii_holding_pct": None, "dii_holding_pct": None, "fii_change_qoq": None, "dii_change_qoq": None, "fii_trend": "UNKNOWN", "dii_trend": "UNKNOWN", "verdict": "Institutional flow data unavailable.", "homework": ""}
-
-    # Cash flow health (OCF/EBITDA, FCF yield, cash conversion quality)
-    try:
-        cashflow = get_cashflow_health(cur, base_symbol)
-    except Exception as e:
-        logger.warning(f"Cash flow health failed for {base_symbol}: {e}")
-        if hasattr(cur, 'connection') and cur.connection:
-            try:
-                cur.connection.rollback()
-            except Exception:
-                pass
-        cashflow = {"ocf_ebitda_ratio": None, "fcf_ocf_ratio": None, "fcf_yield_pct": None,
-                     "ocf_growth_pct": None, "ocf_consistency": "UNKNOWN",
-                     "verdict": "Cash flow data unavailable.", "homework": ""}
-
-    # Multi-timeframe relative strength (1m, 3m, 6m, 12m)
-    try:
-        rs_mtf = get_rs_multi_timeframe(cur, base_symbol)
-    except Exception as e:
-        logger.warning(f"Multi-timeframe RS failed for {base_symbol}: {e}")
-        if hasattr(cur, 'connection') and cur.connection:
-            try:
-                cur.connection.rollback()
-            except Exception:
-                pass
-        rs_mtf = {"rs_21d": None, "rs_63d": None, "rs_126d": None, "rs_252d": None,
-                   "trend": "INSUFFICIENT_DATA", "verdict": "RS data unavailable.", "homework": ""}
-
-    # Management quality (governance score, auditor flags, CFO exits, related party risks)
-    try:
-        mgmt_quality = get_management_quality(cur, base_symbol)
-    except Exception as e:
-        logger.warning(f"Management quality failed for {base_symbol}: {e}")
-        if hasattr(cur, 'connection') and cur.connection:
-            try:
-                cur.connection.rollback()
-            except Exception:
-                pass
-        mgmt_quality = {"quality_score": None, "quality_rating": "UNKNOWN",
-                         "auditor_concern": False, "cfo_turnover": False,
-                         "related_party_risk": False, "pledge_concern": False,
-                         "trend": "STABLE", "verdict": "Data unavailable.", "homework": ""}
+        inst_flow = {"fii_holding_pct": None, "dii_holding_pct": None, "fii_change_qoq": None, "dii_change_qoq": None, "verdict": "", "homework": ""}
 
     # Historical analogs from perx_reports archive
     try:
@@ -1448,8 +1002,8 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
                 "homework": "Run a PERX scan first to enable historical analog matching."
             }
     except Exception as e:
-        logger.warning(f"Analogs failed for {base_symbol}: {e}")
         cur.connection.rollback()
+        logger.warning(f"Analogs failed for {base_symbol}: {e}")
         analogs = {"analogs": [], "verdict": "Analogs unavailable.", "homework": ""}
 
     # Build pre-mortem risk section
@@ -1466,18 +1020,6 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         pre_mortem_risks.append("Low liquidity may cause slippage on entry/exit beyond modeled levels.")
     if inst_flow.get("fii_trend") == "REDUCING" and inst_flow.get("dii_trend") != "ADDING":
         pre_mortem_risks.append("Foreign institutions reducing exposure — potential headwind for rerating momentum.")
-    if cashflow.get("ocf_ebitda_ratio") and cashflow["ocf_ebitda_ratio"] < 0.5:
-        pre_mortem_risks.append(f"Weak cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality concern.")
-    if cashflow.get("ocf_consistency") == "DECLINING":
-        pre_mortem_risks.append("Operating cash flow declining — external financing may be needed.")
-    if rs_mtf.get("trend") == "STRONG_DOWNTREND":
-        pre_mortem_risks.append("Stock underperforming across all timeframes — institutional distribution underway.")
-    elif rs_mtf.get("trend") == "WEAKENING":
-        pre_mortem_risks.append("RS weakening — short-term underperformance emerging vs long-term trend.")
-    if mgmt_quality.get("quality_rating") == "POOR":
-        pre_mortem_risks.append(f"Poor management quality (score {mgmt_quality['quality_score']:.0f}/100) — {mgmt_quality.get('verdict', '')[:80]}")
-    elif mgmt_quality.get("quality_rating") == "ACCEPTABLE" and mgmt_quality.get("trend") == "DECLINING":
-        pre_mortem_risks.append("Management quality declining — governance trend needs close monitoring.")
     if peg.get("peg_ratio") and peg["peg_ratio"] > 3:
         pre_mortem_risks.append(f"PEG ratio at {peg['peg_ratio']:.1f}x — growth is not keeping pace with valuation.")
     if ev_ebitda.get("net_debt_ebitda") and ev_ebitda["net_debt_ebitda"] > 3:
@@ -1498,18 +1040,6 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         catalyst_questions.append("Promoters are buying — strong insider signal. Confirm this is open market purchase (not ESOP or rights issue).")
     if inst_flow.get("fii_trend") == "ADDING":
         catalyst_questions.append(f"FIIs added {inst_flow['fii_change_qoq']:.1f}% — institutional confidence signal. Confirm via latest shareholding pattern filing.")
-    if cashflow.get("fcf_yield_pct") and cashflow["fcf_yield_pct"] > 5:
-        catalyst_questions.append(f"FCF yield at {cashflow['fcf_yield_pct']:.1f}% — strong cash generation relative to capital. Can this compound over next 3 years?")
-    if cashflow.get("ocf_ebitda_ratio") and cashflow["ocf_ebitda_ratio"] > 0.8:
-        catalyst_questions.append(f"High cash conversion (OCF/EBITDA {cashflow['ocf_ebitda_ratio']:.2f}x) — earnings quality is strong. Confirm this is structural (not one-off working capital release).")
-    if rs_mtf.get("trend") == "IMPROVING":
-        catalyst_questions.append("RS improving across timeframes — early rerating signal. Confirm with volume expansion and delivery data.")
-    elif rs_mtf.get("trend") == "STRONG_UPTREND":
-        catalyst_questions.append("Strong multi-timeframe outperformance. Trend is established — key risk is mean reversion if broader market weakens.")
-    if mgmt_quality.get("quality_rating") == "GOOD" and mgmt_quality.get("trend") == "IMPROVING":
-        catalyst_questions.append("Management quality improving (governance score trending up) — this can drive rerating if financials follow.")
-    if mgmt_quality.get("auditor_concern"):
-        catalyst_questions.append("Qualified audit opinion — this is a potential value trap catalyst. If resolved, the stock could re-rate sharply.")
     if ev_ebitda.get("ev_ebitda") and ev_ebitda["ev_ebitda"] < 12:
         catalyst_questions.append(f"EV/EBITDA {ev_ebitda['ev_ebitda']:.1f}x leaves room for rerating IF EBITDA compounds. Can you identify 3 drivers of EBITDA growth for next 12 months?")
     if ownership.get("governance_score") and ownership["governance_score"] < 40:
@@ -1517,46 +1047,34 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
     if not catalyst_questions:
         catalyst_questions.append("No specific catalyst flags from current data. Key question remains: what needs to happen in the next 4 quarters for institutional perception to shift from current lifecycle ({}?) to the next stage?".format(current_lifecycle or "unknown"))
 
-
-    # Sector cycle positioning
-    sector_cycle = {"cycle_stage": "UNKNOWN", "positioning": "", "verdict": ""}
-    if sector_intel and sector_intel.get("status") == "active":
-        breadth = sector_intel.get("industry_breadth", "")
-        rank = sector_intel.get("industry_rank", "")
-        avg = sector_intel.get("avg_sector_mri", 0)
-        top_peers = sector_intel.get("top_peers", [])
-
-        if breadth == "Accumulation":
-            cycle_stage = "EARLY_ACCUMULATION"
-            positioning = "Institutional accumulation phase — momentum likely to follow."
-            verdict = f"Sector breadth is strong (avg MRI {avg:.0f}). Stock rank {rank}."
-            if top_peers:
-                verdict += f" Top peers: {', '.join(top_peers[:3])}."
-            # Add catalyst question
-            catalyst_questions.append("Sector is in accumulation. If this stock is a top-3 peer, rerating can be sector-driven. If a laggard, check what's holding it back.")
-        elif breadth == "Distribution":
-            cycle_stage = "LATE_DISTRIBUTION"
-            positioning = "Broad sector weakness — stock-specific alpha required."
-            verdict = f"Sector breadth is weak (avg MRI {avg:.0f}). Stock rank {rank}."
-            # Add pre-mortem risk
-            if rs_mtf.get("trend") != "STRONG_UPTREND":
-                pre_mortem_risks.append("Sector is in distribution — even strong stocks can get dragged down. Reduce exposure if RS weakens further.")
-        else:
-            cycle_stage = "NEUTRAL"
-            positioning = "Sector neither accumulating nor distributing — stock selection matters most."
-            verdict = f"Sector breadth neutral (avg MRI {avg:.0f}). Stock rank {rank}."
-
-        sector_cycle = {
-            "cycle_stage": cycle_stage,
-            "positioning": positioning,
-            "sector_name": sector_intel.get("sector_name", ""),
-            "industry_breadth": breadth,
-            "avg_sector_mri": avg,
-            "rank": rank,
-            "top_peers": top_peers,
-            "verdict": verdict,
-        }
-
+    # ---------------------------------------------------------------
+    # PRDE Financial Fingerprint Score (from Milestone 0/1)
+    # ---------------------------------------------------------------
+    prde_block = {}
+    try:
+        cur.execute(
+            """
+            SELECT s.master_score, s.components, s.risk_penalty, s.mri_overlay
+            FROM public.prde_final_scores s
+            JOIN public.prde_companies c ON c.id = s.company_id
+            WHERE c.ticker = %s
+            ORDER BY s.created_at DESC
+            LIMIT 1
+            """,
+            (base_symbol,),
+        )
+        prde_row = cur.fetchone()
+        if prde_row:
+            prde_block = {
+                "master_score": float(prde_row["master_score"]) if prde_row["master_score"] is not None else None,
+                "components": prde_row.get("components") if isinstance(prde_row.get("components"), dict) else {},
+                "risk_penalty": float(prde_row["risk_penalty"]) if prde_row["risk_penalty"] is not None else 0.0,
+                "mri_overlay": float(prde_row["mri_overlay"]) if prde_row["mri_overlay"] is not None else 0.0,
+            }
+    except Exception as e:
+        cur.connection.rollback()
+        logger.warning(f"PRDE score not available for {base_symbol}: {e}")
+        prde_block = {"master_score": None, "components": {}, "risk_penalty": 0.0, "mri_overlay": 0.0}
 
     return {
         "valuation": valuation,
@@ -1566,12 +1084,9 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "peg_ratio": peg,
         "ev_ebitda": ev_ebitda,
         "institutional_flow": inst_flow,
-        "cashflow_health": cashflow,
-        "rs_multi_timeframe": rs_mtf,
-        "management_quality": mgmt_quality,
         "historical_analogs": analogs,
-        "sector_cycle": sector_cycle,
         "investor_grade": grade,
+        "prde_score": prde_block,
         "pre_mortem": {
             "risks": pre_mortem_risks,
         },
