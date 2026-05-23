@@ -14,7 +14,7 @@ import logging
 from datetime import date
 from typing import Any
 
-from engine_core.db import fetch_df
+from engine_core.db import fetch_df, get_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("aae_exec_monitor")
@@ -63,6 +63,7 @@ class ExecutionMonitoringAgent:
                     "category": category,
                     "severity": risk["severity"],
                     "detail": risk["detail"],
+                    "data_source": risk.get("source", "PRDE ratios"),
                     "suggested_action": self._suggested_action(category, risk["severity"]),
                 })
 
@@ -75,11 +76,51 @@ class ExecutionMonitoringAgent:
             "alerts": alerts,
         }
 
+    def persist(self) -> dict[str, Any]:
+        """Evaluate risk state and persist to aae_risk_snapshots.
+
+        Returns the evaluated result with version number.
+        """
+        result = self.evaluate()
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT COALESCE(MAX(version), 0) + 1 AS v FROM public.aae_risk_snapshots WHERE symbol = %s",
+                    (self.symbol,),
+                )
+                row = cur.fetchone()
+                next_version = row["v"] if isinstance(row, dict) else row[0]
+
+                cur.execute(
+                    """
+                    INSERT INTO public.aae_risk_snapshots
+                        (symbol, version, overall_risk_state, risk_counts, risks, alerts)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        self.symbol,
+                        next_version,
+                        result.get("overall_risk_state", "CLEAN"),
+                        json.dumps(result.get("risk_counts", {})),
+                        json.dumps(result.get("risks", {})),
+                        json.dumps(result.get("alerts", [])),
+                    ),
+                )
+                conn.commit()
+                result["persisted_version"] = next_version
+                return result
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
     def _check_financial_strain(self) -> dict:
         """Check debt levels and leverage trends from PRDE data."""
         df = fetch_df(
             """
-            SELECT debt_equity
+            SELECT r.fiscal_year, r.debt_equity
             FROM public.prde_ratios_annual r
             JOIN public.prde_companies c ON c.id = r.company_id
             WHERE c.ticker = %s
@@ -92,21 +133,25 @@ class ExecutionMonitoringAgent:
         if df is None or df.empty:
             return {"severity": "GREEN", "detail": "no debt data available", "data_available": False}
 
+        latest_year = int(df.iloc[0]["fiscal_year"]) if df.iloc[0]["fiscal_year"] else None
+        prev_year = int(df.iloc[1]["fiscal_year"]) if len(df) > 1 and df.iloc[1]["fiscal_year"] else None
         latest = float(df.iloc[0]["debt_equity"]) if df.iloc[0]["debt_equity"] else None
         prev = float(df.iloc[1]["debt_equity"]) if len(df) > 1 and df.iloc[1]["debt_equity"] else None
 
         if latest is None:
             return {"severity": "GREEN", "detail": "no debt data", "data_available": False}
 
+        source = f"prde_ratios_annual FY{latest_year}" if latest_year else "prde_ratios_annual"
+
         if latest > HIGH_DEBT_EQUITY:
             if prev and latest > prev:
-                return {"severity": "RED", "detail": f"High and rising D/E: {latest:.2f} (prev {prev:.2f})", "de_ratio": latest}
-            return {"severity": "AMBER", "detail": f"High D/E: {latest:.2f}", "de_ratio": latest}
+                return {"severity": "RED", "detail": f"High and rising D/E: {latest:.2f} (FY{latest_year}) vs {prev:.2f} (FY{prev_year})", "source": source, "de_ratio": latest}
+            return {"severity": "AMBER", "detail": f"High D/E: {latest:.2f} (FY{latest_year})", "source": source, "de_ratio": latest}
 
         if prev and latest < prev:
-            return {"severity": "GREEN", "detail": f"Deleveraging: D/E {latest:.2f} ↓ from {prev:.2f}", "de_ratio": latest}
+            return {"severity": "GREEN", "detail": f"Deleveraging: D/E {latest:.2f} ↓ from {prev:.2f}", "source": source, "de_ratio": latest}
 
-        return {"severity": "GREEN", "detail": f"Healthy D/E: {latest:.2f}", "de_ratio": latest}
+        return {"severity": "GREEN", "detail": f"Healthy D/E: {latest:.2f} (FY{latest_year})", "source": source, "de_ratio": latest}
 
     def _check_earnings_quality(self) -> dict:
         """Check PAT quality via growth consistency from PRDE features."""
@@ -248,10 +293,11 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="AAE Execution Monitoring Agent")
     parser.add_argument("--symbol", required=True, help="Ticker symbol")
+    parser.add_argument("--persist", action="store_true", help="Persist to database")
     args = parser.parse_args()
 
     agent = ExecutionMonitoringAgent(args.symbol)
-    result = agent.evaluate()
+    result = agent.persist() if args.persist else agent.evaluate()
     print(json.dumps(result, indent=2, default=str))
 
 

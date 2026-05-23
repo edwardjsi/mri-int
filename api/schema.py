@@ -836,3 +836,38 @@ def ensure_aae_event_tables(cur) -> None:
         """
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_struct_sig_symbol_version ON public.aae_structural_signals(symbol, version DESC);")
+
+    # Macro Alignment Snapshots — versioned macro context per symbol
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_macro_snapshots (
+            symbol              VARCHAR(20) NOT NULL,
+            version             INT NOT NULL DEFAULT 1,
+            sector              VARCHAR(100),
+            macro_alignment_score NUMERIC(5,2) NOT NULL DEFAULT 0.0,
+            outlook             VARCHAR(30),
+            macro_signals       JSONB,
+            policy_notes        TEXT[] DEFAULT '{}',
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (symbol, version)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_macro_snap_symbol_version ON public.aae_macro_snapshots(symbol, version DESC);")
+
+    # Risk Snapshots — versioned thesis integrity dashboard per symbol
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.aae_risk_snapshots (
+            symbol              VARCHAR(20) NOT NULL,
+            version             INT NOT NULL DEFAULT 1,
+            overall_risk_state  VARCHAR(30) NOT NULL DEFAULT 'CLEAN',
+            risk_counts         JSONB,
+            risks               JSONB,
+            alerts              JSONB,
+            created_at          TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (symbol, version)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_risk_snap_symbol_version ON public.aae_risk_snapshots(symbol, version DESC);")

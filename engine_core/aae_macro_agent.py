@@ -14,7 +14,7 @@ import logging
 from datetime import date
 from typing import Any
 
-from engine_core.db import fetch_df
+from engine_core.db import fetch_df, get_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("aae_macro")
@@ -125,6 +125,47 @@ class MacroCorrelationAgent:
 
         return "UNKNOWN"
 
+    def persist(self) -> dict[str, Any]:
+        """Evaluate macro alignment and persist to aae_macro_snapshots.
+
+        Returns the evaluated result with version number.
+        """
+        result = self.evaluate()
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT COALESCE(MAX(version), 0) + 1 AS v FROM public.aae_macro_snapshots WHERE symbol = %s",
+                    (self.symbol,),
+                )
+                row = cur.fetchone()
+                next_version = row["v"] if isinstance(row, dict) else row[0]
+
+                cur.execute(
+                    """
+                    INSERT INTO public.aae_macro_snapshots
+                        (symbol, version, sector, macro_alignment_score, outlook, macro_signals, policy_notes)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        self.symbol,
+                        next_version,
+                        result.get("sector", ""),
+                        result.get("macro_alignment_score", 0.0),
+                        result.get("outlook", ""),
+                        json.dumps(result.get("macro_signals", {})),
+                        result.get("policy_notes", []),
+                    ),
+                )
+                conn.commit()
+                result["persisted_version"] = next_version
+                return result
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
     def _policy_context(self, sector: str) -> list[str]:
         """Return relevant Indian policy notes for the sector."""
         notes: dict[str, list[str]] = {
@@ -145,10 +186,11 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="AAE Macro Correlation Agent")
     parser.add_argument("--symbol", required=True, help="Ticker symbol")
+    parser.add_argument("--persist", action="store_true", help="Persist to database")
     args = parser.parse_args()
 
     agent = MacroCorrelationAgent(args.symbol)
-    result = agent.evaluate()
+    result = agent.persist() if args.persist else agent.evaluate()
     print(json.dumps(result, indent=2, default=str))
 
 
