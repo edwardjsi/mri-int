@@ -1162,3 +1162,77 @@ Functions that query non-existent columns must be caught AND rolled back at the 
 1. Complete cash flow backfill
 2. Add `get_cashflow_health()` function to `investor_context.py` once backfill completes
 3. Wire cash flow into PERX pre-mortem, catalyst questions, PDF, and email templates
+
+## 📅 Session: May 24, 2026 — Three-Hat Retrospective Full Implementation (Phase A + Phase B)
+
+**Session Start:** 10:00 IST  
+**Session End:** --:-- IST  
+
+### What Was Done
+
+#### Phase A — Architectural Hardening (4/4)
+
+1. ✅ **EngineResult class** (`engine_core/engine_result.py`)
+   - Standardized wrapper: `EngineResult.ok()`, `.unavailable()`, `.error()`, `.stale()`
+   - `ENGINE_UNAVAILABLE = -999.0` sentinel value
+   - `wrap_engine_call()` helper bridges 4 existing return patterns (dict, float, None, Exception)
+
+2. ✅ **RLS Migration** (`engine_core/rls_migration.py`)
+   - Added `client_id` columns to `perx_scores`, `aae_scan_history`, `aae_results_snapshot`
+   - Enabled RLS on all 5 PII tables (including `perx_reports`, `email_log`)
+   - Tenant admin bypass policy for support access
+   - Run against Neon in <1s, no downtime
+
+3. ✅ **API V2** (`api/v2/perx.py`)
+   - `/api/v2/perx/scan/:symbol` returns `module_status` map (each engine OK/UNAVAILABLE)
+   - Returns structured error responses with `error`, `detail`, `action` fields
+   - V1 unchanged for backward compatibility
+
+4. ✅ **Cash flow backfill continued**
+   - Schema + backfill from previous session (3074/3598 rows)
+
+#### Phase B — Investor Features (6/6)
+
+5. ✅ **`get_cashflow_health()`** — OCF/EBITDA, FCF yield, OCF trend, pre-mortem risks
+6. ✅ **Multi-timeframe RS** — `rs_21d/63d/126d/252d` columns + indicator engine computation + trend classifier
+7. ✅ **Sector cycle positioning** — `sector_cycle` block in investor context with stage/positioning/rank
+8. ✅ **ATR-based position sizing (STEE)** — ATR-based stop, ATR-based min risk per share
+9. ✅ **Management quality score** — composite from governance, auditor, CFO, related party, pledge
+10. ✅ **Trailing stop after 1R (STEE)** — stop tightens to 0.5R below price after 1R gain
+
+### Test Results
+
+| Symbol | Score | Sector Cycle | MGMT Quality | RS Trend |
+|--------|-------|-------------|-------------|---------|
+| GRAPHITE | 34.7 | EARLY_ACCUMULATION (rank 9/9) | POOR (5) | STRONG_UPTREND |
+| SCHNEIDER | 79.9 | EARLY_ACCUMULATION (rank 1/9) | N/A | N/A |
+| APARINDS | 68.6 | EARLY_ACCUMULATION (rank 2/9) | N/A | N/A |
+| TCS | 40.5 | N/A | ACCEPTABLE (50) | N/A |
+| HDFCBANK | 17.6 | N/A | ACCEPTABLE (50) | N/A |
+
+### Files Created/Modified
+
+**New files:**
+- `engine_core/engine_result.py` — EngineResult class
+- `engine_core/rls_migration.py` — RLS migration script
+- `api/v2/__init__.py`, `api/v2/perx.py` — API V2 endpoints
+
+**Modified files:**
+- `api/main.py` — wired V2 router
+- `api/schema.py` — RS columns + ALTER TABLE
+- `engine_core/indicator_engine.py` — multi-timeframe RS computation
+- `engine_core/swing_execution_engine.py` — ATR sizing + trailing stop after 1R
+- `engine_perx/investor_context.py` — 4 new functions, sector_cycle, mgmt quality
+- `engine_perx/orchestrator.py` — data warnings, sector_intel threading
+
+### 📌 Key Decisions
+
+1. **RS trend classifier logic**: stock_ret/index_ret × 100 for each window. Trend = STRONG_UPTREND when ALL timeframes > 100, IMPROVING when short-term RS > long-term RS by >5%, etc.
+2. **ATR position sizing**: `risk_per_share = max(close - stop, 1.5 * ATR)` — the ATR minimum prevents over-allocating to volatile stocks with tight stops
+3. **Management quality deductions**: Auditor concern (-15), CFO exit (-10), related party risk (-15), pledge >30% (-15), pledge >10% (-5), declining governance (-5)
+
+### ⏳ Left
+- Multi-timeframe RS data needs indicator pipeline run across all stocks (currently only backfilled for GRAPHITE test)
+- Management quality data needs `aae_governance_metrics` backfill for wider coverage
+- Full STEE backtest to validate ATR sizing vs old method
+

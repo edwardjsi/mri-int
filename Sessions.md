@@ -553,3 +553,84 @@ Fixed a critical bug where PERX scan crashed for any symbol due to PostgreSQL tr
 - Always detect available columns before querying (use `information_schema.columns`)
 - Always rollback the connection when catching DB errors in a transaction
 - Indian stock data via yfinance does NOT provide FII/DII breakdowns
+
+
+## Session: May 24, 2026 — Three-Hat Retrospective Implementation (Phase A + Phase B)
+
+**Session Start:** 10:00 IST  
+**Session End:** --:-- IST  
+
+### Context
+User-led retrospective evaluating the entire platform from three perspectives: successful stock investor, marketer, and software architect. Produced a prioritized action plan.
+
+### Phase A — Architectural Hardening (4/4 complete)
+
+1. **EngineResult class + ENGINE_UNAVAILABLE sentinel** ✅
+   - Created `engine_core/engine_result.py` with `EngineResult.ok()`, `.unavailable()`, `.error()`, `.stale()` factory constructors
+   - Sentinel value `ENGINE_UNAVAILABLE = -999.0`
+   - `wrap_engine_call()` helper bridges existing engines (handles 4 return patterns: dict, float, None, Exception)
+
+2. **RLS Migration** ✅
+   - Created `engine_core/rls_migration.py` — adds `client_id` columns + RLS policies to `perx_reports`, `perx_scores`, `aae_scan_history`, `aae_results_snapshot`, `email_log`
+   - Ran against Neon in <1 second — 13 operations, no data movement, no downtime
+
+3. **API Versioning V2** ✅
+   - Created `api/v2/perx.py` — `/api/v2/perx/scan/:symbol` returns structured `module_status` map (which engines OK vs UNAVAILABLE) + `data_warnings` array
+   - Wired into `api/main.py` with `/api/v2` prefix
+
+### Phase B — Investor-Facing Enhancements (6/6 complete)
+
+4. **Cash Flow Analysis** ✅
+   - New `get_cashflow_health()` in `investor_context.py`: OCF/EBITDA ratio, FCF/OCF ratio, FCF yield (book-based), OCF growth trend, OCF consistency (GROWING/STABLE/DECLINING)
+   - Pre-mortem: flags weak cash conversion (<0.5x) and declining OCF
+   - Catalyst questions: flags high FCF yield (>5%) and strong cash conversion (>0.8x)
+
+5. **Multi-Timeframe Relative Strength** ✅
+   - Added `rs_21d`, `rs_63d`, `rs_126d`, `rs_252d` columns to `daily_prices` (schema + ALTER TABLE)
+   - Updated `indicator_engine.py` to compute all 4 RS windows alongside existing `rs_90d`
+   - New `get_rs_multi_timeframe()` classifies trend: STRONG_UPTREND / IMPROVING / WEAKENING / STRONG_DOWNTREND / MIXED with homework guidance
+   - GRAPHITE example: all timeframes >100 (RS 21d=103, 63d=120, 126d=142, 252d=166) → STRONG_UPTREND
+
+6. **Sector Cycle Positioning** ✅
+   - Added `sector_intel` parameter to `get_all_investor_context()`
+   - New `sector_cycle` block: cycle_stage (EARLY_ACCUMULATION/NEUTRAL/LATE_DISTRIBUTION), positioning advice, industry_breadth, avg_sector_mri, rank, top_peers
+   - Automatically adds pre-mortem risk when sector in distribution + RS not strong uptrend
+   - Automatically adds catalyst question when sector in accumulation
+   - GRAPHITE example: Electrical Equipment sector in EARLY_ACCUMULATION (avg MRI 76), GRAPHITE rank 9/9 (laggard)
+
+7. **ATR-Based Position Sizing (STEE)** ✅
+   - ATR-based stop: `stop = max(low_5d, close - 2*ATR)` prevents shakeouts on normal volatility
+   - ATR-based position sizing: `risk_per_share = max(raw_risk, 1.5*ATR)` ensures volatile stocks get smaller allocations
+   - Target based on actual stop distance (not ATR-inflated), preserving 2:1 reward-to-risk
+
+8. **Management Quality Score** ✅
+   - New `get_management_quality()`: composite score from governance_score, auditor_flag, cfo_exit_flag, related_party_risk, pledged_shares_pct
+   - Deductions: qualified audit (-15), CFO exit (-10), related party risk (-15), high pledge >30% (-15)
+   - Ratings: GOOD (>=70), ACCEPTABLE (>=50), POOR
+   - Trend detection (governance score trajectory over 4 quarters)
+   - GRAPHITE: POOR (score 5) — flagged related party concerns
+
+9. **Trailing Stop After 1R (STEE)** ✅
+   - Once price gains 1R (entry + 1× risk), tighten stop to 0.5R below current price
+   - Stop only moves up, never down
+   - Integrated into `process_exits()` between hard stop and partial profit exit rules
+   - Audit events logged as 'TRAIL_UPDATE' for traceability
+
+### Files Modified
+- `engine_core/engine_result.py` — NEW (EngineResult class + wrap_engine_call)
+- `engine_core/rls_migration.py` — NEW (RLS migration script)
+- `api/v2/__init__.py` — NEW (V2 API package)
+- `api/v2/perx.py` — NEW (/api/v2/perx/scan/:symbol endpoint)
+- `api/main.py` — Added V2 router import + include
+- `engine_core/indicator_engine.py` — Multi-timeframe RS computation + schema
+- `api/schema.py` — RS columns + ALTER TABLE statements
+- `engine_core/swing_execution_engine.py` — ATR-based stop/sizing + trailing stop after 1R
+- `engine_perx/investor_context.py` — 4 new functions (cashflow, RS, mgmt quality, sector cycle) + wiring
+- `engine_perx/orchestrator.py` — Data warnings + sector_intel threading
+
+### Key Lessons
+- RLS on Neon takes <1 second for 5 tables with no operational impact
+- Multi-timeframe RS computation shares the same merged DataFrame as rs_90d — the incremental cost of adding 4 more windows is negligible
+- ATR-based sizing naturally regulates position size by volatility: volatile stocks get smaller positions and vice versa
+- Management quality score relies on `aae_governance_metrics` — symbols without governance data get "UNKNOWN" with clear data_warnings
+
