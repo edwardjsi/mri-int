@@ -45,18 +45,11 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
     setDigitalTwinStock(symbol);
     setDigitalTwinLoading(true);
     setDigitalTwinResult(null);
-    setDigitalTwinHistory([]);
-    setDigitalTwinHistoryLoading(true);
     
     api.getAaeScan(symbol)
       .then(result => setDigitalTwinResult(result))
       .catch(err => setDigitalTwinResult({ error: err.message || 'Failed to run AAE scan' }))
       .finally(() => setDigitalTwinLoading(false));
-
-    api.getAaeHistory(symbol)
-      .then(history => setDigitalTwinHistory(history))
-      .catch(err => console.error('Failed to fetch AAE history', err))
-      .finally(() => setDigitalTwinHistoryLoading(false));
   };
 
   const handleEmailAAE = async () => {
