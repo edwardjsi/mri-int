@@ -14,8 +14,6 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   const [emailing, setEmailing] = useState(false);
   const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
   const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
-  const [digitalTwinHistory, setDigitalTwinHistory] = useState<any[]>([]);
-  const [digitalTwinHistoryLoading, setDigitalTwinHistoryLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
