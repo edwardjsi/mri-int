@@ -313,13 +313,14 @@ def compute_indicators(df, idx_df):
                 merged["stock_ret"] = merged["close"] / merged["close"].shift(90)
                 merged["idx_ret"] = merged["idx_close"] / merged["idx_close"].shift(90)
                 merged["rs_90d"] = (merged["stock_ret"] / merged["idx_ret"]) * 100
-                # Multi-timeframe RS
+                merge_cols = ["date", "rs_90d"]
+                # Multi-timeframe RS (only compute when enough history exists)
                 for window, col in [(21, "rs_21d"), (63, "rs_63d"), (126, "rs_126d"), (252, "rs_252d")]:
                     if len(merged) > window:
                         merged["stock_ret_w"] = merged["close"] / merged["close"].shift(window)
                         merged["idx_ret_w"] = merged["idx_close"] / merged["idx_close"].shift(window)
                         merged[col] = (merged["stock_ret_w"] / merged["idx_ret_w"]) * 100
-                merge_cols = ["date", "rs_90d", "rs_21d", "rs_63d", "rs_126d", "rs_252d"]
+                        merge_cols.append(col)
                 s_df = pd.merge(
                     s_df.drop(columns=[c for c in merge_cols if c != "date"], errors='ignore'),
                     merged[merge_cols], on="date", how="left"
