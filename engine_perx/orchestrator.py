@@ -240,7 +240,6 @@ def _build_report_payload(
         investor_context = get_all_investor_context(
             cur, symbol, current_price=current_price,
             current_perx_score=perx_score, current_lifecycle=lifecycle_stage,
-            sector_intel=sector_intelligence,
         )
 
     # Contextual evaluation against prior report
