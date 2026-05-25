@@ -141,7 +141,7 @@ def search_companies(q: str, conn=Depends(get_db)):
     try:
         cur.execute("""
             SELECT symbol, company_name
-            FROM stock_sectors
+            FROM universe
             WHERE symbol ILIKE %s OR company_name ILIKE %s
             LIMIT 10
         """, (query, query))
