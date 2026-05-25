@@ -202,8 +202,12 @@ async def email_aae_report(
         # Persist the profile
         _persist_rerating_profile(profile, conn)
 
+        # Extract legacy scan result for email (builder expects AAEOrchestrator output format)
+        legacy_result = profile.get("legacy_forensic", profile)
+        legacy_result["symbol"] = symbol.upper()
+
         # Send email in background
-        background_tasks.add_task(send_aae_report_email, client["email"], client.get("name", "Investor"), profile)
+        background_tasks.add_task(send_aae_report_email, client["email"], client.get("name", "Investor"), legacy_result)
 
         return {"status": "SUCCESS", "message": f"Re-Rating Profile for {symbol} queued for email to {client['email']}."}
     except Exception as e:

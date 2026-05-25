@@ -70,11 +70,7 @@ class ReRatingOrchestrator:
         try:
             from engine_fundamental.aae_orchestrator import AAEOrchestrator  # legacy 10-layer
             legacy = AAEOrchestrator(self.symbol).run_full_scan()
-            profile["legacy_forensic"] = {
-                "master_score": legacy.get("master_score"),
-                "status": legacy.get("status"),
-                "layers": legacy.get("layers", {}),
-            }
+            profile["legacy_forensic"] = legacy  # full legacy result for email builder compat
             profile["forensic_score"] = legacy.get("master_score", 50.0)
         except Exception as e:
             logger.warning(f"Legacy forensic scan unavailable for {self.symbol}: {e}")

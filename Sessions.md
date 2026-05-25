@@ -1,3 +1,20 @@
+## **May 25, 2026: PRDE Milestone 0 & 1 Completion + Pipeline Integration**
+
+**Objective**: Complete Milestone 0 (PRDE Financial Foundation) and Milestone 1 (Deterministic Scoring) and wire them into the daily pipeline + AAE orchestrator.
+
+**Actions**:
+  - **Regenerated feature snapshots** — Ran `prde_feature_engine.py --limit 20 --min-years 3` to capture all 14 active PRDE companies (previously only 9 had snapshots due to `min_years=5` threshold). All 14 generated with stable, idempotent feature hashes.
+  - **Regenerated final scores** — Ran `prde_scoring_engine.py --limit 20` to score all 14 companies into `prde_final_scores`. Top performer: SUNPHARMA (74.8), lowest: DIVISLAB (29.0).
+  - **Verified AAE integration** — Tested `aae_re_rating_orchestrator.py` with SUNPHARMA. PRDE score 74.8 flows correctly into the weighted rerating probability (30% weight), combined with forensic (30%), structural (25%), and macro (15%) layers.
+  - **Wired into daily pipeline** — Added Step 8.5 to `scripts/pipeline_cloud.sh`: `prde_feature_engine.py` + `prde_scoring_engine.py` run daily before AAE V3 production cycle. Updated all step labels from [N/8] to [N/10].
+  - **Data audit**: 14 active companies, 64 financial rows, 64 ratio rows, 14 feature snapshots, 14 final scores. Year span 2021–2026. 9 NULL ebitda values (financial sector companies).
+
+**Result**: Milestones 0 and 1 are complete. PRDE financial fingerprint foundation is now a permanent, daily-refreshing layer that feeds into the AAE Re-Rating Orchestrator (Layer B, 30% weight). The 14-company seed universe serves as the deterministic scoring backbone for AAE institutional analysis.
+
+**Next Step**: Expand PRDE seed CSV beyond current 14 companies (mostly large-cap IT/financial) to include mid-cap manufacturing, pharma, and consumer names.
+
+---
+
 ## **May 23, 2026: Four Missing PERX Functions + Email/PDF Rendering Fixes**
 
 **Objective**: Complete the four analytical modules missing from the PERX investor context engine (previous session's single_find_and_replace silently failed), and fix PDF/email rendering mismatches.

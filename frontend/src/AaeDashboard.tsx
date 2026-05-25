@@ -15,6 +15,14 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
   const [digitalTwinResult, setDigitalTwinResult] = useState<any>(null);
   const [digitalTwinLoading, setDigitalTwinLoading] = useState(false);
 
+  // Free-form Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchSymbol, setSearchSymbol] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchStatus, setSearchStatus] = useState<string | null>(null);
+
   useEffect(() => {
     Promise.all([
       api.getAaeTopCandidates().catch(() => []),
@@ -39,6 +47,50 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
       setCandidates(allCandidates);
     }
   }, [filterUniverse, allCandidates, watchlistSymbols]);
+
+  // Debounced company search for free-form input
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery && searchQuery.length >= 2) {
+        try {
+          const res = await api.searchCompanies(searchQuery);
+          setSearchSuggestions(Array.isArray(res) ? res : []);
+          setShowSearchSuggestions(true);
+        } catch { setSearchSuggestions([]); }
+      } else {
+        setSearchSuggestions([]);
+        setShowSearchSuggestions(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const selectSearchSuggestion = (company: any) => {
+    if (!company) return;
+    setSearchSymbol(company.symbol);
+    setSearchQuery(company.company_name || company.symbol);
+    setShowSearchSuggestions(false);
+  };
+
+  const handleSearchAndEmail = async (e?: any) => {
+    if (e) e.preventDefault();
+    let targetSym = searchSymbol;
+    if (!targetSym && searchQuery) {
+      const found = searchSuggestions.find((s: any) =>
+        s.symbol.toUpperCase() === searchQuery.toUpperCase() ||
+        (s.company_name && s.company_name.toUpperCase() === searchQuery.toUpperCase())
+      );
+      targetSym = found ? found.symbol : searchQuery.trim().toUpperCase();
+    }
+    if (!targetSym) { setSearchStatus('Enter a company name or symbol.'); return; }
+    setSearchLoading(true); setSearchStatus(null);
+    try {
+      const res = await api.emailAaeReport(targetSym);
+      setSearchStatus(res.message || 'Re-Rating Report queued for email.');
+    } catch (err: any) {
+      setSearchStatus(err.message || 'Failed to send. Check API logs.');
+    } finally { setSearchLoading(false); }
+  };
 
   const handleRunDigitalTwin = async (symbol: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -245,10 +297,32 @@ export default function AaeDashboard({ onBack }: { onBack: () => void }) {
 
         <main className="aae-main">
           <header className="aae-topbar">
-            <label className="aae-search" aria-label="Search companies">
-              <span>⌕</span>
-              <input placeholder="Search..." aria-label="Search input" />
-            </label>
+            <form onSubmit={handleSearchAndEmail} style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1 }}>
+              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                <input
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setSearchSymbol(''); }}
+                  onFocus={() => searchSuggestions.length > 0 && setShowSearchSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                  placeholder="Company name or symbol..."
+                  aria-label="Search companies"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', background: '#0f172a', color: 'var(--ink)', fontSize: '13px' }}
+                />
+                {showSearchSuggestions && searchSuggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200, background: '#0f172a', border: '1px solid var(--line)', borderRadius: '6px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {searchSuggestions.map((s: any, i: number) => (
+                      <div key={i} onMouseDown={() => selectSearchSuggestion(s)} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--line)', color: 'var(--ink)' }} onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <b>{s.symbol}</b> — {s.company_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button type="submit" disabled={searchLoading} style={{ padding: '8px 16px', borderRadius: '6px', background: 'linear-gradient(135deg, #1e1b4b, #312e81)', color: 'white', border: '1px solid #4338ca', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap', opacity: searchLoading ? 0.6 : 1 }}>
+                {searchLoading ? 'Scanning...' : '🔍 Scan & Email'}
+              </button>
+              {searchStatus && <span style={{ fontSize: '11px', color: 'var(--teal)', whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{searchStatus}</span>}
+            </form>
             <div className="aae-top-actions">
               <button className="aae-quiet-button" type="button" onClick={onBack}>Exit AAE Console</button>
               <button className="aae-primary-button" type="button" onClick={() => window.location.reload()}>Refresh Scan</button>

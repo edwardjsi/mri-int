@@ -2,6 +2,36 @@
 
 ---
 
+## 📅 Session: May 25, 2026 — PRDE Milestone 0 & 1 Completion + Pipeline Integration
+**Session Start:** 09:45 IST
+**Session End:** 10:20 IST
+
+### What Was Done This Session
+
+#### 1. PRDE Milestone 0 — Feature Snapshots ✅
+- [x] Regenerated feature snapshots for all 14 active PRDE companies (lowered `min_years` from 5→3).
+- [x] All 14 companies now have deterministic, idempotent feature hashes in `prde_feature_snapshots`.
+- [x] Verified database state: 14 active companies, 64 financial rows, 64 ratio rows.
+
+#### 2. PRDE Milestone 1 — Deterministic Scoring ✅
+- [x] Ran `prde_scoring_engine.py --limit 20` — all 14 companies scored into `prde_final_scores`.
+- [x] Score distribution: SUNPHARMA 74.8 at top, DIVISLAB 29.0 at bottom. 8 scoring components + risk penalty + MRI overlay all computed.
+- [x] Milestone 0 and 1 are now **complete per the AAE Implementation Roadmap done criteria**.
+
+#### 3. AAE Orchestrator Integration Verified ✅
+- [x] Tested `ReRatingOrchestrator.build_profile()` with SUNPHARMA — PRDE score 74.8 flows into Layer B (30% weight of rerating probability).
+- [x] Confirmed end-to-end: feature snapshot → `compute_master_score()` → `aae_re_rating_orchestrator` → weighted rerating probability.
+
+#### 4. Daily Pipeline Wiring ✅
+- [x] Added PRDE feature + scoring as Step 8.5 in `scripts/pipeline_cloud.sh` (runs before AAE V3 Step 9).
+- [x] Updated all step labels from [N/8] to [N/10] to reflect new 10-step pipeline.
+
+### 📌 Current Milestone
+- PRDE Milestones 0 & 1 **complete**. AAE Milestone 5 (Re-Rating Orchestrator) now has live PRDE scores for all 14 seed companies.
+- Next: Expand PRDE seed CSV to mid-cap manufacturing/pharma/consumer names.
+
+---
+
 ## 📅 Session: May 21, 2026 — UI Enhancements & Breakout Engine Fixes
 **Session Start:** 12:00 IST
 **Session End:** 14:00 IST
