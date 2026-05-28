@@ -6,6 +6,7 @@ import BreakoutBadge from './BreakoutBadge';
 import BreakoutRadarPage from './BreakoutRadarPage';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
+import GuidanceCheck from './GuidanceCheck';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2574,6 +2575,10 @@ function App() {
     return <AaeDashboard onBack={() => setPage('dashboard')} />;
   }
 
+  if (page === 'guidance') {
+    return <GuidanceCheck />;
+  }
+
   return (
     <div className="app-layout">
       <nav className="sidebar">
@@ -2608,6 +2613,9 @@ function App() {
           </button>
           <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
             <span className="nav-icon">🧬</span> AAE Console
+          </button>
+          <button className={`nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')}>
+            <span className="nav-icon">🔍</span> GuidanceCheck
           </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
@@ -2662,6 +2670,7 @@ function App() {
         <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
         <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
         <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
+        <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
         {isAdmin() && (
           <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
         )}
