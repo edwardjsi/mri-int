@@ -1,0 +1,10 @@
+import sys; sys.path.insert(0, '/home/immanuels/Desktop/mri-int')
+from engine_core.db import get_connection
+conn = get_connection(); cur = conn.cursor()
+cur.execute("SELECT COUNT(*) FROM (SELECT symbol FROM fundamental_financials WHERE revenue IS NOT NULL AND ebitda IS NOT NULL AND net_profit IS NOT NULL GROUP BY symbol HAVING COUNT(*) >= 3) sub")
+print(f'3+ yrs usable: {cur.fetchone()["count"]}')
+cur.execute("SELECT COUNT(DISTINCT f.symbol) FROM fundamental_financials f JOIN stock_sectors s ON s.symbol = f.symbol WHERE f.revenue IS NOT NULL")
+print(f'With sector: {cur.fetchone()["count"]}')
+cur.execute("SELECT COUNT(DISTINCT f.symbol) FROM fundamental_financials f JOIN daily_prices dp ON dp.symbol = f.symbol WHERE f.revenue IS NOT NULL AND f.net_profit IS NOT NULL")
+print(f'With price: {cur.fetchone()["count"]}')
+cur.close(); conn.close()
