@@ -105,6 +105,33 @@ def calendar_to_fiscal(d: date) -> tuple:
     else:               return (d.year, 4)
 
 
+def fiscal_to_calendar(fy: int, fq: int) -> tuple:
+    """Convert fiscal (year, quarter) to calendar (year, month_start).
+    Q1FY27 → (2026, 4) [Apr], Q4FY26 → (2026, 1) [Jan]"""
+    if fq <= 3:
+        return (fy, fq * 3 + 1)
+    return (fy, 1)
+
+
+def has_quarter_passed(target_fy: int, target_fq: int) -> bool:
+    """Check if fiscal quarter has passed relative to today."""
+    today = date.today()
+    cfy, cfq = calendar_to_fiscal(today)
+    tc_year, tc_month = fiscal_to_calendar(target_fy, target_fq)
+    cc_year, cc_month = fiscal_to_calendar(cfy, cfq)
+    # Target quarter ends: start_month + 2
+    te_month = tc_month + 2
+    te_year = tc_year
+    if te_month > 12:
+        te_month -= 12
+        te_year += 1
+    if te_year < cc_year:
+        return True
+    if te_year == cc_year and te_month < cc_month:
+        return True
+    return False
+
+
 class GuidanceVerifier:
     """Checks management guidance against actual quarterly financials."""
 
@@ -133,8 +160,7 @@ class GuidanceVerifier:
                 parsed = self._latest_fiscal_quarter(cur, sym)
 
             fy, fq = parsed
-            cfy, cfq = calendar_to_fiscal(date.today())
-            if fy > cfy or (fy == cfy and fq > cfq):
+            if not has_quarter_passed(fy, fq):
                 return self._store(cur, sid, fy, fq, "PENDING")
 
             sql = MAPPING[gtype]["sql"]
