@@ -64,6 +64,24 @@ def get_portfolio_guidance(conn=Depends(get_db)):
     return {"holdings": scores, "count": len(scores)}
 
 
+@router.get("/promises-due")
+def get_promises_due(conn=Depends(get_db)):
+    """Guidance promises with target dates — sorted by nearest deadline."""
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT g.symbol, g.guidance_type, g.guidance_text,
+                  g.target_value, g.target_unit, g.target_date,
+                  g.confidence, v.status
+           FROM management_guidance g
+           LEFT JOIN guidance_verification v ON g.id = v.guidance_id
+           WHERE g.target_date IS NOT NULL
+             AND (v.status IS NULL OR v.status = 'PENDING')
+           ORDER BY g.target_date ASC
+           LIMIT 50"""
+    )
+    return cur.fetchall()
+
+
 @router.get("/leaderboard")
 def get_leaderboard(
     worst: bool = Query(False),

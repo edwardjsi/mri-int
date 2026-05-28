@@ -41,6 +41,7 @@ CRITICAL RULES:
 - DO extract directional commitments without specific numbers (e.g. "we expect margin expansion")
 - DO extract quantitative targets when stated (e.g. "operating margin of 25%")
 - target_value: the FUTURE target number, or null if only directional guidance given
+- target_quarter: WHEN management expects this. Extract from transcript. Use Q1FY26/Q2FY26/Q3FY26/Q4FY26 for quarters, FY26 for full year, H1FY26 for half-year, CY2026 for calendar year. If they say "next quarter" and transcript is Q4FY25, use Q1FY26. If "by March 2026", use Q4FY26. If no timeframe, set null.
 - Even if management says "we don't give guidance", still extract any forward-looking claims they DO make
 
 For EACH valid statement return:

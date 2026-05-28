@@ -60,17 +60,37 @@ MAPPING = {
 
 
 def parse_target_quarter(target_str: str) -> tuple | None:
-    """Parse 'Q4FY26' → (2026, 4), 'FY26' → (2026, 4)."""
+    """Parse various date formats to (fiscal_year, quarter).
+    
+    Q4FY26 → (2026, 4)       FY26 → (2026, 4)
+    H1FY26 → (2026, 2)       H2FY26 → (2026, 4)
+    CY2026 → (2026, 4)       Q1CY26 → (2026, 1)
+    FY2026 → (2026, 4)
+    """
     if not target_str:
         return None
-    s = target_str.upper().replace(" ", "")
+    s = target_str.upper().replace(" ", "").strip()
     try:
+        # Q4FY26 or Q1FY2026
         if "Q" in s and "FY" in s:
             q = int(s.split("FY")[0].replace("Q", ""))
-            fy = 2000 + int(s.split("FY")[1])
+            fy = 2000 + int(s.split("FY")[1][:2])
             return (fy, q)
+        # H1FY26 / H2FY26
+        if s.startswith("H1FY"):
+            return (2000 + int(s[4:]), 2)
+        if s.startswith("H2FY"):
+            return (2000 + int(s[4:]), 4)
+        # FY26 / FY2026
         if s.startswith("FY"):
             return (2000 + int(s[2:]), 4)
+        # CY2026 / Q1CY26
+        if "CY" in s:
+            yr = 2000 + int(s.split("CY")[1][:2]) if int(s.split("CY")[1][:2]) < 100 else int(s.split("CY")[1][:4])
+            if s.startswith("Q"):
+                q = int(s[1])
+                return (yr, q)
+            return (yr, 4)
     except (ValueError, IndexError):
         pass
     return None

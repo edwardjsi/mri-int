@@ -22,7 +22,9 @@ for r in rows:
     tdate = r[5] if isinstance(r, (list, tuple)) else r["target_date"]
     conf = r[6] if isinstance(r, (list, tuple)) else r["confidence"]
     print(f"[{gtype}] {gtext}")
+    if tdate:
+        print(f"  📅 Due: {tdate} | Confidence: {conf}")
     if tval:
-        print(f"  → Target: {tval} {tunit} by {tdate} | Confidence: {conf}")
+        print(f"  → Target: {tval} {tunit}")
     print()
 conn.close()
