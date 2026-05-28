@@ -88,7 +88,13 @@ app.include_router(guidance_router)
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])
 async def health():
-    return {"status": "healthy"}
+    import subprocess
+    try:
+        branch = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, timeout=5).stdout.strip()
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        branch, commit = "unknown", "unknown"
+    return {"status": "healthy", "branch": branch, "commit": commit}
 
 # Serve Frontend Static Files
 static_path = os.path.join(os.path.dirname(__file__), "static")
