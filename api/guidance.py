@@ -53,35 +53,15 @@ def get_guidance_dashboard(symbol: str, conn=Depends(get_db)):
 
 
 @router.get("/portfolio")
-def get_portfolio_guidance(
-    current_client=Depends(get_current_client), conn=Depends(get_db)
-):
-    """GuidanceCheck across all stocks in user's portfolio."""
+def get_portfolio_guidance(conn=Depends(get_db)):
+    """GuidanceCheck across all tracked stocks."""
     cur = conn.cursor()
-
-    # Get user's holdings
-    cur.execute(
-        "SELECT symbol FROM client_external_holdings WHERE client_id=%s",
-        (current_client["id"],),
-    )
-    holdings = [r["symbol"] if isinstance(r, dict) else r[0] for r in cur.fetchall()]
-
-    if not holdings:
-        return {"holdings": [], "message": "No holdings found"}
-
-    # Get credibility scores for all holdings
     cur.execute(
         """SELECT * FROM management_credibility_scores
-           WHERE symbol = ANY(%s)
-           ORDER BY accuracy_pct ASC""",
-        (holdings,),
+           ORDER BY accuracy_pct ASC"""
     )
     scores = cur.fetchall()
-
-    return {
-        "holdings": scores,
-        "count": len(scores),
-    }
+    return {"holdings": scores, "count": len(scores)}
 
 
 @router.get("/leaderboard")
