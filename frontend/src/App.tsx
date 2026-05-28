@@ -2575,10 +2575,6 @@ function App() {
     return <AaeDashboard onBack={() => setPage('dashboard')} />;
   }
 
-  if (page === 'guidance') {
-    return <GuidanceCheck />;
-  }
-
   return (
     <div className="app-layout">
       <nav className="sidebar">
@@ -2638,6 +2634,7 @@ function App() {
                     page === 'watchlist' ? 'Stock Watchlist' :
                       page === 'breakout' ? 'Breakout Radar' :
                       page === 'perx' ? 'PERX Institutional Scan' :
+                      page === 'guidance' ? 'Management Credibility' :
                       page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
           </h1>
         </header>
@@ -2650,6 +2647,7 @@ function App() {
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
           {page === 'breakout' && <BreakoutRadarPage onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
+          {page === 'guidance' && <GuidanceCheck />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
       </main>
