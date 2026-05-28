@@ -31,6 +31,7 @@ COPY engine_core/ ./engine_core/
 COPY engine_fundamental/ ./engine_fundamental/
 COPY engine_qualitative/ ./engine_qualitative/
 COPY engine_perx/ ./engine_perx/
+COPY engine_guidance/ ./engine_guidance/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
 
