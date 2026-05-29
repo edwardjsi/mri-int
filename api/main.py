@@ -43,6 +43,31 @@ def on_startup():
         conn = get_connection()
         ensure_required_tables(conn)
         logger.info("✅ Database Schema Synced")
+
+        # Auto-prime guidance on first run (if guidance table is empty)
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM public.management_guidance")
+            guidance_count = cur.fetchone()[0]
+            cur.close()
+            if guidance_count == 0:
+                logger.info("🔍 Guidance table is empty — auto-priming all stocks in background...")
+                cur2 = conn.cursor()
+                cur2.execute("SELECT DISTINCT UPPER(symbol) FROM watchlist")
+                wl = {row[0] for row in cur2.fetchall()}
+                cur2.execute("SELECT DISTINCT UPPER(symbol) FROM holdings")
+                hl = {row[0] for row in cur2.fetchall()}
+                cur2.close()
+                all_syms = sorted(wl | hl)
+                if all_syms:
+                    import threading
+                    def _prime():
+                        from engine_guidance.guidance_primer import prime_guidance_data_batch
+                        prime_guidance_data_batch(all_syms)
+                    threading.Thread(target=_prime, daemon=True).start()
+                    logger.info(f"🔍 Background priming started for {len(all_syms)} stocks")
+        except Exception as e:
+            logger.warning(f"Auto-prime check skipped: {e}")
     except Exception as e:
         logger.error(f"❌ Database Schema Sync FAILED: {e}")
     finally:
