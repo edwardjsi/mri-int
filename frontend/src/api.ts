@@ -376,6 +376,12 @@ export const api = {
     apiFetch('/guidance/thesis', { method: 'POST', body: JSON.stringify(data) }),
   getThesis: (symbol: string) => apiFetch(`/guidance/thesis/${encodeURIComponent(symbol)}`),
   listTheses: () => apiFetch('/guidance/thesis'),
+
+  // Unified Scan (PERX + AAE + GuidanceCheck + MOSI)
+  scanUnified: (symbol: string) =>
+    apiFetch(`/unified/scan/${encodeURIComponent(symbol)}`, { method: 'POST' }),
+  scanUnifiedWithEmail: (symbol: string) =>
+    apiFetch(`/unified/scan/${encodeURIComponent(symbol)}?include_email=true`, { method: 'POST' }),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
