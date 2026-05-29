@@ -10,7 +10,7 @@ Endpoints:
     GET  /api/guidance/thesis/{symbol}    — Get thesis for a symbol
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, BackgroundTasks
 from api.deps import get_db, get_current_client
 from engine_core.db import get_connection
 import logging
