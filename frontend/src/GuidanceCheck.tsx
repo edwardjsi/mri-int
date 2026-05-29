@@ -8,6 +8,7 @@ export default function GuidanceCheck() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [primeMsg, setPrimeMsg] = useState('');
 
   const check = async () => {
     if (!symbol.trim()) return;
@@ -24,12 +25,27 @@ export default function GuidanceCheck() {
     setLoading(false);
   };
 
+  const primeAll = async () => {
+    setLoading(true); setError(''); setPrimeMsg('');
+    try {
+      const res = await fetch('/api/guidance/prime-all', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('mri_token') }
+      });
+      const data = await res.json();
+      setPrimeMsg(`Priming ${data.total_symbols} stocks in background — ${data.symbols.slice(0,5).join(', ')}...`);
+    } catch (e: any) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
   return (
     <div style={{ padding: '20px', color: '#e2e8f0' }}>
       <h2>🔍 GuidanceCheck</h2>
       <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '16px' }}>Management Credibility Tracker</p>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={symbol} onChange={e => setSymbol(e.target.value)} onKeyDown={e => e.key === 'Enter' && check()}
           placeholder="Symbol (e.g. TCS)"
           style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '8px 12px', color: '#e2e8f0', width: '160px' }} />
@@ -39,7 +55,12 @@ export default function GuidanceCheck() {
         <button onClick={worst} disabled={loading} style={{ background: '#1e3a5f', color: '#60a5fa', border: '1px solid #3b82f6', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer' }}>
           Worst Offenders
         </button>
+        <button onClick={primeAll} disabled={loading} style={{ background: '#451a03', color: '#fbbf24', border: '1px solid #92400e', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontWeight: 600 }}>
+          ⚡ Prime All Stocks
+        </button>
       </div>
+
+      {primeMsg && <div style={{ padding: '10px', background: '#1e3a5f', border: '1px solid #3b82f6', borderRadius: '6px', color: '#93c5fd', marginBottom: '12px', fontSize: '0.85rem' }}>{primeMsg}</div>}
 
       {error && <div style={{ padding: '10px', background: '#7f1d1d20', border: '1px solid #ef444440', borderRadius: '6px', color: '#fca5a5', marginBottom: '12px' }}>{error}</div>}
 
