@@ -47,7 +47,7 @@ def get_llm_client():
         _llm_cache = (None, None)
         return _llm_cache
 
-    http_client = httpx.Client()
+    http_client = httpx.Client(timeout=30.0)
 
     # ── DeepSeek ──────────────────────────────────────────────────
     deepseek_key = os.environ.get("DEEPSEEK_API_KEY")

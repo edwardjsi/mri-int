@@ -309,7 +309,7 @@ class UnifiedAnalyzer:
                 symbol=self.symbol,
                 conn=conn,
                 client_id=None,
-                include_debate=True,
+                include_debate=False,
                 persist=False,
             )
             report["perx"] = perx_result.get("report", perx_result)
