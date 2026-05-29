@@ -74,7 +74,13 @@ export default function GuidanceCheck() {
                 <span style={{ fontSize: '0.8rem' }}>{g.status === 'ACHIEVED' ? '✅' : g.status === 'MISSED' ? '❌' : g.status === 'PARTIAL' ? '⚠️' : g.status === 'PENDING' ? '⏳' : '⚡'}</span>
               </div>
               <p style={{ fontSize: '0.8rem', margin: '0 0 4px' }}>{g.guidance_text}</p>
-              {g.target_value && <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Target: {g.target_value}{g.target_unit} | {g.confidence || '?'} confidence{g.actual_value ? ` | Actual: ${g.actual_value}` : ''}{g.variance_pct != null ? ` | ${g.variance_pct > 0 ? '+' : ''}${g.variance_pct?.toFixed(1)}%` : ''}</div>}
+              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                {g.target_date && <span style={{ marginRight: '8px' }}>📅 {g.target_date}</span>}
+                {g.target_value && <span>Target: {g.target_value}{g.target_unit}</span>}
+                {g.confidence && <span style={{ marginLeft: '8px' }}>| {g.confidence} confidence</span>}
+                {g.actual_value && <span style={{ marginLeft: '8px' }}>| Actual: {g.actual_value}</span>}
+                {g.variance_pct != null && <span style={{ marginLeft: '8px' }}>| {g.variance_pct > 0 ? '+' : ''}{g.variance_pct?.toFixed(1)}%</span>}
+              </div>
             </div>
           ))}
         </div>
