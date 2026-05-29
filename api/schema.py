@@ -603,6 +603,7 @@ def ensure_required_tables(conn) -> None:
     
     ensure_prde_tables(cur)
     ensure_aae_event_tables(cur)
+    ensure_guidance_tables(cur)
     
     conn.commit()
     cur.close()
@@ -883,4 +884,109 @@ def ensure_aae_event_tables(cur) -> None:
             updated_at      TIMESTAMPTZ DEFAULT NOW()
         );
         """
+    )
+
+
+def ensure_guidance_tables(cur) -> None:
+    """Ensure GuidanceCheck tables for management credibility tracking.
+
+    These tables store forward-looking statements extracted from concall
+    transcripts, verification against quarterly financials, and aggregate
+    credibility scores per management team.
+    """
+    # Management Guidance — forward-looking statements from transcripts
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.management_guidance (
+            id              SERIAL PRIMARY KEY,
+            symbol          VARCHAR(20) NOT NULL,
+            transcript_id   INT REFERENCES public.aae_transcripts(id),
+            guidance_text   TEXT NOT NULL,
+            guidance_type   VARCHAR(40) NOT NULL,
+            metric          VARCHAR(60),
+            target_value    NUMERIC,
+            target_unit     VARCHAR(20),
+            target_date     VARCHAR(20),
+            confidence      VARCHAR(20),
+            extracted_at    TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, transcript_id, guidance_text)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_guidance_symbol "
+        "ON public.management_guidance(symbol);"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_guidance_type "
+        "ON public.management_guidance(guidance_type);"
+    )
+
+    # Guidance Verification — actual outcomes vs promises
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.guidance_verification (
+            id                  SERIAL PRIMARY KEY,
+            guidance_id         INT REFERENCES public.management_guidance(id)
+                                ON DELETE CASCADE,
+            checked_fiscal_year  INT,
+            checked_fiscal_quarter INT,
+            actual_value        NUMERIC,
+            status              VARCHAR(20) NOT NULL,
+            variance_pct        NUMERIC,
+            verified_at         TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(guidance_id, checked_fiscal_year, checked_fiscal_quarter)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_verification_guidance "
+        "ON public.guidance_verification(guidance_id);"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_verification_status "
+        "ON public.guidance_verification(status);"
+    )
+
+    # Management Credibility Scores — aggregate per company
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.management_credibility_scores (
+            symbol              VARCHAR(20) PRIMARY KEY,
+            total_promises      INT DEFAULT 0,
+            achieved_count      INT DEFAULT 0,
+            missed_count        INT DEFAULT 0,
+            accuracy_pct        NUMERIC(5,2),
+            avg_variance_pct    NUMERIC(10,2),
+            trend               VARCHAR(20),
+            last_updated        TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    # User Thesis — why user bought, key assumptions
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.user_thesis (
+            id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id       UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol          VARCHAR(20) NOT NULL,
+            thesis_type     VARCHAR(30),
+            key_assumption  TEXT NOT NULL,
+            thesis_breaker  TEXT,
+            expected_hold   VARCHAR(20),
+            entry_date      DATE,
+            entry_price     NUMERIC(12,4),
+            conviction_score INT DEFAULT 50,
+            conviction_trend VARCHAR(20),
+            notes           TEXT,
+            created_at      TIMESTAMPTZ DEFAULT NOW(),
+            updated_at      TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(client_id, symbol)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_user_thesis_client "
+        "ON public.user_thesis(client_id);"
     )
