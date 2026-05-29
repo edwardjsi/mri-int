@@ -178,3 +178,6 @@ Scored 0-10 across 7 weighted dimensions:
 | Date | Change |
 |------|--------|
 | 2026-05-29 | Initial plan. Phase 1-5 defined. Branch created. |
+| 2026-05-29 | Auto-prime guidance on watchlist/portfolio add (guidance_primer.py). |
+| 2026-05-29 | MOSI gaps closed: P/S, 6Q table, peer comparison, multi-bagger scorer. |
+| 2026-05-29 | Unified orchestrator (unified_analysis.py) + API endpoint + frontend (UnifiedAnalysis.tsx). |
