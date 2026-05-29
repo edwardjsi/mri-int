@@ -16,6 +16,8 @@ jobs:
           python-version: '3.11'
       - name: Install Dependencies
         run: pip install -r requirements.txt
+      - name: Install markitdown
+        run: pip install markitdown
       - name: Show revision and pipeline script
         run: |
           git rev-parse HEAD
