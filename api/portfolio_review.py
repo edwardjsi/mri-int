@@ -12,6 +12,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from engine_core.db import get_connection
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
 from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
+from engine_guidance.guidance_primer import prime_guidance_data, prime_guidance_data_batch
 from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
 
@@ -175,6 +176,10 @@ async def add_single_holding(
         )
         # Trigger AAE fundamental data backfill (quarterly financials + governance)
         background_tasks.add_task(prime_aae_data_batch, processed_symbols)
+        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
+        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
+        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
+        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
         
         # Analyze and return instantly
         from engine_core.portfolio_review_engine import analyze_portfolio
@@ -216,6 +221,7 @@ async def save_holdings_bulk(
         # Trigger AAE fundamental data backfill (quarterly financials + governance)
         if symbols_added:
             background_tasks.add_task(prime_aae_data_batch, symbols_added)
+            background_tasks.add_task(prime_guidance_data_batch, symbols_added)
         return {"status": "success", "count": len(holdings)}
     except Exception as e:
         conn.rollback()
@@ -367,6 +373,10 @@ async def upload_csv(
         background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id, client.get("email"), client.get("name"))
         # Trigger AAE fundamental data backfill (quarterly financials + governance)
         background_tasks.add_task(prime_aae_data_batch, processed_symbols)
+        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
+        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
+        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
+        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
 
         from engine_core.portfolio_review_engine import analyze_portfolio
         analysis = analyze_portfolio(processed_holdings, conn)
