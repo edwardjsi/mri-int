@@ -66,23 +66,49 @@ export default function GuidanceCheck() {
 
       {result && result.guidance && (
         <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '10px' }}>📋 {symbol.toUpperCase()} — {result.total_promises || 0} promises</h3>
-          {result.guidance.length === 0 ? <p style={{ color: '#64748b', fontSize: '0.8rem' }}>No guidance found.</p> : result.guidance.map((g: any, i: number) => (
-            <div key={i} style={{ padding: '8px', marginBottom: '6px', background: '#1e293b', borderRadius: '5px', borderLeft: `3px solid ${g.status === 'ACHIEVED' ? '#22c55e' : g.status === 'MISSED' ? '#ef4444' : '#64748b'}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '3px', background: '#334155', color: '#94a3b8' }}>{g.guidance_type}</span>
-                <span style={{ fontSize: '0.8rem' }}>{g.status === 'ACHIEVED' ? '✅' : g.status === 'MISSED' ? '❌' : g.status === 'PARTIAL' ? '⚠️' : g.status === 'PENDING' ? '⏳' : '⚡'}</span>
-              </div>
-              <p style={{ fontSize: '0.8rem', margin: '0 0 4px' }}>{g.guidance_text}</p>
-              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                {g.target_date && <span style={{ marginRight: '8px' }}>📅 {g.target_date}</span>}
-                {g.target_value && <span>Target: {g.target_value}{g.target_unit}</span>}
-                {g.confidence && <span style={{ marginLeft: '8px' }}>| {g.confidence} confidence</span>}
-                {g.actual_value && <span style={{ marginLeft: '8px' }}>| Actual: {g.actual_value}</span>}
-                {g.variance_pct != null && <span style={{ marginLeft: '8px' }}>| {g.variance_pct > 0 ? '+' : ''}{g.variance_pct?.toFixed(1)}%</span>}
-              </div>
-            </div>
-          ))}
+          <h3 style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '10px' }}>
+            📋 {symbol.toUpperCase()} — {result.total_promises || 0} promises
+            {result.credibility && <span style={{ marginLeft: '12px', fontSize: '0.75rem', color: result.credibility.accuracy_pct >= 70 ? '#22c55e' : result.credibility.accuracy_pct >= 40 ? '#f59e0b' : '#ef4444' }}>
+              {result.credibility.accuracy_pct?.toFixed(0)}% credible · {result.credibility.trend || '--'}
+            </span>}
+          </h3>
+          {result.guidance.length === 0 ? (
+            <p style={{ color: '#64748b', fontSize: '0.8rem' }}>No guidance found.</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #1e293b', color: '#64748b', textAlign: 'left' }}>
+                  <th style={{ padding: '6px 8px', width: '30px' }}>#</th>
+                  <th style={{ padding: '6px 8px', width: '100px' }}>Promised Date</th>
+                  <th style={{ padding: '6px 8px' }}>Promise</th>
+                  <th style={{ padding: '6px 8px', width: '90px' }}>Target</th>
+                  <th style={{ padding: '6px 8px', width: '110px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.guidance.map((g: any, i: number) => {
+                  const st = g.status;
+                  const label = st === 'ACHIEVED' ? 'Fulfilled' : st === 'MISSED' ? 'Broken' : st === 'PARTIAL' ? 'Lagging' : st === 'PENDING' ? 'Awaiting' : 'Pending';
+                  const clr = st === 'ACHIEVED' ? '#22c55e' : st === 'MISSED' ? '#ef4444' : st === 'PARTIAL' ? '#f59e0b' : '#64748b';
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #1e293b', verticalAlign: 'top' }}>
+                      <td style={{ padding: '6px 8px', color: '#475569' }}>{i + 1}</td>
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{g.target_date || '—'}</td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <div style={{ marginBottom: '2px' }}>{g.guidance_text}</div>
+                        <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: '3px', background: '#334155', color: '#94a3b8' }}>{g.guidance_type}</span>
+                      </td>
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{g.target_value ? `${g.target_value}${g.target_unit || ''}` : '—'}</td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <span style={{ fontWeight: 600, color: clr, fontSize: '0.75rem' }}>{label}</span>
+                        {g.variance_pct != null && <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{g.variance_pct > 0 ? '+' : ''}{g.variance_pct.toFixed(1)}%</div>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
