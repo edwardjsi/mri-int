@@ -1,4 +1,4 @@
-# Rebuild trigger - ensures Docker cache invalidation (2026-05-28T22:00:00Z)
+# Rebuild trigger - ensures Docker cache invalidation (2026-05-29T23:00:00Z)
 # Unified Multi-Stage Dockerfile for MRI Platform (v2.0 Sync)
 # Stage 1: Build the React Frontend
 FROM node:18-slim as frontend-builder
