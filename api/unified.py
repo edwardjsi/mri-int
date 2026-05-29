@@ -2,6 +2,8 @@
 Unified Analysis API — single endpoint composing PERX + AAE + GuidanceCheck + MOSI.
 
 POST /api/unified/scan/{symbol}
+
+Restricted to stocks in the user's Watchlist or Digital Twin (Portfolio).
 """
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 import logging
@@ -24,22 +26,47 @@ def scan_unified(
     """
     Run a unified institutional scan: PERX + AAE + GuidanceCheck + MOSI gaps.
 
-    Returns a single merged report payload. Error isolation: if one engine
-    fails, the others still produce results. Warnings are returned in
-    the `_warnings` field.
+    Restricted to stocks in the user's Watchlist or Digital Twin.
+    Error isolation: if one engine fails, the others still produce results.
     """
+    base_symbol = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    client_id = client["id"]
+
+    # ── Validate: symbol must be in Watchlist or Portfolio ──────────
+    cur = conn.cursor()
     try:
-        analyzer = UnifiedAnalyzer(symbol)
+        cur.execute(
+            "SELECT 1 FROM watchlist WHERE client_id = %s AND symbol = %s",
+            (client_id, base_symbol),
+        )
+        in_watchlist = cur.fetchone() is not None
+
+        cur.execute(
+            "SELECT 1 FROM holdings WHERE client_id = %s AND symbol = %s",
+            (client_id, base_symbol),
+        )
+        in_holdings = cur.fetchone() is not None
+
+        if not in_watchlist and not in_holdings:
+            raise HTTPException(
+                status_code=403,
+                detail=f"{base_symbol} is not in your Watchlist or Portfolio. Add it first before running a Unified Scan."
+            )
+    finally:
+        cur.close()
+
+    try:
+        analyzer = UnifiedAnalyzer(base_symbol)
         result = analyzer.run()
-        
+
         # Auto-prime guidance data in background if not already present
         if result.get("guidance", {}).get("total_promises", -1) == 0:
             try:
                 from engine_guidance.guidance_primer import prime_guidance_data
-                background_tasks.add_task(prime_guidance_data, symbol)
+                background_tasks.add_task(prime_guidance_data, base_symbol)
             except Exception:
                 pass
-        
+
         # Optional email delivery
         if include_email:
             client_email = client.get("email")
@@ -57,6 +84,8 @@ def scan_unified(
 
         return result
 
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Unified scan failed for {symbol}: {e}")
+        logger.error(f"Unified scan failed for {base_symbol}: {e}")
         raise HTTPException(status_code=500, detail=f"Unified scan failed: {str(e)}")

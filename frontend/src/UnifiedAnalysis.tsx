@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from './api';
 
 export default function UnifiedAnalysis({ onBack }: { onBack: () => void }) {
@@ -7,6 +7,33 @@ export default function UnifiedAnalysis({ onBack }: { onBack: () => void }) {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'overview' | 'perx' | 'aae' | 'guidance' | 'mosi'>('overview');
+  const [allowedSymbols, setAllowedSymbols] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [allowedLoading, setAllowedLoading] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    Promise.all([
+      api.getWatchlist().catch(() => []),
+      api.getPositions().catch(() => []),
+    ]).then(([watchlist, positions]) => {
+      const wlSymbols = (watchlist || []).map((w: any) => w.symbol?.toUpperCase()).filter(Boolean);
+      const posSymbols = (positions || []).map((p: any) => p.symbol?.toUpperCase()).filter(Boolean);
+      const all = [...new Set([...wlSymbols, ...posSymbols])].sort();
+      setAllowedSymbols(all);
+      setAllowedLoading(false);
+    }).catch(() => setAllowedLoading(false));
+  }, []);
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleScan = async (e?: any) => {
     if (e) e.preventDefault();
@@ -38,31 +65,79 @@ export default function UnifiedAnalysis({ onBack }: { onBack: () => void }) {
         <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#f1f5f9' }}>Unified Institutional Scan</h2>
       </div>
 
+      {/* Info Banner */}
+      <div style={{ padding: '12px 16px', background: '#1e1b4b', border: '1px solid #4338ca', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#c7d2fe' }}>
+        🧠 <strong>Unified Scan</strong> works on stocks in your <strong>Watchlist</strong> or <strong>Digital Twin</strong> (Portfolio).
+        {allowedLoading ? ' Loading your stocks…' : allowedSymbols.length === 0 ? ' Add stocks to Watchlist or Portfolio first.' : ` ${allowedSymbols.length} stock${allowedSymbols.length > 1 ? 's' : ''} available for scanning.`}
+      </div>
+
       {/* Search */}
       <div style={{ padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', marginBottom: '24px' }}>
-        <form onSubmit={handleScan} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <input
-            type="text"
-            value={symbol}
-            onChange={e => setSymbol(e.target.value.toUpperCase())}
-            placeholder="Enter NSE symbol (e.g. RELIANCE)"
-            style={{
-              padding: '10px 16px', borderRadius: '8px', border: '1px solid #475569',
-              background: '#0f172a', color: '#f1f5f9', fontSize: '15px', width: '300px'
-            }}
-          />
+        <form onSubmit={handleScan} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={symbol}
+              onChange={e => { setSymbol(e.target.value.toUpperCase()); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Type a symbol from your Watchlist or Portfolio…"
+              autoComplete="off"
+              style={{
+                padding: '10px 16px', borderRadius: '8px', border: '1px solid #475569',
+                background: '#0f172a', color: '#f1f5f9', fontSize: '15px', width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
+            {showSuggestions && symbol && allowedSymbols.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                background: '#0f172a', border: '1px solid #475569', borderRadius: '8px',
+                marginTop: '4px', maxHeight: '200px', overflow: 'auto'
+              }}>
+                {allowedSymbols
+                  .filter(s => s.includes(symbol))
+                  .slice(0, 8)
+                  .map(s => (
+                    <div
+                      key={s}
+                      onClick={() => { setSymbol(s); setShowSuggestions(false); }}
+                      style={{
+                        padding: '8px 16px', cursor: 'pointer', fontSize: '14px',
+                        color: '#cbd5e1', borderBottom: '1px solid #1e293b'
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {s}
+                    </div>
+                  ))}
+                {allowedSymbols.filter(s => s.includes(symbol)).length === 0 && (
+                  <div style={{ padding: '8px 16px', fontSize: '13px', color: '#ef4444' }}>
+                    Not in your Watchlist or Portfolio
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <button
             type="submit"
-            disabled={loading || !symbol.trim()}
+            disabled={loading || !symbol.trim() || (!allowedSymbols.includes(symbol.trim().toUpperCase()) && !allowedLoading)}
             style={{
               padding: '10px 24px', borderRadius: '8px', border: 'none',
-              background: loading ? '#475569' : '#8b5cf6', color: '#fff',
-              fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer'
+              background: loading ? '#475569' : (!symbol.trim() || (!allowedSymbols.includes(symbol.trim().toUpperCase()) && !allowedLoading)) ? '#334155' : '#8b5cf6',
+              color: '#fff', fontWeight: 600, cursor: loading ? 'not-allowed' : (!symbol.trim() ? 'not-allowed' : 'pointer'),
+              whiteSpace: 'nowrap'
             }}
           >
-            {loading ? 'Scanning...' : 'Run Unified Scan'}
+            {loading ? 'Scanning…' : 'Run Unified Scan'}
           </button>
         </form>
+        {symbol && !allowedLoading && !allowedSymbols.includes(symbol.trim().toUpperCase()) && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#ef4444' }}>
+            ⚠ {symbol.trim().toUpperCase()} is not in your Watchlist or Portfolio. Add it first.
+          </div>
+        )}
       </div>
 
       {error && (
