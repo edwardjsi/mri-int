@@ -36,10 +36,39 @@ logger = logging.getLogger("concall_finder")
 
 # ── Constants ────────────────────────────────────────────────────────────
 SCREENER_BASE = "https://www.screener.in"
+NSE_BASE = "https://www.nseindia.com"
+NSE_API = "https://www.nseindia.com/api"
 REQUEST_HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
     "Accept": "text/html,application/xhtml+xml",
 }
+NSE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+# ── Symbol Normalization ──────────────────────────────────────────────────
+
+def normalize_symbol(symbol: str) -> list[str]:
+    """
+    Normalize a symbol for screener.in lookup. Returns candidates to try.
+    Handles space-containing display names like '3B BLACKBIO DX' -> '3BBLACKBIO'.
+    """
+    base = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    candidates = [base]
+
+    # If the symbol has spaces, try space-removed version (common NSE format)
+    if " " in base:
+        no_spaces = base.replace(" ", "")
+        candidates.append(no_spaces)
+
+    # Try without common suffixes
+    for suffix in [" LTD", " LIMITED", " INDIA", " INDUSTRIES"]:
+        if base.endswith(suffix):
+            candidates.append(base[:-len(suffix)].strip())
+
+    return candidates
 
 
 def parse_label_date(label: str) -> Optional[date]:
@@ -177,6 +206,68 @@ def download_and_extract(pdf_url: str) -> Optional[str]:
     return text
 
 
+def fetch_nse_announcements(symbol: str, quarters_back: int = 8) -> list[dict]:
+    """
+    Fallback: search NSE corporate announcements for transcript PDFs.
+    Uses NSE's public API (requires cookie from pre-request to nseindia.com).
+
+    Returns list of dicts with 'label', 'date', 'url' (same format as screener.in).
+    """
+    session = requests.Session()
+    session.headers.update(NSE_HEADERS)
+
+    # Step 1: Get session cookie by hitting the homepage
+    try:
+        session.get(NSE_BASE, timeout=15)
+    except Exception as e:
+        logger.warning(f"NSE pre-request failed: {e}")
+        return []
+
+    # Step 2: Fetch corporate announcements
+    try:
+        url = f"{NSE_API}/corporate-announcements?index=equities&symbol={symbol.upper()}"
+        resp = session.get(url, timeout=30)
+        if resp.status_code != 200:
+            logger.warning(f"NSE API returned {resp.status_code}")
+            return []
+        announcements = resp.json()
+    except Exception as e:
+        logger.warning(f"NSE API request failed for {symbol}: {e}")
+        return []
+
+    # Step 3: Filter for transcript/concall announcements
+    transcript_keywords = ["transcript", "concall", "earnings call", "investor call",
+                          "analyst meet", "conference call", "investor conference"]
+    transcripts = []
+    for ann in announcements:
+        desc = (ann.get("desc", "") or "").lower()
+        if not any(kw in desc for kw in transcript_keywords):
+            continue
+
+        # Parse date from dt field (format: DDMMYYYYhhmmss)
+        dt_str = ann.get("dt", "")
+        doc_date = None
+        if len(dt_str) >= 8:
+            try:
+                doc_date = date(int(dt_str[4:8]), int(dt_str[2:4]), int(dt_str[0:2]))
+            except (ValueError, IndexError):
+                doc_date = date.today()
+
+        # Attachment URL
+        attach_url = ann.get("attchmntFile", "")
+        if not attach_url:
+            continue
+
+        transcripts.append({
+            "label": ann.get("desc", "Transcript")[:100],
+            "date": doc_date,
+            "url": attach_url,
+        })
+
+    logger.info(f"  NSE: Found {len(transcripts)} transcripts for {symbol}")
+    return transcripts[: quarters_back * 2]
+
+
 def find_and_ingest_concalls(
     symbol: str,
     quarters_back: int = 8,
@@ -196,10 +287,27 @@ def find_and_ingest_concalls(
     symbol = symbol.upper()
     logger.info(f"=== Concall Finder: {symbol} ===")
 
-    # 1. Scrape screener.in for transcript links
-    transcripts = fetch_screener_documents(symbol)
+    # 1. Try screener.in with symbol normalizations
+    candidates = normalize_symbol(symbol)
+    transcripts = []
+    for cand in candidates:
+        if cand != candidates[0]:
+            logger.info(f"  Trying normalized symbol: {cand}")
+        transcripts = fetch_screener_documents(cand)
+        if transcripts:
+            logger.info(f"  screener.in returned {len(transcripts)} transcripts for {cand}")
+            break
+
+    # 1b. Fallback: NSE corporate announcements
     if not transcripts:
-        logger.warning(f"No transcripts found for {symbol}")
+        logger.info(f"  screener.in returned 0 — trying NSE fallback...")
+        try:
+            transcripts = fetch_nse_announcements(symbol, quarters_back)
+        except Exception as e:
+            logger.warning(f"NSE fallback failed: {e}")
+
+    if not transcripts:
+        logger.warning(f"No transcripts found for {symbol} (screener.in + NSE)")
         return 0
 
     # 2. Process each transcript (most recent first, up to quarters_back * 2)
