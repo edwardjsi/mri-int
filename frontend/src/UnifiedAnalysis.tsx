@@ -71,6 +71,39 @@ export default function UnifiedAnalysis({ onBack }: { onBack: () => void }) {
         </div>
       )}
 
+      {loading && (
+        <div style={{
+          padding: '48px 24px', background: '#1e293b', borderRadius: '12px',
+          border: '1px solid #334155', textAlign: 'center', marginBottom: '24px'
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px', animation: 'pulse 1.5s ease-in-out infinite' }}>
+            🧠
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 600, color: '#f1f5f9', marginBottom: '8px' }}>
+            Running Unified Institutional Scan
+          </div>
+          <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px' }}>
+            Composing PERX re-rating analysis, AAE forensic layers,<br />
+            GuidanceCheck credibility, and MOSI multi-bagger scoring…
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            {['PERX', 'AAE', 'Guidance', 'MOSI'].map((engine) => (
+              <div key={engine} style={{
+                padding: '8px 16px', borderRadius: '6px',
+                background: '#0f172a', border: '1px solid #334155',
+                fontSize: '12px', color: '#8b5cf6', fontWeight: 600,
+                opacity: 0.6
+              }}>
+                {engine}
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '16px' }}>
+            This may take 10–30 seconds for large-cap stocks with extensive data
+          </div>
+        </div>
+      )}
+
       {result && (
         <>
           {/* Signal Card */}
