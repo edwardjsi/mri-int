@@ -124,24 +124,33 @@ def fetch_screener_documents(symbol: str) -> list[dict]:
 
 
 def pdf_to_text(pdf_path: str) -> Optional[str]:
-    """Extract text from PDF using pdftotext."""
-    txt_path = pdf_path + ".txt"
+    """Extract text from PDF using markitdown (Markdown output)."""
     try:
-        subprocess.run(
-            ["pdftotext", "-layout", pdf_path, txt_path],
-            check=True,
-            capture_output=True,
-            timeout=30,
-        )
-        with open(txt_path, "r", errors="replace") as f:
-            text = f.read()
-        os.unlink(txt_path)
+        from markitdown import MarkItDown
+        md = MarkItDown()
+        result = md.convert(pdf_path)
+        text = result.text_content
 
-        if len(text.strip()) > 200:
-            logger.info(f"  pdftotext: {len(text)} chars extracted")
+        if text and len(text.strip()) > 200:
+            logger.info(f"  markitdown: {len(text)} chars extracted (Markdown)")
             return text
+    except ImportError:
+        logger.warning("markitdown not installed — falling back to pdftotext")
+        try:
+            subprocess.run(
+                ["pdftotext", "-layout", pdf_path, pdf_path + ".txt"],
+                check=True, capture_output=True, timeout=30,
+            )
+            with open(pdf_path + ".txt", "r", errors="replace") as f:
+                text = f.read()
+            os.unlink(pdf_path + ".txt")
+            if len(text.strip()) > 200:
+                logger.info(f"  pdftotext fallback: {len(text)} chars extracted")
+                return text
+        except Exception as e:
+            logger.debug(f"  pdftotext fallback failed: {e}")
     except Exception as e:
-        logger.debug(f"  pdftotext failed: {e}")
+        logger.debug(f"  markitdown failed: {e}")
 
     return None
 
