@@ -203,3 +203,23 @@ def list_theses(
         (current_client["id"],),
     )
     return cur.fetchall()
+
+@router.post("/prime/{symbol}")
+def prime_guidance(
+    symbol: str,
+    background_tasks: BackgroundTasks,
+    client=Depends(get_current_client),
+):
+    """
+    Manually trigger guidance data priming for a symbol.
+    Discovers concall transcripts, extracts guidance via LLM, verifies against financials.
+    Runs as a background task — returns immediately.
+    """
+    base = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    try:
+        from engine_guidance.guidance_primer import prime_guidance_data
+        background_tasks.add_task(prime_guidance_data, base)
+        return {"status": "queued", "symbol": base, "message": "Guidance priming started. Check back in 2-3 minutes for results."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
