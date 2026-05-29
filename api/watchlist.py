@@ -9,6 +9,7 @@ import logging
 from api.deps import get_db, get_current_client
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
 from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
+from engine_guidance.guidance_primer import prime_guidance_data, prime_guidance_data_batch
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +207,8 @@ def add_to_watchlist(req: WatchlistAddRequest, background_tasks: BackgroundTasks
         )
         # Trigger AAE fundamental data backfill (quarterly financials + governance)
         background_tasks.add_task(prime_aae_data, symbol)
+        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
+        background_tasks.add_task(prime_guidance_data, symbol)
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to add symbol: {e}")
@@ -321,6 +324,7 @@ async def upload_watchlist_csv(
             logger.info(f"Triggering background ingestion for {len(unique_symbols)} symbols")
             background_tasks.add_task(ingest_missing_symbols_sync, unique_symbols, str(client["id"]), client["email"])
             background_tasks.add_task(prime_aae_data_batch, unique_symbols)
+            background_tasks.add_task(prime_guidance_data_batch, unique_symbols)
             
         return {
             "message": f"Bulk upload successful. Found {len(unique_symbols)} symbols, added {added_count} new ones.", 

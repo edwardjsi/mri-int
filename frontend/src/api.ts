@@ -364,6 +364,24 @@ export const api = {
   emailAaeReport: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
   triggerAaeReport: (symbol: string) => apiFetch(`/aae/email/${symbol}`, { method: 'POST' }),
   getSectorHeatmap: () => apiFetch('/aae/sectors/heatmap'),
+
+  // GuidanceCheck — Management Credibility Tracking
+  getGuidanceDashboard: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}`),
+  getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),
+  getGuidanceLeaderboard: (worst: boolean = false, limit: number = 20) =>
+    apiFetch(`/guidance/leaderboard?worst=${worst}&limit=${limit}`),
+  triggerGuidanceScan: (symbol: string) =>
+    apiFetch(`/guidance/scan/${encodeURIComponent(symbol)}`, { method: 'POST' }),
+  saveThesis: (data: Record<string, any>) =>
+    apiFetch('/guidance/thesis', { method: 'POST', body: JSON.stringify(data) }),
+  getThesis: (symbol: string) => apiFetch(`/guidance/thesis/${encodeURIComponent(symbol)}`),
+  listTheses: () => apiFetch('/guidance/thesis'),
+
+  // Unified Scan (PERX + AAE + GuidanceCheck + MOSI)
+  scanUnified: (symbol: string) =>
+    apiFetch(`/unified/scan/${encodeURIComponent(symbol)}`, { method: 'POST' }),
+  scanUnifiedWithEmail: (symbol: string) =>
+    apiFetch(`/unified/scan/${encodeURIComponent(symbol)}?include_email=true`, { method: 'POST' }),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };

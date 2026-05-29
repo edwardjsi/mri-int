@@ -105,4 +105,8 @@ python engine_core/prde_scoring_engine.py --limit 50 2>&1 | tee -a "$LOG_FILE"
 echo "[9/10] Running AAE V3 Production Cycle..." | tee -a "$LOG_FILE"
 python scripts/mri_aae_prod.py 2>&1 | tee -a "$LOG_FILE"
 
+# Step 10: GuidanceCheck — Verify management promises against latest financials
+echo "[10/10] Running Quarterly Guidance Check..." | tee -a "$LOG_FILE"
+python scripts/run_quarterly_guidance_check.py 2>&1 | tee -a "$LOG_FILE"
+
 echo "=== Cloud Pipeline Complete — $(date) ===" | tee -a "$LOG_FILE"

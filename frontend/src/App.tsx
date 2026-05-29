@@ -6,6 +6,8 @@ import BreakoutBadge from './BreakoutBadge';
 import BreakoutRadarPage from './BreakoutRadarPage';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
+import GuidanceCheck from './GuidanceCheck';
+import UnifiedAnalysis from './UnifiedAnalysis';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2547,7 +2549,7 @@ function PerxPage() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2572,6 +2574,10 @@ function App() {
 
   if (page === 'aae') {
     return <AaeDashboard onBack={() => setPage('dashboard')} />;
+  }
+
+  if (page === 'unified') {
+    return <UnifiedAnalysis onBack={() => setPage('dashboard')} />;
   }
 
   return (
@@ -2609,6 +2615,12 @@ function App() {
           <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
             <span className="nav-icon">🧬</span> AAE Console
           </button>
+          <button className={`nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')}>
+            <span className="nav-icon">🧠</span> Unified Scan
+          </button>
+          <button className={`nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')}>
+            <span className="nav-icon">🔍</span> GuidanceCheck
+          </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
               <span className="nav-icon">🛡️</span> Platform Intelligence
@@ -2630,6 +2642,8 @@ function App() {
                     page === 'watchlist' ? 'Stock Watchlist' :
                       page === 'breakout' ? 'Breakout Radar' :
                       page === 'perx' ? 'PERX Institutional Scan' :
+page === 'unified' ? 'Unified Institutional Scan' :
+                      page === 'guidance' ? 'Management Credibility' :
                       page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
           </h1>
         </header>
@@ -2642,6 +2656,8 @@ function App() {
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
           {page === 'breakout' && <BreakoutRadarPage onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
+          {page === 'guidance' && <GuidanceCheck />}
+          {page === 'unified' && <div />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
       </main>
@@ -2662,6 +2678,8 @@ function App() {
         <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
         <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
         <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
+        <button className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')} title="Unified Scan">🧠</button>
+        <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
         {isAdmin() && (
           <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
         )}

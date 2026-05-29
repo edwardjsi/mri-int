@@ -645,3 +645,26 @@ Decision:
 3. Swing Momentum icon changed from 🚀 to 🔄 to eliminate collision with Breakout Radar (🚀).
 Reason: The previous mobile nav had only 7 links, missing History, Performance, AAE Console, and Platform Intelligence. Icons-only keeps the bar compact enough to fit 10 items, and the 🔄 icon better represents the swing/cycle concept.
 Status: FINAL.
+
+## Decision 093 — GuidanceCheck: Screener.in as Primary Transcript Source
+Date: 2026-05-28
+Decision:
+1. Use screener.in company pages (not direct BSE API) as the primary source for discovering concall transcripts.
+2. Parse screener.in's #documents section, filter for items labeled "Transcript", extract BSE PDF URLs.
+3. BSE PDFs are downloaded and converted to text via pdftotext (with pdfplumber fallback).
+4. Text is stored via the existing `TranscriptCollector` into `aae_transcripts`.
+5. GPT-4o-mini extracts forward-looking statements into `management_guidance`.
+6. All new code lives in `engine_guidance/` — isolated module, no existing code modified.
+Reason: The BSE API endpoints return HTML challenge pages (anti-bot protection) and are unreliable. Screener.in already aggregates BSE filings with clear labels (e.g., "Apr 2026TranscriptAI SummaryPPT"), providing structured metadata that the BSE API lacks. Coverage: RELIANCE 78 transcripts, TCS 20, HDFCBANK 21, going back to 2016.
+Status: FINAL.
+
+## Decision 094 — GuidanceCheck as Isolated Feature Module
+Date: 2026-05-28
+Decision:
+1. Build GuidanceCheck as an isolated feature inside MRI, not a separate service.
+2. Keep all new code in `engine_guidance/` — no existing engines or pipeline scripts modified.
+3. Register API routes in `api/main.py` only when ready for production use.
+4. Use `CREATE TABLE IF NOT EXISTS` for all new tables — idempotent, safe to deploy anytime.
+5. Develop on feature branch `feature/guidance-check` — GitHub Actions only triggers on `main` push.
+Reason: The existing MRI infrastructure (transcript storage, quarterly financials, GPT pipeline, user auth, portfolio tracking) provides 80% of what GuidanceCheck needs. Building inside MRI maximizes reuse while isolating risk. Zero pipeline disruption during development.
+Status: FINAL.

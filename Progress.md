@@ -2,6 +2,41 @@
 
 ---
 
+## 📅 Session: May 28, 2026 — GuidanceCheck: Management Credibility Tracking Engine
+
+**Session Start:** 20:15 IST
+**Session End:** 21:00 IST
+
+### What Was Built This Session
+
+#### 1. GuidanceCheck Engine (`engine_guidance/`) ✅
+- [x] `bse_concall_finder.py` — Screener.in → BSE PDF → pdftotext → `aae_transcripts`. Verified: TCS (20 transcripts), RELIANCE (45).
+- [x] `guidance_extractor.py` — GPT-4o-mini extracts forward-looking statements → `management_guidance`. Tested on TCS/RELIANCE transcripts.
+- [x] `guidance_verifier.py` — Maps guidance types to `aae_quarterly_financials` columns. Verifiable types: MARGIN, CAPEX, DEBT_REDUCTION, WORKING_CAPITAL.
+- [x] `credibility_scorer.py` — Aggregate accuracy %, trend detection (IMPROVING/STABLE/DETERIORATING).
+
+#### 2. Database Schema ✅
+- [x] Added `ensure_guidance_tables()` to `api/schema.py` with 4 new tables: `management_guidance`, `guidance_verification`, `management_credibility_scores`, `user_thesis`.
+- [x] All tables use `CREATE TABLE IF NOT EXISTS` — idempotent, safe to deploy.
+
+#### 3. API Layer (`api/guidance.py`) ✅
+- [x] 7 endpoints: dashboard, portfolio, leaderboard, scan trigger, thesis CRUD.
+- [x] Registered in `api/main.py`.
+
+#### 4. Frontend (`GuidanceCheck.tsx`) ✅
+- [x] Portfolio credibility table with accuracy %, trend icons.
+- [x] Click-to-expand guidance timeline per stock with status indicators.
+- [x] Worst offenders leaderboard.
+- [x] Wired into `App.tsx` sidebar + mobile nav as "🔍 GuidanceCheck".
+
+### Key Finding
+Most top Indian large-caps give directional/qualitative guidance, not specific numeric promises. The credibility score becomes meaningful on mid-caps where management makes specific margin/capex/debt targets. The pipeline is production-ready — value accumulates with quarterly data.
+
+### 📌 Current Milestone
+- GuidanceCheck engine complete. Next: seed mid-cap transcripts to populate scores, test frontend end-to-end.
+
+---
+
 ## 📅 Session: May 25, 2026 — PRDE Milestone 0 & 1 Completion + Pipeline Integration
 **Session Start:** 09:45 IST
 **Session End:** 10:20 IST

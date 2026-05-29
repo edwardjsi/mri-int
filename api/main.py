@@ -26,6 +26,8 @@ from api.perx import router as perx_router
 from api.v2.perx import router as perx_v2_router
 from api.aae import router as aae_router
 from api.breakout_status import router as breakout_router
+from api.guidance import router as guidance_router
+from api.unified import router as unified_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
 
@@ -82,11 +84,19 @@ app.include_router(perx_router)
 app.include_router(perx_v2_router, prefix="/api/v2")
 app.include_router(aae_router)
 app.include_router(breakout_router)
+app.include_router(guidance_router)
+app.include_router(unified_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])
 async def health():
-    return {"status": "healthy"}
+    import subprocess
+    try:
+        branch = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, timeout=5).stdout.strip()
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        branch, commit = "unknown", "unknown"
+    return {"status": "healthy", "branch": branch, "commit": commit}
 
 # Serve Frontend Static Files
 static_path = os.path.join(os.path.dirname(__file__), "static")
