@@ -2,6 +2,42 @@
 
 ---
 
+## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
+
+**Session Start:** ~13:30 IST
+**Session End:** 14:45 IST
+
+### What Was Done This Session
+
+#### 1. Bug Fixes — Unifier & GuidanceCheck Prime All (4 bugs) ✅
+- [x] **`guidance_primer.py`**: `verify_all_guidance()` → `verify_symbol()` (method didn't exist on `GuidanceVerifier`, crashed priming at step 3)
+- [x] **`engine_perx/sector.py`**: Implemented missing `get_peer_fundamental_comparison()` — Revenue CAGR, OPM, ROCE vs sector peers. Was imported by `unified_analysis.py` but didn't exist.
+- [x] **Table name fixes** (3 files): `watchlist` → `client_watchlist`, `holdings` → `client_external_holdings` in `api/guidance.py`, `api/main.py`, `scripts/prime_all_guidance.py`. This is why Prime All returned 0 stocks.
+- [x] **RealDictCursor access**: `row[0]` → `row["symbol"]` with explicit `AS symbol` alias. `get_connection()` uses `RealDictCursor` — rows are dicts, not tuples.
+
+#### 2. NSE Corporate Announcements Fallback ✅
+- [x] BSE API is auth-protected (301 redirect to login). Added NSE corporate announcements API fallback.
+- [x] `fetch_nse_announcements()` — queries NSE API, filters for transcript/concall keywords, downloads PDFs from NSE archives.
+- [x] Symbol normalization: strips spaces (`"3B BLACKBIO DX"` → `"3BBLACKBIODX"`), tries without suffixes (`"APAR INDUSTRIES"` → `"APAR"`).
+- [x] Flow: `screener.in → normalized candidates → NSE API fallback → download PDF → pdftotext`.
+
+#### 3. Mass Priming Executed ✅
+- [x] `scripts/prime_all_guidance.py` fixed and run — 132 unique stocks across watchlists and holdings.
+- [x] Script processing concalls sequentially: screener.in → NSE fallback, GPT extraction, verification, credibility scoring.
+
+#### 4. Auto-Prime Wiring Verified ✅
+- [x] Watchlist single add, bulk upload, portfolio upload, startup — all wired via `BackgroundTasks` or `threading.Thread`.
+
+### Commits
+- `1e33cc4` — fix: 4 bugs
+- `ad94778` — feat: NSE fallback + symbol normalization
+
+### 📌 Current Milestone
+- MOSI Unifier Phase 1-4 complete. GuidanceCheck V1 complete. NSE fallback live.
+- Next: Deploy to Railway, verify unified scan end-to-end with real data.
+
+---
+
 ## 📅 Session: May 28, 2026 — GuidanceCheck: Management Credibility Tracking Engine
 
 **Session Start:** 20:15 IST

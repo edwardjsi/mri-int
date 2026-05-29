@@ -17,6 +17,30 @@ Decision: No machine learning models in prototype or V1 SaaS.
 Reason: Must be deterministic, explainable, and backtestable. Avoid black-box risk.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 003 — Single Container (No Microservices)
 Date: 2026-02-19
 Decision: Single Dockerized Python service for all quant engines.
@@ -29,17 +53,89 @@ Decision: All AWS resources in Mumbai (ap-south-1).
 Reason: Lowest latency for NSE data ingestion; aligns with existing infra.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 005 — PostgreSQL on RDS (Not Local)
 Date: 2026-02-19
 Decision: Use AWS RDS PostgreSQL even in prototype phase.
 Reason: Makes it a proper DevOps portfolio project, not just a local script.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 006 — Terraform Module Reuse
 Date: 2026-02-19
 Decision: Reuse vpc, rds, ecs, iam module structure from Sovereign Retirement project.
 Reason: Proven pattern, faster execution, consistent naming.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 007 — Prototype Score Model: 0–5 (Not 0–100)
 Date: 2026-02-19
@@ -55,17 +151,89 @@ Status: FINAL.
 
 ---
 
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
+---
+
 ## Decision 009 — PostgreSQL Engine Version 15.15
 Date: 2026-02-19
 Decision: Use PostgreSQL 15.15 on RDS instead of 15.4 or 17.
 Reason: 15.4 not available in ap-south-1. 15.15 confirmed available.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 010 — WSL-Only Execution
 Date: 2026-02-19
 Decision: Repo lives on Windows filesystem /mnt/c/ — all execution via WSL only.
 Reason: Avoids Windows/Linux line ending and permission conflicts.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 011 — Scoring Model Adapted to 0–3
 Date: 2026-02-19
@@ -85,11 +253,59 @@ Decision: Implement automated connection retries in psycopg2 with increased TCP 
 Reason: AWS SSM Port Forwarding tunnels aggressively time out idle TCP connections while yfinance is processing data.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 014 — Nifty 500 Row Limit Expectation
 Date: 2026-02-21
 Decision: Acknowledge ~1.6 million rows is the maximum historical dataset for Nifty 500 from 2005-present.
 Reason: Due to recent IPOs, most companies do not have 20 years of history.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 015 — Weekend Infrastructure Teardown
 Date: 2026-02-21
@@ -97,11 +313,59 @@ Decision: Destroy AWS infrastructure using Terraform and back up the RDS databas
 Reason: To save costs over the weekend/pause period and prove the infrastructure-as-code and data recovery processes.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 016 — Bridge Data Gap Before Frontend
 Date: 2026-03-02
 Decision: Ingest the ~2-year data gap (early 2024 – March 2026) for all Nifty 500 stocks + Nifty 50 index before advancing Phase 2 frontend work. Rerun the full engine pipeline (Indicators → Regime → Scores → Portfolio) to produce current-day signals.
 Reason: The existing DB has data only through early 2024. The dashboard must show live, present-day signals to be useful. Data foundation must be current before any frontend wiring.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 017 — AWS Cost Management: Pause/Resume Pattern
 Date: 2026-03-02
@@ -109,11 +373,59 @@ Decision: Use RDS pause/resume (not full Terraform teardown) for short breaks. R
 Reason: Billing audit revealed NAT Gateway ($32/mo) and Bastion EC2 ($7/mo) were silently billing while RDS was paused. Full teardown saves ~$43/mo but adds rebuild overhead.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 018 — Nifty 50 First, Then Nifty 500
 Date: 2026-03-02
 Decision: Launch the Phase 2 Web App MVP with Nifty 50 stocks only. Expand to Nifty 500 after successful validation.
 Reason: Faster iteration, lower API load, quicker validation cycle. Nifty 50 covers the most liquid and widely followed stocks. Full 500 expansion follows once the pipeline is proven end-to-end.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 019 — Next-Day Open Execution Engine
 Date: 2026-03-02
@@ -121,11 +433,59 @@ Decision: Add `portfolio_engine_nextday.py` that executes trades at next day's o
 Reason: Same-day close execution is unrealistic — in practice, signals are reviewed after market close and orders placed for the next morning. This eliminates execution timing bias.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 020 — Client Signal Platform Architecture
 Date: 2026-03-02
 Decision: Build a client-facing signal platform with: MailerLite for onboarding emails, AWS SES for daily signal digests, cron-based automation (4PM IST Mon-Fri), three-tier price capture (default→self-reported→broker API), per-client equity tracking vs Nifty.
 Reason: Enables controlled testing with a small crowd before full SaaS launch. Self-reported prices with next-day-open defaults balances accuracy with user effort.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 021 — Nifty 500 Expansion Deferred Until Post-SaaS Launch
 Date: 2026-03-03
@@ -133,11 +493,59 @@ Decision: Do NOT expand to Nifty 500 until the SaaS product is successfully laun
 Reason: Focus all engineering effort on shipping a working SaaS product with Nifty 50 first. Nifty 500 expansion is a scaling concern, not a launch requirement. Premature expansion adds data load time, API costs, and complexity without improving the core product validation.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 022 — SaaS Deployment Architecture: ECS Fargate + CloudFront + EventBridge
 Date: 2026-03-03
 Decision: Deploy MRI platform using: (1) ECS Fargate behind ALB for FastAPI backend, (2) S3 + CloudFront for React frontend with API proxy via `/api/*` path pattern, (3) EventBridge scheduled ECS task at 4PM IST Mon-Fri for the daily data pipeline. All infrastructure managed via Terraform. SES in sandbox mode for email delivery.
 Reason: ECS Fargate provides fully managed container orchestration (no EC2 to maintain), CloudFront serves as a single domain for both frontend and API (avoiding CORS), and EventBridge + Fargate gives serverless cron execution (pay only for ~5min/day pipeline runtime). This architecture demonstrates DevOps best practices for portfolio/interview purposes.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 023 — Full-Scale Architecture Demonstrated → Cost-Conscious Testing Phase
 Date: 2026-03-03
@@ -154,17 +562,89 @@ Decision: Transition to a **cost-conscious testing phase** for the next 6 months
 Reason: During the testing phase with a small group of users, 24/7 infrastructure is unnecessary. This reduces 6-month costs from ~$480 to ~$27 while retaining all data and the ability to scale back up instantly.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 024 — Client Investment Features: RS Ranking, Capital Management, Execution Tracking
 Date: 2026-03-03
 Decision: Enhance client-facing platform with: (1) RS-based stock ranking — signals sorted by score DESC then relative strength DESC to resolve ties, (2) Add Capital — users can increase their investment capital at any time, (3) Execution Dialog — prompts for actual price and quantity with auto-calculated 10% allocation suggestion, (4) Daily P&L Summary — shows today's portfolio change vs yesterday, (5) Auto-quantity — signal cards display suggested share count based on 10% of total capital / stock price.
 Reason: Previous system generated signals without position sizing guidance and hardcoded qty=10. These features make the platform usable for real testing with actual capital.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 025 — Daily Operations Workflow for Testing Phase
 Date: 2026-03-03
 Decision: Use a single `mri_daily.sh` script that: (1) starts RDS + bastion, (2) opens SSM tunnel, (3) runs the full pipeline locally, (4) starts a local API server for testers to log in and execute signals, (5) waits for admin to press Enter, (6) tears down everything. Testers get ~15min daily at 4PM IST to mark yesterday's signals as executed and view new signals. Signals generated at 4PM Day N are executed in broker at 9:15AM Day N+1, and marked in the system at 4PM Day N+1. Smallcase/Zerodha subscription is the eventual monetization path (~6 months out).
 Reason: Minimises AWS costs (~$0.07/day) while giving testers a functional daily window. The admin controls the lifecycle manually until the platform scales.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 026 — INCIDENT: RDS Destroyed by Terraform Dependency Cascade
 Date: 2026-03-04
@@ -217,6 +697,30 @@ Impact: Daily pipeline drops from ~3.5 hours to ~30 minutes. The 30-min floor is
 To force full recompute (e.g., after formula change): `UPDATE daily_prices SET ema_50 = NULL;` and `DELETE FROM stock_scores;`
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 031 — Incremental Yahoo Finance Data Fetch
 Date: 2026-03-05
 Context: Daily pipeline Step 1 was downloading full 20-year history (2005→today) for all 500 stocks every run, taking ~25 min even though only 1-2 new days were needed.
@@ -224,11 +728,59 @@ Decision: Add `get_last_date()` to `data_loader.py`. Queries DB for `MAX(date)`,
 Impact: Daily Yahoo download drops from ~25 min to ~2-3 min. Full pipeline total: ~3.5 hrs → ~5-8 min.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 032 — Forgot Password Flow using AWS SES
 Date: 2026-03-09
 Decision: Implemented a "Forgot Password" feature that uses secure, random 32-character tokens stored in a new `password_reset_tokens` table, and sends reset links via AWS SES. Returns explicit 404 for missing accounts rather than a generic security message.
 Reason: Users need a way to recover access. AWS SES is already configured. Returning an explicit 404 improves UX over security-through-obscurity since this is a private prototype phase.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 033 — Free-Tier Cloud Migration: Neon.tech + Render.com
 Date: 2026-03-10
@@ -242,17 +794,89 @@ Decision: Migrate from full AWS stack (~$80/mo) to a free-tier hybrid deployment
 Reason: $0/month vs $80/month for a testing phase with <10 users. Infrastructure-as-code portfolio value retained. Pragmatic, cost-aware engineering decision.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 034 — Portfolio Review Engine (No New Tables)
 Date: 2026-03-11
 Decision: Add `portfolio_review_engine.py` that evaluates any user-submitted portfolio against MRI's existing intelligence. Computes per-holding risk factors based on stock trend scores (0–5), EMA-200 position, and market regime alignment. Aggregates into weighted risk score and classifies as Low/Moderate/High/Extreme. **No new database tables** — reads from existing `stock_scores`, `market_regime`, and `daily_prices`. API endpoints: `POST /api/portfolio-review/analyze` and `GET /api/portfolio-review/quick/{symbol}`.
 Reason: Implements SaaS Blueprint Journey 3 (Portfolio Risk Audit). Keeping it read-only against existing tables avoids schema migration complexity and keeps the engine stateless/deterministic.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 035 — Asynchronous On-Demand Data Ingestion
 Date: 2026-03-11
 Decision: Add asynchronous on-demand asset ingestion capabilities using FastAPI `BackgroundTasks` to automatically download historical data via Yahoo Finance (`.NS` then `.BO`) for any user-uploaded symbols not currently in the Nifty 500 MRI database. The system returns an immediate partial report for known stocks, natively backfills the DB, triggers incremental engine scoring, and then emails the final complete HTML report via AWS SES.
 Reason: Prevents database bloat from storing the entire illiquid NSE/BSE universe daily. Scales data ingestion organically based exactly on what users actually own. Gracefully handles 20-minute latency for missing data by returning partial frontend results immediately and finalizing via email.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 036 — Persistent User Holdings (Digital Twin Layer)
 Date: 2026-03-12
@@ -268,11 +892,59 @@ Decision:
 3. **Audit Documentation**: Created `PYTHON_REVIEW_REPORT.md` to document all security and stability findings for future audits.
 Reason: A comprehensive `python-reviewer` audit identified critical vulnerabilities in raw SQL generation and high-risk connection handling patterns that could cause "Too many connections" errors on Neon/RDS during heavy ingestion tasks.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 ## Decision 037 — Retain Render for Daily Pipeline (No GitHub Actions)
 Date: 2026-03-16
 Decision: Keep the daily data pipeline (`data_loader.py`) executing within the Render environment using reduced data lookback windows (5 days for existing stocks, ~3 years for newly uploaded user stocks) rather than offloading to external cron services like GitHub Actions.
 Reason: Respects Phase 2 MVP constraints. By heavily optimizing the data ingestion boundaries, the pipeline comfortably avoids Render's 512MB out-of-memory crashes. This keeps the architecture unified, avoids introducing new infrastructure dependencies, and organically supports daily tracking of custom user BSE/NSE uploads.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 038 — Shift to ISIN-Based Cross-Exchange Mapping
 Date: 2026-03-16
@@ -280,11 +952,59 @@ Decision: Implement an in-memory "ISIN Bridge" that maps user-provided NSE symbo
 Reason: Yahoo Finance's NSE string formatting (e.g., 'M&M.NS') is inconsistent and prone to 404 errors. Numeric BSE codes (e.g., '500520.BO') are immutable and 100% reliable. The ISIN bridge allows users to keep using their familiar broker-provided symbols while the backend benefits from the reliability of the BSE data universe.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 039 — Tiered Search Strategy for Data Ingestion
 Date: 2026-03-16
 Decision: Adopted a three-tier search strategy for yfinance downloads: 1. ISIN-mapped BSE code, 2. Raw Symbol (NSE), 3. Raw Symbol (BSE).
 Reason: This approach ensures zero-friction for the user. It handles broker-specific naming quirks automatically and prevents "UNKNOWN" grades even if the official ISIN master lists have discrepancies.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 041 — Adaptive Trend Fallback for Recent Listings
 Date: 2026-03-16
@@ -292,17 +1012,89 @@ Decision: Modified the indicator engine to fallback from a 200-day EMA to a 50-d
 Reason: New listings (like One Global) or recent corporate actions would otherwise result in null indicators and failed scoring. Using the 50-day EMA as a proxy ensures the user still receives a trend-alignment grade based on available data.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 042 — Definitive Scrip Mapping for Non-Standard Tickers
 Date: 2026-03-16
 Decision: Implemented a manual override dictionary for specific broker-exported symbols that diverge from official NSE/BSE ISIN master lists.
 Reason: To ensure a friction-less "Drop and Grade" experience for users coming from Zerodha/Upstox/Groww, the system must bridge naming discrepancies (e.g., CIGNITITEC to BSE:534758) instantly.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 043 — Safe Indicator Fallbacks for Recent Listings
 Date: 2026-03-16
 Decision: Implemented `.fillna(df['close'])` for the `rolling_high_6m` calculation in the scoring engine.
 Reason: Stocks with less than 6 months of history return a `None` value for rolling highs, which causes Python's comparison operators to crash the entire thread. Filling with the current price effectively treats the "all-time high" as today's price for new stocks, allowing the scoring logic to complete without losing data for other symbols in the batch.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 044: Multi-Tiered Symbol Search
 **Date**: 2026-03-16  
@@ -404,11 +1196,59 @@ Date: 2026-03-19
 Decision: FastAPI backend must use the $PORT environment variable (default 8000) when running on Railway.
 Reason: Railway assigns a dynamic port for each service; hardcoding 8000 causes healthcheck failures.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 ## Decision 062 — Static Frontend Environment Variable Workaround
 Date: 2026-03-19
 Decision: To securely provide the VITE_API_URL (with /api) to the static frontend on Railway, we added a prebuild script in frontend/package.json that generates the .env file at build time. This avoids committing .env to version control and bypasses Railway UI limitations that strip /api from environment variables.
 Reason: Railway's UI would not accept /api in env vars, and committing .env with secrets is unsafe. The prebuild script ensures the correct API URL is always set for production builds, with no risk of leaking secrets.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 063 — MailerLite Mailing List Integration on Registration
 Date: 2026-03-21
@@ -416,11 +1256,59 @@ Decision: On successful user registration, automatically add the new subscriber 
 Reason: Builds a reachable mailing list of interested users from day one. MailerLite free tier is sufficient for testing.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 064 — Launch landing-first entry
 Date: 2026-03-23
 Decision: Serve a marketing-first landing page to unauthenticated visitors and reuse the existing login/register component as the CTA target.
 Reason: Provide an introductory narrative/soft-sell while keeping the auth flow intact for existing users.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 065 — Neon Database Rollback & Optimization
 Date: 2026-03-23
@@ -428,11 +1316,59 @@ Decision: Pruned daily_prices to a 2-year sliding window (~400k rows) and implem
 Reason: Fixed GitHub Actions quota exhaustion and Neon storage bloat. Pipeline now runs in <1 minute.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 066 — Unified Monolithic Deployment
 Date: 2026-03-23
 Decision: Merge frontend and backend into a single Docker container. FastAPI serves static frontend files from `frontend/dist`.
 Reason: Solves visibility issues on Railway/Render via single URL.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 067 — Watchlist Feature (Tracking Stocks)
 Date: 2026-03-23
@@ -440,11 +1376,59 @@ Decision: Add a persistent `client_watchlist` table for users to track custom st
 Reason: Users need to monitor stocks they don't yet own.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 068 — 0-100 Weighted Scoring Engine
 Date: 2026-03-23
 Decision: Transition from 0-5 binary sum to a 0-100 weighted score: EMA 50/200 (25), Slope (25), Momentum/RS (20), 6m High (20), Volume (10).
 Reason: Provides greater granularity and allows weighting critical trend indicators over secondary surge indicators.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 070 — System-Wide Tuple-Safe Database Access Pattern
 Date: 2026-03-24
@@ -452,11 +1436,59 @@ Decision: Implement an exhaustive "Tuple-Safe" access pattern across ALL FastAPI
 Reason: The Railway production environment's cursor behavior was inconsistent (returning tuples even when RealDictCursor was specified), causing cascading 500 errors and UI loading hangs. This pattern ensures absolute runtime resilience.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 071 — Monolith Same-Origin Deployment Strategy
 Date: 2026-03-24
 Decision: Converge all frontend and backend traffic to a single domain (`mri-api.up.railway.app`) and use relative API paths in the frontend.
 Reason: Eliminates CORS "Preflight" complexity and resolves "Same-Origin" cookie/header issues on Railway. This simplifies the architecture and improves connection reliability.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 072 — Defensive Admin Metrics & Table Auto-Initialization
 Date: 2026-03-24
@@ -464,17 +1496,89 @@ Decision: Hardened the Admin Dashboard backend with automatic table existence ch
 Reason: Prevented 500 errors on fresh deployments where operational tables (watchlist, external holdings) might not yet exist.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 073 — Centralized Schema & Symbol Freshness
 Date: 2026-03-25
 Decision: Consolidate all database table definitions into `api/schema.py:ensure_required_tables` and register it in the FastAPI startup sequence (`api/main.py`). Additionally, update `run_daily_pipeline.sh` to include all unique symbols from user watchlists and holdings.
 Reason: Resolves persistence failures caused by missing unique constraints in ad-hoc `CREATE TABLE` statements and addresses "lame old data" issues for custom stocks by integrating them into the core pipeline.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 074 — Universal Watchlist Feature Integration 
 Date: 2026-03-25
 Decision: Implement `GET /api/watchlist/universal` in `api/watchlist.py` to aggregate all unique symbols tracked across the platform.
 Reason: Provides a global view of community interests and allows the system to efficiently track the entire "active" universe of user-specified stocks.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 075 — "WISE GUARD" Schema Consolidation & Identity Hardening
 Date: 2026-03-26  
@@ -486,6 +1590,30 @@ Decision:
 Reason: Multiple sessions were "looping" on missing table errors and data "disappearing" due to casing mismatches or background task crashes. This closes the loop on schema parity between environments and hardens the "Digital Twin" persistence.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 076 — Hybrid Guard with Grace Rule for First-Run
 Date: 2026-03-26  
 Decision: 
@@ -494,6 +1622,30 @@ Decision:
 3. Added missing `storage_ready` flag to API analysis responses to ensure correct frontend state rendering for "Digital Twin" holdings.
 Reason: Strict "WISE GUARD" validation was silently skipping valid stocks during new user onboarding because the master universe table hadn't been synced yet. This ensures a friction-less "Day 1" experience while maintaining high-quality data once the system is synced.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 077 — Pipeline Silent Failure Audit & Hardening
 Date: 2026-04-01  
@@ -508,6 +1660,30 @@ Decision:
 Reason: Dashboard was repeatedly going stale despite the pipeline "completing successfully" and emails being sent. The root cause was a pattern of graceful fallbacks that silently produced zero output instead of crashing. See `docs/pipeline_silent_failure_audit.md` for full analysis.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 078 — Python Code Hardening & Security Audit
 Date: 2026-04-05  
 Decision:  
@@ -516,6 +1692,30 @@ Decision:
 3. **Audit Documentation**: Created `PYTHON_REVIEW_REPORT.md` to document all security and stability findings for future audits.
 Reason: A comprehensive `python-reviewer` audit identified critical vulnerabilities in raw SQL generation and high-risk connection handling patterns that could cause "Too many connections" errors on Neon/RDS during heavy ingestion tasks.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 079 — Database Hardening & Multi-Tenant Isolation
 Date: 2026-04-05  
@@ -526,6 +1726,30 @@ Decision:
 Reason: A `database-reviewer` audit identified several high-risk patterns: potential cross-tenant data leakage due to lack of RLS, and potential numeric overflow in the long-term price history data.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 081 — Inclusive Scoring for Golden Path Resilience
 Date: 2026-04-23
 Decision: 
@@ -535,17 +1759,89 @@ Decision:
 Reason: The "Golden Path" validation was failing (only 7 stocks >= 75) due to a "Binary Trap." These changes align the engine with realistic institutional accumulation patterns while maintaining the 75-point "High Conviction" gate.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 082 — Robust yfinance Column Normalization
 Date: 2026-04-23
 Decision: Implemented a robust column flattener and mapper in `ingestion_engine.py` to handle yfinance v0.2.50+ MultiIndex return formats.
 Reason: A library update caused index ingestion to fail silently because the 'Date' column was nested in a tuple, leading to the 5-day drift error.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 083 — Direct DB Fetch for Regime Engine
 Date: 2026-04-23
 Decision: Replaced `pd.read_sql` with a direct `cur.execute` fetch in `regime_engine.py`.
 Reason: A compatibility warning between `pandas` and `psycopg2.extras.RealDictCursor` was causing the engine to return empty dataframes silently in the GitHub Actions environment.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 084 — PRDE as Fundamentals Intelligence Layer
 Date: 2026-04-25
@@ -556,6 +1852,30 @@ Decision:
 4. Defer LLM agents until annual financial and ratio data can be imported, validated, and reproduced from stable source rows.
 Reason: PRDE depends on trusted 5-10 year financial statement data. Building the schema and import path first prevents the agent layer from producing convincing but unsupported analysis.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 085 — AAE as Product Vision, PRDE as Foundation
 Date: 2026-04-25
@@ -568,6 +1888,30 @@ Decision:
 Reason: The new AAE PRD expands the product from a fundamentals-only engine into a full research platform. The safest implementation path is to preserve the current PRDE work as the data foundation and layer event-driven agents only after deterministic financial outputs are reproducible.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 086 — Market Holiday Skip in GitHub Actions
 Date: 2026-05-01
 Decision:
@@ -577,6 +1921,30 @@ Decision:
 4. GitHub Actions workflow only runs on Mon-Fri cron; this adds the holiday exclusion layer.
 Reason: Prevents wasted GitHub Actions minutes on days when Indian markets are closed. The pipeline is idempotent and would handle empty data gracefully, but skipping entirely is cleaner and avoids unnecessary compute/logs.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 087 — PERX V1 as a Company-First Orchestration Layer
 Date: 2026-05-08
@@ -604,6 +1972,30 @@ Decision:
 Reason: The existing platform already has the major technical, fundamental, qualitative, email, and dashboard primitives that PERX needs. Building PERX as an orchestration layer maximizes reuse, protects current production flows, and allows the product to ship incrementally without redesigning MRI/STEE/QIF.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 088 — AAE V3 Watchlist Digital Twin & Daily Automation
 Date: 2026-05-11
 Decision:
@@ -613,6 +2005,30 @@ Decision:
 Reason: The AAE V3 is compute-heavy (LLM tokens + multi-agent debate). Integrating it strictly as an on-demand "Digital Twin" for Watchlist items, plus a top-20 automated daily run, controls API costs while maximizing visibility where the user cares most.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 089 — Deterministic Frontend Builds
 Date: 2026-05-21
 Decision:
@@ -620,6 +2036,30 @@ Decision:
 2. Commit `package-lock.json` to version control.
 Reason: Ensures deterministic, non-interactive frontend builds across all environments, eliminating "it works on my machine" issues and preventing unexpected dependency updates from breaking production deployments.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 090 — Decoupled Breakout Status API
 Date: 2026-05-21
@@ -629,6 +2069,30 @@ Decision:
 Reason: Decoupling the breakout status from the main signal feed improves frontend responsiveness when checking individual stocks in the StockDetailsModal, and allows independent iteration of the breakout detection logic.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 091 — Shared API Client for All Frontend Data Fetching
 Date: 2026-05-21
 Decision:
@@ -636,6 +2100,30 @@ Decision:
 2. The auth token is stored under the key `mri_token` in localStorage — no other key is valid.
 Reason: Raw `fetch()` calls bypass the shared auth header injection, API base URL resolution, and session-expiry redirect. The `BreakoutRadar` component was using `localStorage.getItem('token')` (wrong key — should be `mri_token`) and sending `Authorization: Bearer null`, causing a silent 401 on every request. Adding `getBreakoutRadar()` to the `api` object and calling it through `apiFetch` fixes this permanently.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 092 — Mobile Navigation: Icon-Only with Full Page Coverage
 Date: 2026-05-21
@@ -645,6 +2133,30 @@ Decision:
 3. Swing Momentum icon changed from 🚀 to 🔄 to eliminate collision with Breakout Radar (🚀).
 Reason: The previous mobile nav had only 7 links, missing History, Performance, AAE Console, and Platform Intelligence. Icons-only keeps the bar compact enough to fit 10 items, and the 🔄 icon better represents the swing/cycle concept.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
 
 ## Decision 093 — GuidanceCheck: Screener.in as Primary Transcript Source
 Date: 2026-05-28
@@ -658,6 +2170,30 @@ Decision:
 Reason: The BSE API endpoints return HTML challenge pages (anti-bot protection) and are unreliable. Screener.in already aggregates BSE filings with clear labels (e.g., "Apr 2026TranscriptAI SummaryPPT"), providing structured metadata that the BSE API lacks. Coverage: RELIANCE 78 transcripts, TCS 20, HDFCBANK 21, going back to 2016.
 Status: FINAL.
 
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
 ## Decision 094 — GuidanceCheck as Isolated Feature Module
 Date: 2026-05-28
 Decision:
@@ -668,3 +2204,27 @@ Decision:
 5. Develop on feature branch `feature/guidance-check` — GitHub Actions only triggers on `main` push.
 Reason: The existing MRI infrastructure (transcript storage, quarterly financials, GPT pipeline, user auth, portfolio tracking) provides 80% of what GuidanceCheck needs. Building inside MRI maximizes reuse while isolating risk. Zero pipeline disruption during development.
 Status: FINAL.
+
+---
+
+## Decision 095 — NSE Corporate Announcements as Screener.in Fallback
+Date: 2026-05-29
+Decision:
+1. Keep screener.in as the primary concall transcript discovery source.
+2. When screener.in returns 404 or 0 results, fall back to NSE's public corporate announcements API (`nseindia.com/api/corporate-announcements`).
+3. NSE fallback requires a session cookie from a pre-request to nseindia.com — handled via requests.Session.
+4. Filter NSE announcements for transcript/concall keywords, download PDFs from NSE archives, extract text via pdftotext.
+5. BSE API was rejected: auth-protected, 301 redirects to member login.
+Reason: screener.in returns 404 for stocks with space-containing display names or unlisted symbols. NSE's API is the only public, auth-free source for Indian corporate filing PDFs. Symbol normalization (strip spaces, try common suffixes) is applied before either source is queried.
+Status: FINAL.
+
+---
+
+## Decision 096 — Auto-Prime Guidance on Watchlist/Portfolio Add
+Date: 2026-05-29
+Decision:
+1. Every new stock entering watchlist or digital twin gets guidance data auto-primed via FastAPI BackgroundTasks.
+2. On server startup, if management_guidance table is empty, auto-prime all stocks via threading.Thread.
+3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
+4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
+Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
