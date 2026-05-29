@@ -141,7 +141,7 @@ def _analyze(holdings, conn):
         SELECT DISTINCT ON (symbol) symbol, master_score
         FROM aae_results_snapshot
         WHERE symbol IN %s
-        ORDER BY symbol, scanned_at DESC
+        ORDER BY symbol, updated_at DESC
     """, (symbol_tuple,))
     aae_scores_by_symbol = {r["symbol"]: r["master_score"] for r in cur.fetchall()}
 

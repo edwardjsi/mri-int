@@ -5,6 +5,7 @@ FROM node:18-slim as frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
+# Frontend rebuild trigger: 2026-05-29T17:30:00Z
 COPY frontend/ ./
 RUN npm run build
 
