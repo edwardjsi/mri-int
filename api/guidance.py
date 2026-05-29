@@ -223,3 +223,35 @@ def prime_guidance(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/prime-all")
+def prime_all_guidance(
+    background_tasks: BackgroundTasks,
+    client=Depends(get_current_client),
+):
+    """
+    Prime guidance data for ALL stocks in the system.
+    Runs in background — returns immediately with symbol count.
+    """
+    try:
+        from engine_core.db import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT UPPER(symbol) FROM watchlist")
+        wl = {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT DISTINCT UPPER(symbol) FROM holdings")
+        hl = {row[0] for row in cur.fetchall()}
+        conn.close()
+        all_syms = sorted(wl | hl)
+
+        from engine_guidance.guidance_primer import prime_guidance_data_batch
+        background_tasks.add_task(prime_guidance_data_batch, all_syms)
+
+        return {
+            "status": "queued",
+            "total_symbols": len(all_syms),
+            "symbols": all_syms,
+            "message": f"Priming {len(all_syms)} stocks in background. This will take several minutes."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
