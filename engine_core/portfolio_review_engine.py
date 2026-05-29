@@ -312,7 +312,9 @@ def update_all_breakout_candidates(conn=None):
             WHERE eh.symbol IS NOT NULL
         """)
         for row in cur.fetchall():
-            eh_id, breakout, score = row[0], row[1], row[2]
+            eh_id = row["id"]
+            breakout = row["condition_breakout_10d"]
+            score = row["total_score"]
             is_candidate = (breakout is True and score is not None and score >= 80)
             cur.execute("UPDATE client_external_holdings SET breakout_candidate = %s, updated_at = NOW() WHERE id = %s", (is_candidate, eh_id))
 
@@ -330,7 +332,9 @@ def update_all_breakout_candidates(conn=None):
             WHERE cw.symbol IS NOT NULL
         """)
         for row in cur.fetchall():
-            cw_id, breakout, score = row[0], row[1], row[2]
+            cw_id = row["id"]
+            breakout = row["condition_breakout_10d"]
+            score = row["total_score"]
             is_candidate = (breakout is True and score is not None and score >= 80)
             cur.execute("UPDATE client_watchlist SET breakout_candidate = %s WHERE id = %s", (is_candidate, cw_id))
 
