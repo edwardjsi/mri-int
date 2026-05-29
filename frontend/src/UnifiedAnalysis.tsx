@@ -31,13 +31,6 @@ export default function UnifiedAnalysis({ onBack }: { onBack: () => void }) {
     return '#ef4444';
   };
 
-  const getLifecycleColor = (stage: string) => {
-    if (stage === 'Institutional Expansion' || stage === 'Early Rerating') return '#8b5cf6';
-    if (stage === 'Accumulation') return '#3b82f6';
-    if (stage === 'Distribution' || stage === 'Euphoria') return '#ef4444';
-    return '#94a3b8';
-  };
-
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
@@ -226,9 +219,6 @@ function PerxTab({ result }: { result: any }) {
   const engine = perx.engine_outputs || {};
   const inv = perx.investor_context || {};
   const mri = engine.mri || {};
-  const qif = engine.qif || {};
-  const stee = engine.stee || {};
-  const sector = engine.sector || {};
   const valuation = inv.valuation || {};
 
   return (
