@@ -857,6 +857,257 @@ def get_institutional_flow(cur, base_symbol: str) -> dict[str, Any]:
     return result
 
 
+
+def get_ps_ratio(cur, base_symbol: str) -> dict[str, Any]:
+    """
+    Calculate Price-to-Sales ratio.
+    P/S = Market Cap / TTM Revenue.
+    
+    Uses daily_prices for market cap proxy (close price × volume-based estimate)
+    and aae_quarterly_financials for TTM revenue.
+    Falls back to fundamental_financials yearly revenue.
+    """
+    result: dict[str, Any] = {
+        "ps_ratio": None,
+        "ttm_revenue_cr": None,
+        "verdict": "Insufficient data for P/S calculation.",
+        "homework": "",
+    }
+
+    # Get TTM revenue from quarterly financials
+    cur.execute(
+        """
+        SELECT revenue, year, quarter
+        FROM aae_quarterly_financials
+        WHERE symbol = %s AND revenue IS NOT NULL AND revenue > 0
+        ORDER BY year DESC, quarter DESC
+        LIMIT 4
+        """,
+        (base_symbol,),
+    )
+    quarterly_rows = cur.fetchall()
+    
+    ttm_revenue = None
+    if quarterly_rows and len(quarterly_rows) >= 1:
+        ttm_revenue = sum(
+            safe_float(r.get("revenue") if isinstance(r, dict) else r[1])
+            for r in quarterly_rows
+        )
+    
+    # Fallback: yearly revenue from fundamental_financials
+    if not ttm_revenue or ttm_revenue <= 0:
+        cur.execute(
+            """
+            SELECT revenue
+            FROM fundamental_financials
+            WHERE symbol = %s AND revenue IS NOT NULL AND revenue > 0
+            ORDER BY year DESC
+            LIMIT 1
+            """,
+            (base_symbol,),
+        )
+        yr_row = cur.fetchone()
+        if yr_row:
+            ttm_revenue = safe_float(
+                yr_row.get("revenue") if isinstance(yr_row, dict) else yr_row[0]
+            )
+    
+    if not ttm_revenue or ttm_revenue <= 0:
+        return result
+
+    # Convert revenue to crores (yfinance returns raw values)
+    ttm_revenue_cr = round(ttm_revenue / 10_000_000, 2)
+    result["ttm_revenue_cr"] = ttm_revenue_cr
+
+    # Get market cap: try fundamental_financials.market_cap first
+    market_cap = None
+    try:
+        cur.execute(
+            """
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'fundamental_financials' AND column_name = 'market_cap'
+            """
+        )
+        if cur.fetchone():
+            cur.execute(
+                """
+                SELECT market_cap FROM fundamental_financials
+                WHERE symbol = %s AND market_cap IS NOT NULL AND market_cap > 0
+                ORDER BY year DESC LIMIT 1
+                """,
+                (base_symbol,),
+            )
+            mc_row = cur.fetchone()
+            if mc_row:
+                market_cap = safe_float(
+                    mc_row.get("market_cap") if isinstance(mc_row, dict) else mc_row[0]
+                )
+    except Exception:
+        pass
+
+    # Fallback: estimate market cap from daily_prices
+    if not market_cap or market_cap <= 0:
+        cur.execute(
+            """
+            SELECT close FROM daily_prices
+            WHERE symbol = %s
+            ORDER BY date DESC LIMIT 1
+            """,
+            (base_symbol,),
+        )
+        price_row = cur.fetchone()
+        if price_row:
+            price = safe_float(
+                price_row.get("close") if isinstance(price_row, dict) else price_row[0]
+            )
+            # Approximate: use equity from fundamental_financials to estimate shares
+            cur.execute(
+                """
+                SELECT equity FROM fundamental_financials
+                WHERE symbol = %s AND equity IS NOT NULL AND equity > 0
+                ORDER BY year DESC LIMIT 1
+                """,
+                (base_symbol,),
+            )
+            eq_row = cur.fetchone()
+            if eq_row and price > 0:
+                equity_val = safe_float(
+                    eq_row.get("equity") if isinstance(eq_row, dict) else eq_row[0]
+                )
+                # Rough: market_cap ≈ price based on book value proxy
+                # This is approximate — real market cap needs shares outstanding
+                market_cap = None  # Don't use unreliable proxy
+
+    if market_cap and market_cap > 0:
+        market_cap_cr = round(market_cap / 10_000_000, 2)
+        ps = market_cap_cr / ttm_revenue_cr
+        result["ps_ratio"] = round(ps, 2)
+
+        # Verdict
+        if ps < 1.5:
+            result["verdict"] = f"P/S {ps:.2f}x — low relative to revenue (P/S < 1.5x). Margin expansion can drive aggressive rerating."
+            result["homework"] = "Low P/S is only attractive if margins are expanding. Check EBITDA margin trend. Low-margin businesses deserve low P/S."
+        elif ps < 3:
+            result["verdict"] = f"P/S {ps:.2f}x — reasonable for most sectors (P/S 1.5-3x)."
+            result["homework"] = "Compare P/S with direct peers in same sector. P/S varies widely by industry margin profile."
+        elif ps < 6:
+            result["verdict"] = f"P/S {ps:.2f}x — premium to most sectors (P/S 3-6x). Justified only with high growth + high margins."
+            result["homework"] = "At this P/S multiple, check if revenue CAGR is 20%+ and margins are above sector average."
+        else:
+            result["verdict"] = f"P/S {ps:.2f}x — expensive (P/S > 6x). Typically reserved for hyper-growth tech/platform companies."
+            result["homework"] = "At P/S > 6x, every 1% drop in revenue growth can trigger 10-15% stock decline. Growth must be exceptional."
+    else:
+        # Compute from revenue only if market_cap unavailable
+        result["verdict"] = f"TTM Revenue: ₹{ttm_revenue_cr:.0f}Cr. Market cap data unavailable for P/S calculation."
+    
+    return result
+
+
+def get_formatted_quarterly_table(cur, base_symbol: str, quarters: int = 6) -> dict[str, Any]:
+    """
+    Produce a MOSI-style 6-quarter performance table.
+    
+    Each row: quarter label, revenue, EBITDA, PAT, YoY% for each metric,
+    plus an acceleration flag (↑/↓/─).
+    
+    Uses aae_quarterly_financials.
+    """
+    result: dict[str, Any] = {
+        "quarters": [],
+        "verdict": "Insufficient quarterly data.",
+    }
+
+    cur.execute(
+        """
+        SELECT year, quarter, revenue, ebitda, net_profit
+        FROM aae_quarterly_financials
+        WHERE symbol = %s
+        ORDER BY year ASC, quarter ASC
+        """,
+        (base_symbol,),
+    )
+    rows = cur.fetchall()
+    if len(rows) < 3:
+        return result
+
+    parsed = []
+    for r in rows:
+        rd = r if isinstance(r, dict) else {
+            "year": r[0], "quarter": r[1], "revenue": r[2],
+            "ebitda": r[3] if len(r) > 3 else None,
+            "net_profit": r[4] if len(r) > 4 else None,
+        }
+        parsed.append({
+            "year": int(rd.get("year", 0)),
+            "quarter": int(rd.get("quarter", 0)),
+            "revenue": safe_float(rd.get("revenue")),
+            "ebitda": safe_float(rd.get("ebitda")),
+            "pat": safe_float(rd.get("net_profit")),
+            "label": f"Q{int(rd.get('quarter', 0))} FY{str(rd.get('year', 0))[-2:]}",
+        })
+
+    # Take last N quarters
+    recent = parsed[-quarters:]
+
+    # Compute YoY by looking back 4 quarters for each
+    for i, q in enumerate(recent):
+        yoy_rev = yoy_ebitda = yoy_pat = None
+        accel = "─"
+
+        # Find same quarter prior year
+        for prev in parsed:
+            if prev["year"] == q["year"] - 1 and prev["quarter"] == q["quarter"]:
+                if prev["revenue"] > 0:
+                    yoy_rev = round(((q["revenue"] - prev["revenue"]) / prev["revenue"]) * 100, 1)
+                if prev["ebitda"] and prev["ebitda"] > 0 and q["ebitda"]:
+                    yoy_ebitda = round(((q["ebitda"] - prev["ebitda"]) / prev["ebitda"]) * 100, 1)
+                if prev["pat"] and prev["pat"] > 0 and q["pat"]:
+                    yoy_pat = round(((q["pat"] - prev["pat"]) / prev["pat"]) * 100, 1)
+                break
+
+        # Acceleration flag: compare this quarter's YoY vs previous quarter's YoY
+        if i > 0 and yoy_rev is not None:
+            prev_yoy = recent[i - 1].get("_yoy_rev")
+            if prev_yoy is not None:
+                if yoy_rev > prev_yoy + 3:
+                    accel = "↑"
+                elif yoy_rev < prev_yoy - 3:
+                    accel = "↓"
+
+        q["_yoy_rev"] = yoy_rev
+        q["_yoy_ebitda"] = yoy_ebitda
+        q["_yoy_pat"] = yoy_pat
+        q["_accel"] = accel
+
+    # Build output
+    table = []
+    for q in recent:
+        table.append({
+            "quarter": q["label"],
+            "revenue_cr": round(q["revenue"] / 10_000_000, 0) if q["revenue"] else None,
+            "rev_yoy_pct": q["_yoy_rev"],
+            "ebitda_cr": round(q["ebitda"] / 10_000_000, 0) if q["ebitda"] else None,
+            "ebitda_yoy_pct": q["_yoy_ebitda"],
+            "pat_cr": round(q["pat"] / 10_000_000, 0) if q["pat"] else None,
+            "pat_yoy_pct": q["_yoy_pat"],
+            "accel_flag": q["_accel"],
+        })
+
+    result["quarters"] = table
+
+    # Overall verdict
+    accel_count = sum(1 for t in table if t["accel_flag"] == "↑")
+    decel_count = sum(1 for t in table if t["accel_flag"] == "↓")
+    if accel_count > decel_count:
+        result["verdict"] = f"ACCELERATING — {accel_count}/{len(table)} quarters showing acceleration"
+    elif decel_count > accel_count:
+        result["verdict"] = f"DECELERATING — {decel_count}/{len(table)} quarters showing deceleration"
+    else:
+        result["verdict"] = "STABLE — no clear acceleration or deceleration pattern"
+
+    return result
+
+
 def get_rerating_analogs(cur, current_perx_score: float, current_lifecycle: str,
                          exclude_symbol: str | None = None) -> dict[str, Any]:
     """
@@ -990,6 +1241,14 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         logger.warning(f"Institutional flow failed for {base_symbol}: {e}")
         inst_flow = {"fii_holding_pct": None, "dii_holding_pct": None, "fii_change_qoq": None, "dii_change_qoq": None, "verdict": "", "homework": ""}
 
+    # Quarterly performance table (MOSI Step 5)
+    try:
+        quarterly_table = get_formatted_quarterly_table(cur, base_symbol)
+    except Exception as e:
+        cur.connection.rollback()
+        logger.warning(f"Quarterly table failed for {base_symbol}: {e}")
+        quarterly_table = {"quarters": [], "verdict": "Insufficient quarterly data."}
+
     # Historical analogs from perx_reports archive
     try:
         analogs = {}
@@ -1083,6 +1342,8 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         "liquidity": liquidity,
         "peg_ratio": peg,
         "ev_ebitda": ev_ebitda,
+        "ps_ratio": ps_ratio_block,
+        "quarterly_table": quarterly_table,
         "institutional_flow": inst_flow,
         "historical_analogs": analogs,
         "investor_grade": grade,

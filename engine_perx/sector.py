@@ -1,5 +1,14 @@
 from __future__ import annotations
 from typing import Any
+
+def safe_float(v):
+    if v is None:
+        return 0.0
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return 0.0
+
 import pandas as pd
 
 def get_sector_context(cur, symbol: str, sector: str) -> dict[str, Any]:
