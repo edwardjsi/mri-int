@@ -1233,6 +1233,14 @@ def get_all_investor_context(cur, base_symbol: str, current_price: float | None 
         logger.warning(f"EV/EBITDA failed for {base_symbol}: {e}")
         ev_ebitda = {"ev_ebitda": None, "market_cap_cr": None, "net_debt_ebitda": None, "verdict": "EV/EBITDA unavailable.", "homework": ""}
 
+    # P/S ratio (MOSI Step 11)
+    try:
+        ps_ratio_block = get_ps_ratio(cur, base_symbol)
+    except Exception as e:
+        cur.connection.rollback()
+        logger.warning(f"P/S ratio failed for {base_symbol}: {e}")
+        ps_ratio_block = {"ps_ratio": None, "ttm_revenue_cr": None, "verdict": "P/S unavailable.", "homework": ""}
+
     # Institutional flow (FII/DII changes)
     try:
         inst_flow = get_institutional_flow(cur, base_symbol)
