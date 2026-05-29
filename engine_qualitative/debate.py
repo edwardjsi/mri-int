@@ -115,20 +115,10 @@ def get_company_name(symbol):
 
 def run_debate(symbol):
     base_sym = symbol.replace(".NS", "").replace(".BO", "").upper()
-    client = None
-    try:
-        from openai import OpenAI
-        import httpx
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return {"error": "OPENAI_API_KEY not set in environment"}
-        
-        # Use a custom http_client to avoid the 'proxies' vs 'proxy' argument conflict 
-        # caused by the version mismatch between openai (v1.12.0) and httpx (v0.28.1)
-        http_client = httpx.Client()
-        client = OpenAI(api_key=api_key, http_client=http_client)
-    except ImportError:
-        return {"error": "OpenAI or HTTPX package not installed"}
+    from engine_core.llm_client import get_llm_client
+    client, model = get_llm_client()
+    if not client:
+        return {"error": "No LLM API key configured (set DEEPSEEK_API_KEY or OPENAI_API_KEY)"}
 
     verdict = get_quality_verdict(base_sym)
     mri = get_mri_scores(base_sym)
@@ -195,7 +185,7 @@ def run_debate(symbol):
 
     try:
         resp = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             messages=[
                 {"role": "system", "content": DEBATE_PROMPT},
                 {"role": "user", "content": user_message}

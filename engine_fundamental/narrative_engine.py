@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from engine_core.db import get_connection, fetch_df
-from engine_qualitative.extractor import get_openai_client
+from engine_core.llm_client import get_llm_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class NarrativeEngine:
     
     def __init__(self, symbol):
         self.symbol = symbol.upper()
-        self.client = get_openai_client()
+        self.client, self.model = get_llm_client()
 
     def get_latest_transcript(self):
         query = "SELECT * FROM aae_transcripts WHERE symbol = %s ORDER BY date DESC LIMIT 1"
@@ -43,7 +43,7 @@ class NarrativeEngine:
         
         try:
             resp = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are an institutional equity analyst specializing in structural business inflections."},
                     {"role": "user", "content": prompt + "\n\nTranscript Snippet:\n" + text[:15000]}

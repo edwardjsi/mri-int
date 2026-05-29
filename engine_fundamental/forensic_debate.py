@@ -1,6 +1,6 @@
 import logging
+from engine_core.llm_client import get_llm_client
 import os
-from openai import OpenAI
 from engine_core.db import fetch_df
 
 logging.basicConfig(level=logging.INFO)
@@ -14,9 +14,7 @@ class ForensicDebateEngine:
     
     def __init__(self, symbol):
         self.symbol = symbol.upper()
-        import httpx
-        http_client = httpx.Client()
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), http_client=http_client)
+        self.client, self.model = get_llm_client()
 
     def run_bear_layer(self, context_data):
         """Layer 9: The Short-Seller / Forensic Bear perspective."""
@@ -44,7 +42,7 @@ class ForensicDebateEngine:
 
     def get_llm_response(self, prompt, json_mode=False):
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model=self.model,
             messages=[{"role": "system", "content": "You are a professional institutional investment analyst."},
                       {"role": "user", "content": prompt}],
             response_format={ "type": "json_object" } if json_mode else None

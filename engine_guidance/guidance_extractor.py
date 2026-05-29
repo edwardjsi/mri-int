@@ -14,20 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("guidance_extractor")
 
 
-def get_openai_client():
-    """Get OpenAI client — mirrors engine_qualitative.extractor pattern."""
-    try:
-        from openai import OpenAI
-        import httpx
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            logger.warning("OPENAI_API_KEY not set")
-            return None
-        http_client = httpx.Client()
-        return OpenAI(api_key=api_key, http_client=http_client)
-    except ImportError:
-        logger.warning("openai package not installed")
-        return None
+from engine_core.llm_client import get_llm_client
 
 
 GUIDANCE_PROMPT = """You are analyzing an earnings call transcript for {symbol}.
@@ -66,7 +53,7 @@ Transcript:
 class GuidanceExtractor:
     def __init__(self, symbol: str):
         self.symbol = symbol.upper()
-        self.client = get_openai_client()
+        self.client, self.model = get_llm_client()
 
     def extract_from_transcript(self, transcript_text: str) -> list[dict]:
         if not self.client:
@@ -79,7 +66,7 @@ class GuidanceExtractor:
 
         try:
             resp = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are an institutional analyst tracking management guidance. Be precise and conservative."},
                     {"role": "user", "content": prompt},

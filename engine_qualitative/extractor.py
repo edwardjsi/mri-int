@@ -1,19 +1,11 @@
 import os
 import json
+from engine_core.llm_client import get_llm_client
 
 def get_openai_client():
-    try:
-        from openai import OpenAI
-        import httpx
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            return None
-        # Use a custom http_client to avoid the 'proxies' vs 'proxy' argument conflict
-        http_client = httpx.Client()
-        return OpenAI(api_key=api_key, http_client=http_client)
-    except Exception as e:
-        print(f"Error initializing OpenAI client: {e}")
-        return None
+    """Legacy wrapper — returns OpenAI-compatible client from shared LLM factory."""
+    client, _model = get_llm_client()
+    return client
 
 PROMPT = """
 You are extracting INVESTMENT SIGNALS from company disclosures.
@@ -38,17 +30,17 @@ Return JSON:
 """
 
 def extract_signals(docs):
-    client = get_openai_client()
-    if not client:
-        print("WARNING: OpenAI client not initialized. Skipping signal extraction.")
+    _client, model = get_llm_client()
+    if not _client:
+        print("WARNING: LLM client not initialized. Skipping signal extraction.")
         return []
-        
+
     signals = []
 
     for d in docs:
         try:
-            resp = client.chat.completions.create(
-                model="gpt-4o-mini",
+            resp = _client.chat.completions.create(
+                model=model,
                 messages=[
                     {"role": "system", "content": PROMPT},
                     {"role": "user", "content": d["text"][:12000]}
@@ -56,8 +48,8 @@ def extract_signals(docs):
                 temperature=0,
                 response_format={ "type": "json_object" }
             )
-            content = resp.choices[0].message.content
-            parsed = json.loads(content)
+            cont = resp.choices[0].message.content
+            parsed = json.loads(cont)
 
             for s in parsed.get("signals", []):
                 s["source"] = d["source_type"]
