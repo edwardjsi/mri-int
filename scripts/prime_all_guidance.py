@@ -21,10 +21,10 @@ def get_all_symbols():
     conn = get_connection()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT DISTINCT UPPER(symbol) FROM watchlist")
-        wl = {row[0] for row in cur.fetchall()}
-        cur.execute("SELECT DISTINCT UPPER(symbol) FROM holdings")
-        hl = {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist")
+        wl = {row["symbol"] for row in cur.fetchall()}
+        cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings")
+        hl = {row["symbol"] for row in cur.fetchall()}
         all_syms = sorted(wl | hl)
         logger.info(f"Found {len(all_syms)} unique symbols: {len(wl)} from watchlist, {len(hl)} from holdings")
         return all_syms

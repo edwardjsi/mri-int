@@ -56,9 +56,10 @@ def prime_guidance_data(symbol: str):
     try:
         from engine_guidance.guidance_verifier import GuidanceVerifier
         verifier = GuidanceVerifier()
-        verified = verifier.verify_all_guidance(base)
-        if verified:
-            logger.info(f"[GUIDANCE-PRIMER] Verified {verified} guidance statements for {base}")
+        result = verifier.verify_symbol(base)
+        verified_count = result.get("verified", 0) if isinstance(result, dict) else 0
+        if verified_count:
+            logger.info(f"[GUIDANCE-PRIMER] Verified {verified_count} guidance statements for {base}")
     except Exception as e:
         logger.error(f"[GUIDANCE-PRIMER] Guidance verification failed for {base}: {e}")
 

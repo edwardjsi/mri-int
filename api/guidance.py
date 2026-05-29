@@ -236,10 +236,10 @@ def prime_all_guidance(
         from engine_core.db import get_connection
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT DISTINCT UPPER(symbol) FROM watchlist")
-        wl = {row[0] for row in cur.fetchall()}
-        cur.execute("SELECT DISTINCT UPPER(symbol) FROM holdings")
-        hl = {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist")
+        wl = {row["symbol"] for row in cur.fetchall()}
+        cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings")
+        hl = {row["symbol"] for row in cur.fetchall()}
         conn.close()
         all_syms = sorted(wl | hl)
 

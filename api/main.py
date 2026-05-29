@@ -53,10 +53,10 @@ def on_startup():
             if guidance_count == 0:
                 logger.info("🔍 Guidance table is empty — auto-priming all stocks in background...")
                 cur2 = conn.cursor()
-                cur2.execute("SELECT DISTINCT UPPER(symbol) FROM watchlist")
-                wl = {row[0] for row in cur2.fetchall()}
-                cur2.execute("SELECT DISTINCT UPPER(symbol) FROM holdings")
-                hl = {row[0] for row in cur2.fetchall()}
+                cur2.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist")
+                wl = {row["symbol"] for row in cur2.fetchall()}
+                cur2.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings")
+                hl = {row["symbol"] for row in cur2.fetchall()}
                 cur2.close()
                 all_syms = sorted(wl | hl)
                 if all_syms:
