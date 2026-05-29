@@ -35,13 +35,13 @@ def scan_unified(
     # ── Validate: symbol must be in Watchlist or Portfolio ──────────
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT 1 FROM watchlist WHERE client_id = %s AND symbol = %s",
+            "SELECT 1 FROM client_watchlist WHERE client_id = %s AND symbol = %s",
             (client_id, base_symbol),
         )
         in_watchlist = cur.fetchone() is not None
 
         cur.execute(
-            "SELECT 1 FROM holdings WHERE client_id = %s AND symbol = %s",
+            "SELECT 1 FROM client_external_holdings WHERE client_id = %s AND symbol = %s",
             (client_id, base_symbol),
         )
         in_holdings = cur.fetchone() is not None
