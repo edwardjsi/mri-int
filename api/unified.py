@@ -33,8 +33,7 @@ def scan_unified(
     client_id = client["id"]
 
     # ── Validate: symbol must be in Watchlist or Portfolio ──────────
-    cur = conn.cursor()
-    try:
+    with conn.cursor() as cur:
         cur.execute(
             "SELECT 1 FROM watchlist WHERE client_id = %s AND symbol = %s",
             (client_id, base_symbol),
@@ -52,8 +51,6 @@ def scan_unified(
                 status_code=403,
                 detail=f"{base_symbol} is not in your Watchlist or Portfolio. Add it first before running a Unified Scan."
             )
-    finally:
-        cur.close()
 
     try:
         analyzer = UnifiedAnalyzer(base_symbol)
@@ -87,5 +84,7 @@ def scan_unified(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
         logger.error(f"Unified scan failed for {base_symbol}: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Unified scan failed: {str(e)}")
