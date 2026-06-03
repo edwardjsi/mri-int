@@ -45,11 +45,6 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
   const ready = stocks.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
   const consolidating = stocks.filter(d => d.breakout_state === 'CONSOLIDATING');
 
-  const formatVolume = (v: number) => {
-    if (v >= 1_00_00_000) return `${(v / 1_00_00_000).toFixed(1)}Cr`;
-    if (v >= 1_00_000) return `${(v / 1_00_000).toFixed(1)}L`;
-    return v.toLocaleString();
-  };
 
   const renderTable = (items: One12CoStock[]) => (
     <div className="table-container">
