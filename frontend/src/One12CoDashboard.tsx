@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import BreakoutBadge from './BreakoutBadge';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -22,10 +22,46 @@ interface One12CoStock {
   last_date: string;
 }
 
+type SortCol = 'symbol' | 'close' | 'volume_multiplier' | 'rsi' | 'atr_pct' | 'proximity' | 'mri_score';
+
+const COL_DEFS: { key: SortCol; label: string }[] = [
+  { key: 'symbol', label: 'Stock' },
+  { key: 'close', label: '₹' },
+  { key: 'volume_multiplier', label: 'Vol×' },
+  { key: 'rsi', label: 'RSI' },
+  { key: 'atr_pct', label: 'ATR%' },
+  { key: 'proximity', label: '6m Prox' },
+  { key: 'mri_score', label: 'MRI' },
+];
+
+function sortItems(items: One12CoStock[], col: SortCol, dir: 'asc' | 'desc'): One12CoStock[] {
+  return [...items].sort((a, b) => {
+    let va: number | string = 0;
+    let vb: number | string = 0;
+
+    if (col === 'proximity') {
+      va = a.proximity_to_6m_high ?? -999;
+      vb = b.proximity_to_6m_high ?? -999;
+    } else if (col === 'symbol') {
+      va = a.symbol;
+      vb = b.symbol;
+    } else {
+      va = (a as any)[col] ?? 0;
+      vb = (b as any)[col] ?? 0;
+    }
+
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
 export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [stocks, setStocks] = useState<One12CoStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortCol, setSortCol] = useState<SortCol>('mri_score');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     fetch(`${API_BASE}/api/112co/breakouts`)
@@ -38,26 +74,48 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
       .finally(() => setLoading(false));
   }, []);
 
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+  };
+
+  const brokenOut = useMemo(() => {
+    const filtered = stocks.filter(d => d.breakout_state === 'BROKEN_OUT');
+    return sortItems(filtered, sortCol, sortDir);
+  }, [stocks, sortCol, sortDir]);
+
+  const ready = useMemo(() => {
+    const filtered = stocks.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
+    return sortItems(filtered, sortCol, sortDir);
+  }, [stocks, sortCol, sortDir]);
+
+  const consolidating = useMemo(() => {
+    const filtered = stocks.filter(d => d.breakout_state === 'CONSOLIDATING');
+    return sortItems(filtered, sortCol, sortDir);
+  }, [stocks, sortCol, sortDir]);
+
   if (loading) return <div className="loading">Scanning 112Co universe…</div>;
   if (error) return <div className="error-state">⚠️ Failed to load: {error}</div>;
 
-  const brokenOut = stocks.filter(d => d.breakout_state === 'BROKEN_OUT');
-  const ready = stocks.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
-  const consolidating = stocks.filter(d => d.breakout_state === 'CONSOLIDATING');
-
+  const sortIndicator = (col: SortCol) => {
+    if (sortCol !== col) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  };
 
   const renderTable = (items: One12CoStock[]) => (
     <div className="table-container">
       <table className="data-table">
         <thead>
           <tr>
-            <th>Stock</th>
-            <th>₹</th>
-            <th>Vol×</th>
-            <th>RSI</th>
-            <th>ATR%</th>
-            <th>6m Prox</th>
-            <th>MRI</th>
+            {COL_DEFS.map(c => (
+              <th key={c.key} onClick={() => handleSort(c.key)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {c.label}{sortIndicator(c.key)}
+              </th>
+            ))}
             <th>Status</th>
           </tr>
         </thead>
@@ -102,6 +160,7 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
       <h2 className="section-title">🔬 112Co Breakout Radar</h2>
       <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
         Custom 112-company universe — PE expansion watchlist with MRI breakout detection.
+        Click column headers to sort.
       </p>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
         <span>🟢 BROKEN: {brokenOut.length}</span>
