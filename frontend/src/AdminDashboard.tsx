@@ -49,6 +49,7 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
   const [auditingSymbol, setAuditingSymbol] = useState<string | null>(null);
   const [auditStatus, setAuditStatus] = useState<{ symbol: string; msg: string } | null>(null);
   const [aaeCandidates, setAaeCandidates] = useState<any[]>([]);
+  const [pnlLedger, setPnlLedger] = useState<any>(null);
 
   // Sorting states
   const [leaderboardSort, setLeaderboardSort] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total_score', direction: 'desc' });
@@ -179,11 +180,15 @@ export default function AdminDashboard({ onSelectStock }: { onSelectStock: (stoc
       try { const data = await api.getAaeTopCandidates(); setAaeCandidates(data); }
       catch (e) { console.error('AAE failed', e); }
     };
+    const fetchPnl = async () => {
+      try { const data = await api.getAdminPnlLedger(); setPnlLedger(data); }
+      catch (e) { console.error('P&L Ledger failed', e); }
+    };
 
     await Promise.allSettled([
       fetchMetrics(), fetchTop(), fetchGlobal(), fetchLeaderboard(), 
       fetchHallOfFame(), fetchShadow(), fetchHealth(), fetchSwingTrades(),
-      fetchAuditLogs(), fetchQualityLeaderboard(), fetchTopQuality(), fetchAae()
+      fetchAuditLogs(), fetchQualityLeaderboard(), fetchTopQuality(), fetchAae(), fetchPnl()
     ]);
     setLoading(false);
   };
@@ -334,6 +339,87 @@ const handleRepairSymbol = async (e: React.MouseEvent, symbol: string) => {
       </div>
 
       {error && <div className="error-alert">{error}</div>}
+
+      {/* P&L Ledger */}
+      {pnlLedger?.summary && (
+        <section className="section" style={{ marginTop: '24px' }}>
+          <h3 className="section-title">💰 Live P&L Ledger</h3>
+          <p className="section-subtitle">Realized performance across all manual positions and STEE swing trades.</p>
+          <div className="stats-row" style={{ marginTop: '12px' }}>
+            <div className="stat-card" style={{ background: 'linear-gradient(135deg, #064e3b22 0%, #1e293b 100%)' }}>
+              <div className="stat-label">Total Closed Trades</div>
+              <div className="stat-value">{pnlLedger.summary.total_closed_trades}</div>
+            </div>
+            <div className="stat-card" style={{ background: pnlLedger.summary.win_rate_pct >= 50 ? 'linear-gradient(135deg, #22c55e22 0%, #1e293b 100%)' : 'linear-gradient(135deg, #ef444422 0%, #1e293b 100%)' }}>
+              <div className="stat-label">Win Rate</div>
+              <div className="stat-value" style={{ color: pnlLedger.summary.win_rate_pct >= 50 ? '#22c55e' : '#ef4444' }}>
+                {pnlLedger.summary.win_rate_pct}%
+              </div>
+              <div className="stat-subtitle">{pnlLedger.summary.winning_trades}W / {pnlLedger.summary.losing_trades}L</div>
+            </div>
+            <div className="stat-card" style={{ background: pnlLedger.summary.total_realized_pnl >= 0 ? 'linear-gradient(135deg, #22c55e22 0%, #1e293b 100%)' : 'linear-gradient(135deg, #ef444422 0%, #1e293b 100%)' }}>
+              <div className="stat-label">Total Realized P&L</div>
+              <div className="stat-value" style={{ color: pnlLedger.summary.total_realized_pnl >= 0 ? '#22c55e' : '#ef4444', fontSize: '1.2rem' }}>
+                ₹{pnlLedger.summary.total_realized_pnl?.toLocaleString()}
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Avg Return / Trade</div>
+              <div className="stat-value" style={{ color: pnlLedger.summary.avg_return_pct >= 0 ? '#22c55e' : '#ef4444', fontSize: '1.2rem' }}>
+                {pnlLedger.summary.avg_return_pct >= 0 ? '+' : ''}{pnlLedger.summary.avg_return_pct}%
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Largest Win</div>
+              <div className="stat-value" style={{ color: '#22c55e', fontSize: '1rem' }}>+{pnlLedger.summary.largest_win_pct}%</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Largest Loss</div>
+              <div className="stat-value" style={{ color: '#ef4444', fontSize: '1rem' }}>{pnlLedger.summary.largest_loss_pct}%</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Open Positions</div>
+              <div className="stat-value">{pnlLedger.summary.open_positions}</div>
+            </div>
+          </div>
+          {pnlLedger.closed_trades?.length > 0 && (
+            <div className="table-container" style={{ marginTop: '16px' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Type</th>
+                    <th>Entry Date</th>
+                    <th>Entry</th>
+                    <th>Exit Date</th>
+                    <th>Exit</th>
+                    <th>Return %</th>
+                    <th>P&L (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pnlLedger.closed_trades.slice(0, 20).map((t: any, i: number) => (
+                    <tr key={i}>
+                      <td className="font-bold">{t.symbol}</td>
+                      <td><span className={`action-badge ${t.trade_type === 'STEE' ? 'badge-executed' : ''}`}>{t.trade_type}</span></td>
+                      <td>{t.entry_date ? new Date(t.entry_date).toLocaleDateString() : '-'}</td>
+                      <td>₹{t.entry_price?.toLocaleString()}</td>
+                      <td>{t.exit_date ? new Date(t.exit_date).toLocaleDateString() : '-'}</td>
+                      <td>₹{t.exit_price?.toLocaleString()}</td>
+                      <td style={{ color: (t.return_pct || 0) >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                        {t.return_pct >= 0 ? '+' : ''}{t.return_pct}%
+                      </td>
+                      <td style={{ color: (t.pnl_abs || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
+                        ₹{t.pnl_abs?.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="section" style={{ marginTop: '24px' }}>
         <div style={{

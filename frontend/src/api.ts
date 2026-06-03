@@ -175,6 +175,7 @@ export const api = {
     getAdminStrategyShadow: () => apiFetch('/admin/strategy-shadow'),
     getAdminDataHealth: () => apiFetch('/admin/data-health'),
     getAdminSwingTrades: () => apiFetch('/admin/swing-trades'),
+    getAdminPnlLedger: () => apiFetch('/admin/pnl-ledger'),
     getAdminAuditLogs: () => apiFetch('/admin/audit-logs'),
     triggerAdminRecovery: () => apiFetch('/admin/trigger-recovery', { method: 'POST' }),
     triggerPipeline: () => apiFetch('/admin/trigger-pipeline', { method: 'POST' }),

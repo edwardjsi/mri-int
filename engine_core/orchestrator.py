@@ -29,8 +29,18 @@ def run_full_mri_pipeline():
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=30)
         df = pd.read_csv(io.StringIO(response.text))
-        symbols = df['Symbol'].dropna().unique().tolist()
-        load_stocks(symbols)
+        symbols = set(df['Symbol'].dropna().unique().tolist())
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT symbol FROM universe_112co WHERE is_active = TRUE')
+            symbols.update([r[0] for r in cur.fetchall()])
+            cur.close()
+            conn.close()
+            logger.info(f'Added 112Co symbols. Universe: {len(symbols)}')
+        except Exception as e:
+            logger.warning(f'112Co load error: {e}')
+        load_stocks(list(symbols))
 
         # Step 2: Indicators
         logger.info("[2/9] Running Indicator Engine...")

@@ -95,6 +95,118 @@ def get_swing_trades(conn=Depends(get_db), admin=Depends(verify_admin)):
     finally:
         cur.close()
 
+@router.get("/pnl-ledger")
+def get_pnl_ledger(conn=Depends(get_db), admin=Depends(verify_admin)):
+    """Aggregate P&L ledger across manual positions and STEE swing trades."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # 1. Manual trades from client_portfolio (closed positions)
+        cur.execute("""
+            SELECT 
+                cp.symbol,
+                cp.entry_date,
+                cp.entry_price,
+                cp.exit_date,
+                cp.exit_price,
+                cp.quantity,
+                cp.exit_reason,
+                'MANUAL' as trade_type,
+                c.name as client_name,
+                ROUND(((COALESCE(cp.exit_price, 0) - cp.entry_price) / cp.entry_price) * 100, 2) as return_pct,
+                ROUND((COALESCE(cp.exit_price, 0) - cp.entry_price) * cp.quantity, 2) as pnl_abs
+            FROM public.client_portfolio cp
+            JOIN public.clients c ON c.id = cp.client_id
+            WHERE cp.is_open = false AND cp.exit_price IS NOT NULL
+            ORDER BY cp.exit_date DESC NULLS LAST, cp.entry_date DESC
+        """)
+        manual_trades = cur.fetchall()
+
+        # 2. STEE swing trades (closed or with current P&L)
+        cur.execute("""
+            SELECT 
+                st.symbol,
+                st.entry_date,
+                st.entry_price,
+                st.exit_date,
+                st.exit_price,
+                st.quantity,
+                st.exit_reason,
+                'STEE' as trade_type,
+                c.name as client_name,
+                ROUND(((COALESCE(st.exit_price, dp.close) - st.entry_price) / st.entry_price) * 100, 2) as return_pct,
+                ROUND((COALESCE(st.exit_price, dp.close) - st.entry_price) * st.quantity, 2) as pnl_abs,
+                st.status
+            FROM public.swing_trades st
+            JOIN public.clients c ON c.id = st.client_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, close 
+                FROM daily_prices ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = st.symbol
+            ORDER BY st.entry_date DESC
+        """)
+        stee_trades = cur.fetchall()
+
+        # 3. Aggregate stats
+        all_trades = []
+        for t in manual_trades:
+            all_trades.append(dict(t))
+        for t in stee_trades:
+            all_trades.append(dict(t))
+
+        closed_trades = [t for t in all_trades if t.get('exit_price') is not None and t.get('exit_price', 0) > 0]
+        total_trades = len(closed_trades)
+        winning_trades = [t for t in closed_trades if (t.get('return_pct') or 0) > 0]
+        losing_trades = [t for t in closed_trades if (t.get('return_pct') or 0) <= 0]
+        win_rate = round(len(winning_trades) / total_trades * 100, 2) if total_trades > 0 else 0
+        total_pnl = round(sum(t.get('pnl_abs', 0) or 0 for t in closed_trades), 2)
+        avg_return = round(sum(t.get('return_pct', 0) or 0 for t in closed_trades) / total_trades, 2) if total_trades > 0 else 0
+        largest_win = max((t.get('return_pct', 0) or 0 for t in closed_trades), default=0)
+        largest_loss = min((t.get('return_pct', 0) or 0 for t in closed_trades), default=0)
+
+        # Open positions (unrealized)
+        cur.execute("""
+            SELECT 
+                cp.symbol,
+                cp.entry_date,
+                cp.entry_price,
+                cp.quantity,
+                'MANUAL' as trade_type,
+                c.name as client_name,
+                ROUND(((dp.close - cp.entry_price) / cp.entry_price) * 100, 2) as unrealized_return_pct,
+                ROUND((dp.close - cp.entry_price) * cp.quantity, 2) as unrealized_pnl
+            FROM public.client_portfolio cp
+            JOIN public.clients c ON c.id = cp.client_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, close 
+                FROM daily_prices ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = cp.symbol
+            WHERE cp.is_open = true
+            ORDER BY cp.entry_date DESC
+        """)
+        open_positions = cur.fetchall()
+
+        return {
+            "summary": {
+                "total_closed_trades": total_trades,
+                "winning_trades": len(winning_trades),
+                "losing_trades": len(losing_trades),
+                "win_rate_pct": win_rate,
+                "total_realized_pnl": total_pnl,
+                "avg_return_pct": avg_return,
+                "largest_win_pct": largest_win,
+                "largest_loss_pct": largest_loss,
+                "open_positions": len(open_positions),
+            },
+            "closed_trades": closed_trades,
+            "open_positions": [dict(p) for p in open_positions],
+            "all_trades": all_trades
+        }
+    except Exception as e:
+        logger.error(f"PNL LEDGER ERROR: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+    finally:
+        cur.close()
+
 @router.get("/audit-logs")
 def get_audit_logs(limit: int = 50, conn=Depends(get_db), admin=Depends(verify_admin)):
     """Fetch latest system audit logs for compliance monitoring."""

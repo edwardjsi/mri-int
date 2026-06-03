@@ -27,3 +27,4 @@ backups/
 .env
 .venv/
 *.swp
+.agents/

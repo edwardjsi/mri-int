@@ -26,6 +26,7 @@ from api.perx import router as perx_router
 from api.v2.perx import router as perx_v2_router
 from api.aae import router as aae_router
 from api.breakout_status import router as breakout_router
+from api.one12co import router as one12co_router
 from api.guidance import router as guidance_router
 from api.unified import router as unified_router
 from api.schema import ensure_required_tables
@@ -109,6 +110,7 @@ app.include_router(perx_router)
 app.include_router(perx_v2_router, prefix="/api/v2")
 app.include_router(aae_router)
 app.include_router(breakout_router)
+app.include_router(one12co_router)
 app.include_router(guidance_router)
 app.include_router(unified_router)
 

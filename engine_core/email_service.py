@@ -25,8 +25,8 @@ def get_connection():
     return conn
 
 
-def build_signal_email_html(client_name, signals, regime, holdings=None, watchlist=None):
-    """Build HTML email body for daily signal digest."""
+def build_signal_email_html(client_name, signals, regime, holdings=None, watchlist=None, hof_debuts=None, shadow_debuts=None):
+    """Build HTML email body for daily signal digest. Includes HoF/Shadow debut alerts."""
     buy_signals = [s for s in signals if s["action"] == "BUY"]
     sell_signals = [s for s in signals if s["action"] == "SELL"]
     
@@ -153,6 +153,55 @@ def build_signal_email_html(client_name, signals, regime, holdings=None, watchli
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:{score_color}">{sc}/100</td>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb">{grade}</td>
                     <td style="padding:8px;border-bottom:1px solid #e5e7eb">{regime}</td>
+                </tr>"""
+        html += "</table>"
+
+    # 🏛️ Hall of Fame Debuts — first 75+ score TODAY
+    if hof_debuts:
+        html += """
+            <h2 style="color:#f59e0b;font-size:16px;margin:24px 0 8px">🏛️ Hall of Fame — First 75+ Score Today</h2>
+            <p style="font-size:12px;color:#6b7280;margin:0 0 8px">These stocks crossed the 75 MRI score threshold for the <b>first time today</b>. The automated pipeline may have filtered them out due to regime/sector/position limits — evaluate manually.</p>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <tr style="background:#fffbeb">
+                    <th style="padding:8px;text-align:left">Symbol</th>
+                    <th style="padding:8px;text-align:left">Entry Score</th>
+                    <th style="padding:8px;text-align:left">Entry Price</th>
+                    <th style="padding:8px;text-align:left">Current Price</th>
+                </tr>"""
+        for h in hof_debuts:
+            sym = h['symbol'] if isinstance(h, dict) else h[0]
+            entry_score = h['entry_score'] if isinstance(h, dict) else h[2]
+            entry_price = h['entry_price'] if isinstance(h, dict) else h[1]
+            latest_price = h['latest_price'] if isinstance(h, dict) else h[3]
+            html += f"""
+                <tr>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{sym}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#f59e0b">{entry_score}/100</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{entry_price:,.2f}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{latest_price:,.2f}</td>
+                </tr>"""
+        html += "</table>"
+
+    # 🕵️ Strategy Shadow Debuts — first Top 10 appearance TODAY
+    if shadow_debuts:
+        html += """
+            <h2 style="color:#8b5cf6;font-size:16px;margin:24px 0 8px">🕵️ Strategy Shadow — New Top 10 Entry Today</h2>
+            <p style="font-size:12px;color:#6b7280;margin:0 0 8px">These stocks entered the <b>Top 10 MRI scorers</b> for the first time today. The Shadow Tracker ignores regime filters — these are pure momentum leaders worth watching.</p>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <tr style="background:#f5f3ff">
+                    <th style="padding:8px;text-align:left">Symbol</th>
+                    <th style="padding:8px;text-align:left">Entry Price</th>
+                    <th style="padding:8px;text-align:left">Current Price</th>
+                </tr>"""
+        for s in shadow_debuts:
+            sym = s['symbol'] if isinstance(s, dict) else s[0]
+            entry_price = s['entry_price'] if isinstance(s, dict) else s[1]
+            latest_price = s['latest_price'] if isinstance(s, dict) else s[2]
+            html += f"""
+                <tr>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:600">{sym}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{entry_price:,.2f}</td>
+                    <td style="padding:8px;border-bottom:1px solid #e5e7eb">₹{latest_price:,.2f}</td>
                 </tr>"""
         html += "</table>"
 
@@ -781,6 +830,23 @@ def send_signal_emails():
         conn.close()
         return 0
 
+    # 2b. Fetch global Hall of Fame & Strategy Shadow debutants (same for all clients)
+    cur.execute("""
+        SELECT symbol, entry_price, entry_score, latest_price
+        FROM public.top_score_tracking
+        WHERE first_appeared_date = %s
+        ORDER BY entry_score DESC
+    """, (latest_date,))
+    hof_debuts = cur.fetchall()
+
+    cur.execute("""
+        SELECT symbol, entry_price, latest_price
+        FROM public.strategy_shadow_portfolio
+        WHERE first_entry_date = %s AND is_active = TRUE
+        ORDER BY symbol ASC
+    """, (latest_date,))
+    shadow_debuts = cur.fetchall()
+
     sent_count = 0
     for client in active_clients:
         client_id = str(get_val(client, "id", 0))
@@ -831,7 +897,7 @@ def send_signal_emails():
         else:
             subject = f"MRI Daily Update: {regime} Market Summary"
 
-        html_body = build_signal_email_html(name, signals, regime, holdings=holdings_scores, watchlist=watchlist_scores)
+        html_body = build_signal_email_html(name, signals, regime, holdings=holdings_scores, watchlist=watchlist_scores, hof_debuts=hof_debuts, shadow_debuts=shadow_debuts)
 
         try:
             ses.send_email(
@@ -1071,6 +1137,223 @@ def send_email_custom(recipient_email: str, subject: str, html_body: str):
     except Exception as e:
         logger.error(f"❌ Failed to send custom email to {recipient_email}: {e}")
         return False
+
+
+def send_morning_brief():
+    """Send a concise morning brief with HoF & Shadow debuts from the latest pipeline run.
+    Designed to be triggered manually or via cron before market open (9:00 AM IST).
+    Does NOT re-run the pipeline — queries existing data only."""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if not aws_credentials_present():
+        logger.error("❌ AWS credentials missing: cannot send morning brief.")
+        cur.close()
+        conn.close()
+        return 0
+
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+    except Exception as e:
+        logger.error(f"❌ SES region misconfigured: {e}")
+        cur.close()
+        conn.close()
+        return 0
+
+    def get_val(item, key, index):
+        if isinstance(item, dict): return item.get(key)
+        if isinstance(item, (list, tuple)):
+            return item[index] if len(item) > index else None
+        return None
+
+    # 1. Get current regime
+    cur.execute("SELECT classification FROM market_regime ORDER BY date DESC LIMIT 1")
+    regime_row = cur.fetchone()
+    if not regime_row:
+        logger.warning("No regime data — cannot send meaningful morning brief.")
+        conn.close()
+        return 0
+    regime = get_val(regime_row, "classification", 0)
+
+    # 2. Get active clients
+    cur.execute("SELECT id, email, name FROM clients WHERE is_active = true")
+    active_clients = cur.fetchall()
+    if not active_clients:
+        logger.info("No active clients.")
+        conn.close()
+        return 0
+
+    # 3. Fetch HoF debuts (most recent first_appeared_date)
+    cur.execute("""
+        SELECT t.symbol, t.entry_price, t.entry_score, t.latest_price,
+               ss.total_score, ss.condition_breakout_10d
+        FROM public.top_score_tracking t
+        LEFT JOIN public.stock_scores ss ON t.symbol = ss.symbol
+          AND ss.date = (SELECT MAX(date) FROM public.stock_scores)
+        WHERE t.first_appeared_date = (SELECT MAX(first_appeared_date) FROM public.top_score_tracking)
+        ORDER BY t.entry_score DESC
+    """)
+    hof_debuts = cur.fetchall()
+
+    # 4. Fetch Shadow debuts (most recent first_entry_date)
+    cur.execute("""
+        SELECT s.symbol, s.entry_price, s.latest_price,
+               ss.total_score, ss.condition_breakout_10d
+        FROM public.strategy_shadow_portfolio s
+        LEFT JOIN public.stock_scores ss ON s.symbol = ss.symbol
+          AND ss.date = (SELECT MAX(date) FROM public.stock_scores)
+        WHERE s.first_entry_date = (SELECT MAX(first_entry_date) FROM public.strategy_shadow_portfolio)
+          AND s.is_active = TRUE
+        ORDER BY s.symbol ASC
+    """)
+    shadow_debuts = cur.fetchall()
+
+    if not hof_debuts and not shadow_debuts:
+        logger.info("No HoF or Shadow debuts in latest pipeline run. Skipping morning brief.")
+        conn.close()
+        return 0
+
+    # 5. Build HTML
+    regime_color = {"BULL": "#22c55e", "BEAR": "#ef4444", "NEUTRAL": "#f59e0b"}.get(regime, "#6b7280")
+
+    hof_rows = ""
+    for h in hof_debuts:
+        sym = get_val(h, "symbol", 0)
+        entry_score = get_val(h, "entry_score", 2) or 0
+        entry_price = get_val(h, "entry_price", 1) or 0
+        current_score = get_val(h, "total_score", 4) or entry_score
+        is_breakout = get_val(h, "condition_breakout_10d", 5)
+        tag = "🚀" if is_breakout else ""
+        hof_rows += f"""
+            <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:600">{sym} {tag}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#f59e0b">{current_score}/100</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">₹{entry_price:,.2f}</td>
+            </tr>"""
+
+    shadow_rows = ""
+    for s in shadow_debuts:
+        sym = get_val(s, "symbol", 0)
+        entry_price = get_val(s, "entry_price", 1) or 0
+        current_score = get_val(s, "total_score", 3) or 0
+        is_breakout = get_val(s, "condition_breakout_10d", 4)
+        tag = "🚀" if is_breakout else ""
+        shadow_rows += f"""
+            <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:600">{sym} {tag}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#8b5cf6">{current_score}/100</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">₹{entry_price:,.2f}</td>
+            </tr>"""
+
+    brief_date = date.today().strftime('%A, %B %d, %Y')
+    sent_count = 0
+    for client in active_clients:
+        client_id = str(get_val(client, "id", 0))
+        email_addr = get_val(client, "email", 1)
+        name = get_val(client, "name", 2) or "Investor"
+
+        # Duplicate prevention
+        cur.execute("""
+            SELECT id FROM email_log
+            WHERE client_id = %s AND date = CURRENT_DATE
+              AND email_type = 'MORNING_BRIEF' AND status = 'SENT'
+        """, (client_id,))
+        if cur.fetchone():
+            logger.info(f"  ⏭️ Morning brief already sent to {email_addr} today.")
+            continue
+
+        html_body = f"""
+        <html>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;padding:16px;background:#f9fafb">
+            <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border-top:4px solid {regime_color}">
+                <h1 style="margin:0 0 2px;font-size:18px;color:#111827">🌅 MRI Morning Brief</h1>
+                <p style="margin:0 0 12px;color:#6b7280;font-size:12px">{brief_date} · Pre-Market</p>
+
+                <div style="background:{regime_color}15;border-left:4px solid {regime_color};padding:10px 12px;border-radius:4px;margin-bottom:16px">
+                    <span style="font-size:11px;color:#6b7280">Market Regime</span>
+                    <div style="font-size:16px;font-weight:700;color:{regime_color}">{regime}</div>
+                </div>
+
+                <p style="color:#374151;font-size:13px">Hi {name},</p>
+                <p style="color:#374151;font-size:13px">Here are the <b>new Hall of Fame and Strategy Shadow entries</b> from the latest pipeline run. The full BUY/SELL digest arrives tonight — this is your pre-market scan.</p>"""
+
+        if hof_debuts:
+            html_body += f"""
+                <h2 style="color:#f59e0b;font-size:14px;margin:20px 0 6px">🏛️ Hall of Fame — First 75+ Score</h2>
+                <p style="font-size:11px;color:#6b7280;margin:0 0 8px">These stocks crossed the 75 MRI threshold for the first time. 🚀 = breakout candle.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                    <tr style="background:#fffbeb">
+                        <th style="padding:6px 10px;text-align:left">Symbol</th>
+                        <th style="padding:6px 10px;text-align:left">Score</th>
+                        <th style="padding:6px 10px;text-align:left">Entry</th>
+                    </tr>
+                    {hof_rows}
+                </table>"""
+
+        if shadow_debuts:
+            html_body += f"""
+                <h2 style="color:#8b5cf6;font-size:14px;margin:20px 0 6px">🕵️ Strategy Shadow — New Top 10</h2>
+                <p style="font-size:11px;color:#6b7280;margin:0 0 8px">These stocks entered the Top 10 MRI scorers (no regime filter).</p>
+                <table style="width:100%;border-collapse:collapse;font-size:12px">
+                    <tr style="background:#f5f3ff">
+                        <th style="padding:6px 10px;text-align:left">Symbol</th>
+                        <th style="padding:6px 10px;text-align:left">Score</th>
+                        <th style="padding:6px 10px;text-align:left">Entry</th>
+                    </tr>
+                    {shadow_rows}
+                </table>"""
+
+        html_body += f"""
+                <div style="margin-top:16px;padding:10px 12px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd">
+                    <p style="margin:0;font-size:12px;color:#0369a1">
+                        <b>💡 Quick rule:</b> In a <b>BEAR</b> market, only consider 🚀 breakout-tagged stocks.<br>
+                        <b>BULL/NEUTRAL:</b> Enter at open if score ≥ 80 and breakout confirmed.<br>
+                        Run <code>morning brief</code> in DeepSeek TUI for the full 7-condition checklist.
+                    </p>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:18px 0">
+                <p style="font-size:10px;color:#9ca3af;text-align:center">
+                    MRI Morning Brief · Full digest arrives tonight · Not financial advice
+                </p>
+            </div>
+        </body>
+        </html>"""
+
+        subject = f"🌅 MRI Morning Brief: {len(hof_debuts)} HoF + {len(shadow_debuts)} Shadow — {regime}"
+
+        try:
+            ses.send_email(
+                Source=SENDER_EMAIL,
+                Destination={"ToAddresses": [email_addr]},
+                Message={
+                    "Subject": {"Data": subject, "Charset": "UTF-8"},
+                    "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+                },
+            )
+            status_val = "SENT"
+            sent_count += 1
+            logger.info(f"  ✅ Morning brief sent to {email_addr}")
+        except ClientError as e:
+            status_val = "FAILED"
+            code = (e.response or {}).get("Error", {}).get("Code", "ClientError")
+            msg = (e.response or {}).get("Error", {}).get("Message", str(e))
+            logger.error(f"  ❌ Morning brief failed for {email_addr} ({code}): {msg}")
+        except Exception as e:
+            status_val = "FAILED"
+            logger.error(f"  ❌ Morning brief failed for {email_addr}: {str(e)}")
+
+        cur.execute("""
+            INSERT INTO email_log (client_id, date, email_type, service, subject, status)
+            VALUES (%s, CURRENT_DATE, 'MORNING_BRIEF', 'SES', %s, %s)
+        """, (client_id, subject, status_val))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    logger.info(f"=== Morning Brief Complete: {sent_count}/{len(active_clients)} sent ===")
+    return sent_count
 
 
 if __name__ == "__main__":
