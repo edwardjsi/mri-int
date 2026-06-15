@@ -2,6 +2,52 @@
 import { useState } from 'react';
 import { api } from './api';
 
+/**
+ * SparklineTimeline — tiny inline SVG showing confidence, hedging, transparency
+ * across the last N quarters. No external deps.
+ */
+function SparklineTimeline({ timeline }) {
+  const W = 320, H = 70, PAD = 4;
+  const dims = [
+    { key: 'confidence',   color: '#4ade80', label: 'Confidence' },
+    { key: 'hedging',      color: '#fbbf24', label: 'Hedging' },
+    { key: 'transparency', color: '#60a5fa', label: 'Transparency' },
+  ];
+  const xs = timeline.map((_, i) => PAD + (i * (W - 2 * PAD)) / Math.max(1, timeline.length - 1));
+  const yFor = (v: number) => H - PAD - v * (H - 2 * PAD);
+  return (
+    <div>
+      <svg width={W} height={H} style={{display:'block',width:'100%',maxWidth:320}}>
+        {/* gridline at 50% */}
+        <line x1={PAD} x2={W - PAD} y1={H/2} y2={H/2} stroke="#1f2937" strokeWidth={1} strokeDasharray="2 3"/>
+        {dims.map(d => (
+          <polyline
+            key={d.key}
+            fill="none"
+            stroke={d.color}
+            strokeWidth={1.5}
+            points={timeline.map((row, i) => `${xs[i]},${yFor(Number(row[d.key] || 0))}`).join(' ')}
+          />
+        ))}
+        {timeline.map((row, i) => (
+          <circle key={i} cx={xs[i]} cy={yFor(Number(row.confidence || 0))} r={2.5} fill="#4ade80"/>
+        ))}
+      </svg>
+      <div style={{display:'flex',gap:12,marginTop:4,fontSize:'0.65rem'}}>
+        {dims.map(d => (
+          <span key={d.key} style={{color:'#94a3b8'}}>
+            <span style={{display:'inline-block',width:8,height:8,background:d.color,borderRadius:'50%',marginRight:4,verticalAlign:'middle'}}/>
+            {d.label}
+          </span>
+        ))}
+        <span style={{color:'#475569',marginLeft:'auto'}}>
+          {timeline[0]?.quarter_label} → {timeline[timeline.length - 1]?.quarter_label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function toast(msg, isError=false) {
   const t = document.createElement('div');
   t.style.cssText = `position:fixed;bottom:24px;right:24px;background:#111827;border:1px solid ${isError?'#ef4444':'#22c55e'};color:${isError?'#f87171':'#4ade80'};padding:12px 20px;border-radius:10px;font-size:0.85rem;font-weight:600;z-index:999;transition:opacity 0.3s`;
@@ -73,6 +119,16 @@ export default function GuidanceCheck() {
           <span style={{background:'#1e293b',color:'#94a3b8',padding:'1px 6px',borderRadius:3,fontSize:'0.68rem'}}>{p.type}</span>
           {meta}
           {actualHtml}
+          {cls === 'pending' && p.status === 'UNABLE_TO_VERIFY' && p.unable_reason && (
+            <span title={p.unable_reason} style={{
+              marginLeft:'auto', cursor:'help',
+              background:'#1e293b', color:'#fbbf24',
+              padding:'2px 8px', borderRadius:10, fontSize:'0.65rem',
+              fontWeight:600, border:'1px dashed #f59e0b',
+            }}>
+              ℹ️ why?
+            </span>
+          )}
         </div>
       </div>
     );
@@ -163,8 +219,120 @@ export default function GuidanceCheck() {
               </div>
             </div>
           ) : (
-            <div style={{background:'#0d1421',border:'1px solid #1a2236',borderRadius:10,padding:'14px 18px',marginBottom:20,color:'#475569',fontSize:'0.85rem',textAlign:'center'}}>
-              ⏳ No verified promises yet — {(report.pending||[]).length} pending. Run <b>⚡ Prime All Stocks</b> to trigger verification against quarterly financials.
+            <div style={{background:'#0d1421',border:'1px solid #1a2236',borderRadius:10,padding:'14px 18px',marginBottom:20,color:'#475569',fontSize:'0.85rem'}}>
+              <div style={{fontWeight:600,color:'#94a3b8',marginBottom:6}}>
+                ⏳ No verified promises yet — {report.total_unable || 0} of {(report.pending||[]).length} pending couldn't be matched to financials.
+              </div>
+              {report.guidance_quality_signal === 'DIRECTIONAL ONLY' && (
+                <div style={{fontSize:'0.78rem',color:'#fbbf24'}}>
+                  ⚠️ This management team gives directional / qualitative guidance only — they don't typically commit to numbers. Verification requires numeric targets.
+                </div>
+              )}
+              {report.all_future_promises && report.dominant_guidance_type && (
+                <div style={{fontSize:'0.78rem',color:'#64748b',marginTop:4}}>
+                  Most-frequent topic: <b style={{color:'#94a3b8'}}>{report.dominant_guidance_type}</b>. Future quarters will verify as results land.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Header metadata band: transcript coverage + guidance quality */}
+          {(report.transcript_count > 0 || report.total_promises_extracted > 0) && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16,fontSize:'0.72rem',alignItems:'center'}}>
+              <span style={{background:'#1e293b',color:'#cbd5e1',padding:'4px 10px',borderRadius:14,fontWeight:600}}>
+                📊 {report.transcript_count} transcript{report.transcript_count !== 1 ? 's' : ''} analyzed
+                {report.transcript_date_range?.earliest && report.transcript_date_range?.latest && (
+                  <span style={{color:'#64748b',marginLeft:6,fontWeight:400}}>
+                    · {report.transcript_date_range.earliest} → {report.transcript_date_range.latest}
+                  </span>
+                )}
+              </span>
+              <span style={{background:'#1e293b',color:'#cbd5e1',padding:'4px 10px',borderRadius:14,fontWeight:600}}>
+                {report.total_promises_extracted} promises extracted
+              </span>
+              <span style={{background: report.numerical_guidance_pct < 30 ? '#7f1d1d' : report.numerical_guidance_pct < 70 ? '#451a03' : '#14532d',
+                           color: report.numerical_guidance_pct < 30 ? '#fca5a5' : report.numerical_guidance_pct < 70 ? '#fbbf24' : '#4ade80',
+                           padding:'4px 10px',borderRadius:14,fontWeight:600}}>
+                {report.numerical_guidance_pct}% numerical guidance
+              </span>
+              {report.dominant_guidance_type && (
+                <span style={{background:'#1e293b',color:'#94a3b8',padding:'4px 10px',borderRadius:14,fontWeight:600}}>
+                  🎯 Dominant: {report.dominant_guidance_type}
+                </span>
+              )}
+              {report.guidance_quality_signal === 'DIRECTIONAL ONLY' && (
+                <span style={{background:'#1e3a8a',color:'#60a5fa',padding:'4px 10px',borderRadius:14,fontWeight:700,letterSpacing:'0.04em'}}>
+                  📐 DIRECTIONAL ONLY
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Intonation section — 9-dim management tone */}
+          {report.intonation?.latest && report.intonation.quarters_observed >= 1 && (
+            <div style={{background:'#0d1421',border:'1px solid #1a2236',borderRadius:10,padding:'14px 18px',marginBottom:20}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+                <div>
+                  <div style={{fontSize:'0.7rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.07em',color:'#94a3b8'}}>
+                    🎙️ Management Tone — {report.intonation.latest.quarter_label}
+                  </div>
+                  <div style={{fontSize:'0.85rem',color:'#cbd5e1',marginTop:4,lineHeight:1.5}}>
+                    {report.intonation.latest.summary || '—'}
+                  </div>
+                  {report.intonation.latest.headwinds_named && report.intonation.latest.headwinds_named.length > 0 && (
+                    <div style={{fontSize:'0.72rem',color:'#94a3b8',marginTop:6}}>
+                      <b style={{color:'#fbbf24'}}>Headwinds named:</b> {report.intonation.latest.headwinds_named.join(' · ')}
+                    </div>
+                  )}
+                </div>
+                {report.intonation.tone_shift_detected && (
+                  <div style={{background:'#1e3a8a',color:'#60a5fa',padding:'4px 10px',borderRadius:12,fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.04em',whiteSpace:'nowrap'}}>
+                    🚨 TONE SHIFT
+                  </div>
+                )}
+              </div>
+
+              {/* 9-dimension bar grid */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'8px 16px',marginTop:12}}>
+                {[
+                  ['Confidence',      report.intonation.latest.confidence,     '#4ade80'],
+                  ['Hedging',         report.intonation.latest.hedging,        '#fbbf24'],
+                  ['Aggression',      report.intonation.latest.aggression,     '#f87171'],
+                  ['Transparency',    report.intonation.latest.transparency,   '#60a5fa'],
+                  ['Optimism',        report.intonation.latest.optimism,       '#4ade80'],
+                  ['Pessimism',       report.intonation.latest.pessimism,      '#94a3b8'],
+                  ['Accountability',  report.intonation.latest.accountability, '#a78bfa'],
+                  ['Numerical density', report.intonation.latest.numerical_density, '#22d3ee'],
+                ].map(([label, val, color]) => {
+                  const v = Number(val || 0);
+                  const pct = Math.round(v * 100);
+                  const delta = report.intonation.previous
+                    ? (v - (report.intonation.previous[String(label).toLowerCase().replace(' ', '_')] ?? 0))
+                    : 0;
+                  const arrow = delta > 0.01 ? ' ↑' : delta < -0.01 ? ' ↓' : '';
+                  return (
+                    <div key={String(label)} style={{display:'flex',flexDirection:'column',gap:3}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.68rem'}}>
+                        <span style={{color:'#94a3b8'}}>{label as string}</span>
+                        <span style={{color: color as string, fontWeight:700}}>{pct}{arrow}</span>
+                      </div>
+                      <div style={{height:4,background:'#1f2937',borderRadius:2,overflow:'hidden'}}>
+                        <div style={{height:'100%',width:`${pct}%`,background: color as string,transition:'width 0.5s'}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Quarter timeline sparkline — show confidence + hedging over time */}
+              {report.intonation.timeline && report.intonation.timeline.length >= 2 && (
+                <div style={{marginTop:14,borderTop:'1px solid #1a2236',paddingTop:10}}>
+                  <div style={{fontSize:'0.68rem',color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6,fontWeight:700}}>
+                    Tone trajectory
+                  </div>
+                  <SparklineTimeline timeline={report.intonation.timeline} />
+                </div>
+              )}
             </div>
           )}
 

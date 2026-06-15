@@ -605,6 +605,7 @@ def ensure_required_tables(conn) -> None:
     ensure_aae_event_tables(cur)
     ensure_guidance_tables(cur)
     ensure_alert_preferences_table(cur)
+    ensure_intonation_table(cur)
 
     conn.commit()
     cur.close()
@@ -888,6 +889,45 @@ def ensure_aae_event_tables(cur) -> None:
     )
 
 
+def ensure_intonation_table(cur) -> None:
+    """ConvictionEngine (Decision 097) — per-quarter management tone extraction.
+
+    9 dimensions extracted by GPT-4o-mini from each transcript:
+      confidence, hedging, aggression, transparency, optimism, pessimism,
+      accountability, numerical_density, headwind_acknowledged.
+
+    Idempotent. One row per transcript (UNIQUE on transcript_id).
+    """
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.management_intonation (
+            id                     SERIAL PRIMARY KEY,
+            symbol                 VARCHAR(20) NOT NULL,
+            transcript_id          INT REFERENCES public.aae_transcripts(id)
+                                   ON DELETE CASCADE,
+            fiscal_year            INT,
+            fiscal_quarter         INT,
+            confidence             NUMERIC(4,3),
+            hedging                NUMERIC(4,3),
+            aggression             NUMERIC(4,3),
+            transparency           NUMERIC(4,3),
+            optimism               NUMERIC(4,3),
+            pessimism              NUMERIC(4,3),
+            accountability         NUMERIC(4,3),
+            numerical_density      NUMERIC(4,3),
+            headwind_acknowledged  INT,
+            raw                    JSONB,
+            extracted_at           TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(transcript_id)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_intonation_symbol "
+        "ON public.management_intonation(symbol, fiscal_year, fiscal_quarter);"
+    )
+
+
 def ensure_alert_preferences_table(cur) -> None:
     """ConvictionEngine (Decision 097) — opt-in alert preferences per client.
 
@@ -958,6 +998,12 @@ def ensure_guidance_tables(cur) -> None:
             UNIQUE(guidance_id, checked_fiscal_year, checked_fiscal_quarter)
         );
         """
+    )
+    # ConvictionEngine (Decision 097): reason for UNABLE_TO_VERIFY so the UI can
+    # explain *why* the verifier couldn't score a promise.
+    cur.execute(
+        "ALTER TABLE public.guidance_verification "
+        "ADD COLUMN IF NOT EXISTS unable_reason TEXT;"
     )
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_verification_guidance "

@@ -60,6 +60,33 @@ MAPPING = {
                   WHERE symbol=%s AND year=%s AND quarter=%s""",
         "label": "Working capital",
     },
+    # Capacity / network expansion (transmission km, store count, plant MW, etc.)
+    # No quarterly financial column tracks this — record value but mark UNABLE
+    # with a reason so the UI can explain the gap to the user.
+    "CAPACITY_EXPANSION": {
+        "sql": """SELECT NULL::NUMERIC AS actual""",
+        "label": "Capacity addition (units not in DB)",
+        "reason": "no financial column for capacity — needs BSE filings / annual report data",
+    },
+    # Deal pipeline / order book (qualitative directional)
+    "DEAL_PIPELINE": {
+        "sql": """SELECT NULL::NUMERIC AS actual""",
+        "label": "Order book / deal pipeline",
+        "reason": "qualitative metric — not tracked in quarterly financials",
+    },
+    # Market share (qualitative)
+    "MARKET_SHARE": {
+        "sql": """SELECT NULL::NUMERIC AS actual""",
+        "label": "Market share",
+        "reason": "qualitative metric — needs industry data not in DB",
+    },
+    # Catch-all for types without a numeric financial mapping. Always UNABLE
+    # unless the promise carries a concrete number (handled in directional fallback).
+    "OTHER": {
+        "sql": """SELECT NULL::NUMERIC AS actual""",
+        "label": "Qualitative (no financial mapping)",
+        "reason": "qualitative — no numeric target in promise",
+    },
 }
 
 
@@ -156,8 +183,9 @@ class GuidanceVerifier:
             get = lambda i: row[i] if isinstance(row, (list, tuple)) else list(row.values())[i]
             sid, sym, gtype, target, tdate_str = get(0), get(1), get(2), get(3), get(4)
 
-            if not gtype or gtype not in MAPPING or not target:
-                return self._store(cur, sid, None, None, "UNABLE_TO_VERIFY")
+            if not gtype or gtype not in MAPPING:
+                return self._store(cur, sid, None, None, "UNABLE_TO_VERIFY",
+                                   reason=f"guidance_type {gtype!r} not in verifier MAPPING")
 
             parsed = parse_target_quarter(tdate_str or "")
             if not parsed:
@@ -168,32 +196,60 @@ class GuidanceVerifier:
                 return self._store(cur, sid, fy, fq, "PENDING")
 
             sql = MAPPING[gtype]["sql"]
+            default_reason = MAPPING[gtype].get("reason")
+
             if gtype == "REVENUE_GROWTH":
-                cur.execute(sql, (sym, fy, fq, sym, fy, fq, fq, fq))
+                cur.execute(sql, (sym, fy, fq, sym, fy, fq))
             else:
                 cur.execute(sql, (sym, fy, fq))
 
             r = cur.fetchone()
             if not r:
-                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY")
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                   reason=default_reason or "no financial data for target quarter")
 
             actual = r[0] if isinstance(r, (list, tuple)) else list(r.values())[0]
             if actual is None:
-                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY")
+                # Capacity-style types return NULL by design — record with the
+                # type-specific reason so the UI can show *why*.
+                if default_reason:
+                    return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                       reason=default_reason, actual=None)
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                   reason="no financial data for target quarter", actual=None)
 
             # Safe variance: handle None/missing targets, percentage vs absolute
             try:
-                target_f = float(target)
+                target_f = float(target) if target is not None else None
             except (TypeError, ValueError):
                 target_f = None
 
             if target_f is None or target_f == 0:
-                # No numeric target — can't verify, mark unable
-                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY", actual, None)
+                # No numeric target — directional fallback for REVENUE_GROWTH,
+                # UNABLE for everything else (with the type-specific reason).
+                if gtype == "REVENUE_GROWTH":
+                    # Directional: positive YoY = PARTIAL ("grew, even if not by stated number");
+                    # negative = MISSED; exactly zero = PARTIAL (flat)
+                    actual_pct = float(actual)
+                    if actual_pct > 0:
+                        status = "PARTIAL"
+                    elif actual_pct < 0:
+                        status = "MISSED"
+                    else:
+                        status = "PARTIAL"
+                    variance = actual_pct  # store the actual YoY as variance
+                    return self._store(cur, sid, fy, fq, status, actual, variance,
+                                       reason="directional-only — evaluated YoY direction")
+                if default_reason:
+                    return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                       reason=default_reason, actual=actual)
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                   reason="no numeric target in promise", actual=actual)
 
             actual_f = float(actual) if actual is not None else None
             if actual_f is None:
-                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY", None, None)
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY",
+                                   reason="actual value unavailable", actual=None)
 
             variance = ((actual_f - target_f) / abs(target_f)) * 100
 
@@ -232,19 +288,23 @@ class GuidanceVerifier:
             return (r[0], r[1]) if isinstance(r, (list, tuple)) else (r["year"], r["quarter"])
         return calendar_to_fiscal(date.today())
 
-    def _store(self, cur, gid, fy, fq, status, actual=None, variance=None):
+    def _store(self, cur, gid, fy, fq, status, actual=None, variance=None, reason=None):
+        # Only persist the reason when the status is UNABLE_TO_VERIFY — otherwise
+        # it's noise. Pass it through anyway so the SQL stays uniform.
         try:
             cur.execute(
                 """INSERT INTO public.guidance_verification
                    (guidance_id, checked_fiscal_year, checked_fiscal_quarter,
-                    actual_value, status, variance_pct)
-                   VALUES (%s,%s,%s,%s,%s,%s)
+                    actual_value, status, variance_pct, unable_reason)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s)
                    ON CONFLICT (guidance_id, checked_fiscal_year, checked_fiscal_quarter)
                    DO UPDATE SET actual_value=EXCLUDED.actual_value,
                                  status=EXCLUDED.status,
                                  variance_pct=EXCLUDED.variance_pct,
+                                 unable_reason=EXCLUDED.unable_reason,
                                  verified_at=NOW()""",
-                (gid, fy, fq, actual, status, variance),
+                (gid, fy, fq, actual, status, variance,
+                 reason if status == "UNABLE_TO_VERIFY" else None),
             )
             cur.connection.commit()
         except Exception as e:

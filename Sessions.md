@@ -757,3 +757,56 @@ User-led retrospective evaluating the entire platform from three perspectives: s
 - Open PR from `feature/conviction-engine` → `main`.
 - Wait for next quarterly results ingestion (Results season); then run `scripts/run_quarterly_guidance_check.py` to verify new data points trigger lag detection.
 - Monitor `last_verdict_flip` column for organic flips after the second consecutive run.
+
+---
+
+## June 15, 2026 — Management Integrity Surface Addendum (Decision 097 Appendix A)
+
+After deploying the original ConvictionEngine build, loading APARINDS revealed the UI was hiding critical signal: 8 transcripts were analyzed, 18 promises extracted — but all 18 were `UNABLE_TO_VERIFY` because their guidance types (CAPACITY_EXPANSION, REVENUE_GROWTH-without-target, OTHER) fell outside the verifier's narrow MAPPING. The plan's own key finding ("credibility score becomes meaningful after 4+ quarters") was confirmed in production — but the UI didn't surface any of it.
+
+The user said: *"this is a dataset no one else has — make it so."*
+
+### What was built (in `docs/ConvictionEngine15June26.md` Appendix A)
+
+**Phase A — Header metadata (already shipped earlier in session)**
+- `transcript_count`, `transcript_date_range`, `total_promises_extracted`
+- `numerical_guidance_pct`, `deadline_guidance_pct`, `dominant_guidance_type`
+- `all_future_promises`, `directional_style`, `guidance_quality_signal` (DIRECTIONAL ONLY / MIXED / NUMERICAL)
+- `total_unable` (count of UNABLE_TO_VERIFY distinct from pending)
+
+**Phase B — Verifier fixes**
+- Added CAPACITY_EXPANSION, DEAL_PIPELINE, MARKET_SHARE, OTHER to MAPPING with type-specific `unable_reason` strings.
+- Fixed pre-existing latent bug: REVENUE_GROWTH SQL had 6 `%s` but original code passed 8 args → TypeError on every call. Now 6 args.
+- REVENUE_GROWTH without numeric target_value → directional fallback (PARTIAL if YoY positive, MISSED if negative).
+- `unable_reason` column added to `guidance_verification` (idempotent ALTER).
+- Backfilled 1704 existing UNABLE_TO_VERIFY rows with reasons derived from guidance_type.
+- 6 new tests in `engine_guidance/test_verifier_reasons.py` — all green.
+
+**Phase C — Intonation extraction (the unique signal)**
+- New table `management_intonation` (9 dimensions + raw JSONB). Idempotent CREATE.
+- New module `engine_guidance/intonation_extractor.py`:
+  - GPT-4o-mini, structured JSON output
+  - 9 dimensions per transcript: confidence, hedging, aggression, transparency, optimism, pessimism, accountability, numerical_density, headwind_acknowledged
+  - Idempotent (skips already-extracted transcripts)
+  - Cost ~$0.0003/transcript
+- Integrated into `guidance_primer.py` Step 5 — future transcripts get intonation extracted automatically.
+- Background backfill running on all 989 existing transcripts (logs/intonation_backfill_20260615.log, PID 99922, ~13.5% done at last check, ~73 min remaining).
+- API surface: `_build_report_payload()` exposes `intonation.{latest, previous, quarter_over_quarter_delta, tone_shift_detected, tone_shift_dimensions, timeline}`.
+- 10 new tests in `engine_guidance/test_intonation.py` — all green.
+
+**Phase D — UI integration**
+- Header band chips: transcript count + date range, numerical guidance %, dominant type, DIRECTIONAL ONLY badge.
+- Replaced "Run Prime All Stocks" misleading message with explainer: "X of Y pending couldn't be matched to financials" + the DIRECTIONAL ONLY context.
+- New 🎙️ Management Tone card with 9-dimension bar grid, quarter-over-quarter arrows, tone-shift badge, and sparkline trajectory (confidence + hedging + transparency).
+- Per-promise "ℹ️ why?" tooltip on pending items showing the `unable_reason` on hover.
+- New helper `SparklineTimeline` — inline SVG, no external deps.
+
+### Current state (mid-backfill)
+
+- 134/989 transcripts scored in 11 min (early signal)
+- Top-3 most-confident: WAAREEENER (0.90), LLOYDSME (0.90), ADVAIT (0.85)
+- POCL notable: high confidence (0.85) BUT names 3 headwinds per quarter → transparency in action
+
+### Files changed (addendum)
+- New: `engine_guidance/intonation_extractor.py`, `engine_guidance/test_verifier_reasons.py`, `engine_guidance/test_intonation.py`
+- Modified: `api/schema.py` (unable_reason ALTER + intonation table), `api/guidance.py` (header metadata + intonation payload), `engine_guidance/guidance_verifier.py` (MAPPING + reasons + bug fix), `engine_guidance/guidance_primer.py` (Step 5 hook), `frontend/src/GuidanceCheck.tsx` (header band + tone card + tooltips + sparkline), `docs/ConvictionEngine15June26.md` (Appendix A)

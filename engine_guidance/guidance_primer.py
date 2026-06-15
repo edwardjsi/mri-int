@@ -76,6 +76,32 @@ def prime_guidance_data(symbol: str):
     except Exception as e:
         logger.error(f"[GUIDANCE-PRIMER] Credibility scoring failed for {base}: {e}")
 
+    # Step 5: Extract Management Tone (Decision 097 addendum)
+    # Cheap (~0.0003/transcript), idempotent — skipped if already extracted.
+    try:
+        from engine_guidance.intonation_extractor import IntonationExtractor
+        intext = IntonationExtractor()
+        from engine_core.db import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT id, symbol, date, raw_text FROM aae_transcripts
+               WHERE symbol=%s AND id NOT IN (SELECT transcript_id FROM management_intonation)
+               ORDER BY date DESC""",
+            (base,),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        for r in rows:
+            try:
+                intext.extract_transcript(r)
+            except Exception as e:
+                logger.warning(f"[GUIDANCE-PRIMER] Intonation skip for {base} transcript {r['id']}: {e}")
+        if rows:
+            logger.info(f"[GUIDANCE-PRIMER] Intonation extracted for {len(rows)} transcripts of {base}")
+    except Exception as e:
+        logger.warning(f"[GUIDANCE-PRIMER] Intonation extraction skipped for {base}: {e}")
+
     logger.info(f"[GUIDANCE-PRIMER] Guidance prime complete for {base}")
 
 

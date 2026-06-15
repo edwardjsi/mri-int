@@ -1436,3 +1436,51 @@ ConvictionEngine plan drafted, Decision 097 logged. **Awaiting user approval bef
 4. Phase 3 — add `/api/guidance/conviction` + `ConvictionEngine.tsx`
 5. Phase 4 — quarterly lag-alert job + opt-in preference table
 6. Push, open PR, deploy via existing pipeline
+
+---
+
+## 📅 Session: June 15, 2026 — Management Integrity Surface Addendum (ConvictionEngine Phase A-D)
+
+**Session Start:** ~17:50 IST (continuation from earlier ConvictionEngine build)
+**Session End:** pending backfill completion (~22:30 IST)
+**Branch:** `feature/conviction-engine`
+
+### What Was Done This Session
+
+#### 1. Diagnosis: UI was hiding real signal ✅
+- [x] APARINDS investigation: 8 transcripts analyzed, 18 promises extracted, but UI said "no verified" because all 18 were `UNABLE_TO_VERIFY`
+- [x] Root cause: verifier MAPPING only handles MARGIN/CAPEX/DEBT_REDUCTION/WORKING_CAPITAL — APARINDS's promises are CAPACITY_EXPANSION/REVENUE_GROWTH/MARKET_SHARE/OTHER
+- [x] This is the SAME pattern across all companies (POCL: 21 unable, INFY: 17, TCS: 23)
+
+#### 2. Header Metadata (Phase A) ✅
+- [x] `api/guidance.py` — added 9 new payload fields (transcript_count, numerical_guidance_pct, all_future_promises, etc.)
+- [x] Verified live: APARINDS → `8 transcripts analyzed`, `11.1% numerical`, `DIRECTIONAL ONLY`
+
+#### 3. Verifier Fixes (Phase B) ✅
+- [x] Added CAPACITY_EXPANSION, DEAL_PIPELINE, MARKET_SHARE, OTHER to verifier MAPPING with type-specific `unable_reason`
+- [x] Fixed pre-existing latent bug: REVENUE_GROWTH SQL had wrong parameter count (6 vs 8)
+- [x] REVENUE_GROWTH directional fallback for promises without numeric target
+- [x] `unable_reason` column on `guidance_verification` (idempotent ALTER)
+- [x] Backfilled 1704 existing rows
+- [x] 6/6 tests green in `engine_guidance/test_verifier_reasons.py`
+
+#### 4. Intonation Extraction (Phase C) ✅
+- [x] New `management_intonation` table — 9 dimensions + raw JSONB
+- [x] New `engine_guidance/intonation_extractor.py` — GPT-4o-mini scorer
+- [x] Integrated into `guidance_primer.py` Step 5
+- [x] API surface: latest/previous/delta/tone-shift/timeline
+- [x] Background backfill running on all 989 transcripts (~13.5% done)
+- [x] 10/10 tests green in `engine_guidance/test_intonation.py`
+
+#### 5. UI Integration (Phase D) ✅
+- [x] Header band: transcript count, date range, numerical %, dominant type, DIRECTIONAL ONLY badge
+- [x] "Why nothing verified?" explainer card
+- [x] 🎙️ Management Tone card with 9-dim bars + QoQ arrows + sparkline trajectory
+- [x] Tone-shift badge
+- [x] Per-promise "ℹ️ why?" tooltip showing `unable_reason`
+
+### 📌 Current Milestone
+All addendum code complete. **Awaiting backfill (~73 min) before final commit + push.**
+
+### Tests
+- 27/27 unit tests green (11 lag metrics + 6 verifier reasons + 10 intonation)

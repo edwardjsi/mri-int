@@ -82,6 +82,7 @@ def _build_report_payload(conn, symbol: str) -> dict:
              v.variance_pct,
              v.checked_fiscal_year,
              v.checked_fiscal_quarter,
+             v.unable_reason,
              t.date,
              EXTRACT(YEAR FROM t.date)::INT as trans_year,
              EXTRACT(QUARTER FROM t.date)::INT as trans_quarter
@@ -141,6 +142,7 @@ def _build_report_payload(conn, symbol: str) -> dict:
             "promised_in":  _fy_label(txfy, txfq) if txfy and txfq else _fy_label(vfy, vfq),
             "verified_in":  _fy_label(vfy, vfq) if vfy and vfq else "",
             "transcript_date": str(txdate) if txdate else "",
+            "unable_reason": _r(row, 10),
         }
 
         if status == "ACHIEVED":
@@ -311,9 +313,178 @@ def _build_report_payload(conn, symbol: str) -> dict:
     else:
         integrity_signal = "INSUFFICIENT DATA — need at least 3 verified promises to assess integrity"
 
+    # ── Header metadata: transcript coverage + guidance quality signals ──
+    cur.execute(
+        """SELECT COUNT(*) AS n,
+                  MIN(date) AS earliest,
+                  MAX(date) AS latest
+           FROM aae_transcripts WHERE symbol=%s""",
+        (sym,),
+    )
+    trow = cur.fetchone()
+    transcript_count = int(_r(trow, 0) or 0)
+    transcript_date_range = {
+        "earliest": str(_r(trow, 1)) if _r(trow, 1) else None,
+        "latest":   str(_r(trow, 2)) if _r(trow, 2) else None,
+    }
+
+    # Numerical guidance quality: % of promises that carry a numeric target AND a deadline.
+    # Low score = management gives directional / qualitative guidance only.
+    cur.execute(
+        """SELECT
+              COUNT(*) AS total,
+              COUNT(*) FILTER (WHERE target_value IS NOT NULL AND target_unit IS NOT NULL) AS with_numeric,
+              COUNT(*) FILTER (WHERE target_date IS NOT NULL AND target_date <> '') AS with_deadline
+           FROM management_guidance WHERE symbol=%s""",
+        (sym,),
+    )
+    grow = cur.fetchone()
+    g_total = int(_r(grow, 0) or 0)
+    g_numeric = int(_r(grow, 1) or 0)
+    g_deadline = int(_r(grow, 2) or 0)
+    numerical_guidance_pct = round((g_numeric / g_total) * 100, 1) if g_total else 0.0
+    deadline_guidance_pct  = round((g_deadline / g_total) * 100, 1) if g_total else 0.0
+
+    # Dominant guidance type (most-frequent bucket — tells you what management talks about most)
+    cur.execute(
+        """SELECT COALESCE(guidance_type, 'OTHER') AS gtype, COUNT(*) AS n
+           FROM management_guidance WHERE symbol=%s
+           GROUP BY gtype ORDER BY n DESC LIMIT 1""",
+        (sym,),
+    )
+    drow = cur.fetchone()
+    dominant_type = _r(drow, 0) if drow else None
+
+    # All-future flag: every extracted promise is forward-looking AND unverified (no
+    # ACHIEVED/MISSED/PARTIAL exists yet). Means the verifier cannot yet score this
+    # management team on past promises — only the next 1-2 quarters will change that.
+    all_future_promises = (
+        total_verified == 0 and (g_total - len(upcoming)) == 0 and g_total > 0
+    )
+
+    # ── Intonation: 9-dimension management tone, per quarter + 8-quarter timeline ──
+    cur.execute(
+        """SELECT fiscal_year, fiscal_quarter, confidence, hedging, aggression,
+                  transparency, optimism, pessimism, accountability,
+                  numerical_density, headwind_acknowledged, raw
+           FROM management_intonation
+           WHERE symbol=%s
+           ORDER BY fiscal_year DESC, fiscal_quarter DESC
+           LIMIT 12""",
+        (sym,),
+    )
+    intonation_rows = cur.fetchall()
+    intonation = {
+        "quarters_observed": len(intonation_rows),
+        "latest": None,
+        "previous": None,
+        "quarter_over_quarter_delta": None,
+        "tone_shift_detected": False,
+        "tone_shift_dimensions": [],
+        "timeline": [],
+    }
+    if intonation_rows:
+        def _dim(row, idx): return _r(row, idx)
+        latest = {
+            "fiscal_year": int(_dim(intonation_rows[0], 0)),
+            "fiscal_quarter": int(_dim(intonation_rows[0], 1)),
+            "quarter_label": _fy_label(int(_dim(intonation_rows[0], 0)),
+                                       int(_dim(intonation_rows[0], 1))),
+            "confidence":      float(_dim(intonation_rows[0], 2) or 0),
+            "hedging":         float(_dim(intonation_rows[0], 3) or 0),
+            "aggression":      float(_dim(intonation_rows[0], 4) or 0),
+            "transparency":    float(_dim(intonation_rows[0], 5) or 0),
+            "optimism":        float(_dim(intonation_rows[0], 6) or 0),
+            "pessimism":       float(_dim(intonation_rows[0], 7) or 0),
+            "accountability":  float(_dim(intonation_rows[0], 8) or 0),
+            "numerical_density": float(_dim(intonation_rows[0], 9) or 0),
+            "headwind_acknowledged": int(_dim(intonation_rows[0], 10) or 0),
+            "summary": (_dim(intonation_rows[0], 11) or {}).get("one_line_summary", ""),
+            "headwinds_named": (_dim(intonation_rows[0], 11) or {}).get("headwinds_named", []),
+        }
+        intonation["latest"] = latest
+        if len(intonation_rows) >= 2:
+            prev = intonation_rows[1]
+            previous = {
+                "fiscal_year": int(_dim(prev, 0)),
+                "fiscal_quarter": int(_dim(prev, 1)),
+                "quarter_label": _fy_label(int(_dim(prev, 0)), int(_dim(prev, 1))),
+                "confidence":      float(_dim(prev, 2) or 0),
+                "hedging":         float(_dim(prev, 3) or 0),
+                "aggression":      float(_dim(prev, 4) or 0),
+                "transparency":    float(_dim(prev, 5) or 0),
+                "optimism":        float(_dim(prev, 6) or 0),
+                "pessimism":       float(_dim(prev, 7) or 0),
+                "accountability":  float(_dim(prev, 8) or 0),
+                "numerical_density": float(_dim(prev, 9) or 0),
+                "headwind_acknowledged": int(_dim(prev, 10) or 0),
+            }
+            intonation["previous"] = previous
+            # Quarter-over-quarter delta + 1σ tone-shift detection
+            shift_dims = []
+            for key in ("confidence", "hedging", "aggression", "transparency",
+                        "optimism", "pessimism", "accountability", "numerical_density"):
+                d = latest[key] - previous[key]
+                if abs(d) >= 0.20:  # default 1σ threshold ≈ 0.20 absolute
+                    shift_dims.append({"dim": key, "delta": round(d, 3),
+                                       "direction": "up" if d > 0 else "down"})
+            intonation["quarter_over_quarter_delta"] = {
+                "confidence":      round(latest["confidence"] - previous["confidence"], 3),
+                "hedging":         round(latest["hedging"] - previous["hedging"], 3),
+                "aggression":      round(latest["aggression"] - previous["aggression"], 3),
+                "transparency":    round(latest["transparency"] - previous["transparency"], 3),
+                "optimism":        round(latest["optimism"] - previous["optimism"], 3),
+                "pessimism":       round(latest["pessimism"] - previous["pessimism"], 3),
+                "accountability":  round(latest["accountability"] - previous["accountability"], 3),
+                "numerical_density": round(latest["numerical_density"] - previous["numerical_density"], 3),
+            }
+            intonation["tone_shift_detected"] = len(shift_dims) > 0
+            intonation["tone_shift_dimensions"] = shift_dims
+
+        # Timeline: reverse-chronological → chronological for chart-friendly order
+        for r in reversed(intonation_rows):
+            intonation["timeline"].append({
+                "quarter_label": _fy_label(int(_dim(r, 0)), int(_dim(r, 1))),
+                "fiscal_year": int(_dim(r, 0)),
+                "fiscal_quarter": int(_dim(r, 1)),
+                "confidence":      float(_dim(r, 2) or 0),
+                "hedging":         float(_dim(r, 3) or 0),
+                "aggression":      float(_dim(r, 4) or 0),
+                "transparency":    float(_dim(r, 5) or 0),
+                "optimism":        float(_dim(r, 6) or 0),
+                "pessimism":       float(_dim(r, 7) or 0),
+                "accountability":  float(_dim(r, 8) or 0),
+                "numerical_density": float(_dim(r, 9) or 0),
+                "headwind_acknowledged": int(_dim(r, 10) or 0),
+            })
+
+    # Management's qualitative style signal — computed from how many promises
+    # land in each type. "OTHER" + "REVENUE_GROWTH" with no target = "directional".
+    directional_style = (numerical_guidance_pct < 30.0)
+
+    guidance_quality_signal = (
+        "DIRECTIONAL ONLY" if directional_style
+        else "MIXED" if numerical_guidance_pct < 70.0
+        else "NUMERICAL"
+    )
+
     return {
         "symbol": sym,
         "report_date": str(date.today()),
+
+        # Header metadata (transcript coverage + guidance quality signals)
+        "transcript_count": transcript_count,
+        "transcript_date_range": transcript_date_range,
+        "total_promises_extracted": g_total,
+        "numerical_guidance_pct": numerical_guidance_pct,
+        "deadline_guidance_pct": deadline_guidance_pct,
+        "dominant_guidance_type": dominant_type,
+        "all_future_promises": all_future_promises,
+        "directional_style": directional_style,
+        "guidance_quality_signal": guidance_quality_signal,
+
+        # Intonation — 9-dimension management tone (latest + previous + delta + 8q timeline)
+        "intonation": intonation,
 
         # Summary
         "credibility": credibility,
@@ -332,6 +503,7 @@ def _build_report_payload(conn, symbol: str) -> dict:
         "total_upcoming": len(upcoming),
         "total_verified": total_verified,
         "total_material": len(achieved) + len(missed) + len(partial) + len(upcoming),
+        "total_unable": len([p for p in upcoming if p.get("status") == "UNABLE_TO_VERIFY"]),
 
         # ── 1. Past Promises Verified ────────────────────────────────
         "achieved": achieved,
