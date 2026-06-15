@@ -33,17 +33,11 @@ export default function GuidanceCheck() {
     if (!symbol.trim() || !report) return;
     setSending(true);
     try {
-      const res = await fetch(`/api/guidance/${encodeURIComponent(symbol.toUpperCase())}/email`, { method: 'POST' });
-      if (res.ok) {
-        toast(`📧 Report sent! Check your inbox.`);
-      } else if (res.status === 401 || res.status === 403) {
-        toast('Please log in first to send reports.', true);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast(`Failed: ${err.detail || res.statusText}`, true);
-      }
+      await api.sendGuidanceEmail(symbol.toUpperCase());
+      toast(`📧 Report sent! Check your inbox.`);
     } catch (e: any) {
-      toast(`Network error: ${e.message}`, true);
+      // apiFetch throws on non-2xx; the error message includes the status text
+      toast(`Failed: ${e.message || 'Unknown error'}`, true);
     }
     setSending(false);
   };
