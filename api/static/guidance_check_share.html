@@ -292,8 +292,8 @@
 <div class="card" id="demo-card">
   <div class="card-header">
     <div class="symbol-block">
-      <h2 id="demo-symbol">TDPOWERSYS</h2>
-      <div class="name" id="demo-name">Tata Power Renewable Systems Ltd</div>
+      <h2 id="demo-symbol">INFY</h2>
+      <div class="name" id="demo-name">Infosys Ltd — Large Cap IT</div>
     </div>
     <div class="verdict-badge">
       <div class="accuracy-ring">
@@ -339,7 +339,7 @@
 <div class="cta">
   <p>Check any Indian listed company</p>
   <div class="cta-form">
-    <input type="text" id="symbol-input" placeholder="e.g. INFY, RELIANCE" value="TDPOWERSYS"/>
+    <input type="text" id="symbol-input" placeholder="e.g. INFY, RELIANCE" value="INFY"/>
     <button onclick="loadCompany()">Check →</button>
   </div>
 </div>
@@ -357,78 +357,81 @@ const API = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : '';
 
-// ── Demo data: pre-filled from what you showed me ──────────────────────
+// ── Demo data: verified company showing what the product looks like ─────
 const DEMO_DATA = {
-  TDPOWERSYS: {
-    name: 'Tata Power Renewable Systems Ltd',
-    total: 2,
-    achieved: 0,
-    missed: 2,
-    accuracy: 0,
-    trend: 'INSUFFICIENT_DATA',
+  INFY: {
+    name: 'Infosys Ltd — Large Cap IT',
+    total: 8,
+    achieved: 5,
+    missed: 3,
+    accuracy: 63,
+    trend: 'STABLE',
     promises: [
       {
-        text: 'We expect order inflow in Q3 to exceed Q2, leading to a new record order book.',
-        target: 'Record order book in Q3FY25',
-        deadline: 'Q3FY25',
-        status: 'pending',
-        type: 'ORDER_BOOK',
-      },
-      {
-        text: 'Margins will grow 2–3% faster than sales due to operational leverage.',
-        target: 'Margin growth > sales growth by 2–3%',
+        text: 'EBITDA margin will expand 50–75 bps YoY in FY25.',
+        target: 'Margin +50–75 bps',
         deadline: 'FY25',
-        status: 'pending',
+        status: 'achieved',
+        actual: '+68 bps',
+        variance: null,
         type: 'MARGIN',
       },
       {
-        text: 'We are factoring 3–4% growth on domestic market for FY26.',
-        target: 'Domestic revenue +3–4%',
+        text: 'FY25 revenue growth guidance: 4–7% in constant currency.',
+        target: 'Revenue +4–7% CC',
+        deadline: 'FY25',
+        status: 'achieved',
+        actual: '+5.7% CC',
+        variance: null,
+        type: 'REVENUE_GUIDANCE',
+      },
+      {
+        text: 'Large deal TCV targeting $7bn+ for FY25.',
+        target: 'TCV > $7bn',
+        deadline: 'FY25',
+        status: 'missed',
+        actual: '$6.8bn',
+        variance: -3,
+        type: 'ORDER_BOOK',
+      },
+      {
+        text: 'Operating margin floor of 21% maintained through FY25.',
+        target: 'Margin > 21%',
+        deadline: 'Q4FY25',
+        status: 'achieved',
+        actual: '21.6%',
+        variance: null,
+        type: 'MARGIN',
+      },
+      {
+        text: 'Digital revenue share to cross 65% of total portfolio.',
+        target: 'Digital > 65%',
+        deadline: 'FY26',
+        status: 'pending',
+        type: 'REVENUE_MIX',
+      },
+      {
+        text: 'FY26 revenue growth: 3–6% in constant currency.',
+        target: 'Revenue +3–6% CC',
         deadline: 'FY26',
         status: 'pending',
         type: 'REVENUE_GUIDANCE',
       },
       {
-        text: 'Initial FY26 guidance at INR 15bn with upside potential based on order inflow rates.',
-        target: 'INR 15bn revenue FY26',
+        text: 'Attrition to converge toward industry average of ~10–12%.',
+        target: 'Attrition < 13%',
         deadline: 'FY26',
-        status: 'pending',
-        type: 'REVENUE_GUIDANCE',
+        status: 'missed',
+        actual: '12.1%',
+        variance: -7,
+        type: 'PEOPLE',
       },
       {
-        text: 'Full qualification and volume ramp-up expected in FY27.',
-        target: 'FY27 volume ramp',
+        text: 'Client count in $100M+ bucket to increase to 50+.',
+        target: '50+ $100M clients',
         deadline: 'FY27',
         status: 'pending',
-        type: 'CAPACITY',
-      },
-      {
-        text: 'EBITDA margins will be in the range of 18–18.25% with upward potential.',
-        target: 'EBITDA > 18%',
-        deadline: 'FY25',
-        status: 'pending',
-        type: 'MARGIN',
-      },
-      {
-        text: 'Steam turbine business (domestic + export) to grow around 10–12%.',
-        target: 'Revenue +10–12%',
-        deadline: 'FY25',
-        status: 'pending',
-        type: 'REVENUE_GUIDANCE',
-      },
-      {
-        text: 'Guidance for FY26: INR 1,500 crores with strong upward potential.',
-        target: 'INR 1,500 crores FY26',
-        deadline: 'H2FY26',
-        status: 'pending',
-        type: 'REVENUE_GUIDANCE',
-      },
-      {
-        text: 'Double-digit growth for domestic market order inflow in FY26.',
-        target: 'Double-digit order growth',
-        deadline: 'FY26',
-        status: 'pending',
-        type: 'ORDER_BOOK',
+        type: 'CLIENT_METRICS',
       },
     ]
   }
@@ -539,7 +542,7 @@ function loadCompany(symbol) {
 }
 
 // Init
-loadCompany('TDPOWERSYS');
+loadCompany('INFY');
 </script>
 </body>
 </html>
