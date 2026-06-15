@@ -368,6 +368,7 @@ export const api = {
 
   // GuidanceCheck — Management Credibility Tracking
   getGuidanceDashboard: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}`),
+  getGuidanceReport: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/report`),
   getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),
   getGuidanceLeaderboard: (worst: boolean = false, limit: number = 20) =>
     apiFetch(`/guidance/leaderboard?worst=${worst}&limit=${limit}`),

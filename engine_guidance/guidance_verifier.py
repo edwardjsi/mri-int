@@ -26,16 +26,20 @@ MAPPING = {
         "label": "EBITDA margin (%)",
     },
     "REVENUE_GROWTH": {
-        "sql": """SELECT CASE WHEN prev.revenue > 0
-                  THEN ((cur.revenue - prev.revenue) / prev.revenue) * 100.0
-                  ELSE NULL END AS actual
-                  FROM (SELECT revenue FROM aae_quarterly_financials
-                        WHERE symbol=%s AND year=%s AND quarter=%s) cur,
-                       (SELECT revenue FROM aae_quarterly_financials
-                        WHERE symbol=%s
-                          AND (year=%s - CASE WHEN %s=1 THEN 1 ELSE 0 END)
-                          AND quarter=CASE WHEN %s=1 THEN 4 ELSE %s-1 END) prev""",
-        "label": "Revenue QoQ growth (%)",
+        # YoY growth: compare same quarter of prior year
+        "sql": """WITH cur AS (
+                      SELECT revenue FROM aae_quarterly_financials
+                      WHERE symbol=%s AND year=%s AND quarter=%s
+                  ),
+                  prev AS (
+                      SELECT revenue FROM aae_quarterly_financials
+                      WHERE symbol=%s AND year=%s-1 AND quarter=%s
+                  )
+                  SELECT CASE WHEN prev.revenue > 0
+                      THEN ((cur.revenue - prev.revenue)::NUMERIC / prev.revenue) * 100.0
+                      ELSE NULL END AS actual
+                  FROM cur, prev""",
+        "label": "Revenue YoY growth (%)",
     },
     "CAPEX": {
         "sql": """SELECT capex AS actual
@@ -177,13 +181,40 @@ class GuidanceVerifier:
             if actual is None:
                 return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY")
 
-            variance = ((float(actual) - float(target)) / abs(float(target))) * 100
-            if abs(variance) <= 10:
-                status = "ACHIEVED"
-            elif abs(variance) <= 20:
-                status = "PARTIAL"
+            # Safe variance: handle None/missing targets, percentage vs absolute
+            try:
+                target_f = float(target)
+            except (TypeError, ValueError):
+                target_f = None
+
+            if target_f is None or target_f == 0:
+                # No numeric target — can't verify, mark unable
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY", actual, None)
+
+            actual_f = float(actual) if actual is not None else None
+            if actual_f is None:
+                return self._store(cur, sid, fy, fq, "UNABLE_TO_VERIFY", None, None)
+
+            variance = ((actual_f - target_f) / abs(target_f)) * 100
+
+            # Thresholds adjusted for % targets: margin promises within 2pp considered achieved
+            if gtype == "MARGIN":
+                # For margin: check absolute pp difference
+                abs_diff = abs(actual_f - target_f)
+                if abs_diff <= 2.0:
+                    status = "ACHIEVED"
+                elif abs_diff <= 4.0:
+                    status = "PARTIAL"
+                else:
+                    status = "MISSED"
             else:
-                status = "MISSED"
+                # For revenue/growth: use percentage variance
+                if abs(variance) <= 10:
+                    status = "ACHIEVED"
+                elif abs(variance) <= 25:
+                    status = "PARTIAL"
+                else:
+                    status = "MISSED"
 
             return self._store(cur, sid, fy, fq, status, actual, variance)
         finally:

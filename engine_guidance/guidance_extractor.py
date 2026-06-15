@@ -19,31 +19,33 @@ from engine_core.llm_client import get_llm_client
 
 GUIDANCE_PROMPT = """You are analyzing an earnings call transcript for {symbol}.
 
-Extract ONLY forward-looking statements about FUTURE performance. A forward-looking statement:
-- Describes something management expects, plans, targets, or aims to achieve in the FUTURE
-- Uses language like "we expect", "we plan", "we target", "we aim", "we will", "we are targeting", "outlook", "pipeline"
+Extract ONLY forward-looking statements about FUTURE performance that have:
+1. A QUANTITATIVE TARGET (a number): e.g. "revenue of Rs 1,200 cr", "margin of 25%", "20% revenue growth"
+2. A defined TIMEFRAME: e.g. "by Q4FY26", "in FY26", "next year"
 
-CRITICAL RULES:
-- DO NOT extract descriptions of CURRENT/Past state (e.g. "revenue is $1.8B" = current state, not a target)
-- DO extract directional commitments without specific numbers (e.g. "we expect margin expansion")
-- DO extract quantitative targets when stated (e.g. "operating margin of 25%")
-- target_value: the FUTURE target number, or null if only directional guidance given
-- target_quarter: WHEN management expects this. Extract from transcript. Use Q1FY26/Q2FY26/Q3FY26/Q4FY26 for quarters, FY26 for full year, H1FY26 for half-year, CY2026 for calendar year. If they say "next quarter" and transcript is Q4FY25, use Q1FY26. If "by March 2026", use Q4FY26. If no timeframe, set null.
-- Even if management says "we don't give guidance", still extract any forward-looking claims they DO make
+CRITICAL EXCLUSION RULES — DO NOT extract:
+- Vague directional statements with no numbers: "we expect margin expansion", "we see good demand", "we are optimistic", "gearing up for growth", "future looks exciting", "we aim to capitalize" → EXCLUDE
+- Descriptions of current/past state: "revenue is X", "we delivered Y" → EXCLUDE
+- Aspirational statements without numbers or timeframes: "looking to scale meaningfully over 3 years" → EXCLUDE
+- Product/technology statements: "developing next-gen products", "aligning with industry requirements" → EXCLUDE
+
+INCLUDE ONLY if ALL THREE are present:
+- Quantitative target (a specific number or %)
+- Clear timeframe (quarter/year)
+- A specific metric (revenue, margin, orders, etc.)
 
 For EACH valid statement return:
 {{
-    "guidance_text": "exact quote or close paraphrase of the FUTURE promise",
+    "guidance_text": "concise paraphrase of what was promised",
     "guidance_type": "MARGIN|REVENUE_GROWTH|CAPEX|DEBT_REDUCTION|CAPACITY_EXPANSION|WORKING_CAPITAL|DIVIDEND|MARKET_SHARE|HIRING|DEAL_PIPELINE|OTHER",
     "metric": "specific metric name",
-    "target_value": 8.0,
-    "target_unit": "pct|cr|months|units|people|na",
-    "target_quarter": "Q4FY26 or null if unspecified",
-    "confidence": "low|medium|high",
-    "caveats": "any hedges or conditions"
+    "target_value": 8.5,
+    "target_unit": "pct|crore|rs_cr|bps|units",
+    "target_quarter": "Q4FY26",
+    "confidence": "low|medium|high"
 }}
 
-Return JSON: {{"statements": [...]}}. Only include genuine forward-looking commitments.
+Return JSON: {{"statements": [...]}}. Only output genuine quantitative commitments.
 If none found, return {{"statements": []}}.
 
 Transcript:
