@@ -20,7 +20,6 @@ import sys
 from engine_core.db import get_connection, fetch_df
 from engine_guidance.credibility_scorer import CredibilityScorer
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -151,10 +150,108 @@ def _trend_arrow(trend: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Per-company report
+# Per-company report — CLEAN version
 # ---------------------------------------------------------------------------
 
-def report_company(symbol: str) -> str:
+def _is_material_promise(p: dict) -> bool:
+    """Only show promises that have a numeric target and a defined deadline."""
+    has_target = p.get("target_value") is not None
+    has_deadline = p.get("target_date") and p["target_date"] not in ("—", "", None)
+    has_verification = p.get("status") in ("ACHIEVED", "MISSED", "PARTIAL")
+    return bool(has_target or has_verification)
+
+
+def _format_promise_line(p: dict) -> str:
+    """Single-line summary: what was promised → what happened."""
+    text = p.get("guidance_text", "")[:80]
+    target_val = p.get("target_value")
+    target_unit = p.get("target_unit") or ""
+    deadline = p.get("target_date") or ""
+    status = p.get("status") or "PENDING"
+    actual = p.get("actual_value")
+    variance = p.get("variance_pct")
+    gtype = p.get("guidance_type") or "OTHER"
+
+    icon = _status_icon(status)
+
+    if status == "ACHIEVED":
+        detail = f"✅ Achieved {actual}{target_unit}" if actual else "✅ Achieved"
+    elif status == "MISSED":
+        if variance and actual:
+            detail = f"❌ Missed — was {actual}{target_unit} (est. {variance:+.0f}% variance)"
+        else:
+            detail = "❌ Missed"
+    elif status == "PARTIAL":
+        detail = f"⚠️ Partial — hit {actual or '?'}{target_unit}" if actual else "⚠️ Partial"
+    elif deadline:
+        detail = f"⏳ Pending — due {deadline}"
+    else:
+        detail = "⏳ Pending"
+
+    return f"  {icon} [{gtype:20s}] {text}\n     → {detail}"
+
+
+def report_company_clean(symbol: str) -> str:
+    promises = _fetch_promises(symbol)
+    cred = _fetch_credibility(symbol)
+
+    total = cred.get("total_promises", 0)
+    achieved = cred.get("achieved_count", 0)
+    missed = cred.get("missed_count", 0)
+    accuracy = cred.get("accuracy_pct", 0.0)
+    trend = cred.get("trend", "INSUFFICIENT_DATA")
+    avg_var = cred.get("avg_variance_pct")
+
+    # Filter to material promises only
+    material = [p for p in promises if _is_material_promise(p)]
+    # Separate verified from pending
+    verified = [p for p in material if p.get("status") in ("ACHIEVED", "MISSED", "PARTIAL")]
+    pending = [p for p in material if p.get("status") in ("PENDING", None) or p.get("status") == "PENDING"]
+
+    lines = []
+    lines.append(f"\n{'=' * 72}")
+    lines.append(f"  {symbol.upper()}  —  GuidanceCheck")
+    lines.append(f"{'=' * 72}")
+
+    # Verdict banner
+    if total == 0 or not verified:
+        lines.append(f"\n  ⏳ Awaiting first verification")
+        lines.append(f"  {len(material)} material promise(s) tracked — needs quarterly results to verify")
+    else:
+        accuracy_str = f"{accuracy:.0f}%"
+        conviction = _conviction_label(accuracy, trend, total)
+        trend_str = f"{_trend_arrow(trend)} {trend}"
+        lines.append(f"\n  {conviction}  |  {accuracy_str} accuracy ({achieved}✅ / {missed}❌ / {total})  |  {trend_str}")
+        if avg_var:
+            lines.append(f"  Avg miss when broken: {avg_var:.1f}%")
+
+    # Verified promises
+    if verified:
+        lines.append(f"\n  📋 Verified Promises ({len(verified)})")
+        lines.append(f"  {'-' * 60}")
+        for p in verified:
+            lines.append(_format_promise_line(p))
+    else:
+        lines.append(f"\n  📋 No verified promises yet")
+
+    # Pending material promises (show max 5 most important)
+    if pending:
+        lines.append(f"\n  ⏳ Upcoming Checks ({len(pending)} total, showing most material)")
+        lines.append(f"  {'-' * 60}")
+        for p in pending[:5]:
+            lines.append(_format_promise_line(p))
+        if len(pending) > 5:
+            lines.append(f"  ... and {len(pending) - 5} more")
+
+    lines.append(f"\n  { '-' * 72 }\n")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Legacy table report (for --table flag)
+# ---------------------------------------------------------------------------
+
+def report_company_table(symbol: str) -> str:
     promises = _fetch_promises(symbol)
     cred = _fetch_credibility(symbol)
 
@@ -232,6 +329,7 @@ def main():
     parser.add_argument("--worst-offenders", type=int, metavar="N", help="Show bottom N (least credible)")
     parser.add_argument("--watchlist", action="store_true", help="Use symbols from user's watchlist")
     parser.add_argument("--limit", type=int, default=20, help="Max symbols when using --watchlist (default: 20)")
+    parser.add_argument("--table", action="store_true", help="Use table format instead of clean format")
     args = parser.parse_args()
 
     # Default: use watchlist or fall back to hardcoded quality set
@@ -263,11 +361,13 @@ def main():
     print(f"  Companies: {', '.join(symbols)}")
     print(f"{'#' * 72}")
 
+    report_fn = report_company_table if args.table else report_company_clean
+
     for symbol in symbols:
         if symbol in (None, ""):
             continue
         try:
-            output = report_company(symbol)
+            output = report_fn(symbol)
             print(output)
         except Exception as e:
             print(f"\n  ERROR processing {symbol}: {e}\n")

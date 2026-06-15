@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuidanceCheck — Management Credibility Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0e1a;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #1a2544;
+    border: 1px solid #2d4a8a;
+    color: #93c5fd;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: #3b82f6;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  h1 span { color: #3b82f6; }
+
+  .tagline {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .symbol-block h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .symbol-block .name {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  .verdict-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .accuracy-ring {
+    position: relative;
+    width: 60px;
+    height: 60px;
+  }
+  .accuracy-ring svg { transform: rotate(-90deg); }
+  .accuracy-ring circle {
+    fill: none;
+    stroke-width: 5;
+  }
+  .ring-bg { stroke: #1f2937; }
+  .ring-fill {
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+  .accuracy-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .verdict-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .verdict-watch   { background: #1e293b; color: #94a3b8; }
+  .verdict-add     { background: #14532d; color: #4ade80; }
+  .verdict-hold    { background: #451a03; color: #fbbf24; }
+  .verdict-reduce  { background: #7f1d1d; color: #f87171; }
+  .verdict-broken  { background: #500; color: #fff; }
+
+  .divider {
+    height: 1px;
+    background: #1f2937;
+    margin: 20px 0;
+  }
+
+  .promise-item {
+    margin-bottom: 18px;
+  }
+  .promise-item:last-child { margin-bottom: 0; }
+
+  .promise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 5px;
+  }
+  .promise-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    flex: 1;
+  }
+  .promise-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .status-achieved { background: #14532d; color: #4ade80; }
+  .status-missed   { background: #450a0a; color: #f87171; }
+  .status-partial  { background: #451a03; color: #fbbf24; }
+  .status-pending  { background: #1e293b; color: #94a3b8; }
+
+  .promise-meta {
+    font-size: 0.78rem;
+    color: #475569;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .promise-meta .target { color: #64748b; }
+  .promise-meta .actual { color: #94a3b8; }
+  .promise-meta .deadline { color: #475569; }
+  .promise-meta .variance-neg { color: #4ade80; }
+  .promise-meta .variance-pos { color: #f87171; }
+
+  .trend-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .trend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .trend-label {
+    font-size: 0.68rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .trend-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Bottom prompt */
+  .cta {
+    text-align: center;
+    margin-top: 32px;
+    margin-bottom: 16px;
+  }
+  .cta p {
+    color: #475569;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+  }
+  .cta-form {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cta-form input {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    width: 180px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .cta-form input:focus { border-color: #3b82f6; }
+  .cta-form button {
+    background: #1d4ed8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .cta-form button:hover { background: #1e40af; }
+
+  .or-divider {
+    color: #334155;
+    font-size: 0.78rem;
+    text-align: center;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #1f2937;
+  }
+
+  .explanation {
+    max-width: 520px;
+    background: #0d1421;
+    border: 1px solid #1a2236;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  .explanation strong { color: #94a3b8; }
+  .explanation .highlight { color: #60a5fa; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="badge"><div class="badge-dot"></div> GuidanceCheck · Alpha</div>
+
+<h1>Guidance<span>Check</span></h1>
+<p class="tagline">Did management do what they promised?</p>
+
+<!-- Demo card — replace symbol/data dynamically from API -->
+<div class="card" id="demo-card">
+  <div class="card-header">
+    <div class="symbol-block">
+      <h2 id="demo-symbol">TDPOWERSYS</h2>
+      <div class="name" id="demo-name">Tata Power Renewable Systems Ltd</div>
+    </div>
+    <div class="verdict-badge">
+      <div class="accuracy-ring">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          <circle class="ring-bg" cx="30" cy="30" r="25"/>
+          <circle class="ring-fill" id="accuracy-ring"
+            cx="30" cy="30" r="25"
+            stroke="#3b82f6"
+            stroke-dasharray="157"
+            stroke-dashoffset="157"/>
+        </svg>
+        <div class="accuracy-text" id="accuracy-text">—</div>
+      </div>
+      <div class="verdict-label verdict-watch" id="verdict-label">Watching</div>
+    </div>
+  </div>
+
+  <!-- Promises list — injected by JS -->
+  <div id="promises-list"></div>
+
+  <div class="divider"></div>
+
+  <div class="trend-row" id="trend-row">
+    <div class="trend-item">
+      <div class="trend-label">Promises Verified</div>
+      <div class="trend-value" id="trend-total">—</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-label">Achieved</div>
+      <div class="trend-value" style="color:#4ade80" id="trend-achieved">—</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-label">Missed</div>
+      <div class="trend-value" style="color:#f87171" id="trend-missed">—</div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-label">Pending</div>
+      <div class="trend-value" style="color:#94a3b8" id="trend-pending">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="cta">
+  <p>Check any Indian listed company</p>
+  <div class="cta-form">
+    <input type="text" id="symbol-input" placeholder="e.g. INFY, RELIANCE" value="TDPOWERSYS"/>
+    <button onclick="loadCompany()">Check →</button>
+  </div>
+</div>
+
+<div class="explanation">
+  <strong>What is this?</strong> GuidanceCheck tracks every forward-looking statement
+  made by company management in earnings calls and investor presentations —
+  then verifies whether it actually happened, quarter by quarter.
+  <br><br>
+  Built on MRI Platform · Nifty 500 coverage · Updated after every results season
+</div>
+
+<script>
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : '';
+
+// ── Demo data: pre-filled from what you showed me ──────────────────────
+const DEMO_DATA = {
+  TDPOWERSYS: {
+    name: 'Tata Power Renewable Systems Ltd',
+    total: 2,
+    achieved: 0,
+    missed: 2,
+    accuracy: 0,
+    trend: 'INSUFFICIENT_DATA',
+    promises: [
+      {
+        text: 'We expect order inflow in Q3 to exceed Q2, leading to a new record order book.',
+        target: 'Record order book in Q3FY25',
+        deadline: 'Q3FY25',
+        status: 'pending',
+        type: 'ORDER_BOOK',
+      },
+      {
+        text: 'Margins will grow 2–3% faster than sales due to operational leverage.',
+        target: 'Margin growth > sales growth by 2–3%',
+        deadline: 'FY25',
+        status: 'pending',
+        type: 'MARGIN',
+      },
+      {
+        text: 'We are factoring 3–4% growth on domestic market for FY26.',
+        target: 'Domestic revenue +3–4%',
+        deadline: 'FY26',
+        status: 'pending',
+        type: 'REVENUE_GUIDANCE',
+      },
+      {
+        text: 'Initial FY26 guidance at INR 15bn with upside potential based on order inflow rates.',
+        target: 'INR 15bn revenue FY26',
+        deadline: 'FY26',
+        status: 'pending',
+        type: 'REVENUE_GUIDANCE',
+      },
+      {
+        text: 'Full qualification and volume ramp-up expected in FY27.',
+        target: 'FY27 volume ramp',
+        deadline: 'FY27',
+        status: 'pending',
+        type: 'CAPACITY',
+      },
+      {
+        text: 'EBITDA margins will be in the range of 18–18.25% with upward potential.',
+        target: 'EBITDA > 18%',
+        deadline: 'FY25',
+        status: 'pending',
+        type: 'MARGIN',
+      },
+      {
+        text: 'Steam turbine business (domestic + export) to grow around 10–12%.',
+        target: 'Revenue +10–12%',
+        deadline: 'FY25',
+        status: 'pending',
+        type: 'REVENUE_GUIDANCE',
+      },
+      {
+        text: 'Guidance for FY26: INR 1,500 crores with strong upward potential.',
+        target: 'INR 1,500 crores FY26',
+        deadline: 'H2FY26',
+        status: 'pending',
+        type: 'REVENUE_GUIDANCE',
+      },
+      {
+        text: 'Double-digit growth for domestic market order inflow in FY26.',
+        target: 'Double-digit order growth',
+        deadline: 'FY26',
+        status: 'pending',
+        type: 'ORDER_BOOK',
+      },
+    ]
+  }
+};
+
+// ── Render ─────────────────────────────────────────────────────────────
+function render(data, symbol) {
+  const accuracy = data.accuracy || 0;
+  const total = data.total || 0;
+  const achieved = data.achieved || 0;
+  const missed = data.missed || 0;
+  const pending = (data.promises || []).filter(p => p.status === 'pending').length;
+
+  // Accuracy ring
+  const circumference = 2 * Math.PI * 25; // r=25
+  const offset = circumference - (accuracy / 100) * circumference;
+  const ring = document.getElementById('accuracy-ring');
+  const ringColor = accuracy >= 70 ? '#4ade80' : accuracy >= 40 ? '#fbbf24' : accuracy > 0 ? '#f87171' : '#3b82f6';
+  ring.setAttribute('stroke', ringColor);
+  ring.setAttribute('stroke-dashoffset', offset);
+  document.getElementById('accuracy-text').textContent = total > 0 ? `${accuracy}%` : '—';
+
+  // Verdict
+  let verdict, verdictClass;
+  if (total < 3) { verdict = 'Watching'; verdictClass = 'verdict-watch'; }
+  else if (accuracy >= 75) { verdict = 'Add Zone'; verdictClass = 'verdict-add'; }
+  else if (accuracy >= 60) { verdict = 'Hold Zone'; verdictClass = 'verdict-hold'; }
+  else if (accuracy >= 40) { verdict = 'Reduce Zone'; verdictClass = 'verdict-reduce'; }
+  else { verdict = 'Thesis Broken'; verdictClass = 'verdict-broken'; }
+  const vl = document.getElementById('verdict-label');
+  vl.textContent = verdict;
+  vl.className = `verdict-label ${verdictClass}`;
+
+  // Trend row
+  document.getElementById('trend-total').textContent = total;
+  document.getElementById('trend-achieved').textContent = achieved;
+  document.getElementById('trend-missed').textContent = missed;
+  document.getElementById('trend-pending').textContent = pending;
+
+  // Promises — show verified first, then top 4 pending
+  const verified = (data.promises || []).filter(p => p.status !== 'pending');
+  const pending_items = (data.promises || []).filter(p => p.status === 'pending').slice(0, 4);
+  const ordered = [...verified, ...pending_items];
+
+  const listEl = document.getElementById('promises-list');
+  if (ordered.length === 0) {
+    listEl.innerHTML = '<p style="color:#475569;font-size:0.85rem">No trackable promises yet — needs quarterly data.</p>';
+    return;
+  }
+
+  listEl.innerHTML = ordered.map(p => {
+    const statusLabel = { achieved: '✅ Achieved', missed: '❌ Missed', partial: '⚠️ Partial', pending: '⏳ Pending' }[p.status] || '⏳ Pending';
+    const statusClass = { achieved: 'status-achieved', missed: 'status-missed', partial: 'status-partial', pending: 'status-pending' }[p.status] || 'status-pending';
+    const meta = p.actual
+      ? `<span class="actual">Actual: ${p.actual}</span>`
+      : p.variance
+        ? `<span class="${p.variance < 0 ? 'variance-neg' : 'variance-pos'}">${p.variance > 0 ? '+' : ''}${p.variance}% vs target</span>`
+        : '';
+    return `
+      <div class="promise-item">
+        <div class="promise-header">
+          <div class="promise-text">${p.text}</div>
+          <span class="promise-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="promise-meta">
+          <span class="target">🎯 ${p.target}</span>
+          ${p.deadline ? `<span class="deadline">📅 Due ${p.deadline}</span>` : ''}
+          ${meta}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function loadCompany(symbol) {
+  symbol = (symbol || document.getElementById('symbol-input').value).toUpperCase().trim();
+  document.getElementById('demo-symbol').textContent = symbol;
+
+  if (DEMO_DATA[symbol]) {
+    render(DEMO_DATA[symbol], symbol);
+  } else {
+    // Try API
+    fetch(`${API}/api/guidance/${encodeURIComponent(symbol)}`)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('demo-name').textContent = data.name || symbol;
+        render({
+          accuracy: data.credibility?.accuracy_pct || 0,
+          total: data.total_promises || 0,
+          achieved: data.credibility?.achieved_count || 0,
+          missed: data.credibility?.missed_count || 0,
+          promises: (data.guidance || []).map(g => ({
+            text: g.guidance_text,
+            target: g.target_value ? `${g.target_value}${g.target_unit || ''}` : g.guidance_type,
+            deadline: g.target_date || '',
+            status: g.status === 'ACHIEVED' ? 'achieved' : g.status === 'MISSED' ? 'missed' : g.status === 'PARTIAL' ? 'partial' : 'pending',
+            actual: g.actual_value || null,
+            variance: g.variance_pct || null,
+          }))
+        }, symbol);
+      })
+      .catch(() => {
+        document.getElementById('demo-symbol').textContent = symbol;
+        document.getElementById('promises-list').innerHTML =
+          '<p style="color:#475569;font-size:0.85rem">No data yet. Add this stock to start tracking management credibility.</p>';
+      });
+  }
+}
+
+// Init
+loadCompany('TDPOWERSYS');
+</script>
+</body>
+</html>
