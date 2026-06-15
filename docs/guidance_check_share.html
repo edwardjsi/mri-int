@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GuidanceCheck — Management Credibility Tracker</title>
+<title>GuidanceCheck — Management Credibility Report</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background: #0a0e1a;
     color: #e2e8f0;
@@ -17,532 +16,342 @@
     align-items: center;
     padding: 40px 16px;
   }
-
   .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #1a2544;
-    border: 1px solid #2d4a8a;
-    color: #93c5fd;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 24px;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a2544; border: 1px solid #2d4a8a;
+    color: #93c5fd; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 24px;
   }
-
-  .badge-dot {
-    width: 6px; height: 6px;
-    background: #3b82f6;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    margin-bottom: 8px;
-    text-align: center;
-  }
+  .badge-dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; text-align: center; }
   h1 span { color: #3b82f6; }
-
-  .tagline {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-bottom: 40px;
-    text-align: center;
+  .tagline { color: #64748b; font-size: 0.95rem; margin-bottom: 36px; text-align: center; }
+  .topbar {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 28px; align-items: center;
   }
+  .topbar input {
+    background: #111827; border: 1px solid #1f2937; border-radius: 8px;
+    padding: 10px 16px; color: #e2e8f0; font-size: 0.9rem; width: 180px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topbar input:focus { border-color: #3b82f6; }
+  .btn-primary {
+    background: #1d4ed8; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 20px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #1e40af; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-email {
+    background: #14532d; color: #4ade80; border: 1px solid #166534;
+    border-radius: 8px; padding: 10px 20px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-email:hover { background: #166534; }
+  .btn-email:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-email.sending { background: #0d3320; color: #86efac; }
 
   .card {
-    background: #111827;
-    border: 1px solid #1f2937;
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%;
-    max-width: 520px;
-    margin-bottom: 20px;
+    background: #111827; border: 1px solid #1f2937; border-radius: 16px;
+    padding: 28px; width: 100%; max-width: 600px; margin-bottom: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   }
 
   .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 16px; margin-bottom: 20px;
   }
+  .symbol-block h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+  .symbol-block .sub { color: #64748b; font-size: 0.78rem; margin-top: 2px; }
 
-  .symbol-block h2 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+  .verdict-badge { text-align: right; }
+  .verdict-pill {
+    display: inline-block; font-size: 0.78rem; font-weight: 700;
+    padding: 6px 16px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.07em;
   }
-  .symbol-block .name {
-    color: #64748b;
-    font-size: 0.8rem;
-    margin-top: 2px;
-  }
+  .verdict-watching  { background:#1e293b; color:#94a3b8; }
+  .verdict-add       { background:#14532d; color:#4ade80; }
+  .verdict-hold      { background:#451a03; color:#fbbf24; }
+  .verdict-reduce    { background:#7f1d1d; color:#f87171; }
+  .verdict-broken    { background:#500;    color:#fff; }
 
-  .verdict-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
+  .summary-bar {
+    background: #0d1421; border: 1px solid #1a2236; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 20px;
+    display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
   }
-  .accuracy-ring {
-    position: relative;
-    width: 60px;
-    height: 60px;
+  .ring-wrap {
+    position: relative; width: 64px; height: 64px; flex-shrink: 0;
   }
-  .accuracy-ring svg { transform: rotate(-90deg); }
-  .accuracy-ring circle {
-    fill: none;
-    stroke-width: 5;
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-wrap text {
+    transform: none; fill: #e2e8f0; font-size: 14px; font-weight: 700;
+    font-family: -apple-system, sans-serif;
   }
-  .ring-bg { stroke: #1f2937; }
-  .ring-fill {
-    stroke-linecap: round;
-    transition: stroke-dashoffset 1s ease;
-  }
-  .accuracy-text {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    font-weight: 700;
-  }
+  .summary-stats { flex: 1; }
+  .summary-stats .row { display: flex; gap: 12px; font-size: 0.82rem; margin-bottom: 4px; }
+  .summary-stats .val { font-weight: 600; }
+  .pending-count { color: #475569; font-size: 0.8rem; margin-top: 4px; }
 
-  .verdict-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 3px 10px;
-    border-radius: 20px;
+  .promise-section { margin-top: 16px; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; padding: 5px 0; border-bottom: 1px solid;
+    margin-bottom: 8px;
   }
-  .verdict-watch   { background: #1e293b; color: #94a3b8; }
-  .verdict-add     { background: #14532d; color: #4ade80; }
-  .verdict-hold    { background: #451a03; color: #fbbf24; }
-  .verdict-reduce  { background: #7f1d1d; color: #f87171; }
-  .verdict-broken  { background: #500; color: #fff; }
-
-  .divider {
-    height: 1px;
-    background: #1f2937;
-    margin: 20px 0;
-  }
+  .section-achieved { color: #4ade80; border-color: #14532d; }
+  .section-missed   { color: #f87171; border-color: #450a0a; }
+  .section-partial  { color: #fbbf24; border-color: #451a03; }
+  .section-pending  { color: #60a5fa; border-color: #1e3a5f; }
 
   .promise-item {
-    margin-bottom: 18px;
+    background: #0f172a; border-radius: 8px; padding: 12px 14px;
+    margin-bottom: 8px; border-left: 3px solid;
   }
-  .promise-item:last-child { margin-bottom: 0; }
+  .promise-item.achieved { border-color: #22c55e; }
+  .promise-item.missed   { border-color: #ef4444; }
+  .promise-item.partial  { border-color: #f59e0b; }
+  .promise-item.pending  { border-color: #3b82f6; }
 
-  .promise-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 5px;
-  }
-  .promise-text {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    flex: 1;
-  }
-  .promise-status {
-    font-size: 0.72rem;
-    font-weight: 700;
-    white-space: nowrap;
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-  .status-achieved { background: #14532d; color: #4ade80; }
-  .status-missed   { background: #450a0a; color: #f87171; }
-  .status-partial  { background: #451a03; color: #fbbf24; }
-  .status-pending  { background: #1e293b; color: #94a3b8; }
-
-  .promise-meta {
-    font-size: 0.78rem;
-    color: #475569;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .promise-meta .target { color: #64748b; }
-  .promise-meta .actual { color: #94a3b8; }
-  .promise-meta .deadline { color: #475569; }
-  .promise-meta .variance-neg { color: #4ade80; }
-  .promise-meta .variance-pos { color: #f87171; }
-
-  .trend-row {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-top: 18px;
-  }
-  .trend-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .trend-label {
-    font-size: 0.68rem;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .trend-value {
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  .promise-text { font-size: 0.875rem; line-height: 1.45; margin-bottom: 6px; }
+  .promise-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.72rem; color: #64748b; }
+  .promise-meta .target { color: #94a3b8; }
+  .promise-meta .actual-val { color: #e2e8f0; font-weight: 600; }
+  .promise-meta .miss-val { color: #f87171; }
+  .promise-meta .hit-val  { color: #4ade80; }
+  .type-badge {
+    background: #1e293b; color: #94a3b8; padding: 1px 6px;
+    border-radius: 3px; font-size: 0.68rem;
   }
 
-  /* Bottom prompt */
-  .cta {
-    text-align: center;
-    margin-top: 32px;
-    margin-bottom: 16px;
-  }
-  .cta p {
-    color: #475569;
-    font-size: 0.82rem;
-    margin-bottom: 14px;
-  }
-  .cta-form {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .cta-form input {
-    background: #111827;
-    border: 1px solid #1f2937;
-    border-radius: 8px;
-    padding: 10px 16px;
-    color: #e2e8f0;
-    font-size: 0.9rem;
-    width: 180px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .cta-form input:focus { border-color: #3b82f6; }
-  .cta-form button {
-    background: #1d4ed8;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
+  .empty-state {
+    text-align: center; padding: 32px 20px; color: #475569;
     font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
   }
-  .cta-form button:hover { background: #1e40af; }
+  .loading { text-align: center; padding: 32px; color: #475569; font-size: 0.88rem; }
 
-  .or-divider {
-    color: #334155;
-    font-size: 0.78rem;
-    text-align: center;
-    margin: 20px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #111827; border: 1px solid #22c55e;
+    color: #4ade80; padding: 12px 20px; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 600;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    z-index: 100;
   }
-  .or-divider::before, .or-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #1f2937;
-  }
+  .toast.show { opacity: 1; }
+  .toast.error { border-color: #ef4444; color: #f87171; }
 
   .explanation {
-    max-width: 520px;
-    background: #0d1421;
-    border: 1px solid #1a2236;
-    border-radius: 12px;
-    padding: 20px 24px;
-    font-size: 0.82rem;
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 40px;
+    max-width: 600px; background: #0d1421; border: 1px solid #1a2236;
+    border-radius: 12px; padding: 20px 24px; font-size: 0.8rem;
+    color: #64748b; line-height: 1.6; margin-top: 8px;
   }
   .explanation strong { color: #94a3b8; }
-  .explanation .highlight { color: #60a5fa; font-weight: 600; }
 </style>
 </head>
 <body>
 
 <div class="badge"><div class="badge-dot"></div> GuidanceCheck · Alpha</div>
-
 <h1>Guidance<span>Check</span></h1>
 <p class="tagline">Did management do what they promised?</p>
 
-<!-- Demo card — replace symbol/data dynamically from API -->
-<div class="card" id="demo-card">
-  <div class="card-header">
-    <div class="symbol-block">
-      <h2 id="demo-symbol">INFY</h2>
-      <div class="name" id="demo-name">Infosys Ltd — Large Cap IT</div>
-    </div>
-    <div class="verdict-badge">
-      <div class="accuracy-ring">
-        <svg width="60" height="60" viewBox="0 0 60 60">
-          <circle class="ring-bg" cx="30" cy="30" r="25"/>
-          <circle class="ring-fill" id="accuracy-ring"
-            cx="30" cy="30" r="25"
-            stroke="#3b82f6"
-            stroke-dasharray="157"
-            stroke-dashoffset="157"/>
-        </svg>
-        <div class="accuracy-text" id="accuracy-text">—</div>
-      </div>
-      <div class="verdict-label verdict-watch" id="verdict-label">Watching</div>
-    </div>
-  </div>
-
-  <!-- Promises list — injected by JS -->
-  <div id="promises-list"></div>
-
-  <div class="divider"></div>
-
-  <div class="trend-row" id="trend-row">
-    <div class="trend-item">
-      <div class="trend-label">Promises Verified</div>
-      <div class="trend-value" id="trend-total">—</div>
-    </div>
-    <div class="trend-item">
-      <div class="trend-label">Achieved</div>
-      <div class="trend-value" style="color:#4ade80" id="trend-achieved">—</div>
-    </div>
-    <div class="trend-item">
-      <div class="trend-label">Missed</div>
-      <div class="trend-value" style="color:#f87171" id="trend-missed">—</div>
-    </div>
-    <div class="trend-item">
-      <div class="trend-label">Pending</div>
-      <div class="trend-value" style="color:#94a3b8" id="trend-pending">—</div>
-    </div>
-  </div>
+<div class="topbar">
+  <input type="text" id="symbol-input" placeholder="Symbol (e.g. TCS)" value="INFY" onkeydown="if(event.key==='Enter')loadReport()"/>
+  <button class="btn-primary" id="check-btn" onclick="loadReport()">Check →</button>
+  <button class="btn-email" id="email-btn" onclick="sendEmail()" disabled>
+    <span id="email-btn-text">📧 Send Report</span>
+  </button>
 </div>
 
-<div class="cta">
-  <p>Check any Indian listed company</p>
-  <div class="cta-form">
-    <input type="text" id="symbol-input" placeholder="e.g. INFY, RELIANCE" value="INFY"/>
-    <button onclick="loadCompany()">Check →</button>
-  </div>
-</div>
+<div id="report-container"></div>
+<div id="toast" class="toast"></div>
 
 <div class="explanation">
   <strong>What is this?</strong> GuidanceCheck tracks every forward-looking statement
-  made by company management in earnings calls and investor presentations —
-  then verifies whether it actually happened, quarter by quarter.
-  <br><br>
-  Built on MRI Platform · Nifty 500 coverage · Updated after every results season
+  from earnings calls and investor presentations — then verifies whether it actually
+  happened, quarter by quarter. Only numeric, trackable promises are shown.
+  <br><br>Built on MRI Platform · Nifty 500 coverage · Data refreshed after every results season
 </div>
 
 <script>
-const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:8000'
-  : '';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
+let currentSymbol = '';
+let currentReport = null;
 
-// ── Demo data: verified company showing what the product looks like ─────
-const DEMO_DATA = {
-  INFY: {
-    name: 'Infosys Ltd — Large Cap IT',
-    total: 8,
-    achieved: 5,
-    missed: 3,
-    accuracy: 63,
-    trend: 'STABLE',
-    promises: [
-      {
-        text: 'EBITDA margin will expand 50–75 bps YoY in FY25.',
-        target: 'Margin +50–75 bps',
-        deadline: 'FY25',
-        status: 'achieved',
-        actual: '+68 bps',
-        variance: null,
-        type: 'MARGIN',
-      },
-      {
-        text: 'FY25 revenue growth guidance: 4–7% in constant currency.',
-        target: 'Revenue +4–7% CC',
-        deadline: 'FY25',
-        status: 'achieved',
-        actual: '+5.7% CC',
-        variance: null,
-        type: 'REVENUE_GUIDANCE',
-      },
-      {
-        text: 'Large deal TCV targeting $7bn+ for FY25.',
-        target: 'TCV > $7bn',
-        deadline: 'FY25',
-        status: 'missed',
-        actual: '$6.8bn',
-        variance: -3,
-        type: 'ORDER_BOOK',
-      },
-      {
-        text: 'Operating margin floor of 21% maintained through FY25.',
-        target: 'Margin > 21%',
-        deadline: 'Q4FY25',
-        status: 'achieved',
-        actual: '21.6%',
-        variance: null,
-        type: 'MARGIN',
-      },
-      {
-        text: 'Digital revenue share to cross 65% of total portfolio.',
-        target: 'Digital > 65%',
-        deadline: 'FY26',
-        status: 'pending',
-        type: 'REVENUE_MIX',
-      },
-      {
-        text: 'FY26 revenue growth: 3–6% in constant currency.',
-        target: 'Revenue +3–6% CC',
-        deadline: 'FY26',
-        status: 'pending',
-        type: 'REVENUE_GUIDANCE',
-      },
-      {
-        text: 'Attrition to converge toward industry average of ~10–12%.',
-        target: 'Attrition < 13%',
-        deadline: 'FY26',
-        status: 'missed',
-        actual: '12.1%',
-        variance: -7,
-        type: 'PEOPLE',
-      },
-      {
-        text: 'Client count in $100M+ bucket to increase to 50+.',
-        target: '50+ $100M clients',
-        deadline: 'FY27',
-        status: 'pending',
-        type: 'CLIENT_METRICS',
-      },
-    ]
+// ── Load report ─────────────────────────────────────────────────────────
+async function loadReport() {
+  const sym = document.getElementById('symbol-input').value.trim().toUpperCase();
+  if (!sym) return;
+  currentSymbol = sym;
+  currentReport = null;
+  document.getElementById('email-btn').disabled = true;
+
+  const container = document.getElementById('report-container');
+  container.innerHTML = `<div class="loading">Loading ${sym}…</div>`;
+
+  try {
+    const res = await fetch(`${API}/api/guidance/${encodeURIComponent(sym)}/report`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    currentReport = await res.json();
+    renderReport(currentReport, sym);
+    document.getElementById('email-btn').disabled = false;
+  } catch (e) {
+    container.innerHTML = `<div class="card"><div class="empty-state">Could not load ${sym}.<br><small style="color:#475569">${e.message}</small><br><br>Try clicking ⚡ Prime All Stocks in the MRI app first to populate guidance data.</div></div>`;
   }
-};
-
-// ── Render ─────────────────────────────────────────────────────────────
-function render(data, symbol) {
-  const accuracy = data.accuracy || 0;
-  const total = data.total || 0;
-  const achieved = data.achieved || 0;
-  const missed = data.missed || 0;
-  const pending = (data.promises || []).filter(p => p.status === 'pending').length;
-
-  // Accuracy ring
-  const circumference = 2 * Math.PI * 25; // r=25
-  const offset = circumference - (accuracy / 100) * circumference;
-  const ring = document.getElementById('accuracy-ring');
-  const ringColor = accuracy >= 70 ? '#4ade80' : accuracy >= 40 ? '#fbbf24' : accuracy > 0 ? '#f87171' : '#3b82f6';
-  ring.setAttribute('stroke', ringColor);
-  ring.setAttribute('stroke-dashoffset', offset);
-  document.getElementById('accuracy-text').textContent = total > 0 ? `${accuracy}%` : '—';
-
-  // Verdict
-  let verdict, verdictClass;
-  if (total < 3) { verdict = 'Watching'; verdictClass = 'verdict-watch'; }
-  else if (accuracy >= 75) { verdict = 'Add Zone'; verdictClass = 'verdict-add'; }
-  else if (accuracy >= 60) { verdict = 'Hold Zone'; verdictClass = 'verdict-hold'; }
-  else if (accuracy >= 40) { verdict = 'Reduce Zone'; verdictClass = 'verdict-reduce'; }
-  else { verdict = 'Thesis Broken'; verdictClass = 'verdict-broken'; }
-  const vl = document.getElementById('verdict-label');
-  vl.textContent = verdict;
-  vl.className = `verdict-label ${verdictClass}`;
-
-  // Trend row
-  document.getElementById('trend-total').textContent = total;
-  document.getElementById('trend-achieved').textContent = achieved;
-  document.getElementById('trend-missed').textContent = missed;
-  document.getElementById('trend-pending').textContent = pending;
-
-  // Promises — show verified first, then top 4 pending
-  const verified = (data.promises || []).filter(p => p.status !== 'pending');
-  const pending_items = (data.promises || []).filter(p => p.status === 'pending').slice(0, 4);
-  const ordered = [...verified, ...pending_items];
-
-  const listEl = document.getElementById('promises-list');
-  if (ordered.length === 0) {
-    listEl.innerHTML = '<p style="color:#475569;font-size:0.85rem">No trackable promises yet — needs quarterly data.</p>';
-    return;
-  }
-
-  listEl.innerHTML = ordered.map(p => {
-    const statusLabel = { achieved: '✅ Achieved', missed: '❌ Missed', partial: '⚠️ Partial', pending: '⏳ Pending' }[p.status] || '⏳ Pending';
-    const statusClass = { achieved: 'status-achieved', missed: 'status-missed', partial: 'status-partial', pending: 'status-pending' }[p.status] || 'status-pending';
-    const meta = p.actual
-      ? `<span class="actual">Actual: ${p.actual}</span>`
-      : p.variance
-        ? `<span class="${p.variance < 0 ? 'variance-neg' : 'variance-pos'}">${p.variance > 0 ? '+' : ''}${p.variance}% vs target</span>`
-        : '';
-    return `
-      <div class="promise-item">
-        <div class="promise-header">
-          <div class="promise-text">${p.text}</div>
-          <span class="promise-status ${statusClass}">${statusLabel}</span>
-        </div>
-        <div class="promise-meta">
-          <span class="target">🎯 ${p.target}</span>
-          ${p.deadline ? `<span class="deadline">📅 Due ${p.deadline}</span>` : ''}
-          ${meta}
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
-function loadCompany(symbol) {
-  symbol = (symbol || document.getElementById('symbol-input').value).toUpperCase().trim();
-  document.getElementById('demo-symbol').textContent = symbol;
+// ── Render ───────────────────────────────────────────────────────────────
+function renderReport(r, sym) {
+  const achieved = r.achieved || [];
+  const missed   = r.missed   || [];
+  const partial  = r.partial  || [];
+  const pending  = (r.pending || []).slice(0, 8);
+  const accuracy = r.accuracy_pct || 0;
+  const total_verified = r.total_verified || 0;
+  const total_pending  = r.total_pending  || 0;
 
-  if (DEMO_DATA[symbol]) {
-    render(DEMO_DATA[symbol], symbol);
-  } else {
-    // Try API
-    fetch(`${API}/api/guidance/${encodeURIComponent(symbol)}`)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('demo-name').textContent = data.name || symbol;
-        render({
-          accuracy: data.credibility?.accuracy_pct || 0,
-          total: data.total_promises || 0,
-          achieved: data.credibility?.achieved_count || 0,
-          missed: data.credibility?.missed_count || 0,
-          promises: (data.guidance || []).map(g => ({
-            text: g.guidance_text,
-            target: g.target_value ? `${g.target_value}${g.target_unit || ''}` : g.guidance_type,
-            deadline: g.target_date || '',
-            status: g.status === 'ACHIEVED' ? 'achieved' : g.status === 'MISSED' ? 'missed' : g.status === 'PARTIAL' ? 'partial' : 'pending',
-            actual: g.actual_value || null,
-            variance: g.variance_pct || null,
-          }))
-        }, symbol);
-      })
-      .catch(() => {
-        document.getElementById('demo-symbol').textContent = symbol;
-        document.getElementById('promises-list').innerHTML =
-          '<p style="color:#475569;font-size:0.85rem">No data yet. Add this stock to start tracking management credibility.</p>';
-      });
+  // Verdict pill
+  const verdictClass = {
+    'WATCHING': 'verdict-watching',
+    'ADD ZONE': 'verdict-add',
+    'HOLD ZONE': 'verdict-hold',
+    'REDUCE ZONE': 'verdict-reduce',
+    'THESIS BROKEN': 'verdict-broken',
+  }[r.verdict] || 'verdict-watching';
+
+  const ringColor = r.ring_color || '#3b82f6';
+  const circumference = r.ring_circumference || 251;
+  const ringOffset = r.ring_offset || circumference;
+
+  // Verified promise rows
+  function promiseItem(p, cls) {
+    const meta = [];
+    if (p.target)    meta.push(`<span class="target">🎯 ${p.target}</span>`);
+    if (p.deadline)  meta.push(`<span>📅 ${p.deadline}</span>`);
+    if (p.verified_period) meta.push(`<span>${p.verified_period}</span>`);
+
+    let actualHtml = '';
+    if (p.actual) {
+      const isMiss = cls === 'missed';
+      actualHtml = `<div style="margin-top:6px; font-size:0.82rem;">
+        <span style="color:#94a3b8">Actual:</span>
+        <span class="${isMiss ? 'miss-val' : 'hit-val'}" style="font-weight:600; margin-left:4px">${p.actual}</span>
+        ${p.variance_pct != null ? `<span style="color:#64748b; margin-left:6px">(${p.variance_pct > 0 ? '+' : ''}${p.variance_pct}%)</span>` : ''}
+      </div>`;
+    }
+
+    return `<div class="promise-item ${cls}">
+      <div class="promise-text">${p.promise}</div>
+      <div class="promise-meta">
+        <span class="type-badge">${p.type}</span>
+        ${meta.join(' ')}
+        ${actualHtml}
+      </div>
+    </div>`;
   }
+
+  // Summary bar
+  const summaryBar = total_verified > 0 ? `
+    <div class="summary-bar">
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#1f2937" stroke-width="6"/>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="${ringColor}" stroke-width="6"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${ringOffset}"
+            stroke-linecap="round"
+            style="transition: stroke-dashoffset 1s ease"/>
+        </svg>
+        <text x="32" y="37" text-anchor="middle">${accuracy > 0 ? accuracy.toFixed(0) + '%' : '—'}</text>
+      </div>
+      <div class="summary-stats">
+        <div class="row"><span style="color:#4ade80">✅ ${achieved.length} Kept</span><span style="color:#ef4444">❌ ${missed.length} Broken</span><span style="color:#fbbf24">⚠️ ${partial.length} Partial</span></div>
+        <div class="row"><span style="color:#64748b">⏳ ${total_pending} Pending</span><span>·</span><span>${r.credibility?.trend || '—'}</span></div>
+        ${total_pending > 0 ? `<div class="pending-count">${total_pending} promise${total_pending!==1?'s':''} awaiting quarterly results</div>` : ''}
+      </div>
+    </div>` : `
+    <div class="summary-bar">
+      <div style="color:#475569; font-size:0.85rem; flex:1; text-align:center; padding:12px 0;">
+        No verified promises yet — ${total_pending} pending. Run verification to see accuracy.
+      </div>
+    </div>`;
+
+  // Sections
+  function section(label, cls, items) {
+    if (!items.length) return '';
+    return `<div class="promise-section">
+      <div class="section-label section-${cls}">${label} — ${items.length}</div>
+      ${items.map(p => promiseItem(p, cls)).join('')}
+    </div>`;
+  }
+
+  const html = `
+    <div class="card">
+      <div class="card-header">
+        <div class="symbol-block">
+          <h2>${sym}</h2>
+          <div class="sub">${r.report_date} · ${r.total_material || 0} material promises tracked</div>
+        </div>
+        <div class="verdict-badge">
+          <div class="verdict-pill ${verdictClass}">${r.verdict}</div>
+        </div>
+      </div>
+      ${summaryBar}
+      ${section('✅ Kept', 'achieved', achieved)}
+      ${section('❌ Broken', 'missed', missed)}
+      ${section('⚠️ Partial', 'partial', partial)}
+      ${section('⏳ Upcoming', 'pending', pending)}
+    </div>`;
+
+  document.getElementById('report-container').innerHTML = html;
+}
+
+// ── Send email ───────────────────────────────────────────────────────────
+async function sendEmail() {
+  if (!currentSymbol || !currentReport) return;
+  const btn = document.getElementById('email-btn');
+  const btnText = document.getElementById('email-btn-text');
+  btn.disabled = true;
+  btn.classList.add('sending');
+  btnText.textContent = 'Sending…';
+
+  try {
+    // Try unauthenticated first (might work if endpoint allows)
+    const res = await fetch(
+      `${API}/api/guidance/${encodeURIComponent(currentSymbol)}/email`,
+      { method: 'POST' }
+    );
+    if (res.ok) {
+      showToast(`📧 Report sent! Check your inbox for ${currentSymbol}.`, false);
+    } else if (res.status === 401 || res.status === 403) {
+      showToast('Please log in to the MRI app first to send reports.', true);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(`Failed: ${err.detail || res.statusText}`, true);
+    }
+  } catch(e) {
+    showToast(`Network error: ${e.message}`, true);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('sending');
+    btnText.textContent = '📧 Send Report';
+  }
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : ' show');
+  setTimeout(() => t.className = 'toast', 3500);
 }
 
 // Init
-loadCompany('INFY');
+loadReport();
 </script>
 </body>
 </html>
