@@ -707,3 +707,53 @@ User-led retrospective evaluating the entire platform from three perspectives: s
      - `aae_event_evidence`: 0 rows
 - **Result**: Milestone 2's done criteria met — a filing can be ingested, chunked, and linked to a company. The full event pipeline (extraction → evidence linking) is ready for the next step.
 - **Next Step**: Populate `aae_events` by extracting structured events from the ingested document, or skip to testing the existing structural signal agents (Milestone 3).
+
+## June 15, 2026 — ConvictionEngine Build (Decision 097)
+
+- **Branch**: `feature/conviction-engine`
+- **Author**: Lead AI Engineer + user approval after `docs/ConvictionEngine15June26.md` plan
+- **Scope**: Systematize management integrity tracking across the Digital Twin (`client_external_holdings`) and 112 Co Universe (`universe_112co`). Persist lag metrics per quarter so future runs can detect management "lagging" or "breaking word".
+
+### What was built
+
+**Phase 1 — Coverage**
+- Extended `scripts/prime_all_guidance.py` to include `universe_112co` (112 names).
+- Added `scripts/prime_missing_only.py` — only primes symbols with zero `management_guidance` rows, saves ~70% runtime.
+- Primed the 56 missing 112 Co names in ~47 minutes; all succeeded.
+
+**Phase 2 — Lag metrics**
+- 5 new columns on `management_credibility_scores` (idempotent ALTER):
+  `consecutive_miss_quarters INT`, `lag_score NUMERIC(5,2)`,
+  `last_verdict_flip DATE`, `current_verdict VARCHAR(20)`, `previous_verdict VARCHAR(20)`.
+- New `CredibilityScorer._zone_for()` and `_compute_lag_metrics()` in `engine_guidance/credibility_scorer.py`.
+- `_compute_lag_metrics` walks `guidance_verification` in `checked_fiscal_year DESC, checked_fiscal_quarter DESC` order; counts MISSED from most recent until an ACHIEVED/PARTIAL breaks the streak.
+- Verdict flip detection: `previous_verdict` stored on each run; flip stamped with today's date when zones change.
+- 11 unit tests in `engine_guidance/test_lag_metrics.py` covering zone classification, streak math, persistence, and flip detection. All 11 green.
+
+**Phase 3 — Endpoint + UI**
+- New `GET /api/guidance/conviction?source=all|digital_twin|112co|watchlist&verdict=any|<zone>&limit=N` endpoint. Returns worst-first ranked list with summary counts per zone + lagging + flipped counts.
+- New React page `frontend/src/ConvictionEngine.tsx`: source filter chips, verdict filter chips, 7-card summary header (5 zones + lagging + flipped), sortable table with FLIP badge and source tags.
+- Wired into `App.tsx`: sidebar nav button + mobile nav + page render.
+
+**Phase 4 — Quarterly alerts**
+- New `client_alert_preferences` table (one row per client, default-OFF `conviction_alerts_enabled`, `lag_alert_threshold_q` knob).
+- New `engine_core/conviction_alert_email.py` with `build_conviction_alert_email_html(flips)`.
+- New `scripts/send_conviction_alerts.py` — detects flips via `last_verdict_flip >= since_date AND current_verdict IS DISTINCT FROM previous_verdict`, sends to opted-in clients.
+- Idempotent migration registered in `ensure_required_tables` → `ensure_alert_preferences_table`.
+- Verified path with simulated flips (SIGMA, LUPIN) → preview HTML rendered correctly. Reverted simulation.
+
+### Current state
+
+- **DB**: `management_credibility_scores` has 23 rows with new columns populated. 8 companies have ≥3 verified promises (the meaningful threshold). Verdicts: 1 ADD ZONE (POCL), 5 THESIS BROKEN (AMBER, DATAPATTNS, ENGINERSIN, LUPIN, SIGMA, TARIL, LUMAXTECH), 17 WATCHING.
+- **Pipeline**: 112 Co universe has 56/112 fully primed; 56 still waiting on transcripts/concall PDFs. Next quarterly run will re-prime all 180 union symbols.
+- **Tests**: 11/11 in `test_lag_metrics.py` green.
+- **Endpoint**: verified via direct Python call — returns ranked data correctly with multi-source tagging.
+
+### Files changed
+- New: `docs/ConvictionEngine15June26.md`, `engine_guidance/test_lag_metrics.py`, `engine_core/conviction_alert_email.py`, `scripts/prime_missing_only.py`, `scripts/send_conviction_alerts.py`, `frontend/src/ConvictionEngine.tsx`
+- Modified: `api/schema.py` (5 ALTER columns + alert prefs table), `api/guidance.py` (lag fields in report + new `/conviction` endpoint), `engine_guidance/credibility_scorer.py` (lag methods + zone classification), `scripts/prime_all_guidance.py` (add 112 source), `frontend/src/App.tsx` (wire new page), `Decisions.md` (Decision 097), `Progress.md` (session entry)
+
+### Next Step
+- Open PR from `feature/conviction-engine` → `main`.
+- Wait for next quarterly results ingestion (Results season); then run `scripts/run_quarterly_guidance_check.py` to verify new data points trigger lag detection.
+- Monitor `last_verdict_flip` column for organic flips after the second consecutive run.

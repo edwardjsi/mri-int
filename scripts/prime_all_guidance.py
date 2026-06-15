@@ -25,8 +25,13 @@ def get_all_symbols():
         wl = {row["symbol"] for row in cur.fetchall()}
         cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings")
         hl = {row["symbol"] for row in cur.fetchall()}
-        all_syms = sorted(wl | hl)
-        logger.info(f"Found {len(all_syms)} unique symbols: {len(wl)} from watchlist, {len(hl)} from holdings")
+        cur.execute("SELECT DISTINCT UPPER(symbol) AS symbol FROM universe_112co WHERE is_active = TRUE")
+        co112 = {row["symbol"] for row in cur.fetchall()}
+        all_syms = sorted(wl | hl | co112)
+        logger.info(
+            f"Found {len(all_syms)} unique symbols: "
+            f"{len(wl)} from watchlist, {len(hl)} from holdings, {len(co112)} from 112Co universe"
+        )
         return all_syms
     finally:
         conn.close()

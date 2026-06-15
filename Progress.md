@@ -1397,3 +1397,42 @@ Functions that query non-existent columns must be caught AND rolled back at the 
 
 **Next**: Extract structured events from the document, or wire the existing Milestone 3 agents.
 
+
+---
+
+## 📅 Session: June 15, 2026 — ConvictionEngine Plan Authored
+
+**Session Start:** ~current
+**Session End:** pending approval
+**Branch (proposed):** `feature/conviction-engine`
+
+### What Was Done This Session
+
+#### 1. Audit of Existing GuidanceCheck Infrastructure ✅
+- [x] Confirmed `engine_guidance/` (extractor + verifier + scorer + primer) is production-live since May 28.
+- [x] Confirmed 4 DB tables exist with idempotent `ensure_guidance_tables()`: `management_guidance`, `guidance_verification`, `management_credibility_scores`, `user_thesis`.
+- [x] Confirmed `api/guidance.py` exposes `/report`, `/email`, `/portfolio`, `/leaderboard`, `/scan`, `/thesis`, `/prime-all`.
+- [x] Confirmed `scripts/run_quarterly_guidance_check.py` is scheduled inside `scripts/pipeline_cloud.sh`.
+- [x] Confirmed **coverage gap**: `universe_112co` is NOT in `scripts/prime_all_guidance.py` symbol discovery — only `client_watchlist` + `client_external_holdings`.
+- [x] Confirmed **lag-tracking gap**: `management_credibility_scores.trend` is computed but never stored as a quarterly time-series. No consecutive-miss counter, no verdict-flip date.
+
+#### 2. ConvictionEngine Execution Plan ✅
+- [x] Authored `docs/ConvictionEngine15June26.md` — 4-phase plan (Coverage → Lag Metrics → Endpoint+UI → Quarterly Alerts).
+- [x] Each phase has a concrete `Verify` block with deterministic acceptance signals (pytest, psql, curl, file-exists).
+- [x] Phases are strictly sequential — each output feeds the next.
+- [x] Cost estimate: ~$0.07 one-time priming for 112 list; ~$0.05/quarter steady state.
+- [x] Rollback plan documented (all changes additive).
+
+#### 3. Decision Log Updated ✅
+- [x] Added **Decision 097 — ConvictionEngine: Cross-List Management Integrity Tracking** to `Decisions.md`. Status: DRAFT.
+
+### 📌 Current Milestone
+ConvictionEngine plan drafted, Decision 097 logged. **Awaiting user approval before any code change.**
+
+### Next (post-approval)
+1. Branch: `git checkout -b feature/conviction-engine`
+2. Phase 1 — extend `scripts/prime_all_guidance.py` + `scripts/run_quarterly_guidance_check.py` to include `universe_112co`; run priming
+3. Phase 2 — extend `ensure_guidance_tables()` + `credibility_scorer.py` with lag columns
+4. Phase 3 — add `/api/guidance/conviction` + `ConvictionEngine.tsx`
+5. Phase 4 — quarterly lag-alert job + opt-in preference table
+6. Push, open PR, deploy via existing pipeline

@@ -604,7 +604,8 @@ def ensure_required_tables(conn) -> None:
     ensure_prde_tables(cur)
     ensure_aae_event_tables(cur)
     ensure_guidance_tables(cur)
-    
+    ensure_alert_preferences_table(cur)
+
     conn.commit()
     cur.close()
 
@@ -887,6 +888,25 @@ def ensure_aae_event_tables(cur) -> None:
     )
 
 
+def ensure_alert_preferences_table(cur) -> None:
+    """ConvictionEngine (Decision 097) — opt-in alert preferences per client.
+
+    One row per client. Created idempotently. All alert types default to OFF
+    so existing users must explicitly enable them.
+    """
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.client_alert_preferences (
+            client_id                  UUID PRIMARY KEY REFERENCES clients(id) ON DELETE CASCADE,
+            conviction_alerts_enabled  BOOLEAN DEFAULT FALSE,
+            lag_alert_threshold_q      INT DEFAULT 2,
+            created_at                 TIMESTAMPTZ DEFAULT NOW(),
+            updated_at                 TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+
 def ensure_guidance_tables(cur) -> None:
     """Ensure GuidanceCheck tables for management credibility tracking.
 
@@ -962,6 +982,27 @@ def ensure_guidance_tables(cur) -> None:
             last_updated        TIMESTAMPTZ DEFAULT NOW()
         );
         """
+    )
+    # ConvictionEngine (Decision 097) — lag tracking columns. Idempotent.
+    cur.execute(
+        "ALTER TABLE public.management_credibility_scores "
+        "ADD COLUMN IF NOT EXISTS consecutive_miss_quarters INT DEFAULT 0;"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_credibility_scores "
+        "ADD COLUMN IF NOT EXISTS lag_score NUMERIC(5,2) DEFAULT 0;"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_credibility_scores "
+        "ADD COLUMN IF NOT EXISTS last_verdict_flip DATE;"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_credibility_scores "
+        "ADD COLUMN IF NOT EXISTS current_verdict VARCHAR(20);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_credibility_scores "
+        "ADD COLUMN IF NOT EXISTS previous_verdict VARCHAR(20);"
     )
 
     # User Thesis — why user bought, key assumptions

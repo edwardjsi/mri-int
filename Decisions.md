@@ -2228,3 +2228,16 @@ Decision:
 3. Priming pipeline: concall discovery → GPT extraction → verification → credibility scoring. All steps are idempotent (ON CONFLICT upserts).
 4. Table names in prime-all queries: `client_watchlist` and `client_external_holdings` (not `watchlist`/`holdings` which don't exist).
 Reason: Previously, guidance data required manual triggering. Auto-priming ensures credibility scores are available immediately after a stock is added to the system, making GuidanceCheck and the Unified Analysis multi-bagger scoring useful from day one.
+
+## Decision 097 — ConvictionEngine: Cross-List Management Integrity Tracking
+Date: 2026-06-15
+Decision:
+1. Extend the existing `engine_guidance/` pipeline to cover the **`universe_112co` table** in addition to `client_watchlist` + `client_external_holdings`. Prime-all and quarterly verifier both gain the 112 list as a coverage source.
+2. Add three lag-tracking columns to `management_credibility_scores`: `consecutive_miss_quarters INT`, `lag_score NUMERIC(5,2)`, `last_verdict_flip DATE`. Migration is `ADD COLUMN IF NOT EXISTS` — idempotent, safe under RDS-protection rules (Decision 027).
+3. Compute `consecutive_miss_quarters` by walking `guidance_verification` rows in fiscal-quarter order from most recent backwards, counting MISSED until an ACHIEVED/PARTIAL breaks the streak. `lag_score` = `(streak / total_verified_quarters) * 100`.
+4. New API surface: `GET /api/guidance/conviction?source=digital_twin|112co|all` returns Digital Twin ∪ 112Co union, ranked worst-first by accuracy / lag_score.
+5. New React dashboard `ConvictionEngine.tsx` reusing `GuidanceCheck.tsx` chip primitives — verdict chip, accuracy ring, lag indicator. Sidebar entry "🧠 Conviction Engine" in `App.tsx`.
+6. New quarterly lag-alert job: `scripts/send_conviction_alerts.py` reads verdict-flip rows (zone boundary crossings only, not raw accuracy wobbles) and emails opted-in clients via `engine_core/email_service.send_email_custom`.
+7. Defaults: per-quarter LLM spend cap $0.50 with kill-switch; lag-alerts default-OFF (opt-in via `client_alert_preferences`); verdict-zone thresholds kept at 75/60/40 %.
+Reason: User requested management-integrity tracking across both the Digital Twin (real portfolio) and 112 Co Universe (PE-expansion watchlist). Existing GuidanceCheck engine, schema, API, and quarterly pipeline already cover ~80% of the work — the gap is coverage (`universe_112co` is not in the prime-all loop) and per-quarter lag persistence (currently `trend` is computed on the fly but never stored as a time-series). Building this as a thin extension preserves the Decision 003 single-container architecture, Decision 095 Screener+NSE dual-source, and Decision 096 auto-prime-on-add behaviour.
+Status: DRAFT — execution plan in `docs/ConvictionEngine15June26.md` awaiting user approval before any code change.

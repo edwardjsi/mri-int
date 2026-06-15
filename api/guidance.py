@@ -29,20 +29,27 @@ def _r(row, i):
     return row[i]
 
 
+def _fy_label(fy: int | None, fq: int | None) -> str:
+    """Format fiscal year + quarter as QxFYy."""
+    if fy and fq:
+        return f"Q{fq}FY{str(fy)[-2:]}"
+    if fy:
+        return f"FY{str(fy)[-2:]}"
+    return ""
+
+
 def _build_report_payload(conn, symbol: str) -> dict:
     """
-    Build a clean, product-grade guidance report.
-    Only shows promises with a numeric target or a defined deadline.
-    Groups into ACHIEVED / MISSED / PARTIAL / PENDING.
+    Build a clean, product-grade guidance report with THREE intelligence layers:
+    1. Past Promises Verified — all verified promises with actuals, grouped ACHIEVED/MISSED/PARTIAL
+    2. Quarter Comparison — two most recent transcript quarters side-by-side
+    3. Integrity Timeline — quarter-by-quarter breakdown of management reliability
     """
     sym = symbol.upper().strip()
     cur = conn.cursor()
 
-    # Credibility score
-    cur.execute(
-        "SELECT * FROM management_credibility_scores WHERE symbol=%s",
-        (sym,),
-    )
+    # ── Credibility score ──────────────────────────────────────────────
+    cur.execute("SELECT * FROM management_credibility_scores WHERE symbol=%s", (sym,))
     score_row = cur.fetchone()
     credibility = {}
     if score_row:
@@ -53,65 +60,87 @@ def _build_report_payload(conn, symbol: str) -> dict:
             "accuracy_pct": float(_r(score_row, 4) or 0),
             "avg_variance_pct": float(_r(score_row, 5)) if _r(score_row, 5) else None,
             "trend": _r(score_row, 6),
+            # ConvictionEngine (Decision 097) lag fields
+            "consecutive_miss_quarters": _r(score_row, 7) or 0,
+            "lag_score": float(_r(score_row, 8) or 0),
+            "last_verdict_flip": str(_r(score_row, 9)) if _r(score_row, 9) else None,
+            "current_verdict": _r(score_row, 10),
+            "previous_verdict": _r(score_row, 11),
         }
 
-    # Fetch all promises with verification
+    # ── Fetch ALL promises with quarter-of-promise and quarter-of-verification ──
+    # We join with aae_transcripts to know WHEN the promise was made (transcript date)
     cur.execute(
-        """SELECT g.guidance_type, g.guidance_text,
-                  g.target_value, g.target_unit, g.target_date,
-                  v.status, v.actual_value, v.variance_pct,
-                  v.checked_fiscal_year, v.checked_fiscal_quarter
+        """SELECT
+             g.guidance_type,
+             g.guidance_text,
+             g.target_value,
+             g.target_unit,
+             g.target_date,
+             v.status,
+             v.actual_value,
+             v.variance_pct,
+             v.checked_fiscal_year,
+             v.checked_fiscal_quarter,
+             t.date,
+             EXTRACT(YEAR FROM t.date)::INT as trans_year,
+             EXTRACT(QUARTER FROM t.date)::INT as trans_quarter
            FROM management_guidance g
            LEFT JOIN guidance_verification v ON g.id = v.guidance_id
+           LEFT JOIN aae_transcripts t ON g.transcript_id = t.id
            WHERE g.symbol = %s
            ORDER BY
              CASE WHEN v.status IN ('ACHIEVED','MISSED','PARTIAL') THEN 0 ELSE 1 END,
-             g.target_date ASC NULLS LAST,
-             g.extracted_at DESC""",
+             t.date DESC NULLS LAST,
+             g.target_date ASC NULLS LAST""",
         (sym,),
     )
     rows = cur.fetchall()
 
-    achieved = []
-    missed = []
-    partial = []
-    pending = []
+    # Group into categories
+    achieved = []  # Verified: target was met
+    missed   = []  # Verified: target was NOT met
+    partial  = []  # Verified: partially met (within 2pp margin or 25% for revenue)
+    upcoming = []  # Has a target_date/quarter in the future OR not yet verified
 
     for row in rows:
-        gtype   = _r(row, 0)
-        gtext   = _r(row, 1)
-        tval    = _r(row, 2)
-        tunit   = _r(row, 3)
-        tdate   = _r(row, 4)
-        status  = _r(row, 5)
-        actual  = _r(row, 6)
+        gtype    = _r(row, 0)
+        gtext    = _r(row, 1)
+        tval     = _r(row, 2)
+        tunit    = _r(row, 3)
+        tdate    = _r(row, 4)
+        status   = _r(row, 5)
+        actual   = _r(row, 6)
         variance = _r(row, 7)
-        fyear   = _r(row, 8)
-        fquarter = _r(row, 9)
+        vfy      = _r(row, 8)   # fiscal year verified
+        vfq      = _r(row, 9)   # fiscal quarter verified
+        txdate   = _r(row, 10)  # transcript date
+        txfy     = _r(row, 11)  # transcript fiscal year
+        txfq     = _r(row, 12)  # transcript fiscal quarter
 
-        # Build display target string
-        target_display = ""
-        if tval is not None:
-            target_display = f"{tval} {tunit or ''}".strip()
-        elif tdate:
-            target_display = f"by {tdate}"
+        # Target display string
+        target_display = (f"{tval} {tunit or ''}".strip()
+                          if tval is not None else
+                          (f"by {tdate}" if tdate else ""))
 
-        # Format actual result
+        # Actual result display
         actual_display = ""
         if actual is not None:
-            actual_display = f"{actual} {tunit or ''}".strip()
+            actual_display = f"{float(actual):.1f} {tunit or ''}".strip()
         elif status == "MISSED" and variance is not None:
-            actual_display = f"{variance:+.1f}% vs target"
+            actual_display = f"{float(variance):+.1f}% vs target"
 
         item = {
-            "type": gtype or "OTHER",
-            "promise": gtext,
-            "target": target_display,
-            "deadline": tdate or "",
-            "status": status or "PENDING",
-            "actual": actual_display,
+            "type":         gtype or "OTHER",
+            "promise":      gtext,
+            "target":       target_display,
+            "deadline":     tdate or "",
+            "status":       status or "PENDING",
+            "actual":       actual_display,
             "variance_pct": float(variance) if variance is not None else None,
-            "verified_period": f"Q{fquarter}FY{str(fyear)[-2:]}" if fyear and fquarter else "",
+            "promised_in":  _fy_label(txfy, txfq) if txfy and txfq else _fy_label(vfy, vfq),
+            "verified_in":  _fy_label(vfy, vfq) if vfy and vfq else "",
+            "transcript_date": str(txdate) if txdate else "",
         }
 
         if status == "ACHIEVED":
@@ -121,43 +150,172 @@ def _build_report_payload(conn, symbol: str) -> dict:
         elif status == "PARTIAL":
             partial.append(item)
         else:
-            pending.append(item)
+            upcoming.append(item)
 
-    # Summary stats
-    total = credibility.get("total_promises", 0)
-    accuracy = credibility.get("accuracy_pct", 0.0)
-    trend = credibility.get("trend", "INSUFFICIENT_DATA")
+    # ── Summary stats ─────────────────────────────────────────────────
+    total     = credibility.get("total_promises", 0)
+    accuracy  = credibility.get("accuracy_pct", 0.0)
+    trend     = credibility.get("trend", "INSUFFICIENT_DATA")
 
     # Conviction verdict
     if total < 3:
-        verdict = "WATCHING"
-        verdict_color = "#64748b"
-        verdict_bg = "#1e293b"
+        verdict = "WATCHING";       verdict_color = "#64748b"; verdict_bg = "#1e293b"
     elif accuracy >= 75:
         verdict = "ADD ZONE" if trend in ("IMPROVING", "STABLE") else "HOLD ZONE"
-        verdict_color = "#4ade80"
-        verdict_bg = "#14532d"
+        verdict_color = "#4ade80"; verdict_bg = "#14532d"
     elif accuracy >= 60:
-        verdict = "HOLD ZONE"
-        verdict_color = "#fbbf24"
-        verdict_bg = "#451a03"
+        verdict = "HOLD ZONE";      verdict_color = "#fbbf24"; verdict_bg = "#451a03"
     elif accuracy >= 40:
-        verdict = "REDUCE ZONE"
-        verdict_color = "#f87171"
-        verdict_bg = "#7f1d1d"
+        verdict = "REDUCE ZONE";    verdict_color = "#f87171"; verdict_bg = "#7f1d1d"
     else:
-        verdict = "THESIS BROKEN"
-        verdict_color = "#fff"
-        verdict_bg = "#500"
+        verdict = "THESIS BROKEN";  verdict_color = "#fff";    verdict_bg = "#500"
 
-    # Accuracy ring
-    circumference = 2 * 3.14159 * 40  # r=40
-    ring_offset = circumference - (accuracy / 100) * circumference
-    ring_color = "#4ade80" if accuracy >= 70 else "#fbbf24" if accuracy >= 40 else "#f87171" if accuracy > 0 else "#3b82f6"
+    circumference = 2 * 3.14159 * 40
+    ring_offset   = circumference - (accuracy / 100) * circumference
+    ring_color    = ("#4ade80" if accuracy >= 70
+                     else "#fbbf24" if accuracy >= 40
+                     else "#f87171" if accuracy > 0
+                     else "#3b82f6")
+
+    # ── 1. PAST PROMISES VERIFIED ──────────────────────────────────────
+    # All verified promises — these are past promises where we have a verdict
+    verified_promises = achieved + missed + partial
+
+    # ── 2. QUARTER COMPARISON ──────────────────────────────────────────
+    # Get the two most recent transcript quarters
+    cur.execute(
+        """SELECT DISTINCT
+             EXTRACT(YEAR FROM date)::INT as fy,
+             EXTRACT(QUARTER FROM date)::INT as fq,
+             date
+           FROM aae_transcripts
+           WHERE symbol = %s
+           ORDER BY fy DESC, fq DESC
+           LIMIT 2""",
+        (sym,),
+    )
+    trans_quarters = list(cur.fetchall())
+    trans_quarters = sorted(trans_quarters, key=lambda r: (_r(r,0) or 0, _r(r,1) or 0))
+
+    quarter_comparison = {"quarters": [], "integrity_by_quarter": {}, "trend": ""}
+
+    if len(trans_quarters) >= 2:
+        older_q = trans_quarters[0]  # oldest of the two
+        newer_q = trans_quarters[1]  # most recent
+        older_fy, older_fq = _r(older_q, 0), _r(older_q, 1)
+        newer_fy, newer_fq = _r(newer_q, 0), _r(newer_q, 1)
+
+        # Get promises from each quarter
+        def _promises_for_quarter(fy, fq):
+            cur.execute(
+                """SELECT g.guidance_type, g.guidance_text,
+                          g.target_value, g.target_unit, g.target_date,
+                          v.status, v.actual_value, v.variance_pct
+                   FROM management_guidance g
+                   LEFT JOIN guidance_verification v ON g.id = v.guidance_id
+                   JOIN aae_transcripts t ON g.transcript_id = t.id
+                   WHERE g.symbol = %s
+                     AND EXTRACT(YEAR FROM t.date)::INT = %s
+                     AND EXTRACT(QUARTER FROM t.date)::INT = %s
+                   ORDER BY g.guidance_type, g.guidance_text""",
+                (sym, fy, fq),
+            )
+            rows2 = cur.fetchall()
+            items = []
+            for r2 in rows2:
+                gt2 = _r(r2,0); gt2t = _r(r2,1); tv2 = _r(r2,2)
+                tu2 = _r(r2,3); td2 = _r(r2,4); st2 = _r(r2,5)
+                av2 = _r(r2,6); vp2 = _r(r2,7)
+                tdisp2 = (f"{tv2} {tu2 or ''}".strip() if tv2 is not None
+                          else (f"by {td2}" if td2 else ""))
+                adisp2 = (f"{float(av2):.1f} {tu2 or ''}".strip() if av2 is not None
+                          else (f"{float(vp2):+.1f}% vs target" if vp2 is not None and st2=="MISSED" else ""))
+                items.append({"type": gt2 or "OTHER", "promise": gt2t,
+                               "target": tdisp2, "status": st2 or "PENDING",
+                               "actual": adisp2,
+                               "variance_pct": float(vp2) if vp2 is not None else None})
+            return items
+
+        older_promises = _promises_for_quarter(older_fy, older_fq)
+        newer_promises = _promises_for_quarter(newer_fy, newer_fq)
+
+        # Count verified in older quarter
+        older_verified = sum(1 for p in older_promises if p["status"] in ("ACHIEVED","MISSED","PARTIAL"))
+        older_achieved = sum(1 for p in older_promises if p["status"] == "ACHIEVED")
+        older_missed   = sum(1 for p in older_promises if p["status"] == "MISSED")
+        newer_announced = len(newer_promises)
+
+        quarter_comparison = {
+            "older_quarter":  _fy_label(older_fy, older_fq),
+            "newer_quarter":  _fy_label(newer_fy, newer_fq),
+            "older_promises": older_promises,
+            "newer_promises": newer_promises,
+            "older_summary": {
+                "total":       len(older_promises),
+                "verified":    older_verified,
+                "achieved":    older_achieved,
+                "missed":      older_missed,
+                "pending":     len(older_promises) - older_verified,
+            },
+            "newer_summary": {
+                "total":      len(newer_promises),
+                "announced":  newer_announced,
+            },
+            # Did newer quarter REPEAT or REVISIT the same topics?
+            "repeated_topics": [],  # filled below
+            "new_topics":      [],  # filled below
+            "integrity_signal": ("IMPROVING" if older_achieved >= older_missed * 2
+                                  else "DETERIORATING" if older_missed > older_achieved
+                                  else "STABLE"),
+        }
+
+        # Find repeated vs new topics (by guidance_type)
+        older_types = {p["type"] for p in older_promises}
+        newer_types = {p["type"] for p in newer_promises}
+        quarter_comparison["repeated_topics"] = list(older_types & newer_types)
+        quarter_comparison["new_topics"]      = list(newer_types - older_types)
+
+    # ── 3. INTEGRITY TIMELINE ─────────────────────────────────────────
+    # Group verified promises by the QUARTER they were verified in
+    # Shows management reliability quarter-by-quarter
+    integrity_by_quarter = {}
+    for p in (achieved + missed + partial):
+        q = p.get("verified_in") or "Unknown"
+        if q not in integrity_by_quarter:
+            integrity_by_quarter[q] = {"achieved": 0, "missed": 0, "partial": 0, "total": 0}
+        s = p["status"].lower()
+        integrity_by_quarter[q][s] = integrity_by_quarter[q].get(s, 0) + 1
+        integrity_by_quarter[q]["total"] += 1
+
+    # Sort by quarter descending
+    sorted_quarters = sorted(integrity_by_quarter.keys(), reverse=True)
+    timeline = {q: integrity_by_quarter[q] for q in sorted_quarters}
+
+    # ── Integrity Signal ──────────────────────────────────────────────
+    # Count overall broken promises with missed target dates in the past
+    broken_with_past_deadline = [
+        p for p in missed
+        if p.get("deadline") and p.get("status") == "MISSED"
+    ]
+    total_verified = len(verified_promises)
+    integrity_signal = ""
+    if total_verified >= 3:
+        if accuracy >= 75:
+            integrity_signal = "HIGH — management has a strong track record of meeting commitments"
+        elif accuracy >= 60:
+            integrity_signal = "MODERATE — most commitments met, some gaps to investigate"
+        elif accuracy >= 40:
+            integrity_signal = "LOW — multiple broken promises; scrutinize forward guidance carefully"
+        else:
+            integrity_signal = "VERY LOW — majority of commitments missed; management credibility questionable"
+    else:
+        integrity_signal = "INSUFFICIENT DATA — need at least 3 verified promises to assess integrity"
 
     return {
         "symbol": sym,
         "report_date": str(date.today()),
+
+        # Summary
         "credibility": credibility,
         "verdict": verdict,
         "verdict_color": verdict_color,
@@ -166,16 +324,27 @@ def _build_report_payload(conn, symbol: str) -> dict:
         "ring_offset": ring_offset,
         "ring_color": ring_color,
         "ring_circumference": circumference,
-        "achieved": achieved,
-        "missed": missed,
-        "partial": partial,
-        "pending": pending,
+
+        # Counts
         "total_achieved": len(achieved),
-        "total_missed": len(missed),
-        "total_partial": len(partial),
-        "total_pending": len(pending),
-        "total_material": len(achieved) + len(missed) + len(partial) + len(pending),
-        "total_verified": len(achieved) + len(missed) + len(partial),
+        "total_missed":   len(missed),
+        "total_partial":  len(partial),
+        "total_upcoming": len(upcoming),
+        "total_verified": total_verified,
+        "total_material": len(achieved) + len(missed) + len(partial) + len(upcoming),
+
+        # ── 1. Past Promises Verified ────────────────────────────────
+        "achieved": achieved,
+        "missed":   missed,
+        "partial":  partial,
+        "upcoming": upcoming,
+
+        # ── 2. Quarter Comparison ─────────────────────────────────────
+        "quarter_comparison": quarter_comparison,
+
+        # ── 3. Integrity Timeline ─────────────────────────────────────
+        "integrity_timeline": timeline,
+        "integrity_signal": integrity_signal,
     }
 
 
@@ -309,6 +478,144 @@ def get_leaderboard(
         (limit,),
     )
     return cur.fetchall()
+
+
+# ── ConvictionEngine (Decision 097) ──────────────────────────────────
+
+
+@router.get("/conviction")
+def get_conviction(
+    source: str = Query("all", pattern="^(all|digital_twin|112co|watchlist)$"),
+    verdict: str = Query("any", pattern="^(any|ADD ZONE|HOLD ZONE|REDUCE ZONE|THESIS BROKEN|WATCHING)$"),
+    limit: int = Query(50, ge=1, le=200),
+    conn=Depends(get_db),
+):
+    """
+    ConvictionEngine — unified ranking of management integrity across the
+    two lists the user cares about (Digital Twin holdings + 112 Co Universe).
+
+    Default sort: worst credibility first (lowest accuracy_pct, highest lag).
+    """
+    cur = conn.cursor()
+
+    # Build the symbol universe based on source filter
+    where_clauses = ["1=1"]
+    params: list = []
+
+    if source in ("all", "digital_twin"):
+        # Digital Twin = client_external_holdings (Decision 036/088)
+        cur.execute(
+            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings"
+        )
+        dt_syms = {r["symbol"] for r in cur.fetchall()}
+    else:
+        dt_syms = set()
+
+    if source in ("all", "watchlist"):
+        cur.execute(
+            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist"
+        )
+        wl_syms = {r["symbol"] for r in cur.fetchall()}
+    else:
+        wl_syms = set()
+
+    if source in ("all", "112co"):
+        cur.execute(
+            "SELECT DISTINCT UPPER(symbol) AS symbol FROM universe_112co WHERE is_active=TRUE"
+        )
+        co_syms = {r["symbol"] for r in cur.fetchall()}
+    else:
+        co_syms = set()
+
+    universe = sorted(dt_syms | wl_syms | co_syms)
+    if not universe:
+        return {"source": source, "count": 0, "rows": []}
+
+    # Tag each symbol with its source(s) — a stock can be in multiple lists
+    sym_sources: dict[str, list[str]] = {s: [] for s in universe}
+    if dt_syms:
+        for s in dt_syms:
+            sym_sources[s].append("digital_twin")
+    if wl_syms:
+        for s in wl_syms:
+            sym_sources[s].append("watchlist")
+    if co_syms:
+        for s in co_syms:
+            sym_sources[s].append("112co")
+
+    # Fetch credibility rows for these symbols
+    cur.execute(
+        """SELECT symbol, total_promises, achieved_count, missed_count,
+                  accuracy_pct, avg_variance_pct, trend,
+                  consecutive_miss_quarters, lag_score, last_verdict_flip,
+                  current_verdict, previous_verdict, last_updated
+           FROM management_credibility_scores
+           WHERE symbol = ANY(%s)""",
+        (universe,),
+    )
+    rows = cur.fetchall()
+
+    out = []
+    for r in rows:
+        symbol = r["symbol"]
+        accuracy = float(r["accuracy_pct"] or 0)
+        total = r["total_promises"] or 0
+        trend = r["trend"]
+        current_verdict = r["current_verdict"]
+
+        # Compute verdict if not already stored (legacy rows may lack it)
+        if not current_verdict:
+            if total < 3:
+                current_verdict = "WATCHING"
+            elif accuracy >= 75:
+                current_verdict = "ADD ZONE" if trend in ("IMPROVING", "STABLE", "INSUFFICIENT_DATA", None) else "HOLD ZONE"
+            elif accuracy >= 60:
+                current_verdict = "HOLD ZONE"
+            elif accuracy >= 40:
+                current_verdict = "REDUCE ZONE"
+            else:
+                current_verdict = "THESIS BROKEN"
+
+        if verdict != "any" and current_verdict != verdict:
+            continue
+
+        out.append({
+            "symbol": symbol,
+            "sources": sym_sources.get(symbol, []),
+            "accuracy_pct": round(accuracy, 2),
+            "trend": trend,
+            "total_promises": total,
+            "achieved_count": r["achieved_count"] or 0,
+            "missed_count": r["missed_count"] or 0,
+            "avg_variance_pct": float(r["avg_variance_pct"]) if r["avg_variance_pct"] is not None else None,
+            "consecutive_miss_quarters": r["consecutive_miss_quarters"] or 0,
+            "lag_score": float(r["lag_score"] or 0),
+            "current_verdict": current_verdict,
+            "previous_verdict": r["previous_verdict"],
+            "verdict_flipped": (
+                r["previous_verdict"] is not None
+                and r["previous_verdict"] != current_verdict
+            ),
+            "last_verdict_flip": str(r["last_verdict_flip"]) if r["last_verdict_flip"] else None,
+            "last_updated": str(r["last_updated"]) if r["last_updated"] else None,
+        })
+
+    # Sort: worst credibility first → lowest accuracy, then highest lag
+    out.sort(key=lambda x: (x["accuracy_pct"], -x["lag_score"]))
+    out = out[:limit]
+
+    # Summary counts for the UI header
+    summary = {
+        "total": len(out),
+        "ADD ZONE": sum(1 for x in out if x["current_verdict"] == "ADD ZONE"),
+        "HOLD ZONE": sum(1 for x in out if x["current_verdict"] == "HOLD ZONE"),
+        "REDUCE ZONE": sum(1 for x in out if x["current_verdict"] == "REDUCE ZONE"),
+        "THESIS BROKEN": sum(1 for x in out if x["current_verdict"] == "THESIS BROKEN"),
+        "WATCHING": sum(1 for x in out if x["current_verdict"] == "WATCHING"),
+        "lagging_count": sum(1 for x in out if x["consecutive_miss_quarters"] >= 2),
+        "flipped_count": sum(1 for x in out if x["verdict_flipped"]),
+    }
+    return {"source": source, "summary": summary, "rows": out}
 
 
 @router.post("/scan/{symbol}")

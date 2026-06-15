@@ -8,6 +8,7 @@ import One12CoDashboard from './One12CoDashboard';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
 import GuidanceCheck from './GuidanceCheck';
+import ConvictionEngine from './ConvictionEngine';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
@@ -2625,6 +2626,9 @@ function App() {
           <button className={`nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')}>
             <span className="nav-icon">🔍</span> GuidanceCheck
           </button>
+          <button className={`nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')}>
+            <span className="nav-icon">🧠</span> Conviction Engine
+          </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
               <span className="nav-icon">🛡️</span> Platform Intelligence
@@ -2663,6 +2667,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
           {page === 'breakout' && <BreakoutRadarPage onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
           {page === 'guidance' && <GuidanceCheck />}
+          {page === 'conviction' && <ConvictionEngine onSelectStock={setSelectedStock} />}
           {page === 'unified' && <div />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
         </div>
@@ -2686,6 +2691,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
         <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
         <button className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')} title="Unified Scan">🧠</button>
         <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
+        <button className={`mobile-nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')} title="Conviction Engine">🧠</button>
         {isAdmin() && (
           <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
         )}
