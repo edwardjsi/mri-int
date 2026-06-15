@@ -1358,158 +1358,226 @@ def send_morning_brief():
 
 # ── GuidanceCheck Report Email ────────────────────────────────────────
 
+def _build_promise_row(item: dict, color: str) -> str:
+    """Build a single promise table row. Safe — no backslashes in f-string exprs."""
+    ptype = item.get('type', 'OTHER')
+    ptext = item.get('promise', '')
+    ptarget = item.get('target', '')
+    pdeadline = item.get('deadline', '')
+    pactual = item.get('actual') or '—'
+
+    target_html = ''
+    if ptarget:
+        target_html = '<span style="margin-right:6px">🎯 Target: <b style="color:#94a3b8">' + ptarget + '</b></span>'
+    deadline_html = ''
+    if pdeadline:
+        deadline_html = '<span>📅 Due: <b style="color:#94a3b8">' + pdeadline + '</b></span>'
+
+    return (
+        '<tr>'
+        '<td style="padding:10px 14px; border-left:3px solid ' + color + '; background:#1a1a2e; vertical-align:top">'
+        '<div style="color:#e2e8f0; font-size:0.875rem; margin-bottom:4px">' + ptext + '</div>'
+        '<div style="color:#64748b; font-size:0.72rem;">'
+        '<span style="background:#1e293b; padding:1px 6px; border-radius:3px; color:#94a3b8; margin-right:6px">' + ptype + '</span>'
+        + target_html + deadline_html +
+        '</div></td>'
+        '<td style="padding:10px 14px; background:#1a1a2e; text-align:center; vertical-align:top">'
+        '<div style="font-size:0.8rem; color:#e2e8f0">' + pactual + '</div>'
+        '</td></tr>'
+    )
+
+
+def _build_pending_row(item: dict, color: str) -> str:
+    """Build a pending promise row (shows deadline, not actual)."""
+    ptype = item.get('type', 'OTHER')
+    ptext = item.get('promise', '')
+    pdeadline = item.get('deadline', '')
+
+    deadline_html = ''
+    if pdeadline:
+        deadline_html = '<span>📅 <b style="color:#94a3b8">' + pdeadline + '</b></span>'
+
+    return (
+        '<tr>'
+        '<td style="padding:10px 14px; border-left:3px solid ' + color + '; background:#1a1a2e; vertical-align:top">'
+        '<div style="color:#e2e8f0; font-size:0.875rem; margin-bottom:4px">' + ptext + '</div>'
+        '<div style="color:#64748b; font-size:0.72rem;">'
+        '<span style="background:#1e293b; padding:1px 6px; border-radius:3px; color:#94a3b8; margin-right:6px">' + ptype + '</span>'
+        + deadline_html +
+        '</div></td>'
+        '<td style="padding:10px 14px; background:#1a1a2e; text-align:center; vertical-align:top">'
+        '<div style="font-size:0.8rem; color:#64748b">—</div>'
+        '</td></tr>'
+    )
+
+
 def build_guidance_report_email_html(payload: dict) -> str:
     """Build a professional GuidanceCheck report HTML email from a report payload."""
     sym = payload["symbol"]
-    verdict = payload["verdict"]
-    verdict_color = payload["verdict_color"]
-    verdict_bg = payload["verdict_bg"]
-    accuracy = payload["accuracy_pct"]
+    verdict = payload.get("verdict", "WATCHING")
+    verdict_color = payload.get("verdict_color", "#64748b")
+    verdict_bg = payload.get("verdict_bg", "#1e293b")
+    accuracy = payload.get("accuracy_pct", 0.0)
     achieved = payload.get("achieved", [])
     missed = payload.get("missed", [])
     partial = payload.get("partial", [])
     pending = payload.get("pending", [])
     total_verified = payload.get("total_verified", 0)
-    total_material = payload.get("total_material", 0)
     report_date = payload.get("report_date", str(date.today()))
-    trend = payload.get("credibility", {}).get("trend", "")
+    trend = (payload.get("credibility") or {}).get("trend", "") or ""
 
     ring_offset = payload.get("ring_offset", 0)
     ring_color = payload.get("ring_color", "#3b82f6")
     circumference = payload.get("ring_circumference", 251)
 
-    def promise_row(item: dict, color: str) -> str:
-        return f"""<tr>
-            <td style="padding:10px 14px; border-left:3px solid {color}; background:#1a1a2e; vertical-align:top">
-                <div style="color:#e2e8f0; font-size:0.875rem; margin-bottom:4px">{item['promise']}</div>
-                <div style="color:#64748b; font-size:0.72rem;">
-                    <span style="background:#1e293b; padding:1px 6px; border-radius:3px; color:#94a3b8; margin-right:6px">{item['type']}</span>
-                    {f"🎯 Target: <b style=\"color:#94a3b8\">{item['target']}</b>" if item.get('target') else ""}
-                    {f"&nbsp; 📅 Due: <b style=\"color:#94a3b8\">{item['deadline']}</b>" if item.get('deadline') else ""}
-                </div>
-            </td>
-            <td style="padding:10px 14px; background:#1a1a2e; text-align:center; vertical-align:top">
-                <div style="font-size:0.8rem; color:#e2e8f0">{item.get('actual') or '—'}</div>
-            </td>
-        </tr>"""
+    # Build row strings
+    achieved_rows = "".join(_build_promise_row(p, "#22c55e") for p in achieved)
+    missed_rows = "".join(_build_promise_row(p, "#ef4444") for p in missed)
+    partial_rows = "".join(_build_promise_row(p, "#f59e0b") for p in partial)
+    pending_rows = "".join(_build_pending_row(p, "#3b82f6") for p in pending[:8])
 
-    achieved_rows = "\n".join(promise_row(p, "#22c55e") for p in achieved)
-    missed_rows = "\n".join(promise_row(p, "#ef4444") for p in missed)
-    partial_rows = "\n".join(promise_row(p, "#f59e0b") for p in partial)
-    pending_rows = "\n".join(promise_row(p, "#3b82f6") for p in pending[:8])
+    pending_note = ""
+    if len(pending) > 8:
+        pending_note = '<p style="color:#475569; font-size:0.78rem; margin-top:8px">+' + str(len(pending) - 8) + ' more pending promises not shown</p>'
 
-    pending_note = f"<p style=\"color:#475569; font-size:0.78rem; margin-top:8px\">+{len(pending)-8} more pending promises not shown</p>" if len(pending) > 8 else ""
+    # Verified section
+    achieved_section = ""
+    if achieved:
+        p_label = "promise" if len(achieved) == 1 else "promises"
+        achieved_section = (
+            '<div style="margin-top:16px">'
+            '<div style="color:#4ade80; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #14532d; margin-bottom:8px">'
+            '✅ Kept — ' + str(len(achieved)) + ' ' + p_label + '</div>'
+            '<table style="width:100%; border-collapse:collapse; font-size:0.85rem">'
+            '<thead><tr style="color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em">'
+            '<th style="padding:4px 14px; text-align:left">Promise</th>'
+            '<th style="padding:4px 14px; text-align:center">Actual</th></tr></thead>'
+            '<tbody>' + achieved_rows + '</tbody></table></div>'
+        )
 
+    missed_section = ""
+    if missed:
+        p_label = "promise" if len(missed) == 1 else "promises"
+        missed_section = (
+            '<div style="margin-top:16px">'
+            '<div style="color:#ef4444; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #450a0a; margin-bottom:8px">'
+            '❌ Broken — ' + str(len(missed)) + ' ' + p_label + '</div>'
+            '<table style="width:100%; border-collapse:collapse; font-size:0.85rem">'
+            '<thead><tr style="color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em">'
+            '<th style="padding:4px 14px; text-align:left">Promise</th>'
+            '<th style="padding:4px 14px; text-align:center">Actual</th></tr></thead>'
+            '<tbody>' + missed_rows + '</tbody></table></div>'
+        )
+
+    partial_section = ""
+    if partial:
+        p_label = "promise" if len(partial) == 1 else "promises"
+        partial_section = (
+            '<div style="margin-top:16px">'
+            '<div style="color:#f59e0b; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #451a03; margin-bottom:8px">'
+            '⚠️ Partial — ' + str(len(partial)) + ' ' + p_label + '</div>'
+            '<table style="width:100%; border-collapse:collapse; font-size:0.85rem">'
+            '<thead><tr style="color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em">'
+            '<th style="padding:4px 14px; text-align:left">Promise</th>'
+            '<th style="padding:4px 14px; text-align:center">Actual</th></tr></thead>'
+            '<tbody>' + partial_rows + '</tbody></table></div>'
+        )
+
+    pending_section = ""
+    if pending:
+        p_label = "promise" if len(pending) == 1 else "promises"
+        pending_section = (
+            '<div style="margin-top:16px">'
+            '<div style="color:#60a5fa; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #1e3a5f; margin-bottom:8px">'
+            '⏳ Upcoming — ' + str(len(pending)) + ' ' + p_label + ' to watch</div>'
+            '<table style="width:100%; border-collapse:collapse; font-size:0.85rem">'
+            '<thead><tr style="color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em">'
+            '<th style="padding:4px 14px; text-align:left">Promise</th>'
+            '<th style="padding:4px 14px; text-align:center">Deadline</th></tr></thead>'
+            '<tbody>' + pending_rows + '</tbody></table>'
+            + pending_note + '</div>'
+        )
+
+    # Summary bar
     summary_bar = ""
     if total_verified > 0:
-        bar_ach = int(accuracy)
-        bar_mis = 100 - bar_ach
-        summary_bar = f"""<div style=\"background:#111827; border:1px solid #1f2937; border-radius:10px; padding:16px 20px; margin:16px 0\">
-            <div style=\"color:#64748b; font-size:0.75rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em\">Accuracy Track Record</div>
-            <div style=\"display:flex; gap:16px; flex-wrap:wrap; align-items:center\">
-                <div style=\"width:64px; height:64px; flex-shrink:0\">
-                    <svg width=\"64\" height=\"64\" viewBox=\"0 0 64 64\" style=\"transform:rotate(-90deg)\">
-                        <circle cx=\"32\" cy=\"32\" r=\"26\" fill=\"none\" stroke=\"#1f2937\" stroke-width=\"6\"/>
-                        <circle cx=\"32\" cy=\"32\" r=\"26\" fill=\"none\" stroke=\"{ring_color}\" stroke-width=\"6\"
-                            stroke-dasharray=\"{circumference:.0f}\"
-                            stroke-dashoffset=\"{ring_offset:.0f}\"
-                            stroke-linecap=\"round\"/>
-                    </svg>
-                    <div style=\"transform:none; margin-top:-48px; text-align:center; font-size:0.9rem; font-weight:700; color:{verdict_color}\">{accuracy:.0f}%</div>
-                </div>
-                <div style=\"flex:1\">
-                    <div style=\"display:flex; gap:12px; margin-bottom:6px; font-size:0.8rem\">
-                        <span style=\"color:#4ade80\">✅ {len(achieved)} Achieved</span>
-                        <span style=\"color:#ef4444\">❌ {len(missed)} Missed</span>
-                        <span style=\"color:#f59e0b\">⚠️ {len(partial)} Partial</span>
-                    </div>
-                    <div style=\"display:flex; gap:12px; font-size:0.8rem; color:#64748b\">
-                        <span>⏳ {len(pending)} Pending</span>
-                        <span>·</span>
-                        <span>{trend or '—'}</span>
-                    </div>
-                </div>
-            </div>
-        </div>"""
+        acc_str = str(round(accuracy, 0)).split('.')[0] + "%"
+        trend_str = trend if trend else "—"
+        summary_bar = (
+            '<div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:16px 20px; margin:16px 0">'
+            '<div style="color:#64748b; font-size:0.75rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em">Accuracy Track Record</div>'
+            '<div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center">'
+            '<div style="width:64px; height:64px; flex-shrink:0; position:relative">'
+            '<svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">'
+            '<circle cx="32" cy="32" r="26" fill="none" stroke="#1f2937" stroke-width="6"/>'
+            '<circle cx="32" cy="32" r="26" fill="none" stroke="' + ring_color + '" stroke-width="6" '
+            'stroke-dasharray="' + str(round(circumference)) + '" '
+            'stroke-dashoffset="' + str(round(ring_offset)) + '" '
+            'stroke-linecap="round"/>'
+            '</svg>'
+            '<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700; color:' + verdict_color + '">' + acc_str + '</div>'
+            '</div>'
+            '<div style="flex:1">'
+            '<div style="display:flex; gap:12px; margin-bottom:6px; font-size:0.8rem">'
+            '<span style="color:#4ade80">✅ ' + str(len(achieved)) + ' Kept</span>'
+            '<span style="color:#ef4444">❌ ' + str(len(missed)) + ' Broken</span>'
+            '<span style="color:#f59e0b">⚠️ ' + str(len(partial)) + ' Partial</span>'
+            '</div>'
+            '<div style="display:flex; gap:12px; font-size:0.8rem; color:#64748b">'
+            '<span>⏳ ' + str(len(pending)) + ' Pending</span><span>·</span><span>' + trend_str + '</span>'
+            '</div>'
+            '</div></div></div>'
+        )
+    else:
+        summary_bar = (
+            '<div style="background:#0d1421; border:1px solid #1a2236; border-radius:10px; padding:14px 18px; margin:16px 0; color:#475569; font-size:0.85rem; text-align:center">'
+            '⏳ No verified promises yet — ' + str(len(pending)) + ' pending. Run Prime All Stocks to trigger verification.'
+            '</div>'
+        )
 
-    html_body = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GuidanceCheck — {sym}</title>
-</head>
-<body style=\"background:#0a0e1a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:0; margin:0\">
+    # Verified count in header
+    verified_html = (
+        '<div style="color:#475569; font-size:0.72rem; margin-top:4px; text-align:right">'
+        + str(total_verified) + ' promises verified</div>' if total_verified > 0 else
+        '<div style="color:#475569; font-size:0.72rem; margin-top:4px">No verified promises yet</div>'
+    )
 
-<div style=\"max-width:600px; margin:0 auto; padding:24px 16px\">
+    html_body = (
+        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+        '<title>GuidanceCheck — ' + sym + '</title></head>'
+        '<body style="background:#0a0e1a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif; padding:0; margin:0">'
+        '<div style="max-width:600px; margin:0 auto; padding:24px 16px">'
 
-    <!-- Header -->
-    <div style=\"background:#111827; border:1px solid #1f2937; border-radius:14px; padding:24px; margin-bottom:16px\">
-        <div style=\"display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px\">
-            <div>
-                <div style=\"color:#3b82f6; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px\">
-                    🔍 GuidanceCheck · Management Credibility Report
-                </div>
-                <h1 style=\"font-size:1.8rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 4px 0; color:#f1f5f9\">{sym}</h1>
-                <div style=\"color:#475569; font-size:0.8rem\">Report date: {report_date}</div>
-            </div>
-            <div style=\"text-align:right\">
-                <div style=\"background:{verdict_bg}; color:{verdict_color}; font-size:0.75rem; font-weight:700; padding:6px 14px; border-radius:20px; letter-spacing:0.06em; text-transform:uppercase\">
-                    {verdict}
-                </div>
-                {f'<div style=\"color:#475569; font-size:0.72rem; margin-top:4px; text-align:right\">{total_verified} promises verified</div>' if total_verified > 0 else '<div style=\"color:#475569; font-size:0.72rem; margin-top:4px\">No verified promises yet</div>'}
-            </div>
-        </div>
-    </div>
+        # Header
+        '<div style="background:#111827; border:1px solid #1f2937; border-radius:14px; padding:24px; margin-bottom:16px">'
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px">'
+        '<div>'
+        '<div style="color:#3b82f6; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px">'
+        '🔍 GuidanceCheck · Management Credibility Report</div>'
+        '<h1 style="font-size:1.8rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 4px 0; color:#f1f5f9">' + sym + '</h1>'
+        '<div style="color:#475569; font-size:0.8rem">Report date: ' + report_date + '</div>'
+        '</div>'
+        '<div style="text-align:right">'
+        '<div style="background:' + verdict_bg + '; color:' + verdict_color + '; font-size:0.75rem; font-weight:700; '
+        'padding:6px 14px; border-radius:20px; letter-spacing:0.06em; text-transform:uppercase">' + verdict + '</div>'
+        + verified_html +
+        '</div></div></div>'
 
-    <!-- Summary accuracy bar -->
-    {summary_bar}
+        # Summary bar
+        + summary_bar +
 
-    <!-- Promises sections -->
-    {f"""<div style=\"margin-top:16px\">
-        <div style=\"color:#4ade80; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #14532d; margin-bottom:8px\">✅ Kept — {len(achieved)} promise{'s' if len(achieved)!=1 else ''}</div>
-        <table style=\"width:100%; border-collapse:collapse; font-size:0.85rem\">
-            <thead><tr style=\"color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em\"><th style=\"padding:4px 14px; text-align:left\">Promise</th><th style=\"padding:4px 14px; text-align:center\">Actual</th></tr></thead>
-            <tbody>{achieved_rows}</tbody>
-        </table>
-    </div>""" if achieved else ""}
+        # Promise sections
+        + achieved_section + missed_section + partial_section + pending_section +
 
-    {f"""<div style=\"margin-top:16px\">
-        <div style=\"color:#ef4444; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #450a0a; margin-bottom:8px\">❌ Broken — {len(missed)} promise{'s' if len(missed)!=1 else ''}</div>
-        <table style=\"width:100%; border-collapse:collapse; font-size:0.85rem\">
-            <thead><tr style=\"color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em\"><th style=\"padding:4px 14px; text-align:left\">Promise</th><th style=\"padding:4px 14px; text-align:center\">Actual</th></tr></thead>
-            <tbody>{missed_rows}</tbody>
-        </table>
-    </div>""" if missed else ""}
+        # Footer
+        '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'
+        '<div style="color:#475569; font-size:0.72rem; text-align:center; line-height:1.6">'
+        'GuidanceCheck tracks forward-looking statements from earnings calls and investor presentations.<br>'
+        'Promises are verified against actual quarterly financials. Built on MRI Platform.'
+        '</div></div>'
 
-    {f"""<div style=\"margin-top:16px\">
-        <div style=\"color:#f59e0b; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #451a03; margin-bottom:8px\">⚠️ Partial — {len(partial)} promise{'s' if len(partial)!=1 else ''}</div>
-        <table style=\"width:100%; border-collapse:collapse; font-size:0.85rem\">
-            <thead><tr style=\"color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em\"><th style=\"padding:4px 14px; text-align:left\">Promise</th><th style=\"padding:4px 14px; text-align:center\">Actual</th></tr></thead>
-            <tbody>{partial_rows}</tbody>
-        </table>
-    </div>""" if partial else ""}
-
-    {f"""<div style=\"margin-top:16px\">
-        <div style=\"color:#60a5fa; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #1e3a5f; margin-bottom:8px\">⏳ Upcoming — {len(pending)} promise{'s' if len(pending)!=1 else ''} to watch</div>
-        <table style=\"width:100%; border-collapse:collapse; font-size:0.85rem\">
-            <thead><tr style=\"color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em\"><th style=\"padding:4px 14px; text-align:left\">Promise</th><th style=\"padding:4px 14px; text-align:center\">Deadline</th></tr></thead>
-            <tbody>{pending_rows}</tbody>
-        </table>
-        {pending_note}
-    </div>""" if pending else ""}
-
-    <!-- Footer -->
-    <div style=\"margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px\">
-        <div style=\"color:#475569; font-size:0.72rem; text-align:center; line-height:1.6\">
-            GuidanceCheck tracks forward-looking statements from earnings calls and investor presentations.<br>
-            Promises are verified against actual quarterly financials. Built on MRI Platform.
-        </div>
-    </div>
-
-</div>
-</body>
-</html>"""
+        '</div></body></html>'
+    )
 
     return html_body
 
