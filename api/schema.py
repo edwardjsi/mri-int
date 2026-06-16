@@ -1077,3 +1077,61 @@ def ensure_guidance_tables(cur) -> None:
         "CREATE INDEX IF NOT EXISTS idx_user_thesis_client "
         "ON public.user_thesis(client_id);"
     )
+
+    # Management Narrative Timeline — iterative cross-transcript promise trace.
+    # One row per PROMISE (not per transcript). Tracked across all transcripts
+    # in chronological order using management's own later statements as the
+    # verification source. No external financials, no hallucination.
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.management_narrative_timeline (
+            id                          SERIAL PRIMARY KEY,
+            symbol                      VARCHAR(20) NOT NULL,
+            promise_key                 VARCHAR(64) NOT NULL,
+            first_seen_transcript_id    INT REFERENCES public.aae_transcripts(id),
+            first_seen_date             DATE,
+            first_seen_quarter          VARCHAR(16),
+            guidance_text               TEXT NOT NULL,
+            guidance_type               VARCHAR(32),
+            metric                      VARCHAR(64),
+            target_value                NUMERIC,
+            target_unit                 VARCHAR(16),
+            target_date                 VARCHAR(32),
+            status_by_quarter           JSONB,
+            evidence_by_quarter         JSONB,
+            current_status              VARCHAR(32),
+            current_quarter             VARCHAR(16),
+            current_evidence_quote      TEXT,
+            total_transcripts_traced    INT DEFAULT 0,
+            quote_verified              BOOLEAN DEFAULT FALSE,
+            quote_verification_method   VARCHAR(20),
+            quote_source_by_quarter     JSONB,
+            created_at                  TIMESTAMPTZ DEFAULT NOW(),
+            updated_at                  TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, promise_key)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_narrative_timeline_symbol "
+        "ON public.management_narrative_timeline(symbol);"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_narrative_timeline_status "
+        "ON public.management_narrative_timeline(current_status);"
+    )
+    # ConvictionEngine (June 2026): mechanical validation that each
+    # evidence_quote actually appears in the source transcript. Stops
+    # hallucinated quotes from poisoning the credibility score.
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ADD COLUMN IF NOT EXISTS quote_verified BOOLEAN DEFAULT FALSE;"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ADD COLUMN IF NOT EXISTS quote_verification_method VARCHAR(20);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ADD COLUMN IF NOT EXISTS quote_source_by_quarter JSONB;"
+    )
