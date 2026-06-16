@@ -371,6 +371,8 @@ export const api = {
   getGuidanceReport: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/report`),
   getGuidanceCredibility: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/credibility`),
   getGuidanceTimeline: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/timeline`),
+  getConvictionLeaderboard: (params: { source?: string; verdict?: string; limit?: number } = {}) =>
+    apiFetch(`/guidance/conviction?source=${params.source || 'all'}&verdict=${encodeURIComponent(params.verdict || 'any')}&limit=${params.limit || 200}`),
   sendGuidanceEmail: (symbol: string) =>
     apiFetch(`/guidance/${encodeURIComponent(symbol)}/email`, { method: 'POST' }),
   getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),

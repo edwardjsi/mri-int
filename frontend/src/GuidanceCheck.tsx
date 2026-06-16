@@ -314,6 +314,47 @@ export default function GuidanceCheck() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [companiesError, setCompaniesError] = useState('');
+  const [companiesSortKey, setCompaniesSortKey] = useState<string>('accuracy_pct');
+  const [companiesSortDir, setCompaniesSortDir] = useState<'asc' | 'desc'>('asc');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setCompaniesLoading(true);
+    api.getConvictionLeaderboard({ source: 'all', verdict: 'any', limit: 200 })
+      .then((d: any) => { if (!cancelled) setCompanies(d.rows || []); })
+      .catch(err => { if (!cancelled) setCompaniesError(err.message || 'Failed to load companies'); })
+      .finally(() => { if (!cancelled) setCompaniesLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const selectCompany = (sym: string) => {
+    setSymbol(sym);
+    setSelectedSymbol(sym);
+    // Scroll to the management performance section
+    setTimeout(() => {
+      const el = document.getElementById('mgmt-perf-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    load(sym);
+  };
+
+  const sortedCompanies = useMemo(() => {
+    const rows = [...companies];
+    rows.sort((a: any, b: any) => {
+      const va = a[companiesSortKey];
+      const vb = b[companiesSortKey];
+      let cmp = 0;
+      if (typeof va === 'number' && typeof vb === 'number') cmp = va - vb;
+      else if (va < vb) cmp = -1;
+      else if (va > vb) cmp = 1;
+      return companiesSortDir === 'asc' ? cmp : -cmp;
+    });
+    return rows;
+  }, [companies, companiesSortKey, companiesSortDir]);
 
   const load = async (sym: string) => {
     if (!sym.trim()) return;
@@ -443,8 +484,100 @@ export default function GuidanceCheck() {
 
       {loading && <div style={{textAlign:'center',padding:32,color:'#475569'}}>Loading report…</div>}
 
+      {/* Companies table — browseable, sortable, click row for details */}
+      <div style={{marginBottom:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+          <h3 style={{fontSize:'0.95rem',fontWeight:800,letterSpacing:'0.06em',textTransform:'uppercase',color:'#94a3b8',margin:0}}>
+            📊 Companies ({sortedCompanies.length})
+          </h3>
+          {selectedSymbol && (
+            <span style={{fontSize:'0.75rem',color:'#64748b'}}>Selected: <b style={{color:'#4ade80'}}>{selectedSymbol}</b></span>
+          )}
+        </div>
+        {companiesError && <div style={{color:'#f87171',fontSize:'0.8rem',marginBottom:8}}>{companiesError}</div>}
+        {companiesLoading && sortedCompanies.length === 0 ? (
+          <div style={{textAlign:'center',padding:24,color:'#475569',fontSize:'0.85rem'}}>Loading companies…</div>
+        ) : (
+          <div style={{overflowX:'auto',border:'1px solid #1f2937',borderRadius:8}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.82rem'}}>
+              <thead style={{background:'#0f172a'}}>
+                <tr>
+                  {[
+                    ['symbol',          'Symbol',     70],
+                    ['accuracy_pct',    'Score',      60],
+                    ['current_verdict', 'Verdict',    110],
+                    ['trend',           'Trend',      90],
+                    ['total_promises',  'Promises',   70],
+                    ['consecutive_miss_quarters', 'Lag', 50],
+                    ['last_updated',    'Updated',    90],
+                  ].map(([k, label, w]) => (
+                    <th key={k}
+                      onClick={() => {
+                        if (companiesSortKey === k) setCompaniesSortDir(companiesSortDir === 'asc' ? 'desc' : 'asc');
+                        else { setCompaniesSortKey(k); setCompaniesSortDir(k === 'symbol' ? 'asc' : 'desc'); }
+                      }}
+                      style={{
+                        width: w, padding:'8px 10px', textAlign:'left',
+                        color:'#94a3b8', fontWeight:700, fontSize:'0.7rem',
+                        textTransform:'uppercase', letterSpacing:'0.06em',
+                        borderBottom:'1px solid #1f2937',
+                        cursor:'pointer', userSelect:'none',
+                        whiteSpace:'nowrap',
+                      }}>
+                      {label}
+                      <span style={{marginLeft:4,color:'#4ade80'}}>
+                        {companiesSortKey === k ? (companiesSortDir === 'asc' ? '↑' : '↓') : '↕'}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCompanies.length === 0 ? (
+                  <tr><td colSpan={7} style={{padding:24,textAlign:'center',color:'#64748b'}}>
+                    No companies yet. Run the data pipeline (scripts/pipeline_cloud.sh) to populate credibility scores.
+                  </td></tr>
+                ) : sortedCompanies.map((row, i) => {
+                  const zc = ZONE_COLORS[row.current_verdict] || ZONE_COLORS.WATCHING;
+                  const isSelected = row.symbol === selectedSymbol;
+                  return (
+                    <tr key={row.symbol}
+                      onClick={() => selectCompany(row.symbol)}
+                      style={{
+                        background: isSelected ? '#1e293b' : (i % 2 === 0 ? '#0a0e1a' : '#0f172a'),
+                        borderLeft: isSelected ? `3px solid #4ade80` : '3px solid transparent',
+                        cursor:'pointer',
+                      }}>
+                      <td style={{padding:'7px 10px',color:'#e2e8f0',fontWeight:700}}>{row.symbol}</td>
+                      <td style={{padding:'7px 10px',color:'#cbd5e1'}}>
+                        {row.accuracy_pct != null ? Number(row.accuracy_pct).toFixed(0) : '—'}
+                      </td>
+                      <td style={{padding:'7px 10px'}}>
+                        <span style={{background:zc.bg, color:zc.fg, padding:'2px 8px', borderRadius:10, fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.04em', border:`1px solid ${zc.bd}40`}}>
+                          {row.current_verdict}
+                        </span>
+                      </td>
+                      <td style={{padding:'7px 10px', color: TREND_COLORS[row.trend] || '#94a3b8', fontSize:'0.78rem'}}>
+                        {row.trend || '—'}
+                      </td>
+                      <td style={{padding:'7px 10px',color:'#94a3b8',textAlign:'center'}}>{row.total_promises || 0}</td>
+                      <td style={{padding:'7px 10px',color: row.consecutive_miss_quarters > 0 ? '#f87171' : '#94a3b8',textAlign:'center',fontWeight: row.consecutive_miss_quarters > 0 ? 700 : 400}}>
+                        {row.consecutive_miss_quarters > 0 ? `⚠ ${row.consecutive_miss_quarters}Q` : '—'}
+                      </td>
+                      <td style={{padding:'7px 10px',color:'#64748b',fontSize:'0.75rem'}}>
+                        {row.last_updated ? row.last_updated.substring(0, 10) : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {report && (
-        <div style={{background:'#111827',border:'1px solid #1f2937',borderRadius:14,padding:24}}>
+        <div id="mgmt-perf-section" style={{background:'#111827',border:'1px solid #1f2937',borderRadius:14,padding:24,marginTop:24}}>
           {/* Header */}
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16,marginBottom:20}}>
             <div>
