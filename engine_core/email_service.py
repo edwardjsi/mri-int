@@ -1364,22 +1364,22 @@ def _build_promise_row(item: dict, color: str) -> str:
     ptext = item.get('promise', '')
     ptarget = item.get('target', '')
     pdeadline = item.get('deadline', '')
+    ppromised_in = item.get('promised_in', '')
+    pverified_in = item.get('verified_in', '')
     pactual = item.get('actual') or '—'
 
-    target_html = ''
-    if ptarget:
-        target_html = '<span style="margin-right:6px">🎯 Target: <b style="color:#94a3b8">' + ptarget + '</b></span>'
-    deadline_html = ''
-    if pdeadline:
-        deadline_html = '<span>📅 Due: <b style="color:#94a3b8">' + pdeadline + '</b></span>'
+    target_html = '<span style="margin-right:6px">🎯 <b style="color:#94a3b8">' + ptarget + '</b></span>' if ptarget else ''
+    deadline_html = '<span>📅 <b style="color:#94a3b8">' + pdeadline + '</b></span>' if pdeadline else ''
+    promised_html = '<span>📣 ' + ppromised_in + '</span>' if ppromised_in else ''
+    verified_html = '<span>✅ ' + pverified_in + '</span>' if pverified_in else ''
 
     return (
         '<tr>'
         '<td style="padding:10px 14px; border-left:3px solid ' + color + '; background:#1a1a2e; vertical-align:top">'
         '<div style="color:#e2e8f0; font-size:0.875rem; margin-bottom:4px">' + ptext + '</div>'
-        '<div style="color:#64748b; font-size:0.72rem;">'
-        '<span style="background:#1e293b; padding:1px 6px; border-radius:3px; color:#94a3b8; margin-right:6px">' + ptype + '</span>'
-        + target_html + deadline_html +
+        '<div style="color:#64748b; font-size:0.7rem;">'
+        '<span style="background:#1e293b; padding:1px 6px; border-radius:3px; color:#94a3b8; margin-right:5px; font-size:0.65rem">' + ptype + '</span>'
+        + target_html + deadline_html + promised_html + verified_html +
         '</div></td>'
         '<td style="padding:10px 14px; background:#1a1a2e; text-align:center; vertical-align:top">'
         '<div style="font-size:0.8rem; color:#e2e8f0">' + pactual + '</div>'
@@ -1421,8 +1421,11 @@ def build_guidance_report_email_html(payload: dict) -> str:
     achieved = payload.get("achieved", [])
     missed = payload.get("missed", [])
     partial = payload.get("partial", [])
-    pending = payload.get("pending", [])
+    upcoming = payload.get("upcoming", [])
     total_verified = payload.get("total_verified", 0)
+    integrity_signal = payload.get("integrity_signal", "") or ""
+    qc = payload.get("quarter_comparison", {}) or {}
+    timeline = payload.get("integrity_timeline", {}) or {}
     report_date = payload.get("report_date", str(date.today()))
     trend = (payload.get("credibility") or {}).get("trend", "") or ""
 
@@ -1434,11 +1437,11 @@ def build_guidance_report_email_html(payload: dict) -> str:
     achieved_rows = "".join(_build_promise_row(p, "#22c55e") for p in achieved)
     missed_rows = "".join(_build_promise_row(p, "#ef4444") for p in missed)
     partial_rows = "".join(_build_promise_row(p, "#f59e0b") for p in partial)
-    pending_rows = "".join(_build_pending_row(p, "#3b82f6") for p in pending[:8])
+    upcoming_rows = "".join(_build_pending_row(p, "#3b82f6") for p in upcoming[:8])
 
-    pending_note = ""
-    if len(pending) > 8:
-        pending_note = '<p style="color:#475569; font-size:0.78rem; margin-top:8px">+' + str(len(pending) - 8) + ' more pending promises not shown</p>'
+    upcoming_note = ""
+    if len(upcoming) > 8:
+        upcoming_note = '<p style="color:#475569; font-size:0.78rem; margin-top:8px">+' + str(len(upcoming) - 8) + ' more upcoming promises not shown</p>'
 
     # Verified section
     achieved_section = ""
@@ -1483,19 +1486,19 @@ def build_guidance_report_email_html(payload: dict) -> str:
             '<tbody>' + partial_rows + '</tbody></table></div>'
         )
 
-    pending_section = ""
-    if pending:
-        p_label = "promise" if len(pending) == 1 else "promises"
-        pending_section = (
+    upcoming_section = ""
+    if upcoming:
+        p_label = "promise" if len(upcoming) == 1 else "promises"
+        upcoming_section = (
             '<div style="margin-top:16px">'
             '<div style="color:#60a5fa; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:6px 0; border-bottom:1px solid #1e3a5f; margin-bottom:8px">'
-            '⏳ Upcoming — ' + str(len(pending)) + ' ' + p_label + ' to watch</div>'
+            '⏳ Upcoming — ' + str(len(upcoming)) + ' ' + p_label + ' to watch</div>'
             '<table style="width:100%; border-collapse:collapse; font-size:0.85rem">'
             '<thead><tr style="color:#475569; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em">'
             '<th style="padding:4px 14px; text-align:left">Promise</th>'
             '<th style="padding:4px 14px; text-align:center">Deadline</th></tr></thead>'
-            '<tbody>' + pending_rows + '</tbody></table>'
-            + pending_note + '</div>'
+            '<tbody>' + upcoming_rows + '</tbody></table>'
+            + upcoming_note + '</div>'
         )
 
     # Summary bar
@@ -1524,14 +1527,14 @@ def build_guidance_report_email_html(payload: dict) -> str:
             '<span style="color:#f59e0b">⚠️ ' + str(len(partial)) + ' Partial</span>'
             '</div>'
             '<div style="display:flex; gap:12px; font-size:0.8rem; color:#64748b">'
-            '<span>⏳ ' + str(len(pending)) + ' Pending</span><span>·</span><span>' + trend_str + '</span>'
+            '<span>⏳ ' + str(len(upcoming)) + ' Upcoming</span><span>·</span><span>' + trend_str + '</span>'
             '</div>'
             '</div></div></div>'
         )
     else:
         summary_bar = (
             '<div style="background:#0d1421; border:1px solid #1a2236; border-radius:10px; padding:14px 18px; margin:16px 0; color:#475569; font-size:0.85rem; text-align:center">'
-            '⏳ No verified promises yet — ' + str(len(pending)) + ' pending. Run Prime All Stocks to trigger verification.'
+            '⏳ No verified promises yet — ' + str(len(upcoming)) + ' upcoming. Run Prime All Stocks to trigger verification.'
             '</div>'
         )
 
@@ -1567,7 +1570,7 @@ def build_guidance_report_email_html(payload: dict) -> str:
         + summary_bar +
 
         # Promise sections
-        + achieved_section + missed_section + partial_section + pending_section +
+        + achieved_section + missed_section + partial_section + upcoming_section +
 
         # Footer
         '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'
@@ -1576,10 +1579,136 @@ def build_guidance_report_email_html(payload: dict) -> str:
         'Promises are verified against actual quarterly financials. Built on MRI Platform.'
         '</div></div>'
 
+        # ── Integrity Signal ───────────────────────────────────────
+        + (_build_integrity_signal_email_section(integrity_signal, accuracy)) +
+
+        # ── Quarter Comparison ──────────────────────────────────
+        + (_build_quarter_comparison_email_section(qc)) +
+
+        # ── Integrity Timeline ──────────────────────────────────
+        + (_build_integrity_timeline_email_section(timeline)) +
+
         '</div></body></html>'
     )
 
     return html_body
+
+
+def _build_integrity_signal_email_section(integrity_signal: str, accuracy: float) -> str:
+    if not integrity_signal:
+        return ''
+    sig_class = 'high' if accuracy >= 75 else 'moderate' if accuracy >= 60 else 'low' if accuracy >= 40 else 'insufficient'
+    sig_icon  = {'high':'🟢','moderate':'🟡','low':'🔴','insufficient':'⚪'}[sig_class]
+    bg_colors = {'high':'#14532d30','moderate':'#451a0320','low':'#7f1d1d20','insufficient':'#1e293b'}
+    bd_colors = {'high':'#22c55e40','moderate':'#f59e0b30','low':'#f8717140','insufficient':'#334155'}
+    tx_colors = {'high':'#86efac','moderate':'#fde68a','low':'#fca5a5','insufficient':'#94a3b8'}
+    return (
+        '<div style="border-radius:10px; padding:14px 16px; margin:16px 0; '
+        'background:' + bg_colors[sig_class] + '; border:1px solid ' + bd_colors[sig_class] + '; '
+        'color:' + tx_colors[sig_class] + '; font-size:0.82rem; line-height:1.5; '
+        'display:flex; gap:12px; align-items:flex-start">'
+        '<div style="font-size:1.1rem; flex-shrink:0">' + sig_icon + '</div>'
+        '<div>' + integrity_signal + '</div>'
+        '</div>'
+    )
+
+
+def _build_quarter_comparison_email_section(qc: dict) -> str:
+    if not qc or not qc.get('older_quarter'):
+        return ''
+    older = qc.get('older_promises', [])
+    newer = qc.get('newer_promises', [])
+    os = qc.get('older_summary', {})
+    sig = qc.get('integrity_signal', '') or ''
+
+    def status_badge(s):
+        if s == 'ACHIEVED': return '<span style="color:#4ade80;font-weight:700">✅</span>'
+        if s == 'MISSED':   return '<span style="color:#f87171;font-weight:700">❌</span>'
+        if s == 'PARTIAL':  return '<span style="color:#fbbf24;font-weight:700">⚠️</span>'
+        return '<span style="color:#475569">⏳</span>'
+
+    older_rows = ''.join(
+        '<div style="font-size:0.75rem;padding:3px 0;border-bottom:1px solid #1f2937">'
+        + status_badge(p.get('status'))
+        + ' <span style="background:#1e293b;color:#94a3b8;padding:0 4px;border-radius:2px;margin:0 4px;font-size:0.62rem">' + (p.get('type') or 'OTHER') + '</span>'
+        + ' ' + (p.get('promise') or '')[:55]
+        + '</div>' for p in older
+    ) if older else '<div style="color:#475569;font-size:0.75rem;padding:4px 0">No extracted promises for this quarter</div>'
+
+    newer_rows = ''.join(
+        '<div style="font-size:0.75rem;padding:3px 0;border-bottom:1px solid #1f2937">'
+        + '<span style="color:#60a5fa;font-weight:700">NEW </span>'
+        + ' <span style="background:#1e293b;color:#94a3b8;padding:0 4px;border-radius:2px;margin:0 4px;font-size:0.62rem">' + (p.get('type') or 'OTHER') + '</span>'
+        + ' ' + (p.get('promise') or '')[:50]
+        + '</div>' for p in newer
+    ) if newer else '<div style="color:#475569;font-size:0.75rem;padding:4px 0">No extracted promises for this quarter</div>'
+
+    return (
+        '<div style="background:#111827;border:1px solid #1f2937;border-radius:14px;padding:20px;margin:16px 0">'
+        '<div style="color:#60a5fa;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px">'
+        '📊 Quarter Comparison — Management Track Record</div>'
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+        # Older quarter
+        '<div style="background:#0d1421;border:1px solid #1f2937;border-radius:8px;padding:12px">'
+        '<div style="color:#94a3b8;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">'
+        '📣 ' + qc.get('older_quarter','') + ' · What they committed</div>'
+        '<div style="font-size:0.75rem;color:#475569;margin-bottom:6px">'
+        '<span>Total: <b style="color:#e2e8f0">' + str(os.get('total',0)) + '</b></span>'
+        '<span style="margin-left:10px;color:#4ade80">✅ ' + str(os.get('achieved',0)) + '</span>'
+        '<span style="margin-left:8px;color:#f87171">❌ ' + str(os.get('missed',0)) + '</span>'
+        '<span style="margin-left:8px;color:#475569">⏳ ' + str(os.get('pending',0)) + '</span>'
+        '</div>'
+        + older_rows +
+        '</div>'
+        # Newer quarter
+        '<div style="background:#0d1421;border:1px solid #1e3a5f;border-radius:8px;padding:12px">'
+        '<div style="color:#94a3b8;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">'
+        '📣 ' + qc.get('newer_quarter','') + ' · Latest commitments</div>'
+        '<div style="font-size:0.75rem;color:#475569;margin-bottom:6px">'
+        '<span>New promises: <b style="color:#60a5fa">' + str(len(newer)) + '</b></span>'
+        '</div>'
+        + newer_rows +
+        '</div>'
+        '</div>'
+        + ('<div style="color:#475569;font-size:0.72rem;margin-top:8px;font-style:italic">' + sig + '</div>' if sig else '') +
+        '</div>'
+    )
+
+
+def _build_integrity_timeline_email_section(timeline: dict) -> str:
+    if not timeline:
+        return ''
+    keys = sorted(timeline.keys(), reverse=True)
+    max_total = max((timeline[k].get('total', 0) for k in keys), default=1)
+    rows = ''
+    for q in keys:
+        d = timeline[q]
+        total = d.get('total', 0)
+        achieved = d.get('achieved', 0)
+        missed   = d.get('missed', 0)
+        bar_pct  = (total / max_total) * 100 if max_total > 0 else 0
+        bar_color = '#22c55e' if total > 0 and achieved/total >= 0.7 else '#f59e0b' if total > 0 and achieved/total >= 0.4 else '#ef4444'
+        rows += (
+            '<tr>'
+            '<td style="padding:5px 8px;font-size:0.75rem;color:#94a3b8;font-weight:600;min-width:60px">' + q + '</td>'
+            '<td style="padding:5px 8px;flex:1">'
+            '<div style="background:#1f2937;border-radius:3px;height:6px;width:' + str(bar_pct) + '%;margin:auto 0">'
+            '<div style="height:6px;border-radius:3px;background:' + bar_color + ';width:100%;opacity:0.7"></div>'
+            '</div>'
+            '</td>'
+            '<td style="padding:5px 8px;font-size:0.72rem;text-align:right;white-space:nowrap">'
+            '<span style="color:#4ade80">' + str(achieved) + '✅</span>'
+            '<span style="color:#f87171;margin-left:4px">' + str(missed) + '❌</span>'
+            '<span style="color:#475569;margin-left:4px">' + str(total) + ' tot</span>'
+            '</td></tr>'
+        )
+    return (
+        '<div style="background:#111827;border:1px solid #1f2937;border-radius:14px;padding:20px;margin:16px 0">'
+        '<div style="color:#94a3b8;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px">'
+        '📈 Integrity by Quarter</div>'
+        '<table style="width:100%;border-collapse:collapse">' + rows + '</table>'
+        '</div>'
+    )
 
 
 if __name__ == "__main__":
