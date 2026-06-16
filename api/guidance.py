@@ -653,6 +653,124 @@ def send_guidance_report(
 
 # ── Original dashboard endpoint (kept for backwards compat) ─────────────
 
+@router.get("/conviction")
+def get_conviction(
+    source: str = Query("all", pattern="^(all|digital_twin|112co|watchlist)$"),
+    verdict: str = Query("any", pattern="^(any|ADD ZONE|HOLD ZONE|REDUCE ZONE|THESIS BROKEN|WATCHING)$"),
+    limit: int = Query(50, ge=1, le=200),
+    conn=Depends(get_db),
+):
+    """
+    ConvictionEngine — unified ranking of management integrity across the
+    two lists the user cares about (Digital Twin holdings + 112 Co Universe).
+    Default sort: worst credibility first (lowest accuracy_pct, highest lag).
+    """
+    cur = conn.cursor()
+
+    # Build the symbol universe based on source filter
+    where_clauses = ["1=1"]
+    params: list = []
+
+    if source in ("all", "digital_twin"):
+        # Digital Twin = client_external_holdings (Decision 036/088)
+        cur.execute(
+            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings"
+        )
+        dt_syms = {r["symbol"] for r in cur.fetchall()}
+    else:
+        dt_syms = set()
+
+    if source in ("all", "watchlist"):
+        cur.execute(
+            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist"
+        )
+        wl_syms = {r["symbol"] for r in cur.fetchall()}
+    else:
+        wl_syms = set()
+
+    universe = sorted(dt_syms | wl_syms)
+    if not universe:
+        return {"source": source, "summary": {"total": 0}, "rows": []}
+
+    # Tag each symbol with its source(s)
+    sym_sources: dict = {s: [] for s in universe}
+    for s in dt_syms:
+        sym_sources[s].append("digital_twin")
+    for s in wl_syms:
+        sym_sources[s].append("watchlist")
+
+    # Restrict verdict filter
+    verdict_clause = ""
+    if verdict != "any":
+        verdict_clause = "AND current_verdict = %s"
+        params.append(verdict)
+
+    # Fetch credibility scores for the universe
+    placeholder = ",".join(["%s"] * len(universe))
+    cur.execute(
+        f"""
+        SELECT symbol, total_promises, achieved_count, missed_count,
+               avg_variance_pct, trend,
+               consecutive_miss_quarters, lag_score,
+               current_verdict, previous_verdict, last_verdict_flip, last_updated
+        FROM management_credibility_scores
+        WHERE symbol IN ({placeholder}) {verdict_clause}
+        """,
+        universe + params,
+    )
+    rows = cur.fetchall()
+    score_by_sym = {r["symbol"]: r for r in rows}
+
+    # Build the unified output: every universe symbol with sources annotated
+    out = []
+    for symbol in universe:
+        r = score_by_sym.get(symbol)
+        if not r:
+            # Skip symbols with no credibility data yet (not yet scored)
+            continue
+        total = r["total_promises"] or 0
+        accuracy = float(r["avg_variance_pct"]) if r["avg_variance_pct"] is not None else 0.0
+        trend = r["trend"] or "INSUFFICIENT_DATA"
+        current_verdict = r["current_verdict"] or "WATCHING"
+        out.append({
+            "symbol": symbol,
+            "sources": sym_sources.get(symbol, []),
+            "accuracy_pct": round(accuracy, 2),
+            "trend": trend,
+            "total_promises": total,
+            "achieved_count": r["achieved_count"] or 0,
+            "missed_count": r["missed_count"] or 0,
+            "avg_variance_pct": float(r["avg_variance_pct"]) if r["avg_variance_pct"] is not None else None,
+            "consecutive_miss_quarters": r["consecutive_miss_quarters"] or 0,
+            "lag_score": float(r["lag_score"] or 0),
+            "current_verdict": current_verdict,
+            "previous_verdict": r["previous_verdict"],
+            "verdict_flipped": (
+                r["previous_verdict"] is not None
+                and r["previous_verdict"] != current_verdict
+            ),
+            "last_verdict_flip": str(r["last_verdict_flip"]) if r["last_verdict_flip"] else None,
+            "last_updated": str(r["last_updated"]) if r["last_updated"] else None,
+        })
+
+    # Sort: worst credibility first → lowest accuracy, then highest lag
+    out.sort(key=lambda x: (x["accuracy_pct"], -x["lag_score"]))
+    out = out[:limit]
+
+    # Summary counts for the UI header
+    summary = {
+        "total": len(out),
+        "ADD ZONE": sum(1 for x in out if x["current_verdict"] == "ADD ZONE"),
+        "HOLD ZONE": sum(1 for x in out if x["current_verdict"] == "HOLD ZONE"),
+        "REDUCE ZONE": sum(1 for x in out if x["current_verdict"] == "REDUCE ZONE"),
+        "THESIS BROKEN": sum(1 for x in out if x["current_verdict"] == "THESIS BROKEN"),
+        "WATCHING": sum(1 for x in out if x["current_verdict"] == "WATCHING"),
+        "lagging_count": sum(1 for x in out if x["consecutive_miss_quarters"] >= 2),
+        "flipped_count": sum(1 for x in out if x["verdict_flipped"]),
+    }
+    return {"source": source, "summary": summary, "rows": out}
+
+
 @router.get("/{symbol}")
 def get_guidance_dashboard(symbol: str, conn=Depends(get_db)):
     """Single-screen GuidanceCheck dashboard for one company."""
@@ -745,145 +863,6 @@ def get_credibility_score(symbol: str, conn=Depends(get_db)):
     from engine_guidance.narrative_credibility_scorer import NarrativeCredibilityScorer
     scorer = NarrativeCredibilityScorer()
     return scorer.compute_score(symbol)
-
-
-# ── ConvictionEngine (Decision 097) ──────────────────────────────────
-
-
-@router.get("/conviction")
-def get_conviction(
-    source: str = Query("all", pattern="^(all|digital_twin|112co|watchlist)$"),
-    verdict: str = Query("any", pattern="^(any|ADD ZONE|HOLD ZONE|REDUCE ZONE|THESIS BROKEN|WATCHING)$"),
-    limit: int = Query(50, ge=1, le=200),
-    conn=Depends(get_db),
-):
-    """
-    ConvictionEngine — unified ranking of management integrity across the
-    two lists the user cares about (Digital Twin holdings + 112 Co Universe).
-
-    Default sort: worst credibility first (lowest accuracy_pct, highest lag).
-    """
-    cur = conn.cursor()
-
-    # Build the symbol universe based on source filter
-    where_clauses = ["1=1"]
-    params: list = []
-
-    if source in ("all", "digital_twin"):
-        # Digital Twin = client_external_holdings (Decision 036/088)
-        cur.execute(
-            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_external_holdings"
-        )
-        dt_syms = {r["symbol"] for r in cur.fetchall()}
-    else:
-        dt_syms = set()
-
-    if source in ("all", "watchlist"):
-        cur.execute(
-            "SELECT DISTINCT UPPER(symbol) AS symbol FROM client_watchlist"
-        )
-        wl_syms = {r["symbol"] for r in cur.fetchall()}
-    else:
-        wl_syms = set()
-
-    if source in ("all", "112co"):
-        cur.execute(
-            "SELECT DISTINCT UPPER(symbol) AS symbol FROM universe_112co WHERE is_active=TRUE"
-        )
-        co_syms = {r["symbol"] for r in cur.fetchall()}
-    else:
-        co_syms = set()
-
-    universe = sorted(dt_syms | wl_syms | co_syms)
-    if not universe:
-        return {"source": source, "count": 0, "rows": []}
-
-    # Tag each symbol with its source(s) — a stock can be in multiple lists
-    sym_sources: dict[str, list[str]] = {s: [] for s in universe}
-    if dt_syms:
-        for s in dt_syms:
-            sym_sources[s].append("digital_twin")
-    if wl_syms:
-        for s in wl_syms:
-            sym_sources[s].append("watchlist")
-    if co_syms:
-        for s in co_syms:
-            sym_sources[s].append("112co")
-
-    # Fetch credibility rows for these symbols
-    cur.execute(
-        """SELECT symbol, total_promises, achieved_count, missed_count,
-                  accuracy_pct, avg_variance_pct, trend,
-                  consecutive_miss_quarters, lag_score, last_verdict_flip,
-                  current_verdict, previous_verdict, last_updated
-           FROM management_credibility_scores
-           WHERE symbol = ANY(%s)""",
-        (universe,),
-    )
-    rows = cur.fetchall()
-
-    out = []
-    for r in rows:
-        symbol = r["symbol"]
-        accuracy = float(r["accuracy_pct"] or 0)
-        total = r["total_promises"] or 0
-        trend = r["trend"]
-        current_verdict = r["current_verdict"]
-
-        # Compute verdict if not already stored (legacy rows may lack it)
-        if not current_verdict:
-            if total < 3:
-                current_verdict = "WATCHING"
-            elif accuracy >= 75:
-                current_verdict = "ADD ZONE" if trend in ("IMPROVING", "STABLE", "INSUFFICIENT_DATA", None) else "HOLD ZONE"
-            elif accuracy >= 60:
-                current_verdict = "HOLD ZONE"
-            elif accuracy >= 40:
-                current_verdict = "REDUCE ZONE"
-            else:
-                current_verdict = "THESIS BROKEN"
-
-        if verdict != "any" and current_verdict != verdict:
-            continue
-
-        out.append({
-            "symbol": symbol,
-            "sources": sym_sources.get(symbol, []),
-            "accuracy_pct": round(accuracy, 2),
-            "trend": trend,
-            "total_promises": total,
-            "achieved_count": r["achieved_count"] or 0,
-            "missed_count": r["missed_count"] or 0,
-            "avg_variance_pct": float(r["avg_variance_pct"]) if r["avg_variance_pct"] is not None else None,
-            "consecutive_miss_quarters": r["consecutive_miss_quarters"] or 0,
-            "lag_score": float(r["lag_score"] or 0),
-            "current_verdict": current_verdict,
-            "previous_verdict": r["previous_verdict"],
-            "verdict_flipped": (
-                r["previous_verdict"] is not None
-                and r["previous_verdict"] != current_verdict
-            ),
-            "last_verdict_flip": str(r["last_verdict_flip"]) if r["last_verdict_flip"] else None,
-            "last_updated": str(r["last_updated"]) if r["last_updated"] else None,
-        })
-
-    # Sort: worst credibility first → lowest accuracy, then highest lag
-    out.sort(key=lambda x: (x["accuracy_pct"], -x["lag_score"]))
-    out = out[:limit]
-
-    # Summary counts for the UI header
-    summary = {
-        "total": len(out),
-        "ADD ZONE": sum(1 for x in out if x["current_verdict"] == "ADD ZONE"),
-        "HOLD ZONE": sum(1 for x in out if x["current_verdict"] == "HOLD ZONE"),
-        "REDUCE ZONE": sum(1 for x in out if x["current_verdict"] == "REDUCE ZONE"),
-        "THESIS BROKEN": sum(1 for x in out if x["current_verdict"] == "THESIS BROKEN"),
-        "WATCHING": sum(1 for x in out if x["current_verdict"] == "WATCHING"),
-        "lagging_count": sum(1 for x in out if x["consecutive_miss_quarters"] >= 2),
-        "flipped_count": sum(1 for x in out if x["verdict_flipped"]),
-    }
-    return {"source": source, "summary": summary, "rows": out}
-
 
 @router.post("/scan/{symbol}")
 def trigger_guidance_scan(
