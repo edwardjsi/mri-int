@@ -56,19 +56,285 @@ function toast(msg, isError=false) {
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
 }
 
+// ── Credibility hero ────────────────────────────────────────────────
+const ZONE_COLORS: Record<string, { bg: string; fg: string; bd: string }> = {
+  'ADD ZONE':      { bg: '#14532d', fg: '#4ade80', bd: '#166534' },
+  'HOLD ZONE':     { bg: '#451a03', fg: '#fbbf24', bd: '#78350f' },
+  'REDUCE ZONE':   { bg: '#7f1d1d', fg: '#f87171', bd: '#991b1b' },
+  'THESIS BROKEN': { bg: '#500724', fg: '#fda4af', bd: '#831843' },
+  'WATCHING':      { bg: '#1e293b', fg: '#94a3b8', bd: '#334155' },
+};
+
+const TREND_COLORS: Record<string, string> = {
+  IMPROVING: '#4ade80', STABLE: '#94a3b8', DETERIORATING: '#f87171',
+  INSUFFICIENT_DATA: '#64748b',
+};
+
+const STATUS_COLORS: Record<string, { bg: string; fg: string; border: string }> = {
+  FULFILLED:              { bg: '#0f1f17', fg: '#4ade80', border: '#22c55e' },
+  REVISED_UP:             { bg: '#0a1f1f', fg: '#5eead4', border: '#14b8a6' },
+  ON_TRACK:               { bg: '#0a1929', fg: '#60a5fa', border: '#3b82f6' },
+  PARTIALLY_FULFILLED:    { bg: '#1c1306', fg: '#fbbf24', border: '#f59e0b' },
+  REVISED_DOWN:           { bg: '#1f1316', fg: '#fb923c', border: '#ea580c' },
+  MISSED:                 { bg: '#1f0a0a', fg: '#f87171', border: '#ef4444' },
+  PENDING:                { bg: '#0f172a', fg: '#94a3b8', border: '#475569' },
+  NEW:                    { bg: '#1e1b4b', fg: '#a5b4fc', border: '#6366f1' },
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  FULFILLED: '✅ Kept',
+  REVISED_UP: '↑ Revised Up',
+  ON_TRACK: '🟢 On Track',
+  PARTIALLY_FULFILLED: '⚠️ Partial',
+  REVISED_DOWN: '↓ Revised Down',
+  MISSED: '❌ Broken',
+  PENDING: '⏳ Pending',
+  NEW: '🆕 New',
+};
+
+const STATUS_ORDER = [
+  'FULFILLED', 'REVISED_UP', 'ON_TRACK', 'PARTIALLY_FULFILLED',
+  'REVISED_DOWN', 'MISSED', 'PENDING', 'NEW',
+];
+
+function CredibilityHero({ cred }: { cred: any }) {
+  const score = cred.score;
+  const verdict = cred.current_verdict || 'WATCHING';
+  const previousVerdict = cred.previous_verdict;
+  const trend = cred.trend || 'INSUFFICIENT_DATA';
+  const counts = cred.counts || {};
+  const nActionable = cred.actionable_promises || 0;
+  const nTotal = cred.total_promises || 0;
+  const nPending = (counts.PENDING || 0) + (counts.NEW || 0);
+  const lag = cred.consecutive_miss_quarters || 0;
+  const zc = ZONE_COLORS[verdict] || ZONE_COLORS['WATCHING'];
+
+  // Verdict flip indicator
+  let flipChip = null;
+  if (previousVerdict && previousVerdict !== verdict) {
+    const isPromotion = ['ADD ZONE', 'HOLD ZONE'].includes(verdict) ||
+                        (verdict === 'REDUCE ZONE' && previousVerdict === 'THESIS BROKEN');
+    const isDemotion = ['THESIS BROKEN', 'REDUCE ZONE', 'WATCHING'].includes(verdict) &&
+                       previousVerdict && !['THESIS BROKEN', 'REDUCE ZONE'].includes(previousVerdict);
+    const arrow = isPromotion && !isDemotion ? '↑' : isDemotion ? '↓' : '→';
+    const color = isPromotion ? '#4ade80' : isDemotion ? '#f87171' : '#94a3b8';
+    flipChip = (
+      <span style={{background:'#0f172a', color, padding:'4px 10px', borderRadius:12, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', border:`1px solid ${color}40`}}>
+        {arrow} {previousVerdict} → {verdict}
+      </span>
+    );
+  }
+
+  return (
+    <div style={{
+      background:'linear-gradient(135deg, #0a1f1a 0%, #0a1929 100%)',
+      border:'1px solid #1e3a5f',
+      borderRadius:14,
+      padding:20,
+      marginBottom:20,
+      boxShadow:'0 0 0 1px #1e3a5f40 inset',
+    }}>
+      <div style={{display:'flex',alignItems:'flex-start',gap:16,flexWrap:'wrap'}}>
+        {/* Score ring */}
+        <div style={{position:'relative', flexShrink:0}}>
+          <svg width="88" height="88" viewBox="0 0 88 88" style={{transform:'rotate(-90deg)'}}>
+            <circle cx="44" cy="44" r="36" fill="none" stroke="#1f2937" strokeWidth="7"/>
+            <circle cx="44" cy="44" r="36" fill="none" stroke={zc.fg} strokeWidth="7"
+              strokeDasharray={2*Math.PI*36}
+              strokeDashoffset={2*Math.PI*36 - (score||0)/100 * 2*Math.PI*36}
+              strokeLinecap="round"
+              style={{transition:'stroke-dashoffset 1s ease'}}/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <div style={{fontSize:'1.4rem',fontWeight:800,color:zc.fg,lineHeight:1}}>
+              {score != null ? score.toFixed(0) : '—'}
+            </div>
+            <div style={{fontSize:'0.55rem',color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',marginTop:2}}>
+              Trust Score
+            </div>
+          </div>
+        </div>
+
+        {/* Details */}
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:8}}>
+            <span style={{background:zc.bg, color:zc.fg, padding:'5px 12px', borderRadius:14, fontSize:'0.78rem', fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', border:`1px solid ${zc.bd}`}}>
+              {verdict}
+            </span>
+            {flipChip}
+            <span style={{background:'#0f172a', color: TREND_COLORS[trend] || '#64748b', padding:'5px 12px', borderRadius:14, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', border:`1px solid ${(TREND_COLORS[trend]||'#64748b')}40`}}>
+              📈 {trend.replace('_', ' ')}
+            </span>
+            {lag > 0 && (
+              <span style={{background:'#1f0a0a', color:'#f87171', padding:'5px 12px', borderRadius:14, fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.04em', border:'1px solid #ef444440'}}>
+                ⚠ {lag}Q miss streak
+              </span>
+            )}
+          </div>
+          <div style={{fontSize:'0.82rem',color:'#cbd5e1',lineHeight:1.5,marginBottom:8}}>
+            Based on <b style={{color:'#e2e8f0'}}>{nActionable} of {nTotal}</b> promises that have an actionable status.
+            {nPending > 0 && <span style={{color:'#64748b'}}> {nPending} still pending future verification.</span>}
+          </div>
+          <div style={{display:'flex',gap:10,flexWrap:'wrap',fontSize:'0.74rem'}}>
+            {STATUS_ORDER.map(s => (counts[s] || 0) > 0 && (
+              <span key={s} style={{color: STATUS_COLORS[s].fg, fontWeight:600}}>
+                {STATUS_LABELS[s]}: <b>{counts[s]}</b>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PromiseCard({ p }: { p: any }) {
+  const sc = STATUS_COLORS[p.current_status] || STATUS_COLORS.PENDING;
+  const tv = p.target_value;
+  const targetStr = tv != null
+    ? `${tv}${p.target_unit ? ' ' + p.target_unit : ''}${p.target_date ? ' · ' + p.target_date : ''}`
+    : (p.target_date || '');
+  const sbq = p.status_by_quarter || {};
+  const ebq = p.evidence_by_quarter || {};
+  const qsbq = p.quote_source_by_quarter || {};
+  const quarters = Object.keys(sbq).sort();
+
+  return (
+    <div style={{
+      background:'#0f172a',
+      borderRadius:8,
+      padding:'12px 14px',
+      marginBottom:8,
+      borderLeft:`3px solid ${sc.border}`,
+    }}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10,marginBottom:6}}>
+        <div style={{fontSize:'0.875rem',lineHeight:1.45,flex:1}}>{p.guidance_text}</div>
+        <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+          {p.quote_verified ? (
+            <span title="Evidence quote verified in source transcript" style={{color:'#4ade80',fontSize:'0.72rem',fontWeight:700}}>✓</span>
+          ) : (
+            <span title="Quote not verified against source" style={{color:'#f59e0b',fontSize:'0.72rem',fontWeight:700}}>⚠</span>
+          )}
+          <span style={{
+            background:sc.bg, color:sc.fg, padding:'2px 8px',
+            borderRadius:10, fontSize:'0.68rem', fontWeight:700,
+            letterSpacing:'0.04em', border:`1px solid ${sc.border}40`,
+          }}>
+            {STATUS_LABELS[p.current_status] || p.current_status}
+          </span>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:10,flexWrap:'wrap',fontSize:'0.7rem',color:'#64748b',marginBottom:8}}>
+        {p.guidance_type && (
+          <span style={{background:'#1e293b',color:'#94a3b8',padding:'1px 6px',borderRadius:3,fontSize:'0.65rem'}}>{p.guidance_type}</span>
+        )}
+        {targetStr && <span>🎯 {targetStr}</span>}
+        <span>📅 first: {p.first_seen_quarter || '?'}</span>
+        {p.total_transcripts_traced > 0 && <span>· traced {p.total_transcripts_traced}q</span>}
+      </div>
+      {quarters.length > 1 && (
+        <div style={{borderTop:'1px solid #1f2937',paddingTop:8,marginTop:6}}>
+          {quarters.map(q => {
+            const s = sbq[q];
+            const qsc = STATUS_COLORS[s] || STATUS_COLORS.PENDING;
+            const quote = ebq[q];
+            const src = qsbq[q];
+            return (
+              <div key={q} style={{display:'flex',gap:8,alignItems:'flex-start',fontSize:'0.72rem',marginBottom:4}}>
+                <span style={{color:'#64748b',minWidth:50,flexShrink:0}}>{q}</span>
+                <span style={{
+                  color:qsc.fg, fontWeight:600, minWidth:90, flexShrink:0,
+                }}>
+                  {STATUS_LABELS[s] || s}
+                </span>
+                <span style={{color:'#94a3b8',flex:1,fontStyle:'italic'}}>
+                  {quote ? `"${quote.length > 120 ? quote.slice(0,120) + '…' : quote}"` : <span style={{color:'#475569'}}>—</span>}
+                  {src && src !== 'current_transcript' && (
+                    <span style={{color:'#475569',fontStyle:'normal',marginLeft:6}} title={`Quote found in ${src}`}>
+                      ({src === 'company_corpus' ? 'prior transcript' : src})
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimelineSection({ timelineData }: { timelineData: any }) {
+  if (!timelineData || !timelineData.promises) return null;
+  const grouped: Record<string, any[]> = {};
+  for (const p of timelineData.promises) {
+    (grouped[p.current_status] = grouped[p.current_status] || []).push(p);
+  }
+  return (
+    <div style={{marginTop:24}}>
+      <div style={{
+        fontSize:'0.78rem',fontWeight:800,letterSpacing:'0.06em',
+        textTransform:'uppercase',color:'#94a3b8',
+        paddingBottom:8,marginBottom:8,borderBottom:'1px solid #1f2937',
+      }}>
+        📊 Conviction Timeline ({timelineData.total_promises} promises)
+      </div>
+      {STATUS_ORDER.map(s => {
+        const items = grouped[s] || [];
+        if (items.length === 0) return null;
+        const sc = STATUS_COLORS[s] || STATUS_COLORS.PENDING;
+        return (
+          <div key={s} style={{marginTop:16}}>
+            <div style={{
+              fontSize:'0.72rem',fontWeight:700,textTransform:'uppercase',
+              letterSpacing:'0.07em',padding:'5px 0',marginBottom:8,
+              borderBottom:`1px solid ${sc.border}40`,
+              color:sc.fg,
+            }}>
+              {STATUS_LABELS[s]} — {items.length}
+            </div>
+            {items.slice(0, 12).map(p => <PromiseCard key={p.promise_key} p={p} />)}
+            {items.length > 12 && (
+              <div style={{color:'#475569',fontSize:'0.78rem',marginTop:4,padding:'0 4px'}}>
+                +{items.length - 12} more {STATUS_LABELS[s].toLowerCase()} promises not shown
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function GuidanceCheck() {
   const [symbol, setSymbol] = useState('');
   const [report, setReport] = useState<any>(null);
+  const [credibility, setCredibility] = useState<any>(null);
+  const [timeline, setTimeline] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
   const load = async (sym: string) => {
     if (!sym.trim()) return;
-    setLoading(true); setError(''); setReport(null);
+    setLoading(true); setError(''); setReport(null); setCredibility(null); setTimeline(null);
+    const upper = sym.toUpperCase();
     try {
-      const data = await api.getGuidanceReport(sym.toUpperCase());
-      setReport(data);
+      const [reportData, credData, timelineData] = await Promise.all([
+        api.getGuidanceReport(upper).catch(e => ({ __err: e.message || 'report failed' })),
+        api.getGuidanceCredibility(upper).catch(e => ({ __err: e.message || 'credibility failed' })),
+        api.getGuidanceTimeline(upper).catch(e => ({ __err: e.message || 'timeline failed' })),
+      ]);
+      if (reportData && !reportData.__err) setReport(reportData);
+      if (credData && !credData.__err) setCredibility(credData);
+      if (timelineData && !timelineData.__err) setTimeline(timelineData);
+      // Surface partial failures so the user sees something is wrong.
+      const failures = [reportData, credData, timelineData].filter(d => d && d.__err).map(d => d.__err);
+      if (failures.length && !reportData?.__err && !credData?.__err && !timelineData?.__err) {
+        setError(failures.join('; '));
+      } else if (reportData?.__err) {
+        setError(`Report failed: ${reportData.__err}`);
+      }
     } catch (e: any) {
       setError(e.message || 'Failed to load report');
     }
@@ -191,6 +457,11 @@ export default function GuidanceCheck() {
               </div>
             </div>
           </div>
+
+          {/* ConvictionEngine Credibility Score (new) */}
+          {credibility && credibility.total_promises > 0 && (
+            <CredibilityHero cred={credibility} />
+          )}
 
           {/* Accuracy bar */}
           {(report.total_verified || 0) > 0 ? (
@@ -336,14 +607,14 @@ export default function GuidanceCheck() {
             </div>
           )}
 
-          {/* Promise sections */}
+          {/* Promise sections (legacy from old extractor — kept for backward compat) */}
           {section('✅ Kept', 'achieved', achieved)}
           {section('❌ Broken', 'missed', missed)}
           {section('⚠️ Partial', 'partial', partial)}
-          {section('⏳ Upcoming', 'pending', (report.pending||[]).slice(0, 8))}
-          {(report.pending||[]).length > 8 && (
-            <div style={{color:'#475569',fontSize:'0.78rem',marginTop:8,padding:'0 4px'}}>+{report.pending.length - 8} more pending promises — click Check to see all</div>
-          )}
+          {section('⏳ Upcoming', 'pending', (report.pending||[]).slice(0, 4))}
+
+          {/* Conviction Timeline (new — supersedes the legacy sections above) */}
+          {timeline && <TimelineSection timelineData={timeline} />}
         </div>
       )}
 
