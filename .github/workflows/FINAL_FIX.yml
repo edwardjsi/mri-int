@@ -1,7 +1,5 @@
 name: FINAL FIX
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
   schedule:
     # 4:00 PM IST / 10:30 AM UTC, Monday–Friday
