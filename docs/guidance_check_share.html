@@ -3,52 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GuidanceCheck — Management Credibility Report</title>
+<title>GuidanceCheck — Management Integrity Report</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0a0e1a;
-    color: #e2e8f0;
+    background: #0a0e1a; color: #e2e8f0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
     padding: 40px 16px;
   }
   .badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: #1a2544; border: 1px solid #2d4a8a;
-    color: #93c5fd; font-size: 0.7rem; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 4px 12px; border-radius: 20px; margin-bottom: 24px;
+    background: #1a2544; border: 1px solid #2d4a8a; color: #93c5fd;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px;
   }
   .badge-dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; text-align: center; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; text-align: center; }
   h1 span { color: #3b82f6; }
-  .tagline { color: #64748b; font-size: 0.95rem; margin-bottom: 36px; text-align: center; }
-  .topbar {
-    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-    margin-bottom: 28px; align-items: center;
-  }
+  .tagline { color: #64748b; font-size: 0.9rem; margin-bottom: 32px; text-align: center; }
+
+  .topbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; align-items: center; }
   .topbar input {
     background: #111827; border: 1px solid #1f2937; border-radius: 8px;
-    padding: 10px 16px; color: #e2e8f0; font-size: 0.9rem; width: 180px;
-    outline: none; transition: border-color 0.2s;
+    padding: 10px 16px; color: #e2e8f0; font-size: 0.9rem; width: 170px; outline: none;
   }
   .topbar input:focus { border-color: #3b82f6; }
   .btn-primary {
     background: #1d4ed8; color: #fff; border: none; border-radius: 8px;
-    padding: 10px 20px; font-size: 0.88rem; font-weight: 600;
-    cursor: pointer; transition: background 0.2s;
+    padding: 10px 20px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
   }
   .btn-primary:hover { background: #1e40af; }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-email {
-    background: #14532d; color: #4ade80; border: 1px solid #166534;
-    border-radius: 8px; padding: 10px 20px; font-size: 0.88rem; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    background: #14532d; color: #4ade80; border: 1px solid #166534; border-radius: 8px;
+    padding: 10px 18px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
   }
   .btn-email:hover { background: #166534; }
   .btn-email:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -56,111 +47,131 @@
 
   .card {
     background: #111827; border: 1px solid #1f2937; border-radius: 16px;
-    padding: 28px; width: 100%; max-width: 600px; margin-bottom: 16px;
+    padding: 24px; width: 100%; max-width: 640px; margin-bottom: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   }
+  .card + .card { margin-top: 0; }
 
-  .card-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    flex-wrap: wrap; gap: 16px; margin-bottom: 20px;
-  }
-  .symbol-block h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
-  .symbol-block .sub { color: #64748b; font-size: 0.78rem; margin-top: 2px; }
-
-  .verdict-badge { text-align: right; }
+  /* Header */
+  .report-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
+  .symbol-block h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; }
+  .symbol-block .sub { color: #64748b; font-size: 0.75rem; margin-top: 2px; }
   .verdict-pill {
-    display: inline-block; font-size: 0.78rem; font-weight: 700;
-    padding: 6px 16px; border-radius: 20px;
-    text-transform: uppercase; letter-spacing: 0.07em;
+    font-size: 0.72rem; font-weight: 700; padding: 5px 14px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.06em;
   }
   .verdict-watching  { background:#1e293b; color:#94a3b8; }
   .verdict-add       { background:#14532d; color:#4ade80; }
   .verdict-hold      { background:#451a03; color:#fbbf24; }
   .verdict-reduce    { background:#7f1d1d; color:#f87171; }
-  .verdict-broken    { background:#500;    color:#fff; }
+  .verdict-broken    { background:#500; color:#fff; }
 
+  /* Summary bar */
   .summary-bar {
     background: #0d1421; border: 1px solid #1a2236; border-radius: 10px;
-    padding: 16px 20px; margin-bottom: 20px;
-    display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    padding: 14px 18px; margin-bottom: 18px; display: flex; gap: 20px;
+    align-items: center; flex-wrap: wrap;
   }
-  .ring-wrap {
-    position: relative; width: 64px; height: 64px; flex-shrink: 0;
-  }
+  .ring-wrap { width: 60px; height: 60px; flex-shrink: 0; position: relative; }
   .ring-wrap svg { transform: rotate(-90deg); }
-  .ring-wrap text {
-    transform: none; fill: #e2e8f0; font-size: 14px; font-weight: 700;
-    font-family: -apple-system, sans-serif;
-  }
+  .ring-wrap text { transform: none; fill: #e2e8f0; font-size: 13px; font-weight: 700; font-family: -apple-system; }
   .summary-stats { flex: 1; }
-  .summary-stats .row { display: flex; gap: 12px; font-size: 0.82rem; margin-bottom: 4px; }
-  .summary-stats .val { font-weight: 600; }
-  .pending-count { color: #475569; font-size: 0.8rem; margin-top: 4px; }
+  .summary-stats .row { display: flex; gap: 12px; font-size: 0.8rem; margin-bottom: 3px; }
+  .pending-note { color: #475569; font-size: 0.75rem; margin-top: 3px; }
 
-  .promise-section { margin-top: 16px; }
+  /* Section labels */
+  .promise-section { margin-top: 14px; }
   .section-label {
-    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.07em; padding: 5px 0; border-bottom: 1px solid;
-    margin-bottom: 8px;
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; padding: 4px 0; border-bottom: 1px solid; margin-bottom: 8px;
   }
   .section-achieved { color: #4ade80; border-color: #14532d; }
   .section-missed   { color: #f87171; border-color: #450a0a; }
   .section-partial  { color: #fbbf24; border-color: #451a03; }
-  .section-pending  { color: #60a5fa; border-color: #1e3a5f; }
+  .section-upcoming { color: #60a5fa; border-color: #1e3a5f; }
 
+  /* Promise item */
   .promise-item {
-    background: #0f172a; border-radius: 8px; padding: 12px 14px;
-    margin-bottom: 8px; border-left: 3px solid;
+    background: #0f172a; border-radius: 8px; padding: 11px 13px; margin-bottom: 7px;
+    border-left: 3px solid;
   }
   .promise-item.achieved { border-color: #22c55e; }
   .promise-item.missed   { border-color: #ef4444; }
   .promise-item.partial  { border-color: #f59e0b; }
-  .promise-item.pending  { border-color: #3b82f6; }
+  .promise-item.upcoming { border-color: #3b82f6; }
 
-  .promise-text { font-size: 0.875rem; line-height: 1.45; margin-bottom: 6px; }
-  .promise-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.72rem; color: #64748b; }
-  .promise-meta .target { color: #94a3b8; }
-  .promise-meta .actual-val { color: #e2e8f0; font-weight: 600; }
-  .promise-meta .miss-val { color: #f87171; }
-  .promise-meta .hit-val  { color: #4ade80; }
+  .promise-text { font-size: 0.85rem; line-height: 1.4; margin-bottom: 5px; }
+  .promise-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.7rem; color: #64748b; align-items: center; }
   .type-badge {
-    background: #1e293b; color: #94a3b8; padding: 1px 6px;
-    border-radius: 3px; font-size: 0.68rem;
+    background: #1e293b; color: #94a3b8; padding: 1px 6px; border-radius: 3px; font-size: 0.65rem;
   }
+  .actual-line { margin-top: 5px; font-size: 0.8rem; }
+  .actual-achieved { color: #4ade80; font-weight: 600; }
+  .actual-missed   { color: #f87171; font-weight: 600; }
+  .actual-partial  { color: #fbbf24; font-weight: 600; }
 
-  .empty-state {
-    text-align: center; padding: 32px 20px; color: #475569;
-    font-size: 0.88rem;
+  /* ── 3 NEW SECTIONS ─────────────────────────────────────────── */
+
+  /* 1. Integrity Signal */
+  .integrity-signal {
+    border-radius: 10px; padding: 14px 16px; margin-top: 14px; font-size: 0.82rem;
+    line-height: 1.5; display: flex; gap: 12px; align-items: flex-start;
   }
+  .integrity-signal.high    { background: #14532d30; border: 1px solid #22c55e40; color: #86efac; }
+  .integrity-signal.moderate { background: #451a0320; border: 1px solid #f59e0b30; color: #fde68a; }
+  .integrity-signal.low     { background: #7f1d1d20; border: 1px solid #f8717140; color: #fca5a5; }
+  .integrity-signal.insufficient { background: #1e293b; border: 1px solid #334155; color: #94a3b8; }
+  .signal-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+  /* 2. Quarter Comparison */
+  .quarter-compare { margin-top: 16px; }
+  .compare-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .compare-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #60a5fa; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .compare-col { background: #0f172a; border-radius: 8px; padding: 12px; }
+  .compare-col-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; color: #94a3b8; }
+  .compare-col.newer { border: 1px solid #1e3a5f; }
+  .compare-col.older { border: 1px solid #1f2937; }
+  .compare-stat { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 2px 0; color: #64748b; }
+  .compare-stat .val { font-weight: 600; color: #e2e8f0; }
+  .compare-stat .val.green { color: #4ade80; }
+  .compare-stat .val.red   { color: #f87171; }
+  .compare-item { font-size: 0.78rem; padding: 4px 0; border-bottom: 1px solid #1f2937; }
+  .compare-item:last-child { border-bottom: none; }
+  .compare-item .badge { font-size: 0.6rem; padding: 1px 5px; margin-right: 4px; }
+  .compare-status { float: right; font-size: 0.65rem; font-weight: 600; }
+  .integrity-note { font-size: 0.72rem; color: #64748b; margin-top: 8px; font-style: italic; }
+
+  /* 3. Integrity Timeline */
+  .timeline { margin-top: 14px; }
+  .timeline-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .timeline-quarter { font-size: 0.72rem; font-weight: 700; color: #94a3b8; min-width: 64px; }
+  .timeline-bar-wrap { flex: 1; background: #1f2937; border-radius: 4px; height: 8px; overflow: hidden; }
+  .timeline-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .timeline-count { font-size: 0.72rem; color: #64748b; min-width: 80px; text-align: right; }
+
   .loading { text-align: center; padding: 32px; color: #475569; font-size: 0.88rem; }
-
+  .empty-state { text-align: center; padding: 28px 20px; color: #475569; font-size: 0.85rem; }
   .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: #111827; border: 1px solid #22c55e;
-    color: #4ade80; padding: 12px 20px; border-radius: 10px;
-    font-size: 0.85rem; font-weight: 600;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    z-index: 100;
+    position: fixed; bottom: 24px; right: 24px; background: #111827; border: 1px solid #22c55e;
+    color: #4ade80; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
   }
   .toast.show { opacity: 1; }
   .toast.error { border-color: #ef4444; color: #f87171; }
-
-  .explanation {
-    max-width: 600px; background: #0d1421; border: 1px solid #1a2236;
-    border-radius: 12px; padding: 20px 24px; font-size: 0.8rem;
-    color: #64748b; line-height: 1.6; margin-top: 8px;
-  }
-  .explanation strong { color: #94a3b8; }
 </style>
 </head>
 <body>
 
-<div class="badge"><div class="badge-dot"></div> GuidanceCheck · Alpha</div>
+<div class="badge"><div class="badge-dot"></div> GuidanceCheck · Management Integrity</div>
 <h1>Guidance<span>Check</span></h1>
 <p class="tagline">Did management do what they promised?</p>
 
 <div class="topbar">
-  <input type="text" id="symbol-input" placeholder="Symbol (e.g. TCS)" value="INFY" onkeydown="if(event.key==='Enter')loadReport()"/>
+  <input type="text" id="symbol-input" placeholder="Symbol (e.g. TCS, INFY)" value="INFY" onkeydown="if(event.key==='Enter')loadReport()"/>
   <button class="btn-primary" id="check-btn" onclick="loadReport()">Check →</button>
   <button class="btn-email" id="email-btn" onclick="sendEmail()" disabled>
     <span id="email-btn-text">📧 Send Report</span>
@@ -170,37 +181,26 @@
 <div id="report-container"></div>
 <div id="toast" class="toast"></div>
 
-<div class="explanation">
-  <strong>What is this?</strong> GuidanceCheck tracks every forward-looking statement
-  from earnings calls and investor presentations — then verifies whether it actually
-  happened, quarter by quarter. Only numeric, trackable promises are shown.
-  <br><br>Built on MRI Platform · Nifty 500 coverage · Data refreshed after every results season
-</div>
-
 <script>
 const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
 let currentSymbol = '';
 let currentReport = null;
 
-// ── Load report ─────────────────────────────────────────────────────────
 async function loadReport() {
   const sym = document.getElementById('symbol-input').value.trim().toUpperCase();
   if (!sym) return;
-  currentSymbol = sym;
-  currentReport = null;
+  currentSymbol = sym; currentReport = null;
   document.getElementById('email-btn').disabled = true;
-
   const container = document.getElementById('report-container');
   container.innerHTML = `<div class="loading">Loading ${sym}…</div>`;
-
   try {
     const res = await fetch(`${API}/api/guidance/${encodeURIComponent(sym)}/report`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     currentReport = await res.json();
     renderReport(currentReport, sym);
     document.getElementById('email-btn').disabled = false;
-  } catch (e) {
-    container.innerHTML = `<div class="card"><div class="empty-state">Could not load ${sym}.<br><small style="color:#475569">${e.message}</small><br><br>Try clicking ⚡ Prime All Stocks in the MRI app first to populate guidance data.</div></div>`;
+  } catch(e) {
+    container.innerHTML = `<div class="card"><div class="empty-state">Could not load ${sym}.<br><small style="color:#475569">${e.message}</small><br><br>Click <b>⚡ Prime All Stocks</b> in the MRI app first to populate guidance data.</div></div>`;
   }
 }
 
@@ -209,39 +209,34 @@ function renderReport(r, sym) {
   const achieved = r.achieved || [];
   const missed   = r.missed   || [];
   const partial  = r.partial  || [];
-  const pending  = (r.pending || []).slice(0, 8);
+  const upcoming = (r.upcoming || []).slice(0, 8);
   const accuracy = r.accuracy_pct || 0;
   const total_verified = r.total_verified || 0;
-  const total_pending  = r.total_pending  || 0;
+  const total_upcoming = r.total_upcoming  || 0;
+  const qc = r.quarter_comparison || {};
+  const timeline = r.integrity_timeline || {};
+  const integrity_signal = r.integrity_signal || '';
 
-  // Verdict pill
-  const verdictClass = {
-    'WATCHING': 'verdict-watching',
-    'ADD ZONE': 'verdict-add',
-    'HOLD ZONE': 'verdict-hold',
-    'REDUCE ZONE': 'verdict-reduce',
-    'THESIS BROKEN': 'verdict-broken',
-  }[r.verdict] || 'verdict-watching';
-
-  const ringColor = r.ring_color || '#3b82f6';
+  // Verdict pill class
+  const vc = { WATCHING:'verdict-watching', 'ADD ZONE':'verdict-add', 'HOLD ZONE':'verdict-hold', 'REDUCE ZONE':'verdict-reduce', 'THESIS BROKEN':'verdict-broken' };
+  const verdictClass = vc[r.verdict] || 'verdict-watching';
+  const ringColor   = r.ring_color || '#3b82f6';
   const circumference = r.ring_circumference || 251;
   const ringOffset = r.ring_offset || circumference;
 
-  // Verified promise rows
+  // ── Promise item ──────────────────────────────────────────────────
   function promiseItem(p, cls) {
     const meta = [];
-    if (p.target)    meta.push(`<span class="target">🎯 ${p.target}</span>`);
+    if (p.target)    meta.push(`<span>🎯 ${p.target}</span>`);
     if (p.deadline)  meta.push(`<span>📅 ${p.deadline}</span>`);
-    if (p.verified_period) meta.push(`<span>${p.verified_period}</span>`);
+    if (p.promised_in) meta.push(`<span>📣 ${p.promised_in}</span>`);
+    if (p.verified_in) meta.push(`<span>✅ ${p.verified_in}</span>`);
 
     let actualHtml = '';
     if (p.actual) {
       const isMiss = cls === 'missed';
-      actualHtml = `<div style="margin-top:6px; font-size:0.82rem;">
-        <span style="color:#94a3b8">Actual:</span>
-        <span class="${isMiss ? 'miss-val' : 'hit-val'}" style="font-weight:600; margin-left:4px">${p.actual}</span>
-        ${p.variance_pct != null ? `<span style="color:#64748b; margin-left:6px">(${p.variance_pct > 0 ? '+' : ''}${p.variance_pct}%)</span>` : ''}
-      </div>`;
+      const actualCls = isMiss ? 'actual-missed' : cls === 'partial' ? 'actual-partial' : 'actual-achieved';
+      actualHtml = `<div class="actual-line"><span class="${actualCls}">${p.actual}</span>${p.variance_pct != null ? `<span style="color:#475569;margin-left:6px;font-size:0.75rem">(${p.variance_pct>0?'+':''}${p.variance_pct.toFixed(1)}%)</span>` : ''}</div>`;
     }
 
     return `<div class="promise-item ${cls}">
@@ -249,38 +244,11 @@ function renderReport(r, sym) {
       <div class="promise-meta">
         <span class="type-badge">${p.type}</span>
         ${meta.join(' ')}
-        ${actualHtml}
       </div>
+      ${actualHtml}
     </div>`;
   }
 
-  // Summary bar
-  const summaryBar = total_verified > 0 ? `
-    <div class="summary-bar">
-      <div class="ring-wrap">
-        <svg width="64" height="64" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="26" fill="none" stroke="#1f2937" stroke-width="6"/>
-          <circle cx="32" cy="32" r="26" fill="none" stroke="${ringColor}" stroke-width="6"
-            stroke-dasharray="${circumference}"
-            stroke-dashoffset="${ringOffset}"
-            stroke-linecap="round"
-            style="transition: stroke-dashoffset 1s ease"/>
-        </svg>
-        <text x="32" y="37" text-anchor="middle">${accuracy > 0 ? accuracy.toFixed(0) + '%' : '—'}</text>
-      </div>
-      <div class="summary-stats">
-        <div class="row"><span style="color:#4ade80">✅ ${achieved.length} Kept</span><span style="color:#ef4444">❌ ${missed.length} Broken</span><span style="color:#fbbf24">⚠️ ${partial.length} Partial</span></div>
-        <div class="row"><span style="color:#64748b">⏳ ${total_pending} Pending</span><span>·</span><span>${r.credibility?.trend || '—'}</span></div>
-        ${total_pending > 0 ? `<div class="pending-count">${total_pending} promise${total_pending!==1?'s':''} awaiting quarterly results</div>` : ''}
-      </div>
-    </div>` : `
-    <div class="summary-bar">
-      <div style="color:#475569; font-size:0.85rem; flex:1; text-align:center; padding:12px 0;">
-        No verified promises yet — ${total_pending} pending. Run verification to see accuracy.
-      </div>
-    </div>`;
-
-  // Sections
   function section(label, cls, items) {
     if (!items.length) return '';
     return `<div class="promise-section">
@@ -289,23 +257,146 @@ function renderReport(r, sym) {
     </div>`;
   }
 
-  const html = `
-    <div class="card">
-      <div class="card-header">
-        <div class="symbol-block">
-          <h2>${sym}</h2>
-          <div class="sub">${r.report_date} · ${r.total_material || 0} material promises tracked</div>
+  // ── Summary bar ──────────────────────────────────────────────────
+  const summaryBar = total_verified > 0 ? `
+    <div class="summary-bar">
+      <div class="ring-wrap">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="24" fill="none" stroke="#1f2937" stroke-width="5"/>
+          <circle cx="30" cy="30" r="24" fill="none" stroke="${ringColor}" stroke-width="5"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${ringOffset}" stroke-linecap="round"
+            style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <text x="30" y="35" text-anchor="middle">${accuracy > 0 ? accuracy.toFixed(0)+'%' : '—'}</text>
+      </div>
+      <div class="summary-stats">
+        <div class="row">
+          <span style="color:#4ade80">✅ ${achieved.length} Kept</span>
+          <span style="color:#f87171">❌ ${missed.length} Broken</span>
+          <span style="color:#fbbf24">⚠️ ${partial.length} Partial</span>
         </div>
-        <div class="verdict-badge">
-          <div class="verdict-pill ${verdictClass}">${r.verdict}</div>
+        <div class="row">
+          <span style="color:#60a5fa">⏳ ${total_upcoming} Upcoming</span>
+          <span style="color:#475569">·</span>
+          <span>${r.credibility?.trend || '—'}</span>
+        </div>
+        ${total_upcoming > 0 ? `<div class="pending-note">${total_upcoming} promise${total_upcoming!==1?'s':''} awaiting quarterly verification</div>` : ''}
+      </div>
+    </div>` : `
+    <div class="summary-bar">
+      <div style="color:#475569;font-size:0.85rem;flex:1;text-align:center;padding:12px 0">
+        No verified promises yet — ${total_upcoming} pending. Click <b>⚡ Prime All Stocks</b> in the MRI app to run verification.
+      </div>
+    </div>`;
+
+  // ── 1. Integrity Signal ────────────────────────────────────────────
+  let integrityHtml = '';
+  if (integrity_signal) {
+    const sigClass = accuracy >= 75 ? 'high' : accuracy >= 60 ? 'moderate' : accuracy >= 40 ? 'low' : 'insufficient';
+    const sigIcon  = sigClass === 'high' ? '🟢' : sigClass === 'moderate' ? '🟡' : sigClass === 'low' ? '🔴' : '⚪';
+    integrityHtml = `<div class="integrity-signal ${sigClass}">
+      <div class="signal-icon">${sigIcon}</div>
+      <div>${integrity_signal}</div>
+    </div>`;
+  }
+
+  // ── 2. Quarter Comparison ─────────────────────────────────────────
+  let quarterHtml = '';
+  if (qc.older_quarter && qc.newer_quarter) {
+    const older = qc.older_promises || [];
+    const newer = qc.newer_promises || [];
+    const os = qc.older_summary || {};
+    const sig = qc.integrity_signal || '';
+
+    function compareStatusBadge(s) {
+      if (s === 'ACHIEVED') return '<span class="compare-status" style="color:#4ade80">✅</span>';
+      if (s === 'MISSED')   return '<span class="compare-status" style="color:#f87171">❌</span>';
+      if (s === 'PARTIAL')  return '<span class="compare-status" style="color:#fbbf24">⚠️</span>';
+      return '<span class="compare-status" style="color:#475569">⏳</span>';
+    }
+
+    quarterHtml = `<div class="quarter-compare">
+      <div class="compare-header">
+        <div class="compare-title">📊 Quarter Comparison — Management Track Record</div>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-col older">
+          <div class="compare-col-label">📣 ${qc.older_quarter} · What they committed</div>
+          <div class="compare-stat"><span>Promises made</span><span class="val">${os.total || 0}</span></div>
+          <div class="compare-stat"><span>✅ Achieved</span><span class="val green">${os.achieved || 0}</span></div>
+          <div class="compare-stat"><span>❌ Missed</span><span class="val red">${os.missed || 0}</span></div>
+          <div class="compare-stat"><span>⏳ Pending/Partial</span><span class="val">${os.pending || 0}</span></div>
+          ${older.map(p => `<div class="compare-item">${compareStatusBadge(p.status)} <span class="type-badge">${p.type}</span> ${p.promise.substring(0,55)}${p.promise.length>55?'…':''}</div>`).join('')}
+          ${older.length === 0 ? '<div style="color:#475569;font-size:0.75rem;padding:4px 0">No extracted promises for this quarter</div>' : ''}
+        </div>
+        <div class="compare-col newer">
+          <div class="compare-col-label">📣 ${qc.newer_quarter} · Latest commitments</div>
+          <div class="compare-stat"><span>New promises</span><span class="val">${newer.length}</span></div>
+          ${newer.map(p => `<div class="compare-item"><span class="compare-status" style="color:#60a5fa">NEW</span> <span class="type-badge">${p.type}</span> ${p.promise.substring(0,55)}${p.promise.length>55?'…':''}</div>`).join('')}
+          ${newer.length === 0 ? '<div style="color:#475569;font-size:0.75rem;padding:4px 0">No extracted promises for this quarter</div>' : ''}
         </div>
       </div>
+      ${sig ? `<div class="integrity-note">${sig}</div>` : ''}
+    </div>`;
+  } else if (total_verified === 0 && total_upcoming > 0) {
+    quarterHtml = `<div class="quarter-compare">
+      <div class="compare-title" style="color:#60a5fa;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">📊 Quarter Comparison</div>
+      <div style="color:#475569;font-size:0.82rem;text-align:center;padding:16px 0">
+        ${total_upcoming} promise${total_upcoming!==1?'s':''} found but not yet verified.<br>
+        Run <b>⚡ Prime All Stocks</b> to verify against actual quarterly financials.
+      </div>
+    </div>`;
+  }
+
+  // ── 3. Integrity Timeline ─────────────────────────────────────────
+  let timelineHtml = '';
+  const timelineKeys = Object.keys(timeline);
+  if (timelineKeys.length > 0) {
+    const maxTotal = Math.max(...timelineKeys.map(k => timeline[k].total || 1));
+    timelineHtml = `<div class="timeline">
+      <div class="section-label" style="color:#94a3b8;border-color:#1f2937;margin-bottom:10px">📈 Integrity by Quarter</div>
+      ${timelineKeys.map(q => {
+        const d = timeline[q];
+        const achieved_pct = d.total > 0 ? (d.achieved / d.total) * 100 : 0;
+        const missed_pct   = d.total > 0 ? (d.missed   / d.total) * 100 : 0;
+        const barColor = achieved_pct >= 70 ? '#22c55e' : achieved_pct >= 40 ? '#f59e0b' : '#ef4444';
+        const total_pct = d.total > 0 ? (d.total / maxTotal) * 100 : 0;
+        return `<div class="timeline-row">
+          <div class="timeline-quarter">${q}</div>
+          <div class="timeline-bar-wrap" style="flex:1;background:#1f2937;border-radius:4px;height:8px;overflow:hidden;margin:0 12px">
+            <div class="timeline-bar" style="width:${total_pct}%;background:${barColor};height:100%;border-radius:4px;opacity:0.6"></div>
+          </div>
+          <div class="timeline-count">
+            <span style="color:#4ade80">${d.achieved||0}✅</span>
+            <span style="color:#f87171;margin-left:4px">${d.missed||0}❌</span>
+            <span style="color:#475569;margin-left:4px">${d.total||0} tot</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // ── Assemble ──────────────────────────────────────────────────────
+  const html = `
+    <div class="card">
+      <div class="report-header">
+        <div class="symbol-block">
+          <h2>${sym}</h2>
+          <div class="sub">${r.report_date} · ${r.total_material||0} material promises · ${total_verified} verified</div>
+        </div>
+        <div><div class="verdict-pill ${verdictClass}">${r.verdict}</div></div>
+      </div>
       ${summaryBar}
+      ${integrityHtml}
       ${section('✅ Kept', 'achieved', achieved)}
       ${section('❌ Broken', 'missed', missed)}
       ${section('⚠️ Partial', 'partial', partial)}
-      ${section('⏳ Upcoming', 'pending', pending)}
-    </div>`;
+      ${section('⏳ Upcoming', 'upcoming', upcoming)}
+    </div>
+
+    ${quarterHtml ? `<div class="card">${quarterHtml}</div>` : ''}
+    ${timelineHtml ? `<div class="card">${timelineHtml}</div>` : ''}
+  `;
 
   document.getElementById('report-container').innerHTML = html;
 }
@@ -315,39 +406,20 @@ async function sendEmail() {
   if (!currentSymbol || !currentReport) return;
   const btn = document.getElementById('email-btn');
   const btnText = document.getElementById('email-btn-text');
-  btn.disabled = true;
-  btn.classList.add('sending');
-  btnText.textContent = 'Sending…';
-
+  btn.disabled = true; btn.classList.add('sending'); btnText.textContent = 'Sending…';
   try {
-    // Try unauthenticated first (might work if endpoint allows)
-    const res = await fetch(
-      `${API}/api/guidance/${encodeURIComponent(currentSymbol)}/email`,
-      { method: 'POST' }
-    );
-    if (res.ok) {
-      showToast(`📧 Report sent! Check your inbox for ${currentSymbol}.`, false);
-    } else if (res.status === 401 || res.status === 403) {
-      showToast('Please log in to the MRI app first to send reports.', true);
-    } else {
-      const err = await res.json().catch(() => ({}));
-      showToast(`Failed: ${err.detail || res.statusText}`, true);
-    }
-  } catch(e) {
-    showToast(`Network error: ${e.message}`, true);
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove('sending');
-    btnText.textContent = '📧 Send Report';
-  }
+    const res = await fetch(`${API}/api/guidance/${encodeURIComponent(currentSymbol)}/email`, {method:'POST'});
+    if (res.ok) showToast(`📧 Report sent! Check your inbox.`, false);
+    else if (res.status===401||res.status===403) showToast('Please log in first to send reports.', true);
+    else { const err = await res.json().catch(()=>({})); showToast(`Failed: ${err.detail||res.statusText}`, true); }
+  } catch(e) { showToast(`Network error: ${e.message}`, true); }
+  finally { btn.disabled=false; btn.classList.remove('sending'); btnText.textContent='📧 Send Report'; }
 }
 
-// ── Toast ────────────────────────────────────────────────────────────────
-function showToast(msg, isError = false) {
+function showToast(msg, isError=false) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (isError ? ' error' : ' show');
-  setTimeout(() => t.className = 'toast', 3500);
+  t.textContent = msg; t.className = 'toast' + (isError?' error':' show');
+  setTimeout(() => { t.className = 'toast'; }, 3500);
 }
 
 // Init
