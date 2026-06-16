@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { apiFetch } from './api';
 
 /**
  * ConvictionEngine — Cross-list management integrity dashboard.
@@ -6,7 +7,6 @@ import { useState, useEffect, useMemo } from 'react';
  * holdings and the 112 Co Universe, sorted worst-first by default.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 interface ConvictionRow {
   symbol: string;
@@ -70,16 +70,19 @@ export default function ConvictionEngine({ onSelectStock }: { onSelectStock: (st
   const [sortDir, setSortDir] = useState<SortDir>('asc'); // worst-first by default
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    const url = `${API_BASE}/api/guidance/conviction?source=${source}&verdict=${encodeURIComponent(verdictFilter)}&limit=200`;
-    fetch(url)
-      .then(res => res.json())
-      .then((d: ConvictionResponse) => setData(d))
+    const url = `/guidance/conviction?source=${source}&verdict=${encodeURIComponent(verdictFilter)}&limit=200`;
+    apiFetch(url)
+      .then((d: ConvictionResponse) => { if (!cancelled) setData(d); })
       .catch(err => {
-        console.error('ConvictionEngine fetch error:', err);
-        setError(err.message);
+        if (!cancelled) {
+          console.error('ConvictionEngine fetch error:', err);
+          setError(err.message || 'Failed to load');
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [source, verdictFilter]);
 
   const sortedRows = useMemo(() => {

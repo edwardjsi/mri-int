@@ -70,7 +70,7 @@ function isAdmin(): boolean {
     return localStorage.getItem('mri_is_admin') === 'true';
 }
 
-async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolean = false) {
+export async function apiFetch(path: string, options: RequestInit = {}, isLogin: boolean = false) {
     const token = getToken();
     
     // Normalize path to ensure it starts with /

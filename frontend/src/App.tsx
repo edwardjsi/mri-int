@@ -1,6 +1,6 @@
 // @ts-nocheck
 // v2-build-fix
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import BreakoutBadge from './BreakoutBadge';
 import BreakoutRadarPage from './BreakoutRadarPage';
@@ -2548,6 +2548,41 @@ function PerxPage() {
 }
 
 /* ─── Main App ────────────────────────────────────────────── */
+
+// ErrorBoundary — catches render-time errors anywhere in the tree and
+// shows them as a visible red box instead of silently unmounting the page.
+// (Required to diagnose issues like the ConvictionEngine raw-fetch 401 crash.)
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{padding:32,margin:32,background:'#7f1d1d20',border:'1px solid #ef4444',borderRadius:8,color:'#fca5a5',fontFamily:'monospace',fontSize:13,whiteSpace:'pre-wrap'}}>
+          <div style={{fontWeight:700,fontSize:15,marginBottom:12,color:'#fecaca'}}>
+            ⚠️ Page render error
+          </div>
+          <div style={{marginBottom:8}}><b>Message:</b> {this.state.error.message}</div>
+          <div style={{marginBottom:8}}><b>Stack:</b>{'\n'}{this.state.error.stack}</div>
+          <div style={{marginTop:12}}>
+            <button onClick={() => { this.setState({error: null}); window.location.reload(); }}
+              style={{padding:'6px 12px',background:'#7f1d1d',color:'#fff',border:'1px solid #ef4444',borderRadius:6,cursor:'pointer'}}>
+              Reload page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
@@ -2701,4 +2736,10 @@ page === 'unified' ? 'Unified Institutional Scan' :
   );
 }
 
-export default App;
+export default function WrappedApp() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
