@@ -652,6 +652,21 @@ def get_leaderboard(
     return cur.fetchall()
 
 
+@router.get("/{symbol}/credibility")
+def get_credibility_score(symbol: str, conn=Depends(get_db)):
+    """Narrative-timeline-based credibility score for one symbol.
+
+    Built from management_narrative_timeline (iterative cross-transcript
+    trace). Returns score (0-100), verdict zone, trend, counts by status,
+    consecutive miss quarters, and lag score. Reads from
+    management_credibility_scores which is populated by
+    engine_guidance.narrative_credibility_scorer.
+    """
+    from engine_guidance.narrative_credibility_scorer import NarrativeCredibilityScorer
+    scorer = NarrativeCredibilityScorer()
+    return scorer.compute_score(symbol)
+
+
 # ── ConvictionEngine (Decision 097) ──────────────────────────────────
 
 
