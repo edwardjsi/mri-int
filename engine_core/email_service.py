@@ -10,6 +10,12 @@ from datetime import date
 from engine_core.db import get_connection as _get_raw_connection
 from engine_core.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
 from botocore.exceptions import ClientError
+# ConvictionEngine (June 16): narrative timeline-based credibility scoring
+# powers the GuidanceCheck report email. Lazy-imported to avoid a circular
+# import (engine_guidance does not import engine_core).
+def _narrative_scorer():
+    from engine_guidance.narrative_credibility_scorer import NarrativeCredibilityScorer
+    return NarrativeCredibilityScorer()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -1414,10 +1420,6 @@ def _build_pending_row(item: dict, color: str) -> str:
 def build_guidance_report_email_html(payload: dict) -> str:
     """Build a professional GuidanceCheck report HTML email from a report payload."""
     sym = payload["symbol"]
-    verdict = payload.get("verdict", "WATCHING")
-    verdict_color = payload.get("verdict_color", "#64748b")
-    verdict_bg = payload.get("verdict_bg", "#1e293b")
-    accuracy = payload.get("accuracy_pct", 0.0)
     achieved = payload.get("achieved", [])
     missed = payload.get("missed", [])
     partial = payload.get("partial", [])
@@ -1427,11 +1429,49 @@ def build_guidance_report_email_html(payload: dict) -> str:
     qc = payload.get("quarter_comparison", {}) or {}
     timeline = payload.get("integrity_timeline", {}) or {}
     report_date = payload.get("report_date", str(date.today()))
-    trend = (payload.get("credibility") or {}).get("trend", "") or ""
 
-    ring_offset = payload.get("ring_offset", 0)
-    ring_color = payload.get("ring_color", "#3b82f6")
-    circumference = payload.get("ring_circumference", 251)
+    # ── ConvictionEngine (June 16): narrative-timeline-based credibility ──
+    # Supersedes the old accuracy_pct which only counted ACHIEVED/MISSED/PARTIAL
+    # from external-financial verification (51 actionable signals universe-wide).
+    # The new scorer reads management's own later statements as the verification
+    # source (796 actionable signals, 29.3% of the universe).
+    # If the endpoint pre-computed and passed narrative_credibility in payload,
+    # reuse it; otherwise compute here.
+    nc = payload.get("narrative_credibility")
+    if not nc:
+        try:
+            nc = _narrative_scorer().compute_score(sym)
+        except Exception as _e:
+            logger.warning(f"Narrative credibility lookup failed for {sym}: {_e}")
+            nc = {}
+    narr_score = nc.get("score")
+    narr_verdict = nc.get("current_verdict") or "WATCHING"
+    narr_prev_verdict = nc.get("previous_verdict")
+    narr_trend = nc.get("trend") or ""
+    narr_lag = nc.get("consecutive_miss_quarters") or 0
+    narr_counts = nc.get("counts") or {}
+    narr_n_total = nc.get("total_promises") or 0
+    narr_n_actionable = nc.get("actionable_promises") or 0
+    narr_unverified = nc.get("unverified_count") or 0
+
+    # Backward-compat fallback values (used if narrative scorer unavailable)
+    verdict = narr_verdict or payload.get("verdict", "WATCHING")
+    trend = narr_trend or (payload.get("credibility") or {}).get("trend", "") or ""
+    accuracy = float(narr_score) if narr_score is not None else float(payload.get("accuracy_pct", 0.0) or 0.0)
+
+    # Verdict zone color mapping (matches the UI CredibilityHero)
+    _ZONE_BG = {
+        'ADD ZONE': '#14532d', 'HOLD ZONE': '#451a03',
+        'REDUCE ZONE': '#7f1d1d', 'THESIS BROKEN': '#500724',
+        'WATCHING': '#1e293b',
+    }
+    _ZONE_FG = {
+        'ADD ZONE': '#4ade80', 'HOLD ZONE': '#fbbf24',
+        'REDUCE ZONE': '#f87171', 'THESIS BROKEN': '#fda4af',
+        'WATCHING': '#94a3b8',
+    }
+    verdict_bg = _ZONE_BG.get(verdict, '#1e293b')
+    verdict_color = _ZONE_FG.get(verdict, '#94a3b8')
 
     # Build row strings
     achieved_rows = "".join(_build_promise_row(p, "#22c55e") for p in achieved)
@@ -1501,42 +1541,94 @@ def build_guidance_report_email_html(payload: dict) -> str:
             + upcoming_note + '</div>'
         )
 
-    # Summary bar
-    summary_bar = ""
-    if total_verified > 0:
-        acc_str = str(round(accuracy, 0)).split('.')[0] + "%"
-        trend_str = trend if trend else "—"
-        summary_bar = (
-            '<div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:16px 20px; margin:16px 0">'
-            '<div style="color:#64748b; font-size:0.75rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em">Accuracy Track Record</div>'
-            '<div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center">'
-            '<div style="width:64px; height:64px; flex-shrink:0; position:relative">'
-            '<svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">'
-            '<circle cx="32" cy="32" r="26" fill="none" stroke="#1f2937" stroke-width="6"/>'
-            '<circle cx="32" cy="32" r="26" fill="none" stroke="' + ring_color + '" stroke-width="6" '
-            'stroke-dasharray="' + str(round(circumference)) + '" '
-            'stroke-dashoffset="' + str(round(ring_offset)) + '" '
-            'stroke-linecap="round"/>'
-            '</svg>'
-            '<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700; color:' + verdict_color + '">' + acc_str + '</div>'
-            '</div>'
-            '<div style="flex:1">'
-            '<div style="display:flex; gap:12px; margin-bottom:6px; font-size:0.8rem">'
-            '<span style="color:#4ade80">✅ ' + str(len(achieved)) + ' Kept</span>'
-            '<span style="color:#ef4444">❌ ' + str(len(missed)) + ' Broken</span>'
-            '<span style="color:#f59e0b">⚠️ ' + str(len(partial)) + ' Partial</span>'
-            '</div>'
-            '<div style="display:flex; gap:12px; font-size:0.8rem; color:#64748b">'
-            '<span>⏳ ' + str(len(upcoming)) + ' Upcoming</span><span>·</span><span>' + trend_str + '</span>'
-            '</div>'
-            '</div></div></div>'
+    # ── ConvictionEngine Credibility section (replaces old Accuracy Track Record) ──
+    # Built from the narrative timeline, not external-financial verification.
+    score_str = (str(round(accuracy, 0)).split('.')[0] + '%') if narr_score is not None else '—'
+    ring_circumference = 2 * 3.14159 * 36
+    ring_offset_val = ring_circumference - (accuracy / 100.0) * ring_circumference if narr_score is not None else ring_circumference
+
+    # Verdict flip chip
+    flip_chip = ''
+    if narr_prev_verdict and narr_prev_verdict != narr_verdict:
+        is_promo = narr_verdict in ('ADD ZONE', 'HOLD ZONE') and narr_prev_verdict in ('WATCHING', 'REDUCE ZONE', 'THESIS BROKEN')
+        is_demo = narr_verdict in ('REDUCE ZONE', 'THESIS BROKEN') and narr_prev_verdict in ('ADD ZONE', 'HOLD ZONE', 'WATCHING')
+        arrow = '↑' if is_promo and not is_demo else '↓' if is_demo else '→'
+        flip_color = '#4ade80' if (is_promo and not is_demo) else '#f87171' if is_demo else '#94a3b8'
+        flip_chip = (
+            '<span style="background:#0f172a; color:' + flip_color + '; padding:4px 10px; '
+            'border-radius:12px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; '
+            'border:1px solid ' + flip_color + '40; white-space:nowrap">'
+            + arrow + ' ' + narr_prev_verdict + ' → ' + narr_verdict + '</span>'
+        )
+
+    # Trend chip color
+    _TREND_FG = {
+        'IMPROVING': '#4ade80', 'STABLE': '#94a3b8', 'DETERIORATING': '#f87171',
+        'INSUFFICIENT_DATA': '#64748b',
+    }
+    trend_fg = _TREND_FG.get(narr_trend, '#64748b')
+
+    # Status counts row (only show non-zero statuses)
+    status_chip_html = ''
+    _STATUS_LABEL = {
+        'FULFILLED': ('#4ade80', '✅ Kept'),
+        'REVISED_UP': ('#5eead4', '↑ Revised Up'),
+        'ON_TRACK': ('#60a5fa', 'On Track'),
+        'PARTIALLY_FULFILLED': ('#fbbf24', '⚠️ Partial'),
+        'REVISED_DOWN': ('#fb923c', '↓ Revised Down'),
+        'MISSED': ('#f87171', '❌ Broken'),
+        'PENDING': ('#94a3b8', '⏳ Pending'),
+        'NEW': ('#a5b4fc', '🆕 New'),
+    }
+    for _s, (_c, _lbl) in _STATUS_LABEL.items():
+        _n = narr_counts.get(_s, 0)
+        if _n:
+            status_chip_html += '<span style="color:' + _c + '; font-weight:600">' + _lbl + ': <b>' + str(_n) + '</b></span>'
+
+    if narr_n_total > 0:
+        sample_size_html = (
+            '<div style="font-size:0.78rem; color:#cbd5e1; margin-bottom:6px">'
+            'Based on <b style="color:#e2e8f0">' + str(narr_n_actionable) + ' of ' + str(narr_n_total) + '</b> actionable promises.'
+            + (' <span style="color:#f59e0b">' + str(narr_unverified) + ' quote-unverified</span>.' if narr_unverified else '')
+            + '</div>'
         )
     else:
-        summary_bar = (
-            '<div style="background:#0d1421; border:1px solid #1a2236; border-radius:10px; padding:14px 18px; margin:16px 0; color:#475569; font-size:0.85rem; text-align:center">'
-            '⏳ No verified promises yet — ' + str(len(upcoming)) + ' upcoming. Run Prime All Stocks to trigger verification.'
-            '</div>'
-        )
+        sample_size_html = '<div style="font-size:0.78rem; color:#64748b">No narrative timeline yet for this symbol.</div>'
+
+    summary_bar = (
+        '<div style="background:linear-gradient(135deg,#0a1f1a 0%,#0a1929 100%); border:1px solid #1e3a5f; border-radius:14px; padding:20px; margin:16px 0">'
+        '<div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap">'
+        '<div style="position:relative; flex-shrink:0">'
+        '<svg width="88" height="88" viewBox="0 0 88 88" style="transform:rotate(-90deg)">'
+        '<circle cx="44" cy="44" r="36" fill="none" stroke="#1f2937" stroke-width="7"/>'
+        '<circle cx="44" cy="44" r="36" fill="none" stroke="' + verdict_color + '" stroke-width="7" '
+        'stroke-dasharray="' + str(round(ring_circumference, 1)) + '" '
+        'stroke-dashoffset="' + str(round(ring_offset_val, 1)) + '" '
+        'stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>'
+        '</svg>'
+        '<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center">'
+        '<div style="font-size:1.4rem; font-weight:800; color:' + verdict_color + '; line-height:1">' + score_str + '</div>'
+        '<div style="font-size:0.55rem; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px">Trust Score</div>'
+        '</div>'
+        '</div>'
+        '<div style="flex:1; min-width:200px">'
+        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px">'
+        '<span style="background:' + verdict_bg + '; color:' + verdict_color + '; padding:5px 12px; border-radius:14px; '
+        'font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:1px solid ' + verdict_color + '40">' + narr_verdict + '</span>'
+        + flip_chip +
+        '<span style="background:#0f172a; color:' + trend_fg + '; padding:5px 12px; border-radius:14px; '
+        'font-size:0.72rem; font-weight:700; letter-spacing:0.04em; border:1px solid ' + trend_fg + '40">'
+        '📈 ' + (narr_trend.replace('_', ' ') if narr_trend else 'INSUFFICIENT_DATA') + '</span>'
+        + (('<span style="background:#1f0a0a; color:#f87171; padding:5px 12px; border-radius:14px; '
+            'font-size:0.72rem; font-weight:700; letter-spacing:0.04em; border:1px solid #ef444440">'
+            '⚠ ' + str(narr_lag) + 'Q miss streak</span>') if narr_lag and narr_lag > 0 else '')
+        + '</div>'
+        + sample_size_html +
+        '<div style="display:flex; gap:10px; flex-wrap:wrap; font-size:0.74rem">' + status_chip_html + '</div>'
+        '</div>'
+        '</div>'
+        '</div>'
+    )
 
     # Verified count in header
     verified_html = (
@@ -1545,50 +1637,38 @@ def build_guidance_report_email_html(payload: dict) -> str:
         '<div style="color:#475569; font-size:0.72rem; margin-top:4px">No verified promises yet</div>'
     )
 
+    # NOTE: parenthesized string-concat chain below uses explicit '+' on every
+    # line. Comments are deliberately placed AFTER the '+' on each line so they
+    # do not break implicit string concatenation across newlines.
     html_body = (
-        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-        '<title>GuidanceCheck — ' + sym + '</title></head>'
-        '<body style="background:#0a0e1a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif; padding:0; margin:0">'
+        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +  # doctype+head
+        '<title>GuidanceCheck — ' + sym + '</title></head>' +
+        '<body style="background:#0a0e1a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif; padding:0; margin:0">' +
         '<div style="max-width:600px; margin:0 auto; padding:24px 16px">'
-
-        # Header
-        '<div style="background:#111827; border:1px solid #1f2937; border-radius:14px; padding:24px; margin-bottom:16px">'
-        '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px">'
-        '<div>'
-        '<div style="color:#3b82f6; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px">'
-        '🔍 GuidanceCheck · Management Credibility Report</div>'
-        '<h1 style="font-size:1.8rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 4px 0; color:#f1f5f9">' + sym + '</h1>'
-        '<div style="color:#475569; font-size:0.8rem">Report date: ' + report_date + '</div>'
-        '</div>'
-        '<div style="text-align:right">'
-        '<div style="background:' + verdict_bg + '; color:' + verdict_color + '; font-size:0.75rem; font-weight:700; '
-        'padding:6px 14px; border-radius:20px; letter-spacing:0.06em; text-transform:uppercase">' + verdict + '</div>'
-        + verified_html +
-        '</div></div></div>'
-
-        # Summary bar
-        + summary_bar +
-
-        # Promise sections
-        + achieved_section + missed_section + partial_section + upcoming_section +
-
-        # Footer
-        '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'
-        '<div style="color:#475569; font-size:0.72rem; text-align:center; line-height:1.6">'
-        'GuidanceCheck tracks forward-looking statements from earnings calls and investor presentations.<br>'
-        'Promises are verified against actual quarterly financials. Built on MRI Platform.'
-        '</div></div>'
-
-        # ── Integrity Signal ───────────────────────────────────────
-        + (_build_integrity_signal_email_section(integrity_signal, accuracy)) +
-
-        # ── Quarter Comparison ──────────────────────────────────
-        + (_build_quarter_comparison_email_section(qc)) +
-
-        # ── Integrity Timeline ──────────────────────────────────
-        + (_build_integrity_timeline_email_section(timeline)) +
-
-        '</div></body></html>'
+        + '<div style="background:#111827; border:1px solid #1f2937; border-radius:14px; padding:24px; margin-bottom:16px">'  # header card open
+        + '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px">'
+        + '<div>'
+        + '<div style="color:#3b82f6; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px">'
+        + '🔍 GuidanceCheck · Management Credibility Report</div>'
+        + '<h1 style="font-size:1.8rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 4px 0; color:#f1f5f9">' + sym + '</h1>'
+        + '<div style="color:#475569; font-size:0.8rem">Report date: ' + report_date + '</div>'
+        + '</div>'
+        + '<div style="text-align:right">'
+        + '<div style="background:' + verdict_bg + '; color:' + verdict_color + '; font-size:0.75rem; font-weight:700;'
+        + 'padding:6px 14px; border-radius:20px; letter-spacing:0.06em; text-transform:uppercase">' + verdict + '</div>'
+        + verified_html
+        + '</div></div></div>'
+        + summary_bar  # ConvictionEngine credibility section
+        + achieved_section + missed_section + partial_section + upcoming_section  # promise lists
+        + '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'  # footer
+        + '<div style="color:#475569; font-size:0.72rem; text-align:center; line-height:1.6">'
+        + 'GuidanceCheck tracks forward-looking statements from earnings calls and investor presentations.<br>'
+        + 'Promises are verified against actual quarterly financials. Built on MRI Platform.'
+        + '</div></div>'
+        + _build_integrity_signal_email_section(integrity_signal, accuracy)  # integrity signal
+        + _build_quarter_comparison_email_section(qc)  # quarter comparison
+        + _build_integrity_timeline_email_section(timeline)  # integrity timeline
+        + '</div></body></html>'
     )
 
     return html_body

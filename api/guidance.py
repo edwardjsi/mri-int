@@ -614,6 +614,20 @@ def send_guidance_report(
     payload = _build_report_payload(conn, sym)
     client_email = current_client.get("email", "")
 
+    # ConvictionEngine (June 16): use narrative-timeline-based verdict
+    # for the email subject so it reflects the new credibility score,
+    # not the legacy accuracy_pct verdict.
+    try:
+        from engine_guidance.narrative_credibility_scorer import NarrativeCredibilityScorer
+        _narr = NarrativeCredibilityScorer().compute_score(sym)
+        if _narr.get("current_verdict"):
+            payload["narrative_credibility"] = _narr
+            _email_verdict = _narr["current_verdict"]
+        else:
+            _email_verdict = payload.get("verdict", "WATCHING")
+    except Exception:
+        _email_verdict = payload.get("verdict", "WATCHING")
+
     def _send():
         try:
             html = build_guidance_report_email_html(payload)
@@ -621,7 +635,7 @@ def send_guidance_report(
             ses = get_ses_client()
             send_email_custom(
                 client_email,
-                f"GuidanceCheck Report — {sym} ({payload['verdict']})",
+                f"GuidanceCheck Report — {sym} ({_email_verdict})",
                 html,
             )
             logger.info(f"GuidanceCheck report emailed for {sym} to {client_email}")
