@@ -1090,21 +1090,21 @@ def ensure_guidance_tables(cur) -> None:
             promise_key                 VARCHAR(64) NOT NULL,
             first_seen_transcript_id    INT REFERENCES public.aae_transcripts(id),
             first_seen_date             DATE,
-            first_seen_quarter          VARCHAR(16),
+            first_seen_quarter          VARCHAR(32),
             guidance_text               TEXT NOT NULL,
-            guidance_type               VARCHAR(32),
-            metric                      VARCHAR(64),
+            guidance_type               VARCHAR(64),
+            metric                      VARCHAR(128),
             target_value                NUMERIC,
-            target_unit                 VARCHAR(16),
-            target_date                 VARCHAR(32),
+            target_unit                 VARCHAR(32),
+            target_date                 VARCHAR(64),
             status_by_quarter           JSONB,
             evidence_by_quarter         JSONB,
-            current_status              VARCHAR(32),
-            current_quarter             VARCHAR(16),
+            current_status              VARCHAR(64),
+            current_quarter             VARCHAR(32),
             current_evidence_quote      TEXT,
             total_transcripts_traced    INT DEFAULT 0,
             quote_verified              BOOLEAN DEFAULT FALSE,
-            quote_verification_method   VARCHAR(20),
+            quote_verification_method   VARCHAR(32),
             quote_source_by_quarter     JSONB,
             created_at                  TIMESTAMPTZ DEFAULT NOW(),
             updated_at                  TIMESTAMPTZ DEFAULT NOW(),
@@ -1134,4 +1134,39 @@ def ensure_guidance_tables(cur) -> None:
     cur.execute(
         "ALTER TABLE public.management_narrative_timeline "
         "ADD COLUMN IF NOT EXISTS quote_source_by_quarter JSONB;"
+    )
+    # ConvictionEngine (June 16, post-backfill): VARCHAR overflows on
+    # CIPLA (guidance_type), FRONTSP (first_seen_quarter), POCL (metric).
+    # Bumping to safely exceed any plausible LLM-generated value.
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN first_seen_quarter TYPE VARCHAR(32);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN guidance_type TYPE VARCHAR(64);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN metric TYPE VARCHAR(128);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN target_unit TYPE VARCHAR(32);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN target_date TYPE VARCHAR(64);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN current_status TYPE VARCHAR(64);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN current_quarter TYPE VARCHAR(32);"
+    )
+    cur.execute(
+        "ALTER TABLE public.management_narrative_timeline "
+        "ALTER COLUMN quote_verification_method TYPE VARCHAR(32);"
     )
