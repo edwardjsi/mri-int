@@ -369,6 +369,8 @@ export const api = {
   // GuidanceCheck — Management Credibility Tracking
   getGuidanceDashboard: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}`),
   getGuidanceReport: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/report`),
+  getGuidanceCredibility: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/credibility`),
+  getGuidanceTimeline: (symbol: string) => apiFetch(`/guidance/${encodeURIComponent(symbol)}/timeline`),
   sendGuidanceEmail: (symbol: string) =>
     apiFetch(`/guidance/${encodeURIComponent(symbol)}/email`, { method: 'POST' }),
   getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),

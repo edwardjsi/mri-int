@@ -531,6 +531,72 @@ def get_guidance_report(symbol: str, conn=Depends(get_db)):
     return payload
 
 
+@router.get("/{symbol}/timeline")
+def get_narrative_timeline(symbol: str, conn=Depends(get_db)):
+    """Per-promise timeline built by narrative_tracer.
+
+    Returns promises grouped by current_status, each with the full
+    status_by_quarter + evidence_by_quarter + quote_source_by_quarter
+    maps. Powers the timeline cards in the GuidanceCheck UI.
+    """
+    sym = symbol.upper().strip()
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT promise_key, guidance_text, guidance_type, metric,
+                  target_value, target_unit, target_date,
+                  first_seen_quarter, first_seen_date,
+                  current_status, current_quarter, current_evidence_quote,
+                  status_by_quarter, evidence_by_quarter,
+                  quote_source_by_quarter,
+                  quote_verified, quote_verification_method,
+                  total_transcripts_traced
+           FROM management_narrative_timeline
+           WHERE symbol = %s
+           ORDER BY
+             CASE current_status
+               WHEN 'FULFILLED' THEN 1
+               WHEN 'REVISED_UP' THEN 2
+               WHEN 'ON_TRACK' THEN 3
+               WHEN 'PARTIALLY_FULFILLED' THEN 4
+               WHEN 'REVISED_DOWN' THEN 5
+               WHEN 'MISSED' THEN 6
+               WHEN 'PENDING' THEN 7
+               WHEN 'NEW' THEN 8
+               ELSE 9
+             END,
+             first_seen_quarter ASC""",
+        (sym,),
+    )
+    rows = cur.fetchall()
+    promises = []
+    for r in rows:
+        promises.append({
+            "promise_key": r["promise_key"],
+            "guidance_text": r["guidance_text"],
+            "guidance_type": r["guidance_type"],
+            "metric": r["metric"],
+            "target_value": float(r["target_value"]) if r["target_value"] is not None else None,
+            "target_unit": r["target_unit"],
+            "target_date": r["target_date"],
+            "first_seen_quarter": r["first_seen_quarter"],
+            "first_seen_date": r["first_seen_date"].isoformat() if r["first_seen_date"] else None,
+            "current_status": r["current_status"],
+            "current_quarter": r["current_quarter"],
+            "current_evidence_quote": r["current_evidence_quote"],
+            "status_by_quarter": r["status_by_quarter"] or {},
+            "evidence_by_quarter": r["evidence_by_quarter"] or {},
+            "quote_source_by_quarter": r["quote_source_by_quarter"] or {},
+            "quote_verified": r["quote_verified"],
+            "quote_verification_method": r["quote_verification_method"],
+            "total_transcripts_traced": r["total_transcripts_traced"],
+        })
+    return {
+        "symbol": sym,
+        "total_promises": len(promises),
+        "promises": promises,
+    }
+
+
 @router.post("/{symbol}/email")
 def send_guidance_report(
     symbol: str,
