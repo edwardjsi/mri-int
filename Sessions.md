@@ -17,6 +17,27 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 6 — ConvictionEngine Modal Closes the Gap**
+
+**Objective**: Close the gap the Phase 5 plan acknowledged might not need closing — the universal `StockDetailsModal` (opened from ConvictionEngine rows, Watchlist, Holdings, Signal cards, etc.) was already calling `/api/aae/scan` and receiving `legacy_forensic.layers.management_integrity`, but rendering none of it. Users saw master_score + bull_case with no credibility context.
+
+**Actions**:
+- **Extracted reusable component** `frontend/src/ManagementIntegrityPanel.tsx` from the inline IIFE in `AaeDashboard.tsx`. 280 lines, fully self-contained, accepts `legacyForensic` + optional `onNavigate` props. All color constants (`VERDICT_ZONE_COLORS`, `TREND_COLORS`, `PROMISE_STATUS_COLOR`) centralized here so they're not duplicated across surfaces.
+- **`AaeDashboard.tsx`**: inline IIFE (226 lines of JSX) replaced with `<ManagementIntegrityPanel ... />`. Net delta −229/+5 lines; two duplicated color-constant blocks removed.
+- **`App.tsx StockDetailsModal`**: now renders `<ManagementIntegrityPanel legacyForensic={aaeData.legacy_forensic} />` right after the existing AAE Institutional Performance block. No `onNavigate` (modal context can't switch pages — the CTA is omitted).
+- **Result**: any surface that calls `/api/aae/scan` now shows the same full credibility panel — ConvictionEngine rows, Watchlist, Holdings cards, Signal cards, anywhere that opens `StockDetailsModal`.
+
+**Verification**:
+- TypeScript: `npx tsc --noEmit` — zero errors
+- Vite production build: 734 modules transformed, built in 2.41s
+- Phase 5 already verified backend data shape; both call sites read the same block
+
+**Result**: Phase 6 complete. The plan's optional polish became a real gap fix because the legacy `StockDetailsModal` was rendering master_score with no credibility context — the integrity panel now appears on every modal opened by an AAE scan.
+
+**Next Step**: Phase 7 — final verification, master commit.
+
+---
+
 ## **June 17, 2026 (continued): AAE Phase 5 — Digital Twin Modal Gets Integrity Panel**
 
 **Objective**: Surface the credibility track-record (already flowing through `legacy_forensic.layers.management_integrity` from Phases 3-4) in the Digital Twin modal so users can see *why* a stock got the master_score it did, not just the number.

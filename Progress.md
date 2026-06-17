@@ -183,6 +183,32 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 6: ConvictionEngine Modal Closes the Gap
+
+**Session Start:** 11:15 IST
+**Session End:** 11:35 IST
+
+### What Was Done This Session
+
+#### 1. Phase 6 — ConvictionEngine Modal Closes the Gap ✅
+- [x] **NEW component** `frontend/src/ManagementIntegrityPanel.tsx` (280 lines) — self-contained, accepts `legacyForensic` + optional `onNavigate`.
+- [x] **Color constants** centralized (VERDICT_ZONE_COLORS, TREND_COLORS, PROMISE_STATUS_COLOR).
+- [x] **`AaeDashboard.tsx`** — inline IIFE (226 lines) replaced with `<ManagementIntegrityPanel />`. Net delta −229/+5 lines.
+- [x] **`App.tsx StockDetailsModal`** — wired to render the panel. Closes the gap: ConvictionEngine rows → click → modal now shows full credibility panel alongside master_score + bull_case.
+- [x] **Verification**:
+  - `npx tsc --noEmit` — zero errors
+  - `npm run build` — 734 modules transformed, built in 2.41s
+  - Any surface that calls `/api/aae/scan` now renders the same panel
+
+#### 2. Commit ✅
+- `ca6ccaa` — feat: extract ManagementIntegrityPanel into reusable component + wire into StockDetailsModal (Phase 6)
+
+### 📌 Current Milestone
+- AAE Phase 6 (ConvictionEngine modal closes gap) **complete**.
+- Next: **Phase 7** — final verification + master commit.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST
