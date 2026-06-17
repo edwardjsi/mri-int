@@ -1417,6 +1417,270 @@ def _build_pending_row(item: dict, color: str) -> str:
     )
 
 
+# ── GuidanceCheck email screen-mirror helpers (June 17, 2026) ──────────────
+# These three sections are visible on the GuidanceCheck screen
+# (frontend/src/GuidanceCheck.tsx) but were missing from the email until now:
+# the header metadata chip strip, the intonation "tone monitor" card, and
+# the "no verified promises yet" fallback panel. The payload built by
+# api/guidance.py::_build_report_payload already contains all required data;
+# these helpers just render it for email.
+
+def _build_header_metadata_band(payload: dict) -> str:
+    """Header chips strip: transcript count, promises extracted, numerical %,
+    dominant guidance type, DIRECTIONAL ONLY chip.
+
+    Mirrors GuidanceCheck.tsx:644-672. Each chip is conditional — absent when
+    the corresponding payload field is empty/zero.
+    """
+    chips = []
+
+    tc = int(payload.get("transcript_count", 0) or 0)
+    if tc > 0:
+        rng = payload.get("transcript_date_range", {}) or {}
+        earliest = rng.get("earliest")
+        latest = rng.get("latest")
+        date_span = ""
+        if earliest and latest:
+            date_span = (
+                ' <span style="color:#64748b;font-weight:400;margin-left:6px">'
+                '· ' + str(earliest) + ' → ' + str(latest) + '</span>'
+            )
+        chips.append(
+            '<span style="background:#1e293b;color:#cbd5e1;padding:4px 10px;'
+            'border-radius:14px;font-weight:600;font-size:0.72rem">'
+            '📊 ' + str(tc) + ' transcript' + ('s' if tc != 1 else '')
+            + ' analyzed' + date_span + '</span>'
+        )
+
+    tpe = int(payload.get("total_promises_extracted", 0) or 0)
+    if tpe > 0:
+        chips.append(
+            '<span style="background:#1e293b;color:#cbd5e1;padding:4px 10px;'
+            'border-radius:14px;font-weight:600;font-size:0.72rem">'
+            + str(tpe) + ' promises extracted</span>'
+        )
+
+    num_pct = payload.get("numerical_guidance_pct", 0) or 0
+    if num_pct or num_pct == 0:
+        bg = '#7f1d1d' if num_pct < 30 else '#451a03' if num_pct < 70 else '#14532d'
+        fg = '#fca5a5' if num_pct < 30 else '#fbbf24' if num_pct < 70 else '#4ade80'
+        chips.append(
+            '<span style="background:' + bg + ';color:' + fg + ';padding:4px 10px;'
+            'border-radius:14px;font-weight:600;font-size:0.72rem">'
+            + str(round(num_pct, 1)) + '% numerical guidance</span>'
+        )
+
+    dom = payload.get("dominant_guidance_type")
+    if dom:
+        chips.append(
+            '<span style="background:#1e293b;color:#94a3b8;padding:4px 10px;'
+            'border-radius:14px;font-weight:600;font-size:0.72rem">'
+            '🎯 Dominant: ' + str(dom) + '</span>'
+        )
+
+    if payload.get("guidance_quality_signal") == "DIRECTIONAL ONLY":
+        chips.append(
+            '<span style="background:#1e3a8a;color:#60a5fa;padding:4px 10px;'
+            'border-radius:14px;font-weight:700;font-size:0.72rem;letter-spacing:0.04em">'
+            '📐 DIRECTIONAL ONLY</span>'
+        )
+
+    if not chips:
+        return ""
+    return (
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px 0;'
+        'font-size:0.72rem;align-items:center">'
+        + ''.join(chips) +
+        '</div>'
+    )
+
+
+def _build_intonation_email_section(intonation: dict) -> str:
+    """Tone monitor card: latest-quarter summary + 9-dimension grid +
+    Q-o-Q deltas + 8-quarter trajectory table.
+
+    Mirrors GuidanceCheck.tsx:675-742. Returns '' when no intonation data is
+    available so the email is unchanged for symbols without transcripts.
+    """
+    if not intonation or intonation.get("quarters_observed", 0) < 1:
+        return ""
+    latest = intonation.get("latest") or {}
+    if not latest:
+        return ""
+    previous = intonation.get("previous") or {}
+
+    DIMS = [
+        ("Confidence",        "confidence",        "#4ade80"),
+        ("Hedging",           "hedging",           "#fbbf24"),
+        ("Aggression",        "aggression",        "#f87171"),
+        ("Transparency",      "transparency",      "#60a5fa"),
+        ("Optimism",          "optimism",          "#4ade80"),
+        ("Pessimism",         "pessimism",         "#94a3b8"),
+        ("Accountability",    "accountability",    "#a78bfa"),
+        ("Numerical density", "numerical_density", "#22d3ee"),
+    ]
+
+    q_label = latest.get("quarter_label", "")
+    summary = latest.get("summary", "") or "—"
+    headwinds = latest.get("headwinds_named") or []
+    tone_shift = bool(intonation.get("tone_shift_detected", False))
+
+    headwinds_html = ""
+    if headwinds:
+        headwinds_html = (
+            '<div style="font-size:0.72rem;color:#94a3b8;margin-top:6px">'
+            '<b style="color:#fbbf24">Headwinds named:</b> '
+            + ' · '.join(str(h) for h in headwinds) +
+            '</div>'
+        )
+
+    shift_chip = ""
+    if tone_shift:
+        shift_chip = (
+            '<div style="background:#1e3a8a;color:#60a5fa;padding:4px 10px;'
+            'border-radius:12px;font-size:0.7rem;font-weight:700;'
+            'letter-spacing:0.04em;white-space:nowrap;margin-left:auto">'
+            '🚨 TONE SHIFT</div>'
+        )
+
+    dim_rows = ""
+    for label, key, color in DIMS:
+        v = float(latest.get(key, 0) or 0)
+        pct = max(0, min(100, round(v * 100)))
+        pv = float(previous.get(key, 0) or 0)
+        delta = v - pv
+        arrow = ""
+        if delta > 0.01:
+            arrow = ' <span style="color:' + color + '">↑</span>'
+        elif delta < -0.01:
+            arrow = ' <span style="color:' + color + '">↓</span>'
+        dim_rows += (
+            '<tr><td style="padding:3px 0;font-size:0.72rem;color:#94a3b8;'
+            'width:42%">' + str(label) + '</td>'
+            '<td style="padding:3px 8px;width:18%">'
+            '<div style="height:5px;background:#1f2937;border-radius:2px;overflow:hidden">'
+            '<div style="height:100%;width:' + str(pct) + '%;background:' + color + '"></div>'
+            '</div></td>'
+            '<td style="padding:3px 0;font-size:0.72rem;color:' + color + ';'
+            'font-weight:700;text-align:right;width:40%">'
+            + str(pct) + '%' + arrow + '</td></tr>'
+        )
+
+    dim_grid = (
+        '<table style="width:100%;border-collapse:collapse;margin-top:12px">'
+        + dim_rows + '</table>'
+    )
+
+    timeline = intonation.get("timeline", []) or []
+    trajectory_html = ""
+    if len(timeline) >= 2:
+        rows = ""
+        max_conf = max(
+            (float(t.get("confidence", 0) or 0) for t in timeline), default=1
+        ) or 1
+        for t in timeline[-8:]:
+            ql = t.get("quarter_label", "")
+            conf = float(t.get("confidence", 0) or 0)
+            hedge = float(t.get("hedging", 0) or 0)
+            conf_pct = round(conf * 100)
+            hedge_pct = round(hedge * 100)
+            bar_pct = round((conf / max_conf) * 100) if max_conf > 0 else 0
+            bar_color = "#22c55e" if conf >= 0.7 else "#f59e0b" if conf >= 0.4 else "#ef4444"
+            rows += (
+                '<tr>'
+                '<td style="padding:5px 8px;font-size:0.72rem;color:#94a3b8;'
+                'font-weight:600;min-width:50px">' + str(ql) + '</td>'
+                '<td style="padding:5px 8px">'
+                '<div style="background:#1f2937;border-radius:3px;height:5px;width:100%">'
+                '<div style="height:5px;border-radius:3px;background:' + bar_color + ';'
+                'width:' + str(bar_pct) + '%"></div></div></td>'
+                '<td style="padding:5px 8px;font-size:0.72rem;text-align:right;'
+                'white-space:nowrap;color:#4ade80">' + str(conf_pct) + '%</td>'
+                '<td style="padding:5px 8px;font-size:0.72rem;text-align:right;'
+                'white-space:nowrap;color:#fbbf24">' + str(hedge_pct) + '%</td>'
+                '</tr>'
+            )
+        trajectory_html = (
+            '<div style="margin-top:14px;border-top:1px solid #1a2236;padding-top:10px">'
+            '<div style="font-size:0.68rem;color:#94a3b8;text-transform:uppercase;'
+            'letter-spacing:0.06em;margin-bottom:8px;font-weight:700">'
+            'Tone trajectory — confidence over time</div>'
+            '<table style="width:100%;border-collapse:collapse"><thead>'
+            '<tr style="color:#475569;font-size:0.62rem;text-transform:uppercase;'
+            'letter-spacing:0.06em">'
+            '<th style="padding:2px 8px;text-align:left">Quarter</th>'
+            '<th style="padding:2px 8px;text-align:left">Confidence</th>'
+            '<th style="padding:2px 8px;text-align:right">Conf%</th>'
+            '<th style="padding:2px 8px;text-align:right">Hedge%</th>'
+            '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+        )
+
+    return (
+        '<div style="background:#0d1421;border:1px solid #1a2236;border-radius:10px;'
+        'padding:16px 18px;margin:0 0 16px 0">'
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;'
+        'gap:10px;flex-wrap:wrap">'
+        '<div style="flex:1;min-width:200px">'
+        '<div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;'
+        'letter-spacing:0.07em;color:#94a3b8">'
+        '🎙️ Management Tone — ' + str(q_label) + '</div>'
+        '<div style="font-size:0.85rem;color:#cbd5e1;margin-top:4px;line-height:1.5">'
+        + summary + '</div>'
+        + headwinds_html +
+        '</div>'
+        + shift_chip +
+        '</div>'
+        + dim_grid
+        + trajectory_html +
+        '</div>'
+    )
+
+
+def _build_no_verified_promises_warning(payload: dict) -> str:
+    """Fallback panel: when no promises are verified yet, show the
+    guidance-quality signal so the reader understands why the email is sparse.
+
+    Mirrors GuidanceCheck.tsx:625-642. No-op when total_verified > 0 or
+    there's nothing to explain.
+    """
+    if payload.get("total_verified", 0) > 0:
+        return ""
+    total_unable = int(payload.get("total_unable", 0) or 0)
+    upcoming_len = len(payload.get("upcoming", []) or [])
+    if upcoming_len == 0 and total_unable == 0:
+        return ""
+    parts = []
+    if total_unable > 0 or upcoming_len > 0:
+        parts.append(
+            '⏳ No verified promises yet — ' + str(total_unable) + ' of ' + str(upcoming_len)
+            + " pending couldn't be matched to financials."
+        )
+    if payload.get("guidance_quality_signal") == "DIRECTIONAL ONLY":
+        parts.append(
+            '<div style="font-size:0.78rem;color:#fbbf24;margin-top:6px">'
+            '⚠️ This management team gives directional / qualitative guidance only — '
+            "they don't typically commit to numbers. Verification requires numeric targets."
+            '</div>'
+        )
+    if payload.get("all_future_promises") and payload.get("dominant_guidance_type"):
+        parts.append(
+            '<div style="font-size:0.78rem;color:#94a3b8;margin-top:4px">'
+            'Most-frequent topic: <b style="color:#cbd5e1">'
+            + str(payload["dominant_guidance_type"])
+            + '</b>. Future quarters will verify as results land.</div>'
+        )
+    if not parts:
+        return ""
+    return (
+        '<div style="background:#0d1421;border:1px solid #1a2236;border-radius:10px;'
+        'padding:14px 18px;margin:0 0 16px 0;color:#94a3b8;font-size:0.85rem">'
+        '<div style="font-weight:600;color:#cbd5e1;margin-bottom:6px">'
+        + parts[0] + '</div>'
+        + ''.join(parts[1:]) +
+        '</div>'
+    )
+
+
 def build_guidance_report_email_html(payload: dict) -> str:
     """Build a professional GuidanceCheck report HTML email from a report payload."""
     sym = payload["symbol"]
@@ -1659,6 +1923,9 @@ def build_guidance_report_email_html(payload: dict) -> str:
         + verified_html
         + '</div></div></div>'
         + summary_bar  # ConvictionEngine credibility section
+        + _build_header_metadata_band(payload)  # chips strip: transcripts, promises, numerical %, dominant, DIRECTIONAL
+        + _build_intonation_email_section(payload.get("intonation", {}))  # tone monitor (latest + 9 dims + trajectory)
+        + _build_no_verified_promises_warning(payload)  # fallback panel when total_verified == 0
         + achieved_section + missed_section + partial_section + upcoming_section  # promise lists
         + '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'  # footer
         + '<div style="color:#475569; font-size:0.72rem; text-align:center; line-height:1.6">'
