@@ -17,6 +17,34 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 5 — Digital Twin Modal Gets Integrity Panel**
+
+**Objective**: Surface the credibility track-record (already flowing through `legacy_forensic.layers.management_integrity` from Phases 3-4) in the Digital Twin modal so users can see *why* a stock got the master_score it did, not just the number.
+
+**Actions**:
+- **New panel** in `frontend/src/AaeDashboard.tsx` Digital Twin modal, inserted right after the 4 layer score boxes (PRDE / Structural / Macro / Risk) where it's contextually grouped with the other layer scores. Reads from `digitalTwinResult.legacy_forensic.layers.management_integrity`.
+- **Conditional render**: if `has_data=True`, show full panel; otherwise show a dashed-border placeholder explaining "no track record yet".
+- **Verdict zone badge** (color-coded to match GuidanceCheck conventions): ADD ZONE green, HOLD ZONE amber, REDUCE ZONE orange, THESIS BROKEN red, WATCHING gray.
+- **Trend chip** (IMPROVING / STABLE / DETERIORATING / INSUFFICIENT_DATA) — color-coded.
+- **Miss streak chip** (only when `consecutive_miss_quarters > 0`) in red.
+- **Lag score chip**, **LLM assessment chip** (TRUSTED green / DISTRUSTED red / NEUTRAL text), **verdict-flip warning** when verdict recently changed zones, **master-score-contribution chip** showing the +X.X pts the credibility weight added.
+- **Promise fulfillment chips** in count order (FULFILLED → REVISED_UP → ON_TRACK → PARTIALLY_FULFILLED → REVISED_DOWN → MISSED), color-coded per status, omitted when count is 0.
+- **Graveyard rule alert** — renders only when AUTO_BURY / SOFT_LAG_PENALTY / MANUAL_BURIAL fired, explains why the master score got a knock-down penalty.
+- **Navigation CTA**: "View Full Promise Timeline in GuidanceCheck →" button navigates to the guidance page for per-promise drill-down. Gated on optional `onNavigate` prop.
+- **App.tsx wiring**: `AaeDashboard` now takes optional `onNavigate` prop; App.tsx passes `setPage` as `onNavigate`. `'guidance'` added to the page state union type.
+- **New color constants** `VERDICT_ZONE_COLORS` and `TREND_COLORS` at the top of AaeDashboard.tsx for easy theme adjustment.
+
+**Verification**:
+- TypeScript: `npx tsc --noEmit` — zero errors
+- Vite production build: 734 modules transformed, built in 2.69s
+- Live data shape check on CGCL: backend returns `has_data=True`, `verdict=ADD ZONE`, `score=80.38`, `13 of 40 promises actionable`, `master_score_breakdown.credibility=12.06` — matches every field the panel reads.
+
+**Result**: Phase 5 complete. The Digital Twin modal now explains management integrity as a first-class layer alongside PRDE / Structural / Macro / Risk. Users see the score, the verdict zone, the trend, the miss streak, the promise fulfillment breakdown, the LLM credibility assessment, any active graveyard penalty, and a clear path to the full per-promise timeline in GuidanceCheck.
+
+**Next Step**: Phase 6 — ConvictionEngine polish (optional, mostly closes for free since Phase 3 made credibility flow through ai_context). Phase 7 — final tests + master commit.
+
+---
+
 ## **June 17, 2026 (continued): AAE Phase 4 — Master Score Rebalanced with Credibility (Option A)**
 
 **Objective**: Make management credibility a first-class component of the master_score formula, not just a debate/penalty modifier. A clean ADD ZONE manager should *raise* the score; a broken THESIS BROKEN manager should *lower* it. User chose **Option A (rebalance)** over Option B (penalty-based).

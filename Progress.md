@@ -153,6 +153,36 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 5: Digital Twin Modal Integrity Panel
+
+**Session Start:** 10:45 IST
+**Session End:** 11:15 IST
+
+### What Was Done This Session
+
+#### 1. Phase 5 — Digital Twin Modal Management Integrity Panel ✅
+- [x] **New panel** in `frontend/src/AaeDashboard.tsx` Digital Twin modal, inserted after the 4 layer score boxes.
+- [x] **Verdict zone badge** — color-coded (ADD ZONE green / HOLD ZONE amber / REDUCE ZONE orange / THESIS BROKEN red / WATCHING gray).
+- [x] **Trend, miss streak, lag score, LLM assessment, verdict-flip, contribution** chips.
+- [x] **Promise fulfillment chips** — FULFILLED / REVISED_UP / ON_TRACK / PARTIALLY_FULFILLED / REVISED_DOWN / MISSED, color-coded, zero-counts omitted.
+- [x] **Graveyard rule alert** — renders only when AUTO_BURY / SOFT_LAG_PENALTY / MANUAL_BURIAL fired.
+- [x] **Graceful empty state** — dashed-border placeholder when no credibility data.
+- [x] **Navigation CTA** — "View Full Promise Timeline in GuidanceCheck →" button (gated on optional `onNavigate` prop).
+- [x] **App.tsx wiring** — `AaeDashboard` accepts `onNavigate` prop; App.tsx passes `setPage`; `'guidance'` added to page state union.
+- [x] **Verification**:
+  - `npx tsc --noEmit` — zero errors
+  - `npm run build` — 734 modules transformed, built in 2.69s
+  - Live data shape check on CGCL — backend returns expected shape (80.4 / ADD ZONE / 13-of-40 / +12.1 contribution)
+
+#### 2. Commit ✅
+- `95fe6f4` — feat: AAE Digital Twin modal surfaces Management Integrity panel (Phase 5)
+
+### 📌 Current Milestone
+- AAE Phase 5 (frontend integrity panel) **complete**.
+- Next: **Phase 6** — ConvictionEngine polish (optional, closes for free since Phase 3 made credibility flow through ai_context). Then **Phase 7** — final verification + master commit.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST
