@@ -86,6 +86,38 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 3: Debate Agents Get Integrity Context
+
+**Session Start:** 09:45 IST
+**Session End:** 10:15 IST
+
+### What Was Done This Session
+
+#### 1. Phase 3 — Layers 9-10 (Bear/Bull Debate) Management Integrity Context ✅
+- [x] **New helper** `_build_management_integrity(symbol)` in `aae_orchestrator.py` — combines credibility score row + per-status promise counts + latest LLM `credibility_assessment` from Phase 1.
+- [x] **Context wiring** — `run_full_scan()` injects `management_integrity`, `graveyard_rule`, `graveyard_penalty` into `ai_context`.
+- [x] **Prompt enrichment** — `forensic_debate.py` `_integrity_focus_block()` renders a human-readable block with score, verdict, trend, miss streak, lag, verdict-flip note, promise counts, and LLM assessment.
+- [x] **Side-specific nudges** — bear: "if DISTRUSTED, critical thesis risk"; bull: "if TRUSTED, de-risks the rerating thesis".
+- [x] **Block omission** when no data — fresh symbols stay clean.
+- [x] **Tiny Phase 2 enhancement** — `fetch_credibility()` returns `previous_verdict` (no Phase 2 behavior change).
+- [x] **Test coverage** — `engine_fundamental/test_debate_management_integrity.py`, 10 cases, all pass:
+  - Helper: None for unknown, full dict for known, counts aggregated correctly
+  - Verdict-flip detection, narrative_assessment None when Phase 1 hasn't run
+  - Bear prompt contains integrity block with all sections (CGCL clean + ASHOKA collapsed)
+  - Bull prompt ditto
+  - Bear/bull OMIT block when no data / has_data=False / key missing
+  - Orchestrator ai_context actually contains the integrity block (verified by mocking all 7 heavy layers)
+- [x] **Regression check** — 58 tests pass (10 new + 14 Phase 2 + 7 Phase 1 + 27 existing). Zero leftover rows.
+
+#### 2. Commit ✅
+- `034e3d7` — feat: AAE Layers 9-10 (Bear/Bull Debate) now weigh management integrity (Phase 3)
+
+### 📌 Current Milestone
+- AAE Phase 3 (debate agents get integrity context) **complete**.
+- Next: **Phase 4** — Master score weighting. **Open question for user**: rebalance (credibility gets 15% weight) OR penalty-based (-5 per consecutive miss quarter)? Plan defers the choice.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST

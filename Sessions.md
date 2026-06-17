@@ -17,6 +17,33 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 3 — Bear/Bull Debate Gets Integrity Context**
+
+**Objective**: Wire the credibility track-record into the Layer 9-10 bear/bull debate so the AI can cite concrete management behavior ("management has missed 3 of 5 promises") rather than arguing in the abstract. Last layer with substantive AI behavior change before the optional polish phases.
+
+**Actions**:
+- **New helper** (`_build_management_integrity(symbol)` in aae_orchestrator.py): combines (a) credibility score + verdict + trend + lag from `management_credibility_scores`, (b) per-status promise counts aggregated from `management_narrative_timeline`, and (c) the latest LLM `credibility_assessment` from `aae_narrative_intelligence` (Phase 1 result, propagated). Returns `None` when no data exists; full dict otherwise.
+- **Context wiring** (orchestrator `run_full_scan`): adds `management_integrity`, `graveyard_rule`, and `graveyard_penalty` to `ai_context`. The debate engine can now see both the integrity block AND whether a credibility collapse triggered an auto-burial.
+- **Prompt enrichment** (`forensic_debate.py`): new `_integrity_focus_block()` renders a human-readable "Management Integrity (verified cross-transcript track record)" block with score, verdict, trend, miss streak, lag, verdict-flip note, promise counts, and the LLM assessment.
+  - **Bear nudge**: "If credibility is broken or DISTRUSTED, this is a critical thesis risk you MUST address."
+  - **Bull nudge**: "If credibility is strong or TRUSTED, this significantly de-risks the rerating thesis — cite it directly."
+  - Block is entirely omitted when no data exists so fresh symbols stay clean.
+- **Tiny Phase 2 enhancement**: `graveyard_engine.fetch_credibility()` now also returns `previous_verdict` so the integrity block can detect flips. No behavior change for Phase 2 callers.
+
+**Tests** (`engine_fundamental/test_debate_management_integrity.py`, 10 cases, all pass):
+- `_build_management_integrity`: `None` for unknown symbol, full dict for known, promise count aggregation, verdict-flip detection, `narrative_assessment=None` when Phase 1 hasn't run.
+- **Prompt capture**: bear/bull prompts DO contain the integrity block when context has data (CGCL-style clean record and ASHOKA-style collapsed record both verified).
+- **Prompt cleanliness**: bear/bull prompts OMIT the integrity block when no data, when `has_data=False`, or when the key is missing entirely.
+- **Orchestrator wiring**: `AAEOrchestrator.run_full_scan()` ai_context contains `management_integrity` + `graveyard_rule` + `graveyard_penalty`. Verified by mocking all 7 heavy layers + the debate engine, capturing the context dict, and asserting the integrity block has the seeded data.
+
+**Regression check**: 58 tests pass (10 new + 14 Phase 2 + 7 Phase 1 + 27 existing). Zero leftover test rows.
+
+**Result**: Phase 3 complete. The next time AAE runs on CGCL (clean record) or ASHOKA (4Q miss streak, REDUCE ZONE flipped from HOLD, 7 MISSED), the bear/bull debate will argue with full management-track-record context — not just numerical fundamentals.
+
+**Next Step**: Phase 4 — Master score weighting. Rebalance the master_score to incorporate credibility (15% weight) OR add credibility as a penalty (-5 per consecutive miss quarter). The plan defers the choice to the user.
+
+---
+
 ## **June 17, 2026 (continued): AAE Phase 2 — Layer 7 Auto-Burial**
 
 **Objective**: Make AAE Layer 7 (Graveyard) detect credibility collapse *automatically* instead of relying on a human to manually bury the symbol in `aae_graveyard`. Detects managers who are actively missing commitments without waiting for someone to notice.
