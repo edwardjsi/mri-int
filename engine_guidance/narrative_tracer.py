@@ -40,26 +40,55 @@ logger = logging.getLogger("narrative_tracer")
 INITIAL_EXTRACTION_PROMPT = """You are analyzing the EARLIEST available earnings call transcript
 for {symbol} (quarter: {quarter}, date: {date}).
 
-Your job: extract EVERY forward-looking statement management made about FUTURE
-performance. This includes numeric targets AND qualitative commitments.
+Your job: extract EVERY forward-looking COMMITMENT management made about FUTURE
+performance. A "commitment" is a SPECIFIC, VERIFIABLE pledge — not a vague
+aspiration or corporate boilerplate.
 
-INCLUDE statements like:
-  - "AUM target of INR55,000 crores by FY28 with ROE 16-18% and ROA 4-4.5%"
-  - "we expect car loan origination to grow in the range of 12-15% YoY"
-  - "we aim to add 100 branches by end of FY27"
-  - "our focus is on maintaining NIM around 6.5-7%"
-  - "we plan to grow the MSME book to X crores"
-  - "the management has secured credit rating... stable outlook" (qualitative commitment)
+═══════════════════════════════════════════════════════════════════════
+WHAT COUNTS AS A PROMISE (must have at least ONE of these)
+═══════════════════════════════════════════════════════════════════════
+  ✓ Specific numeric target + unit + timeframe
+    "AUM target of INR55,000 crores by FY28"
+    "Total CAPEX of ₹1,000 crores this year"
+    "Expand to 100 branches by end of FY27"
+  ✓ Specific binary outcome with deadline
+    "Unit-III phase-I to be fully operational in 6 months"
+    "Commercial volumes for 3 CS projects to start in Q3-Q4 calendar 2026"
+  ✓ Specific directional commitment with timeframe
+    "Expect car loan origination to grow 12-15% YoY"
+    "Maintain NIM in the 6.5-7% range"
 
-EXCLUDE:
-  - Descriptions of past/present results: "we delivered X", "revenue was Y"
-  - Vague commentary with no commitment: "we feel optimistic about the future"
-  - Industry-level statements with no company-specific commitment
+═══════════════════════════════════════════════════════════════════════
+REJECT — these are NOT promises (do NOT extract them)
+═══════════════════════════════════════════════════════════════════════
+  ✗ Past/present results — already happened, can't be a future commitment
+    "we delivered X", "we achieved Y", "revenue was Z"
+    "we maintained stability", "we maintained margins"
+  ✗ Vague corporate positioning — no specific outcome
+    "we are well positioned", "we are confident", "we remain committed"
+    "we see opportunities", "we are excited about"
+    "we maintain our focus", "we stay on track"
+  ✗ Vague aspiration — no metric, no deadline, no binary outcome
+    "the objective is to enhance", "we aim to be a leader"
+    "we focus on quality", "we believe in innovation"
+    "we strive for excellence", "the underlying focus has not changed"
+  ✗ Ongoing practices — not a future commitment, just a current activity
+    "we have continued to invest in", "we are investing in"
+    "we have been expanding", "we continue to focus on"
+  ✗ Industry-level statements — not company-specific
+    "the industry is growing", "demand is strong"
+  ✗ Product/technology descriptions — features, not commitments
+    "we are developing new products", "we launched X"
+  ✗ Repeats / paraphrases of the same idea within the transcript
+    (deduplicate to ONE entry per unique commitment)
+
+═══════════════════════════════════════════════════════════════════════
+WHEN IN DOUBT, EXCLUDE. A short list of high-quality, specific commitments
+is far more valuable than a long list of vague boilerplate.
+═══════════════════════════════════════════════════════════════════════
 
 If a range is given (e.g. "12-15%"), set target_value to the midpoint and
-target_unit accordingly; include range_low and range_high.
-If no number is given, set target_value to null and target_unit to null —
-BUT STILL INCLUDE THE PROMISE. Qualitative promises are valuable signal.
+include range_low and range_high.
 
 Return JSON in EXACTLY this format:
 {{
@@ -78,10 +107,6 @@ Return JSON in EXACTLY this format:
     }}
   ]
 }}
-
-Be exhaustive. If you find 10 promises, return 10. Do not invent numbers.
-If no numeric target exists, leave numeric fields null — but still include
-the promise so we can track its narrative evolution.
 
 Transcript ({quarter}):
 {transcript_text}
