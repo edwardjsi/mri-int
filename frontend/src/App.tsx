@@ -2586,7 +2586,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2610,7 +2610,7 @@ function App() {
   }
 
   if (page === 'aae') {
-    return <AaeDashboard onBack={() => setPage('dashboard')} />;
+    return <AaeDashboard onBack={() => setPage('dashboard')} onNavigate={setPage} />;
   }
 
   if (page === 'unified') {
