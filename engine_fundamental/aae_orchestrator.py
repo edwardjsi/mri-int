@@ -5,12 +5,93 @@ from engine_fundamental.ownership_engine import OwnershipEngine
 from engine_fundamental.valuation_engine import ValuationEngine
 from engine_fundamental.narrative_engine import NarrativeEngine
 from engine_fundamental.market_confirmation import MarketConfirmationEngine
-from engine_fundamental.graveyard_engine import GraveyardEngine
+from engine_fundamental.graveyard_engine import GraveyardEngine, fetch_credibility
 from engine_fundamental.forensic_debate import ForensicDebateEngine
-from engine_core.db import fetch_df
+from engine_core.db import fetch_df, get_connection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# ── Management integrity context (AAE Phase 3) ──────────────────────────
+# Combines the credibility track-record score (deterministic) with the
+# latest LLM credibility_assessment from Phase 1 and promise counts from
+# the narrative timeline. Used by the Layer 9-10 bear/bull debate so the
+# AI can cite "management has missed 3 of 5 promises" with concrete data.
+def _build_management_integrity(symbol: str) -> dict | None:
+    """Build the management_integrity block for AAE debate context.
+
+    Returns a dict with has_data flag and all sub-fields, or None if there
+    is no credibility data AND no narrative timeline data for the symbol.
+    """
+    cred = fetch_credibility(symbol)
+
+    # Aggregate promise counts from the narrative timeline (the same
+    # source NarrativeCredibilityScorer reads).
+    counts = {
+        "FULFILLED": 0, "REVISED_UP": 0, "ON_TRACK": 0,
+        "PARTIALLY_FULFILLED": 0, "REVISED_DOWN": 0, "MISSED": 0,
+        "PENDING": 0, "NEW": 0,
+    }
+    total_promises_in_timeline = 0
+    actionable_promises = 0
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT current_status FROM management_narrative_timeline
+               WHERE symbol = %s""",
+            (symbol.upper(),),
+        )
+        for r in cur.fetchall():
+            s = r["current_status"]
+            if s in counts:
+                counts[s] += 1
+            total_promises_in_timeline += 1
+            if s in ("FULFILLED", "REVISED_UP", "ON_TRACK",
+                     "PARTIALLY_FULFILLED", "REVISED_DOWN", "MISSED"):
+                actionable_promises += 1
+
+        # Latest LLM credibility_assessment (Phase 1).
+        cur.execute(
+            """SELECT credibility_assessment, credibility_score_at_analysis
+               FROM aae_narrative_intelligence
+               WHERE symbol = %s
+               ORDER BY date DESC LIMIT 1""",
+            (symbol.upper(),),
+        )
+        narr_row = cur.fetchone()
+    finally:
+        conn.close()
+
+    narrative_assessment = narr_row["credibility_assessment"] if narr_row else None
+    narrative_score_at_analysis = (
+        float(narr_row["credibility_score_at_analysis"])
+        if narr_row and narr_row["credibility_score_at_analysis"] is not None
+        else None
+    )
+
+    if not cred and total_promises_in_timeline == 0:
+        return None  # Nothing to ground the debate on.
+
+    return {
+        "has_data": True,
+        "credibility_score": cred["score"] if cred else None,
+        "verdict": cred["verdict"] if cred else None,
+        "previous_verdict": cred["previous_verdict"] if cred else None,
+        "trend": cred["trend"] if cred else "INSUFFICIENT_DATA",
+        "consecutive_miss_quarters": cred["consecutive_miss_quarters"] if cred else 0,
+        "lag_score": cred["lag_score"] if cred else 0.0,
+        "promise_counts": counts,
+        "total_promises": total_promises_in_timeline,
+        "actionable_promises": actionable_promises,
+        "verdict_flipped_recently": (
+            cred["previous_verdict"] is not None
+            and cred["previous_verdict"] != cred["verdict"]
+        ) if cred else False,
+        "narrative_assessment": narrative_assessment,
+        "narrative_score_at_analysis": narrative_score_at_analysis,
+    }
 
 class AAEOrchestrator:
     """
@@ -111,7 +192,11 @@ class AAEOrchestrator:
         
         # Layer 9 & 10: AI Stress Test Agents
         debate_engine = ForensicDebateEngine(self.symbol)
-        
+
+        # Phase 3 (AAE × Management Integrity): build the integrity context
+        # the bear/bull debate will weigh alongside the numerical layers.
+        management_integrity = _build_management_integrity(self.symbol)
+
         # Prepare context for AI agents
         ai_context = {
             "symbol": self.symbol,
@@ -120,7 +205,10 @@ class AAEOrchestrator:
             "financial_delta": sector_result.get('reasons'),
             "narrative_summary": narrative_summary,
             "valuation": val_result.get('reasons'),
-            "market_confirmation": market_result.get('confirmation_status')
+            "market_confirmation": market_result.get('confirmation_status'),
+            "management_integrity": management_integrity,
+            "graveyard_rule": forensic.get('rule'),
+            "graveyard_penalty": forensic.get('penalty', 0),
         }
         
         bear_case = debate_engine.run_bear_layer(ai_context)

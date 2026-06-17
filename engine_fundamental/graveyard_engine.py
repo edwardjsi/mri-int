@@ -16,7 +16,7 @@ def fetch_credibility(symbol: str) -> dict | None:
         cur = conn.cursor()
         cur.execute(
             """SELECT accuracy_pct, total_promises, missed_count,
-                      trend, current_verdict,
+                      trend, current_verdict, previous_verdict,
                       consecutive_miss_quarters, lag_score, last_verdict_flip
                FROM management_credibility_scores WHERE symbol = %s""",
             (symbol.upper(),),
@@ -30,6 +30,7 @@ def fetch_credibility(symbol: str) -> dict | None:
             "missed_count": int(row["missed_count"] or 0),
             "trend": row["trend"] or "INSUFFICIENT_DATA",
             "verdict": row["current_verdict"] or "WATCHING",
+            "previous_verdict": row["previous_verdict"],
             "consecutive_miss_quarters": int(row["consecutive_miss_quarters"] or 0),
             "lag_score": float(row["lag_score"]) if row["lag_score"] is not None else 0.0,
             "last_verdict_flip": row["last_verdict_flip"],
