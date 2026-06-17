@@ -2,6 +2,48 @@
 
 ---
 
+## 📅 Session: June 17, 2026 — AAE Phase 1: Narrative Credibility Context Injection
+
+**Session Start:** 07:30 IST
+**Session End:** 09:00 IST
+
+### What Was Done This Session
+
+#### 1. Landed Uncommitted narrative_tracer Prompt Tightening ✅
+- [x] **Commit `792eada`** — Reframed the INITIAL_EXTRACTION_PROMPT from "extract every forward-looking statement" to "extract every SPECIFIC, VERIFIABLE COMMITMENT" with explicit INCLUDE/REJECT checklists.
+- [x] Removed the "BUT STILL INCLUDE qualitative promises" clause (qualitative-only promises dilute signal).
+- [x] Removed the "be exhaustive" footer, added "WHEN IN DOUBT, EXCLUDE" closing rule.
+- [x] Validates: `ast.parse` clean, no schema changes, $0 LLM cost change.
+
+#### 2. Phase 1 — Layer 4 Credibility Track-Record Injection ✅
+- [x] **Schema migration** — Added 2 idempotent ALTER columns to `aae_narrative_intelligence`:
+  - `credibility_assessment VARCHAR(20)` (TRUSTED | NEUTRAL | DISTRUSTED | INSUFFICIENT_DATA)
+  - `credibility_score_at_analysis NUMERIC(5,2)` (the credibility score at the moment of analysis, for audit trail)
+  - Migration applied to live Neon DB.
+- [x] **New helper** `_fetch_credibility_context(symbol)` in `narrative_engine.py`:
+  - Joins `management_credibility_scores` + `management_narrative_timeline`
+  - Returns formatted "Management Track Record" prompt block: score, verdict zone, trend, consecutive_miss_quarters, verdict-flip note, and the 5 most recent actionable promises with verbatim guidance_text + current_status.
+  - Graceful fallback: `has_data=False` when no credibility or no promises; prompt_section stays empty (preserves current behavior).
+- [x] **Prompt enrichment** — `analyze_transcript()` now injects the track-record block before the extraction list and asks the LLM to emit `management_credibility_assessment`.
+- [x] **Persistence** — `store_analysis()` writes the new fields. Defaults:
+  - Track record present + LLM skipped the field → NEUTRAL
+  - No track record → INSUFFICIENT_DATA
+- [x] **Test coverage** — `engine_fundamental/test_narrative_credibility_context.py` with 7 tests against live DB:
+  - 4 context helper tests: empty / full / flipped-verdict / promises-only-no-score
+  - 3 persistence tests: TRUSTED path, NEUTRAL default, INSUFFICIENT_DATA fallback
+  - Disposable `_NARR_CTX_<uuid>` symbols, full cleanup. All 7 pass.
+- [x] **Regression check** — All 27 existing `engine_guidance` tests still pass.
+
+#### 3. Commits ✅
+- `792eada` — fix: tighter narrative_tracer extraction prompt — only specific commitments
+- `347c692` — feat: AAE Layer 4 (Narrative) now injects management credibility track-record into LLM prompt
+
+### 📌 Current Milestone
+- AAE Phase 1 (Layer 4 credibility enrichment) **complete**.
+- Next: **Phase 2** — Layer 7 (Graveyard) auto-burial on credibility collapse. Detects EIHAHOTELS-style management failures automatically. ~30 min.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST

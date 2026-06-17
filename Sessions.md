@@ -1,3 +1,22 @@
+## **June 17, 2026: AAE Phase 1 — Layer 4 Credibility Track-Record Injection**
+
+**Objective**: Begin executing the AAE × Management Integrity integration plan (7 phases, ~4 hrs, docs/AAE_INTEGRATION_PLAN_2026-06-17.md). First deliverable: enrich AAE Layer 4 (Narrative) LLM prompt with the symbol's management credibility track-record so the AI can ground its summary in verifiable management behavior rather than reacting to the latest transcript in isolation. Also landed an uncommitted prompt tightening for narrative_tracer.
+
+**Actions**:
+- **Landed narrative_tracer prompt tightening** (`792eada`): Reframed the INITIAL_EXTRACTION_PROMPT from "extract every forward-looking statement" to "extract every specific, verifiable commitment" with explicit INCLUDE/REJECT checklists. Removes the "but still include qualitative promises" clause. Net effect: fewer noise promises in `management_narrative_timeline`, more accurate credibility scores. $0 LLM cost change.
+- **Schema migration**: Added 2 idempotent ALTER columns to `aae_narrative_intelligence` — `credibility_assessment VARCHAR(20)` and `credibility_score_at_analysis NUMERIC(5,2)`. Applied to live Neon DB.
+- **New helper** (`_fetch_credibility_context` in narrative_engine.py): Joins `management_credibility_scores` + `management_narrative_timeline` to produce a formatted "Management Track Record" prompt block. Includes the 5 most recent actionable promises with verbatim guidance text and current_status.
+- **Prompt enrichment** (analyze_transcript): When credibility data exists, inject the track-record block into the LLM prompt with explicit instruction to emit `management_credibility_assessment ∈ {TRUSTED, NEUTRAL, DISTRUSTED, INSUFFICIENT_DATA}`. Backward-compatible: if no credibility data, falls back to current behavior.
+- **Persistence** (store_analysis): Persists `credibility_assessment` + `credibility_score_at_analysis`. Defaults: LLM-skipped field with track-record present → NEUTRAL; no track record → INSUFFICIENT_DATA.
+- **Test coverage** (engine_fundamental/test_narrative_credibility_context.py): 7 tests against live Neon DB, all pass. Covers empty/full/flipped/partial data shapes + the 3 persistence paths (TRUSTED, NEUTRAL default, INSUFFICIENT_DATA fallback). Uses disposable `_NARR_CTX_<uuid>` symbols with full cleanup.
+- **Regression check**: All 27 existing engine_guidance tests still pass.
+
+**Result**: Phase 1 of the integration plan is complete. The next time AAE runs on a symbol with credibility data (CGCL, ASHOKA, EIHAHOTELS, etc.), the narrative layer's LLM call will receive multi-quarter management context instead of just the latest transcript. Cost is $0 (same prompt length, just structured).
+
+**Next Step**: Phase 2 — Layer 7 (Graveyard) auto-burial on credibility collapse. Highest remaining-value phase; will detect EIHAHOTELS-style management failures automatically instead of waiting for manual burial.
+
+---
+
 ## **May 25, 2026: PRDE Milestone 0 & 1 Completion + Pipeline Integration**
 
 **Objective**: Complete Milestone 0 (PRDE Financial Foundation) and Milestone 1 (Deterministic Scoring) and wire them into the daily pipeline + AAE orchestrator.
