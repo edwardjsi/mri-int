@@ -9,6 +9,7 @@ import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
 import GuidanceCheck from './GuidanceCheck';
 import ConvictionEngine from './ConvictionEngine';
+import ManagementIntegrityPanel from './ManagementIntegrityPanel';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
@@ -241,6 +242,12 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
                 </div>
               </div>
             )}
+
+            {/* AAE × Management Integrity (Phase 6) — surfaces the credibility
+                track-record in the universal StockDetailsModal too, so clicks
+                from ConvictionEngine / Watchlist / etc. show the same panel
+                the AAE Digital Twin modal shows. */}
+            <ManagementIntegrityPanel legacyForensic={aaeData.legacy_forensic} />
           </div>
         )}
 
