@@ -17,6 +17,37 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 2 — Layer 7 Auto-Burial**
+
+**Objective**: Make AAE Layer 7 (Graveyard) detect credibility collapse *automatically* instead of relying on a human to manually bury the symbol in `aae_graveyard`. Detects managers who are actively missing commitments without waiting for someone to notice.
+
+**Actions**:
+- **New module-level helper** `fetch_credibility(symbol)` in `graveyard_engine.py`: lightweight read of `management_credibility_scores` — returns a flat dict or None. No DB write.
+- **Two new rules** in `GraveyardEngine.evaluate_penalty()`:
+  - **Rule 1 — AUTO-BURY (HARD -30)**: `consecutive_miss_quarters >= 4` AND `accuracy_pct < 40` → writes `[AUTO]` marker to `aae_graveyard`, returns -30 penalty.
+  - **Rule 2 — SOFT LAG PENALTY (-10)**: `consecutive_miss_quarters >= 2` → returns -10 penalty, no DB write.
+  - **Rule 3 — MANUAL BURIAL** preserved (existing behavior, takes precedence).
+- **Defensive ordering**: Manual burial always wins over auto-bury. A human-set `reason_for_death` is never overwritten with `[AUTO]`, even if the symbol also qualifies for auto-bury. Prevents data loss if a manual analyst already flagged the issue with different context.
+- **New `auto: bool` kwarg** on `bury_symbol()`: only programmatic burials get the `[AUTO]` prefix so manual reviews can distinguish.
+- **Class constants** for thresholds (`AUTO_BURY_MIN_CONSECUTIVE_MISS=4`, `AUTO_BURY_MAX_SCORE=40`, `SOFT_PENALTY_MIN_CONSECUTIVE_MISS=2`) — easy to tune without code spelunking.
+- **Return shape expanded**: `evaluate_penalty()` now also returns `rule` (NONE | AUTO_BURY | SOFT_LAG_PENALTY | MANUAL_BURIAL) and the full `credibility` snapshot. Orchestrator code only reads `penalty` + `reason`, so this is fully backward-compatible.
+- **Test coverage** (engine_fundamental/test_graveyard_credibility.py, 14 cases, all pass): no-penalty cases (missing/strong cred), soft penalty (2 + 3 misses), threshold edges (3 misses + low score, score=40.00), auto-bury happy path + boundary (39.99) + extreme (6 misses), manual preservation (alone and overlapping with auto), idempotency (second call doesn't double-penalize), and `fetch_credibility()` None/full cases.
+
+**Live-data sanity check on Neon (no side effects, just read)**:
+- **SIGMA**: 8 consecutive misses + 0/100 + THESIS BROKEN → would AUTO-BURY ✓
+- **TARIL / DATAPATTNS**: THESIS BROKEN but only 3 misses → SOFT penalty (conservative — 1 more miss to go)
+- **ASHOKA / SJS**: 4 misses but score ≥40 → SOFT penalty (not yet auto-bury)
+- **EIHAHOTELS**: 33.83/100 but 0 consecutive misses → NO penalty (correct — low score alone isn't enough)
+- **16 other symbols** with 2+ misses correctly get SOFT penalty
+
+**Regression check**: 48 tests pass (14 new + 7 from Phase 1 + 27 existing). Zero leftover test rows.
+
+**Result**: Phase 2 complete. The next time AAE runs on SIGMA (or any symbol that crosses the auto-bury threshold), it'll get the -30 hard penalty automatically without waiting for manual analyst intervention.
+
+**Next Step**: Phase 3 — Layers 9-10 (Bear/Bull Debate) get management_integrity context. Bear case can now say "management has missed 3 of 5 promises" with concrete data.
+
+---
+
 ## **May 25, 2026: PRDE Milestone 0 & 1 Completion + Pipeline Integration**
 
 **Objective**: Complete Milestone 0 (PRDE Financial Foundation) and Milestone 1 (Deterministic Scoring) and wire them into the daily pipeline + AAE orchestrator.

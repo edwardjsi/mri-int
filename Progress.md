@@ -44,6 +44,48 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 2: Layer 7 Auto-Burial
+
+**Session Start:** 09:00 IST
+**Session End:** 09:45 IST
+
+### What Was Done This Session
+
+#### 1. Phase 2 — Layer 7 Auto-Burial on Credibility Collapse ✅
+- [x] **New module helper** `fetch_credibility(symbol)` in `graveyard_engine.py` — lightweight read of `management_credibility_scores`.
+- [x] **Two new rules** in `GraveyardEngine.evaluate_penalty()`:
+  - AUTO-BURY (-30 hard): `consecutive_miss_quarters >= 4` AND `accuracy_pct < 40`
+  - SOFT LAG PENALTY (-10): `consecutive_miss_quarters >= 2`
+- [x] **Defensive ordering** — manual burial takes precedence; human-set `reason_for_death` never overwritten with `[AUTO]`.
+- [x] **`auto: bool` kwarg** on `bury_symbol()` — only programmatic burials get the `[AUTO]` prefix.
+- [x] **Class constants** for all thresholds — easy tuning without code spelunking.
+- [x] **Return shape expanded** — `evaluate_penalty()` now returns `rule` + full `credibility` snapshot. Backward-compatible (orchestrator only reads `penalty` + `reason`).
+- [x] **Test coverage** — `engine_fundamental/test_graveyard_credibility.py`, 14 cases, all pass:
+  - No-penalty cases (missing/strong cred)
+  - Soft penalty at 2 and 3 consecutive misses
+  - Threshold edges (3 misses + low score, score=40.00)
+  - Auto-bury happy path + boundary (39.99) + extreme (6 misses)
+  - Manual burial preserved (alone and overlapping with auto)
+  - Idempotency (second call doesn't double-penalize)
+  - `fetch_credibility()` None/full cases
+- [x] **Regression check** — 48 tests pass (14 new + 7 from Phase 1 + 27 existing). Zero leftover rows.
+
+#### 2. Live-Data Sanity Check ✅
+- [x] **SIGMA** (8 misses, score 0) → would AUTO-BURY ✓
+- [x] **TARIL / DATAPATTNS** (THESIS BROKEN but 3 misses) → SOFT penalty (conservative)
+- [x] **ASHOKA / SJS** (4 misses but score ≥40) → SOFT penalty
+- [x] **EIHAHOTELS** (low score but 0 consecutive misses) → NO penalty (correct)
+- [x] 16 other symbols with 2+ misses correctly flagged for SOFT penalty
+
+#### 3. Commit ✅
+- `d1067e9` — feat: AAE Layer 7 (Graveyard) auto-buries on credibility collapse (Phase 2)
+
+### 📌 Current Milestone
+- AAE Phase 2 (Layer 7 auto-burial) **complete**.
+- Next: **Phase 3** — Layers 9-10 (Bear/Bull Debate) get `management_integrity` context. Bear case can now cite "management has missed 3 of 5 promises" with concrete data. ~30 min.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST
