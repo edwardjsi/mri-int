@@ -209,6 +209,47 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 7: Final Verification + GuidanceCheck Email Work
+
+**Session Start:** 11:35 IST
+**Session End:** 13:20 IST
+
+### What Was Done This Session
+
+#### 1. Committed Overnight Email Work ✅
+- [x] `engine_core/email_service.py` (+267 lines) — three new helpers (`_build_header_metadata_band`, `_build_intonation_email_section`, `_build_no_verified_promises_warning`) wired into `build_guidance_report_email_html`.
+- [x] `engine_core/test_guidance_email_sections.py` (new) — 8 structural tests for the new email sections.
+- [x] `scripts/render_guidance_email.py` (new) — visual spot-check tool.
+- [x] `docs/GUIDANCE_EMAIL_ENHANCEMENT_PLAN_2026-06-17.md` — planning doc.
+
+#### 2. Phase 7 — Final Verification ✅
+- [x] **CGCL** smoke test → clean record, no graveyard penalty ✓
+- [x] **EIHAHOTELS** smoke test → low score but 0 miss streak, conservative threshold correctly does NOT auto-bury ✓
+- [x] **ASHOKA** smoke test → 4Q miss streak + score 47 → SOFT_LAG_PENALTY (-10) ✓
+- [x] **SIGMA** smoke test → 8Q miss streak + score 0 → AUTO_BURY (-30, writes `[AUTO]` to aae_graveyard) ✓
+- [x] **Profile wiring** → `ReRatingOrchestrator.build_profile()` carries full `management_integrity` block ✓
+- [x] **Full AAE orchestrator end-to-end** → CGCL completed in ~16s, master_score=71.6, bear+bull debate fired via DeepSeek ✓
+- [x] **Regression suite** → 69 tests pass (all phases). Zero test data leaks. Zero TypeScript errors. Vite build clean.
+
+#### 3. Side Effect to Note
+- SIGMA was auto-buried during the smoke test (real DB write). This is the correct conservative behavior. To revert: `DELETE FROM aae_graveyard WHERE symbol='SIGMA';`
+
+#### 4. Commit ✅
+- `37c6340` — feat: GuidanceCheck email mirrors screen sections
+
+### 📌 Current Milestone
+- **AAE × Management Integrity integration: ALL 7 PHASES COMPLETE** ✓
+- Full plan: docs/AAE_INTEGRATION_PLAN_2026-06-17.md
+
+### 🎯 Net Effect of the Integration
+The AAE master score is now a hybrid number + integrity signal:
+- Clean ADD ZONE manager (CGCL): +12.1 credibility contribution on top of base layers, bear/bull lean on "TRUSTED, 5 FULFILLED 0 MISSED" context
+- Broken THESIS BROKEN manager (SIGMA): −7.5 from credibility weight + −30 from auto-bury = master score floored
+- Bear case for ASHOKA: "management has missed 3 of 5 promises" — concrete data, not generic hand-waving
+- Frontend: integrity panel appears on every modal opened by an AAE scan (ConvictionEngine, Watchlist, Holdings, Signal cards)
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST

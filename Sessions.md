@@ -17,6 +17,35 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 7 — Final Verification + Master Commit**
+
+**Objective**: End-to-end smoke tests on live data + final regression run to prove all 7 phases of the AAE × Management Integrity integration work together.
+
+**Live-data smoke tests** (all pass):
+- **CGCL** (clean record, 80.4/100 ADD ZONE, 0 consecutive misses) → `GraveyardEngine.evaluate_penalty()` returns `NONE` with penalty=0 ✓
+- **EIHAHOTELS** (low score 33.8, but **0** consecutive misses) → returns `NONE` ✓ (conservative threshold correctly does NOT auto-bury when the miss streak hasn't accumulated)
+- **ASHOKA** (47.2/100, 4 consecutive misses, REDUCE ZONE) → returns `SOFT_LAG_PENALTY` with penalty=10 ✓
+- **SIGMA** (0/100, 8 consecutive misses, THESIS BROKEN) → returns `AUTO_BURY` with penalty=30, writes `[AUTO]` row to `aae_graveyard` ✓
+- **Profile wiring**: `ReRatingOrchestrator.build_profile()` for CGCL produces full `legacy_forensic.layers.management_integrity` (has_data=True, verdict=ADD ZONE, score=80.38, full promise_counts, master_score_breakdown.credibility=12.06) ✓
+- **Full AAE orchestrator end-to-end run**: CGCL completed in ~16s with master_score=71.6 (sector/narrative/market/ownership/valuation/credibility all contributing). Bear + bull debate agents fired via DeepSeek ✓
+
+**Regression suite**: 69 tests pass (11 Phase 4 master-score + 10 Phase 3 debate + 14 Phase 2 graveyard + 7 Phase 1 narrative + 27 existing engine_guidance). Zero leftover test rows in any of the test-tables. Zero TypeScript errors. Vite production build succeeds (734 modules, 3.06s).
+
+**Side effect to note**: SIGMA was auto-buried during the smoke test (real DB write via `[AUTO] AUTO-BURIED: 8 consecutive missed quarters + 0/100 credibility (THESIS BROKEN)`). This is the correct conservative behavior per Phase 2's threshold. If you want to revert, DELETE FROM `aae_graveyard` WHERE symbol='SIGMA'; the credibility score row stays intact for re-evaluation.
+
+**Result**: Phase 7 complete. All 7 phases of `docs/AAE_INTEGRATION_PLAN_2026-06-17.md` are now landed:
+- Phase 1: AAE Layer 4 (Narrative) injects credibility context into LLM prompt ✓
+- Phase 2: AAE Layer 7 (Graveyard) auto-buries on credibility collapse ✓
+- Phase 3: AAE Layers 9-10 (Bear/Bull Debate) weigh management integrity ✓
+- Phase 4: master_score formula weights credibility at 15% ✓
+- Phase 5: AAE Digital Twin modal surfaces integrity panel ✓
+- Phase 6: ManagementIntegrityPanel extracted + StockDetailsModal wired ✓
+- Phase 7: All phases verified end-to-end with live data ✓
+
+**Net result of the integration**: the AAE master score is now a hybrid number + integrity signal. A clean ADD ZONE manager (CGCL) gets a +12.1 contribution from credibility on top of base layers. A broken THESIS BROKEN manager (SIGMA) gets a −30 auto-bury penalty on top of the master_score formula. The bear/bull debate now argues with concrete "management has missed 3 of 5 promises" data instead of abstract valuations. The frontend surfaces it everywhere a user opens a stock modal.
+
+---
+
 ## **June 17, 2026 (continued): AAE Phase 6 — ConvictionEngine Modal Closes the Gap**
 
 **Objective**: Close the gap the Phase 5 plan acknowledged might not need closing — the universal `StockDetailsModal` (opened from ConvictionEngine rows, Watchlist, Holdings, Signal cards, etc.) was already calling `/api/aae/scan` and receiving `legacy_forensic.layers.management_integrity`, but rendering none of it. Users saw master_score + bull_case with no credibility context.
