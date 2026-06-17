@@ -558,6 +558,17 @@ def ensure_required_tables(conn) -> None:
         );
         """
     )
+    # AAE × Management Integrity (Decision 097 + 2026-06-17 plan): Layer 4 (Narrative)
+    # prompt now asks the LLM for a TRUSTED / NEUTRAL / DISTRUSTED assessment based
+    # on the credibility track-record context that gets injected upstream.
+    cur.execute(
+        "ALTER TABLE public.aae_narrative_intelligence "
+        "ADD COLUMN IF NOT EXISTS credibility_assessment VARCHAR(20);"
+    )
+    cur.execute(
+        "ALTER TABLE public.aae_narrative_intelligence "
+        "ADD COLUMN IF NOT EXISTS credibility_score_at_analysis NUMERIC(5,2);"
+    )
 
     cur.execute(
         """
