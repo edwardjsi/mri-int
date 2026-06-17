@@ -99,10 +99,33 @@ class AAEOrchestrator:
     Synthesizes a 10-layer institutional forensic intelligence pipeline.
     Layers 0-7: Deterministic Forensic Audit.
     Layers 9-10: Multi-agent AI Stress Test (Bear vs. Bull).
+
+    Master score weights (Phase 4, AAE × Management Integrity plan):
+        sector       0.25
+        narrative    0.20  (down from 0.25 — narrative now incorporates credibility via Phase 1)
+        market       0.20  (down from 0.25)
+        ownership    0.10
+        valuation    0.10
+        credibility  0.15  (NEW — from management_credibility_scores)
+    Sum = 1.00.
+
+    Credibility defaults to 50 (neutral) when no track record exists yet,
+    so missing data never hurts and never helps.
     """
-    
+    W_SECTOR      = 0.25
+    W_NARRATIVE   = 0.20
+    W_MARKET      = 0.20
+    W_OWNERSHIP   = 0.10
+    W_VALUATION   = 0.10
+    W_CREDIBILITY = 0.15
+
     def __init__(self, symbol):
         self.symbol = symbol.upper()
+
+    @property
+    def _weight_sum(self) -> float:
+        return (self.W_SECTOR + self.W_NARRATIVE + self.W_MARKET
+                + self.W_OWNERSHIP + self.W_VALUATION + self.W_CREDIBILITY)
 
     def run_full_scan(self):
         logger.info(f"Starting AAE V3 10-Layer Scan for {self.symbol}...")
@@ -175,27 +198,44 @@ class AAEOrchestrator:
         # Layer 7: Forensic Feedback (Graveyard)
         graveyard = GraveyardEngine(self.symbol)
         forensic = graveyard.evaluate_penalty()
-        
+
+        # Phase 3 (AAE × Management Integrity): build the integrity context
+        # once, BEFORE the master_score calc, so we can fold it into the
+        # weighted formula. Same dict is reused in ai_context for the debate.
+        management_integrity = _build_management_integrity(self.symbol)
+
         # Master Score Calculation (Deterministic)
-        master_score = (
-            (sector_result.get('score', 50) * 0.30) +
-            (narrative_score * 0.25) +
-            (market_result.get('score', 50) * 0.25) +
-            (own_result.get('score', 50) * 0.10) +
-            (val_result.get('valuation_score', 50) * 0.10)
+        # Phase 4: weights rebalanced to include credibility at 15%.
+        # Credibility defaults to 50 (neutral) when no track record exists.
+        credibility_score_for_weighting = (
+            management_integrity["credibility_score"]
+            if (management_integrity
+                and management_integrity.get("credibility_score") is not None)
+            else 50
         )
-        
-        # Apply Penalties
+        sector_score = sector_result.get('score', 50)
+        market_score = market_result.get('score', 50)
+        own_score = own_result.get('score', 50)
+        val_score = val_result.get('valuation_score', 50)
+
+        # Per-layer contribution breakdown (handy for Phase 5 UI + debugging)
+        contrib = {
+            "sector":      sector_score * self.W_SECTOR,
+            "narrative":   narrative_score * self.W_NARRATIVE,
+            "market":      market_score * self.W_MARKET,
+            "ownership":   own_score * self.W_OWNERSHIP,
+            "valuation":   val_score * self.W_VALUATION,
+            "credibility": credibility_score_for_weighting * self.W_CREDIBILITY,
+        }
+        master_score = sum(contrib.values())
+
+        # Apply Penalties (additive knock-downs on top of the weighted formula)
         master_score -= divergence_penalty
         if forensic['penalty'] > 0:
             master_score -= forensic['penalty']
-        
+
         # Layer 9 & 10: AI Stress Test Agents
         debate_engine = ForensicDebateEngine(self.symbol)
-
-        # Phase 3 (AAE × Management Integrity): build the integrity context
-        # the bear/bull debate will weigh alongside the numerical layers.
-        management_integrity = _build_management_integrity(self.symbol)
 
         # Prepare context for AI agents
         ai_context = {
@@ -209,26 +249,33 @@ class AAEOrchestrator:
             "management_integrity": management_integrity,
             "graveyard_rule": forensic.get('rule'),
             "graveyard_penalty": forensic.get('penalty', 0),
+            "master_score_breakdown": contrib,
         }
         
         bear_case = debate_engine.run_bear_layer(ai_context)
         bull_case = debate_engine.run_bull_layer(ai_context)
 
-        # Data quality check: count how many engine layers returned real data
+        # Data quality check: count how many engine layers returned real data.
+        # Phase 4: now includes credibility (6 layers total).
+        credibility_score_value = (
+            management_integrity.get("credibility_score")
+            if management_integrity else None
+        )
         score_sources = [
             sector_result.get('score'),
             narrative_score,
             market_result.get('score'),
             own_result.get('score'),
             val_result.get('valuation_score'),
+            credibility_score_value,
         ]
-        real_layer_count = sum(1 for s in score_sources 
+        real_layer_count = sum(1 for s in score_sources
             if s is not None and isinstance(s, (int, float)) and s not in (50, 0))
-        
+
         data_quality_warning = None
         if real_layer_count <= 1:
             data_quality_warning = (
-                f"⚠️ Only {real_layer_count}/5 engine layers returned real data for {self.symbol}. "
+                f"⚠️ Only {real_layer_count}/6 engine layers returned real data for {self.symbol}. "
                 "The master score is heavily influenced by default values. "
                 "Check if this symbol has been ingested into all AAE data pipelines."
             )
@@ -243,17 +290,31 @@ class AAEOrchestrator:
             "market_confirmation": market_result.get('confirmation_status'),
             "narrative_score": round(narrative_score, 1),
             "reasons": sector_result.get('reasons', []) + market_result.get('reasons', []) + own_result.get('reasons', []) + val_result.get('reasons', []),
-            
+
             "data_quality": {
                 "layers_with_real_data": real_layer_count,
-                "total_engine_layers": 5,
+                "total_engine_layers": 6,
                 "warning": data_quality_warning,
             },
-            
+
+            # Phase 4: master score contribution breakdown + final credibility score used
+            "master_score_breakdown": {
+                k: round(v, 2) for k, v in contrib.items()
+            },
+            "credibility_score_used": credibility_score_for_weighting,
+            "weights": {
+                "sector":      self.W_SECTOR,
+                "narrative":   self.W_NARRATIVE,
+                "market":      self.W_MARKET,
+                "ownership":   self.W_OWNERSHIP,
+                "valuation":   self.W_VALUATION,
+                "credibility": self.W_CREDIBILITY,
+            },
+
             # 10-Layer Results
             "bear_case": bear_case, # Layer 9
             "bull_case": bull_case, # Layer 10
-            
+
             "layers": {
                 "governance": gov_data,
                 "structural_delta": sector_result,
@@ -266,6 +327,7 @@ class AAEOrchestrator:
                 "valuation": val_result,
                 "market": market_result,
                 "forensic": forensic,
+                "management_integrity": management_integrity,
                 "bear_agent": bear_case,
                 "bull_agent": bull_case
             }
