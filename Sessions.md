@@ -17,6 +17,37 @@
 
 ---
 
+## **June 17, 2026 (continued): AAE Phase 4 — Master Score Rebalanced with Credibility (Option A)**
+
+**Objective**: Make management credibility a first-class component of the master_score formula, not just a debate/penalty modifier. A clean ADD ZONE manager should *raise* the score; a broken THESIS BROKEN manager should *lower* it. User chose **Option A (rebalance)** over Option B (penalty-based).
+
+**Actions**:
+- **Class-level weight constants** on `AAEOrchestrator`: `W_SECTOR=0.25`, `W_NARRATIVE=0.20`, `W_MARKET=0.20`, `W_OWNERSHIP=0.10`, `W_VALUATION=0.10`, `W_CREDIBILITY=0.15`. `_weight_sum` property asserts the invariant (1.0).
+- **Rebalanced formula**: sector/narrative/market dropped 0.05 each (justified: narrative already incorporates credibility via Phase 1, so double-counting is a real risk). Credibility is the new 6th input.
+- **`_build_management_integrity` called earlier** in `run_full_scan()` — before master_score (was after, for debate only). Same dict is reused for both formula and ai_context — no duplicate DB work.
+- **Credibility defaults to 50 (neutral)** when no track record exists, so missing data never hurts and never helps.
+- **Result dict enriched**: `master_score_breakdown` (per-layer contribution), `weights` (formula constants), `credibility_score_used` (the actual score that fed the formula), `layers.management_integrity` (the full integrity block for Phase 5 UI).
+- **Data quality warning updated**: `total_engine_layers: 5 → 6`.
+
+**Tests** (`engine_fundamental/test_master_score_credibility_weight.py`, 11 cases, all pass):
+- Weights sum to 1.0, credibility=0.15, narrative/market=0.20
+- Neutral baseline (all 50s, no cred) → master_score = 50.0
+- Per-layer breakdown matches `50 × weight` exactly
+- Credibility=100 → master_score = 57.5 (+7.5 boost)
+- Credibility=0 → master_score = 42.5 (−7.5 drop)
+- Credibility=None defaults to 50 (no effect)
+- No credibility row + no timeline → defaults to 50
+- Graveyard -30 penalty still applies additively on top of weighted formula
+- Result exposes `weights` dict with all 6 keys
+
+**Regression check**: 69 tests pass (11 new + 58 existing). Zero leftover test rows.
+
+**Result**: Phase 4 complete. A CGCL (clean ADD ZONE) now gets a +7.5 boost vs an equivalent stock with no credibility data; a SIGMA (8Q miss streak, 0/100 credibility) gets a −7.5 drag vs an equivalent stock. Combined with Phase 2 auto-burial (−30), the worst managers are now strongly filtered out.
+
+**Next Step**: Phase 5 — frontend AAE dashboard panel for management integrity. Render the credibility layer in `AaeDashboard.tsx` with the timeline evidence so users can see *why* a manager scored what they scored.
+
+---
+
 ## **June 17, 2026 (continued): AAE Phase 3 — Bear/Bull Debate Gets Integrity Context**
 
 **Objective**: Wire the credibility track-record into the Layer 9-10 bear/bull debate so the AI can cite concrete management behavior ("management has missed 3 of 5 promises") rather than arguing in the abstract. Last layer with substantive AI behavior change before the optional polish phases.

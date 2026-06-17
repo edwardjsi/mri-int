@@ -118,6 +118,41 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (cont.) — AAE Phase 4: Master Score Rebalanced (Option A)
+
+**Session Start:** 10:15 IST
+**Session End:** 10:45 IST
+
+### What Was Done This Session
+
+#### 1. Phase 4 — Master Score Rebalanced with Credibility (Option A) ✅
+- [x] **Class-level weight constants** on `AAEOrchestrator` — `W_SECTOR=0.25`, `W_NARRATIVE=0.20`, `W_MARKET=0.20`, `W_OWNERSHIP=0.10`, `W_VALUATION=0.10`, `W_CREDIBILITY=0.15`.
+- [x] **Rebalanced formula** — sector/narrative/market each dropped 0.05; credibility is new 6th input. Sum = 1.0 (verified by `_weight_sum` invariant).
+- [x] **`_build_management_integrity` called earlier** — before master_score (was after, for debate only). Same dict reused, no duplicate DB work.
+- [x] **Credibility defaults to 50** (neutral) when no track record exists.
+- [x] **Result dict enriched** — `master_score_breakdown` (per-layer contribution), `weights` (formula constants), `credibility_score_used`, `layers.management_integrity` (Phase 5 prep).
+- [x] **Data quality warning updated** — `total_engine_layers: 5 → 6`.
+- [x] **Test coverage** — `engine_fundamental/test_master_score_credibility_weight.py`, 11 cases, all pass:
+  - Weights sum to 1.0; each weight at the documented value
+  - Neutral baseline (all 50s, no cred) → master_score = 50.0
+  - Per-layer breakdown matches `50 × weight` exactly
+  - Credibility=100 → master_score = 57.5 (+7.5)
+  - Credibility=0 → master_score = 42.5 (−7.5)
+  - Credibility=None defaults to 50 (no effect)
+  - No credibility row + no timeline → defaults to 50
+  - Graveyard -30 penalty still applies additively
+  - Result exposes `weights` dict with all 6 keys
+- [x] **Regression check** — 69 tests pass (11 new + 58 existing). Zero leftover rows.
+
+#### 2. Commit ✅
+- `fd58f85` — feat: AAE master_score now weights credibility at 15% (Phase 4, Option A rebalance)
+
+### 📌 Current Milestone
+- AAE Phase 4 (master score rebalanced) **complete**.
+- Next: **Phase 5** — frontend AAE dashboard panel for management integrity. Render credibility layer in `AaeDashboard.tsx` with timeline evidence. ~30 min.
+
+---
+
 ## 📅 Session: May 29, 2026 — Unifier Bug Fixes + NSE Fallback + Mass Priming
 
 **Session Start:** ~13:30 IST
