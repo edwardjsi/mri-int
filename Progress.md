@@ -2,6 +2,36 @@
 
 ---
 
+## 📅 Session: June 17, 2026 (continued) — End-of-Day Verification, SIGMA Revert & Push
+
+**Session Start:** ~14:00 IST
+**Session End:** ~14:30 IST
+
+### What Was Done This Session
+
+#### 1. SIGMA Auto-Burial Reverted ✅
+- [x] Phase 7 smoke test had auto-buried SIGMA (8 consecutive missed quarters + 0/100 credibility) — correct conservative behavior, but a real production DB write.
+- [x] `DELETE FROM aae_graveyard WHERE symbol='SIGMA'` — 1 row removed. Credibility score row left intact for re-evaluation.
+
+#### 2. Full Regression Suite Re-Run ✅
+- [x] Installed `pytest==9.1.0` in `venv` (was missing).
+- [x] Ran pytest across all 8 test files (Phase 1 narrative + Phase 2 graveyard + Phase 3 debate + Phase 4 master-score + 3 engine_guidance baselines + Phase 7 email sections).
+- [x] **77 / 77 passed in 145s.** Zero failures.
+- [x] Today's run left zero leaked test rows in any of the 7 audited tables.
+
+#### 3. Stale-Leak Cleanup ✅
+- [x] Found 1 leaked row from yesterday's session (`_TESTVR_3D32C182` in `management_guidance` + joined `guidance_verification`). Deleted. Not from today's run.
+
+#### 4. Push ✅
+- [x] All 15 commits from today's 7 AAE phases + Phase 7 docs pushed to `origin/main`.
+- [x] Branch is now in sync with remote.
+
+### 📌 Current Milestone
+- **AAE × Management Integrity integration: complete and on remote.** All 7 phases from `docs/AAE_INTEGRATION_PLAN_2026-06-17.md` are live.
+- Next: decide next roadmap item (sector-specific credibility models, debate feedback loop, or advanced portfolio risk integration).
+
+---
+
 ## 📅 Session: June 17, 2026 — AAE Phase 1: Narrative Credibility Context Injection
 
 **Session Start:** 07:30 IST

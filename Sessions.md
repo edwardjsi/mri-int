@@ -1,3 +1,20 @@
+## **June 17, 2026 (continued): End-of-Day Verification, SIGMA Revert & Push**
+
+**Objective**: Close out the day's 7-phase AAE × Management Integrity integration by re-running the regression suite against the live Neon DB, reverting the SIGMA side-effect from Phase 7 smoke tests, and pushing the 15 local commits to `origin/main`.
+
+**Actions**:
+- **Reverted SIGMA auto-burial**: `DELETE FROM aae_graveyard WHERE symbol='SIGMA'` (1 row removed). The Phase 7 smoke test had auto-buried SIGMA (8 consecutive missed quarters + 0/100 credibility) which was correct conservative behavior per the Phase 2 thresholds, but a real production DB write. Reverted to keep the graveyard clean until SIGMA appears in a real AAE scan run. Credibility score row left intact for re-evaluation.
+- **Regression suite re-run**: `pytest` against all 8 test files (Phase 1 narrative + Phase 2 graveyard + Phase 3 debate + Phase 4 master-score + 3 engine_guidance baselines + Phase 7 email sections). **77 / 77 passed in 145s.** Note: pytest was not pre-installed in `venv` — installed `pytest==9.1.0` via `pip install pytest` first (no impact on production code).
+- **Leak audit**: Verified zero test-data leaks across `management_credibility_scores`, `management_narrative_timeline`, `management_guidance`, `guidance_verification`, `aae_graveyard`, `aae_narrative_intelligence`, `aae_results_snapshot`.
+- **Stale-leak cleanup**: Found 1 row from yesterday's session (`_TESTVR_3D32C182` in `management_guidance` + joined `guidance_verification`) — deleted. Not from today's run, just hygiene.
+- **Push**: 15 commits pushed to `origin/main`. All Phase 1–7 code + Phase 7 docs are now on the shared remote.
+
+**Result**: Day's AAE × Management Integrity work is complete and on `origin/main`. Net effect unchanged from Phase 7's summary: clean ADD ZONE managers (CGCL) get +7.5 to +12.1 credibility boost, broken managers (SIGMA) get −7.5 from weight + −30 from auto-bury on real scans, bear/bull debate cites concrete management behavior, frontend surfaces the panel on every modal opened by an AAE scan.
+
+**Next Step**: Decide next roadmap item (sector-specific credibility models? debate feedback loop? advanced portfolio risk integration?). Phase 2 of the AAE roadmap is complete; remaining work in `docs/AAE_INTEGRATION_PLAN_2026-06-17.md` is done.
+
+---
+
 ## **June 17, 2026: AAE Phase 1 — Layer 4 Credibility Track-Record Injection**
 
 **Objective**: Begin executing the AAE × Management Integrity integration plan (7 phases, ~4 hrs, docs/AAE_INTEGRATION_PLAN_2026-06-17.md). First deliverable: enrich AAE Layer 4 (Narrative) LLM prompt with the symbol's management credibility track-record so the AI can ground its summary in verifiable management behavior rather than reacting to the latest transcript in isolation. Also landed an uncommitted prompt tightening for narrative_tracer.
