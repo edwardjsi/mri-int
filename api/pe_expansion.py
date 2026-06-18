@@ -366,60 +366,10 @@ def _log_email(client_id: str | None, recipient: str, report: dict[str, Any],
 
 # ── Routes ───────────────────────────────────────────────────────────
 
-@router.get("/{symbol}")
-def get_pe_expansion(symbol: str) -> dict[str, Any]:
-    """Return the full PE Expansion report JSON for a symbol."""
-    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
-    if not sym:
-        raise HTTPException(status_code=400, detail="symbol is required")
-    try:
-        report = build_pe_expansion_report(sym)
-    except Exception as e:
-        logger.error(f"build_pe_expansion_report({sym}) failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to build report: {e}")
-
-    # Light cache hint: caller should set If-None-Match handling if needed.
-    return report
-
-
-@router.post("/email/{symbol}")
-def email_pe_expansion(symbol: str, to: str = Query(..., description="Recipient email"),
-                       client_id: str | None = Query(None)) -> dict[str, Any]:
-    """Build the report, render the HTML email, send via SES, log to email_log."""
-    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
-    if not sym:
-        raise HTTPException(status_code=400, detail="symbol is required")
-    if "@" not in to or "." not in to:
-        raise HTTPException(status_code=400, detail="invalid 'to' email address")
-
-    try:
-        report = build_pe_expansion_report(sym)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to build report: {e}")
-
-    send_result = _send_pe_expansion_email(to, report)
-    _log_email(client_id, to, report, send_result)
-
-    return {
-        "status": send_result.get("status"),
-        "symbol": sym,
-        "to": to,
-        "pe_score": report["header"]["pe_score"],
-        "message_id": send_result.get("message_id"),
-        "dev_path": send_result.get("path"),
-        "warning": send_result.get("warning"),
-    }
-
-
-@router.get("/email/preview/{symbol}", response_class=HTMLResponse)
-def preview_pe_expansion_email(symbol: str) -> HTMLResponse:
-    """Render the HTML email in a browser without sending. Useful for QA."""
-    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
-    report = build_pe_expansion_report(sym)
-    return HTMLResponse(content=render_pe_expansion_email(report))
-
-
-# ── Suggest + Top 10 (manual-refresh, 149-universe scope) ──────────
+# IMPORTANT: /suggest and /top10 must be registered BEFORE the /{symbol}
+# catch-all, otherwise FastAPI's route-order matching would hijack them as
+# symbol names ("suggest", "top10") and return PE reports for non-existent
+# companies instead of the autocomplete/top-10 responses.
 
 @router.get("/suggest")
 def suggest_pe_expansion(q: str = Query("", description="Symbol or company name prefix"),
@@ -501,3 +451,56 @@ def top10_pe_expansion() -> dict[str, Any]:
         }
     finally:
         conn.close()
+
+
+@router.get("/{symbol}")
+def get_pe_expansion(symbol: str) -> dict[str, Any]:
+    """Return the full PE Expansion report JSON for a symbol."""
+    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    if not sym:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    try:
+        report = build_pe_expansion_report(sym)
+    except Exception as e:
+        logger.error(f"build_pe_expansion_report({sym}) failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to build report: {e}")
+
+    # Light cache hint: caller should set If-None-Match handling if needed.
+    return report
+
+
+@router.post("/email/{symbol}")
+def email_pe_expansion(symbol: str, to: str = Query(..., description="Recipient email"),
+                       client_id: str | None = Query(None)) -> dict[str, Any]:
+    """Build the report, render the HTML email, send via SES, log to email_log."""
+    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    if not sym:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    if "@" not in to or "." not in to:
+        raise HTTPException(status_code=400, detail="invalid 'to' email address")
+
+    try:
+        report = build_pe_expansion_report(sym)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to build report: {e}")
+
+    send_result = _send_pe_expansion_email(to, report)
+    _log_email(client_id, to, report, send_result)
+
+    return {
+        "status": send_result.get("status"),
+        "symbol": sym,
+        "to": to,
+        "pe_score": report["header"]["pe_score"],
+        "message_id": send_result.get("message_id"),
+        "dev_path": send_result.get("path"),
+        "warning": send_result.get("warning"),
+    }
+
+
+@router.get("/email/preview/{symbol}", response_class=HTMLResponse)
+def preview_pe_expansion_email(symbol: str) -> HTMLResponse:
+    """Render the HTML email in a browser without sending. Useful for QA."""
+    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    report = build_pe_expansion_report(sym)
+    return HTMLResponse(content=render_pe_expansion_email(report))
