@@ -175,7 +175,6 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
   };
 
   const h = report?.header;
-  const cov = report?.coverage;
   const bucketC = h ? bucketColor(h.bucket) : colors.textMuted;
   const lastPromiseQuarter = (() => {
     if (!report || !report.primary_detail) return null;
@@ -271,7 +270,10 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
         )}
 
         {/* ── Report sections (only when loaded) ── */}
-        {report && !loading && !error && (
+        {report && !loading && !error && (() => {
+          const h = report.header;
+          const cov = report.coverage;
+          return (
         <>
         {/* ── Header ── */}
         <div style={{ padding: '32px 40px', background: colors.panel, borderBottom: `3px solid ${bucketC}` }}>
@@ -281,8 +283,13 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
                 MRI · Expansion Lens
               </div>
               <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 4 }}>{h.company_name}</div>
-              <div style={{ fontSize: 13, color: colors.textDim, marginBottom: 24 }}>
+              <div style={{ fontSize: 13, color: colors.textDim, marginBottom: 4 }}>
                 {h.sector || '—'} · {h.symbol} · {h.generated_at_ist}
+              </div>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 24, lineHeight: 1.5 }}>
+                Data spans {cov.n_quarter_span} quarter{cov.n_quarter_span === 1 ? '' : 's'}
+                {lastPromiseQuarter ? ` · latest promise ${lastPromiseQuarter}` : ''}
+                {' · '}Manual refresh only — last persisted {asOfIstLabel} IST
               </div>
             </div>
             {onBack && (
@@ -491,7 +498,8 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
           </div>
         </div>
         </>
-        )}
+          );
+        })()}
 
       </div>
     </div>
