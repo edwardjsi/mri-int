@@ -141,6 +141,226 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
     else:
         credibility_html = ""
 
+    # Helper: bucket a 0-100 score into a human-readable verdict + color
+    def _bucket_label(score: float | int | None) -> tuple[str, str]:
+        if score is None:
+            return ("No data", "#64748b")
+        if score >= 80:
+            return ("Strong", "#22c55e")
+        if score >= 60:
+            return ("Holding up", "#3b82f6")
+        if score >= 40:
+            return ("Mixed", "#f59e0b")
+        return ("Weak", "#ef4444")
+
+    # ── Independent Checks strip (3 side-by-side cards) ──
+    ic = report.get("independent_check")
+    fq = report.get("financial_quality")
+    pa = report.get("price_action")
+
+    def _card_html(title: str, score: float | int | None,
+                   label_override: str | None = None,
+                   extra_html: str = "",
+                   score_unit: str = "/100") -> str:
+        """Render one of the three cross-check cards."""
+        label, color = _bucket_label(score)
+        if label_override:
+            label = label_override
+        score_str = f"{score:.0f}{score_unit}" if score is not None else "—"
+        return f"""
+        <div style="flex:1;min-width:240px;padding:18px 20px;background:#0b1220;border:1px solid #1e293b;border-radius:6px;">
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">{_esc(title)}</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">
+            <div style="font-size:36px;font-weight:800;color:#f1f5f9;line-height:1;">{score_str}</div>
+            <div style="font-size:13px;font-weight:700;color:{color};">{_esc(label)}</div>
+          </div>
+          {extra_html}
+        </div>
+        """
+
+    ic_extra = ""
+    if ic and ic.get("reasons"):
+        bullets = "".join(
+            f'<li style="margin:3px 0;color:#94a3b8;font-size:11px;line-height:1.5;">{_esc(r)}</li>'
+            for r in ic["reasons"][:3]
+        )
+        ic_extra = f'<ul style="margin:8px 0 0 0;padding-left:18px;">{bullets}</ul>'
+
+    fq_extra = ""
+    if fq and fq.get("category"):
+        fq_extra = f'<div style="font-size:11px;color:#94a3b8;margin-top:4px;">Category: <span style="color:#f1f5f9;font-weight:600;">{_esc(fq["category"])}</span></div>'
+
+    pa_extra = ""
+    if pa and pa.get("breakout_state"):
+        pa_extra = f'<div style="font-size:11px;color:#94a3b8;margin-top:4px;">State: <span style="color:#f1f5f9;font-weight:600;">{_esc(pa["breakout_state"])}</span></div>'
+
+    indep_card = _card_html("Independent Check", ic["master_score"] if ic else None, extra_html=ic_extra) if ic else _card_html("Independent Check", None, label_override="No data", extra_html='<div style="font-size:11px;color:#64748b;margin-top:4px;">No audit available</div>')
+    fin_card = _card_html("Financial Quality", fq["score"] if fq else None, extra_html=fq_extra) if fq else _card_html("Financial Quality", None, label_override="No data", extra_html='<div style="font-size:11px;color:#64748b;margin-top:4px;">No verdict available</div>')
+    price_card = _card_html("Price Action", pa["total_score"] if pa else None, extra_html=pa_extra) if pa else _card_html("Price Action", None, label_override="No data", extra_html='<div style="font-size:11px;color:#64748b;margin-top:4px;">No data available</div>')
+
+    checks_html = f"""
+    <div style="padding:24px 40px;background:#0f172a;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">
+        What Other Checks Say
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        {indep_card}
+        {fin_card}
+        {price_card}
+      </div>
+    </div>
+    """
+
+    # ── Where the Signals Agree (5-row matrix) ──
+    cross_check = report.get("cross_check", [])
+    if cross_check:
+        alignment_label = {
+            "all_agree": "All agree",
+            "mostly_agree": "Mostly agree",
+            "mixed": "Mixed signals",
+            "split": "Split",
+            "no_data": "No data",
+        }
+        alignment_color = {
+            "all_agree": "#22c55e",
+            "mostly_agree": "#3b82f6",
+            "mixed": "#f59e0b",
+            "split": "#ef4444",
+            "no_data": "#64748b",
+        }
+        matrix_rows = ""
+        for row in cross_check:
+            a = row.get("alignment", "no_data")
+            label = alignment_label.get(a, "No data")
+            color = alignment_color.get(a, "#64748b")
+            matrix_rows += f"""
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:10px 12px;color:#f1f5f9;font-weight:700;">{_esc(row['dimension'])}</td>
+          <td style="padding:10px 12px;color:#94a3b8;font-size:11px;">{_esc(row['pe_view'])}</td>
+          <td style="padding:10px 12px;color:#94a3b8;font-size:11px;">{_esc(row['indep_view'])}</td>
+          <td style="padding:10px 12px;color:#94a3b8;font-size:11px;">{_esc(row['fin_view'])}</td>
+          <td style="padding:10px 12px;color:#94a3b8;font-size:11px;">{_esc(row['price_view'])}</td>
+          <td style="padding:10px 12px;color:{color};font-weight:700;font-size:12px;">{_esc(label)}</td>
+        </tr>
+        """
+        cross_check_html = f"""
+    <div style="padding:24px 40px;background:#0b1220;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;">
+        Where the Signals Agree
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:14px;font-style:italic;">
+        A plain-English read on whether the four engines back each other up.
+      </div>
+      <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;font-size:12px;color:#cbd5e1;">
+        <thead>
+          <tr style="background:#020617;border-bottom:1px solid #334155;">
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Dimension</th>
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Narrative</th>
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Independent Check</th>
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Financial Quality</th>
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Price Action</th>
+            <th align="left"  style="padding:8px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Verdict</th>
+          </tr>
+        </thead>
+        <tbody>{matrix_rows}</tbody>
+      </table>
+    </div>
+    """
+    else:
+        cross_check_html = ""
+
+    # ── Financial Quality breakdown (7 agents) ──
+    fin_breakdown_html = ""
+    if fq and fq.get("agents"):
+        agent_labels = [
+            ("revenue", "Revenue Quality"),
+            ("margin", "Margin Quality"),
+            ("leverage", "Leverage"),
+            ("wc", "Working Capital"),
+            ("roce", "Capital Efficiency (ROCE)"),
+            ("evolution", "Business Evolution"),
+            ("translation", "Financial Translation"),
+        ]
+        rows_html = ""
+        for key, label in agent_labels:
+            score = fq["agents"].get(key)
+            if score is None:
+                row_color = "#475569"
+                score_text = "—"
+                bar = "░░░░░░░░░░"
+            else:
+                row_color = "#22c55e" if score >= 7 else ("#f59e0b" if score >= 4 else "#ef4444")
+                score_text = f"{score}/10"
+                bar = "█" * score + "░" * (10 - score)
+            rows_html += f"""
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:8px 12px;color:#f1f5f9;">{_esc(label)}</td>
+          <td style="padding:8px 12px;font-family:monospace;color:{row_color};font-weight:700;">{_esc(score_text)}</td>
+          <td style="padding:8px 12px;font-family:monospace;color:{row_color};letter-spacing:0.05em;">{bar}</td>
+        </tr>
+        """
+        fin_breakdown_html = f"""
+    <div style="padding:24px 40px;background:#0f172a;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">
+        Financial Quality — 7-Agent Breakdown
+      </div>
+      <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;font-size:12px;color:#cbd5e1;">
+        <thead>
+          <tr style="background:#020617;border-bottom:1px solid #334155;">
+            <th align="left" style="padding:6px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Agent</th>
+            <th align="left" style="padding:6px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Score</th>
+            <th align="left" style="padding:6px 12px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;">Strength</th>
+          </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+      </table>
+    </div>
+    """
+    else:
+        fin_breakdown_html = ""
+
+    # ── Price Action 7-step checklist ──
+    price_html = ""
+    if pa and pa.get("conditions"):
+        cond_labels = [
+            ("ema_50_200", "EMA 50 above 200"),
+            ("ema_200_slope", "200-day EMA slope positive"),
+            ("six_m_high", "Near 6-month high"),
+            ("volume", "Volume confirmation (1.3x)"),
+            ("rs", "Relative strength vs Nifty"),
+            ("breakout_10d", "Close above 10-day high"),
+            ("price_quality", "Strong close (70%+ of day's range)"),
+        ]
+        rows_html = ""
+        n_pass = 0
+        for key, label in cond_labels:
+            passed = bool(pa["conditions"].get(key))
+            if passed:
+                n_pass += 1
+            mark = "✓" if passed else "✗"
+            color = "#22c55e" if passed else "#ef4444"
+            rows_html += f"""
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:8px 12px;font-family:monospace;color:{color};font-weight:700;font-size:14px;">{mark}</td>
+          <td style="padding:8px 12px;color:#f1f5f9;">{_esc(label)}</td>
+        </tr>
+        """
+        price_html = f"""
+    <div style="padding:24px 40px;background:#0f172a;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;">
+        Price Action — 7-Step Checklist
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:14px;font-style:italic;">
+        {_esc(pa.get('breakout_state', ''))} · {n_pass} of 7 momentum signals on
+      </div>
+      <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;font-size:12px;color:#cbd5e1;">
+        <tbody>{rows_html}</tbody>
+      </table>
+    </div>
+    """
+    else:
+        price_html = ""
+
     # Section A: header
     bar_color = _bucket_color(h["bucket"])
     header_html = f"""
@@ -425,9 +645,13 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
 <body style="margin:0;padding:0;background:#020617;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#cbd5e1;">
   <div style="max-width:920px;margin:0 auto;background:#0f172a;">
     {credibility_html}
+    {checks_html}
     {header_html}
     {drivers_html}
     {cats_html}
+    {cross_check_html}
+    {fin_breakdown_html}
+    {price_html}
     {primary_html}
     {secondary_html}
     {footer_html}

@@ -846,6 +846,309 @@ def _fetch_category_status_grids(symbol: str, category_codes: list[str]) -> dict
     return out
 
 
+def _fetch_independent_check(symbol: str) -> dict[str, Any] | None:
+    """Read the most recent row from aae_results_snapshot.
+
+    Returns {master_score, sector, reasons: [...], updated_at} or None
+    when no row exists. This is the user-facing 'Independent Check' —
+    the 8-layer forensic audit that cross-references management narrative
+    against financials, sector, ownership, and valuation.
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT master_score, sector, reasons, updated_at
+               FROM aae_results_snapshot
+               WHERE UPPER(symbol) = %s
+               ORDER BY updated_at DESC NULLS LAST
+               LIMIT 1""",
+            (symbol.upper(),),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        reasons = row["reasons"]
+        # reasons may be a JSON string or list depending on driver
+        if isinstance(reasons, str):
+            try:
+                reasons = json.loads(reasons)
+            except (ValueError, TypeError):
+                reasons = [reasons] if reasons else []
+        if not isinstance(reasons, list):
+            reasons = []
+        return {
+            "master_score": float(row["master_score"]) if row["master_score"] is not None else None,
+            "sector": row["sector"],
+            "reasons": [str(r) for r in reasons if r],
+            "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+        }
+    finally:
+        conn.close()
+
+
+def _fetch_financial_quality(symbol: str) -> dict[str, Any] | None:
+    """Read the most recent row from quality_verdicts.
+
+    Returns {score, category, agents: {revenue, margin, leverage, wc, roce,
+    evolution, translation}, flags: [...]} or None. The 'translation'
+    agent may be missing if the column doesn't exist in the schema —
+    in that case it renders as null in the response.
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        # translation_score may not exist in older schemas; use a column
+        # existence check to stay backward-compatible.
+        cur.execute(
+            """SELECT column_name FROM information_schema.columns
+               WHERE table_name='quality_verdicts' AND column_name='translation_score'"""
+        )
+        has_translation = cur.fetchone() is not None
+
+        select_translation = ", translation_score" if has_translation else ""
+        cur.execute(
+            f"""SELECT score, category,
+                       revenue_score, margin_score, leverage_score,
+                       wc_score, roce_score, evolution_score
+                       {select_translation},
+                       flags, updated_at
+               FROM quality_verdicts
+               WHERE UPPER(symbol) = %s
+               ORDER BY updated_at DESC NULLS LAST
+               LIMIT 1""",
+            (symbol.upper(),),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        agents = {
+            "revenue": int(row["revenue_score"]) if row["revenue_score"] is not None else None,
+            "margin": int(row["margin_score"]) if row["margin_score"] is not None else None,
+            "leverage": int(row["leverage_score"]) if row["leverage_score"] is not None else None,
+            "wc": int(row["wc_score"]) if row["wc_score"] is not None else None,
+            "roce": int(row["roce_score"]) if row["roce_score"] is not None else None,
+            "evolution": int(row["evolution_score"]) if row["evolution_score"] is not None else None,
+        }
+        if has_translation and row.get("translation_score") is not None:
+            agents["translation"] = int(row["translation_score"])
+        flags = row["flags"]
+        if isinstance(flags, str):
+            try:
+                flags = json.loads(flags)
+            except (ValueError, TypeError):
+                flags = [flags] if flags else []
+        if not isinstance(flags, list):
+            flags = []
+        return {
+            "score": float(row["score"]) if row["score"] is not None else None,
+            "category": row["category"],
+            "agents": agents,
+            "flags": [str(f) for f in flags if f],
+            "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+        }
+    finally:
+        conn.close()
+
+
+def _fetch_price_action(symbol: str) -> dict[str, Any] | None:
+    """Read the most recent row from stock_scores.
+
+    Returns {total_score, conditions: {7-step dict}, breakout_state} or None.
+    The 'conditions' dict uses the same column names as stock_scores:
+    ema_50_200, ema_200_slope, six_m_high, volume, rs, breakout_10d, price_quality.
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT total_score, breakout_state,
+                       condition_ema_50_200, condition_ema_200_slope,
+                       condition_6m_high, condition_volume, condition_rs,
+                       condition_breakout_10d, condition_price_quality,
+                       date
+               FROM stock_scores
+               WHERE UPPER(symbol) = %s
+               ORDER BY date DESC NULLS LAST
+               LIMIT 1""",
+            (symbol.upper(),),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            "total_score": int(row["total_score"]) if row["total_score"] is not None else None,
+            "breakout_state": row["breakout_state"],
+            "conditions": {
+                "ema_50_200": bool(row["condition_ema_50_200"]),
+                "ema_200_slope": bool(row["condition_ema_200_slope"]),
+                "six_m_high": bool(row["condition_6m_high"]),
+                "volume": bool(row["condition_volume"]),
+                "rs": bool(row["condition_rs"]),
+                "breakout_10d": bool(row["condition_breakout_10d"]),
+                "price_quality": bool(row["condition_price_quality"]),
+            },
+            "as_of": row["date"].isoformat() if row["date"] else None,
+        }
+    finally:
+        conn.close()
+
+
+# User-facing names for the four engines. The cross-check result uses
+# these as dimension labels and view prefixes.
+_ENGINE_LABELS = {
+    "pe": "Narrative",
+    "indep": "Independent Check",
+    "fin": "Financial Quality",
+    "price": "Price Action",
+}
+
+
+def _pe_category_strength(breakdown: list[dict[str, Any]], code: str) -> int | None:
+    """Helper: look up PE category signal_strength for a given category code."""
+    for c in breakdown:
+        if c.get("code") == code and not c.get("missing"):
+            return int(c.get("signal_strength", 0))
+    return None
+
+
+def _verdict(score: float | int | None) -> str:
+    """Bucket a 0-100 score into a human-readable verdict."""
+    if score is None:
+        return "No data"
+    if score >= 80:
+        return "Strong"
+    if score >= 60:
+        return "Holding up"
+    if score >= 40:
+        return "Mixed"
+    return "Weak"
+
+
+def _classify_alignment(views: list[tuple[str, bool | None]]) -> str:
+    """Given [(engine_label, positive_signal), ...], bucket the agreement.
+
+    Returns 'all_agree' if every present signal is positive,
+    'no_data' if no engine has data, 'split' if signals are all over the map,
+    'mixed' if at least one positive but not unanimous, 'mostly_agree'
+    when most are positive but one disagrees.
+    """
+    present = [(label, v) for label, v in views if v is not None]
+    if not present:
+        return "no_data"
+    positives = sum(1 for _, v in present if v)
+    n = len(present)
+    if positives == n:
+        return "all_agree"
+    if positives == 0:
+        return "split"
+    if positives >= max(1, n - 1):
+        return "mostly_agree"
+    return "mixed"
+
+
+def _build_cross_check(pe_breakdown: list[dict[str, Any]], pe_score: float | None,
+                       pe_credibility: dict[str, Any] | None,
+                       indep: dict[str, Any] | None,
+                       fin: dict[str, Any] | None,
+                       price: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Compare the four engines across 5 dimensions and label agreement.
+
+    Dimensions:
+      - Margins: PE narrative strength + Financial Quality margin_score
+      - Growth: PE revenue+capacity strength + Financial Quality revenue_score
+      - Quality: PE overall + Independent Check master + Financial Quality overall
+      - Momentum: PE overall + Price Action total_score
+      - Credibility: PE credibility vs Independent Check notes
+
+    Each row: {dimension, pe_view, indep_view, fin_view, price_view, alignment}
+    Alignment is one of: 'all_agree', 'mostly_agree', 'mixed', 'split', 'no_data'.
+    """
+    rows: list[dict[str, Any]] = []
+
+    # Margins
+    pe_margin = _pe_category_strength(pe_breakdown, "MARGIN_EXPANSION")
+    fin_margin = (fin or {}).get("agents", {}).get("margin") if fin else None
+    rows.append({
+        "dimension": "Margins",
+        "pe_view": f"Narrative says {'strong' if (pe_margin or 0) >= 3 else 'weak'} ({pe_margin or 0}/5)" if pe_margin is not None else "No data",
+        "indep_view": "—",
+        "fin_view": f"Margin agent: {fin_margin}/10" if fin_margin is not None else "No data",
+        "price_view": "—",
+        "alignment": _classify_alignment([
+            ("Narrative", pe_margin is not None and pe_margin >= 3),
+            ("Financial Quality", fin_margin is not None and fin_margin >= 7),
+        ]),
+    })
+
+    # Growth (PE revenue visibility + capacity expansion combined)
+    pe_rev = _pe_category_strength(pe_breakdown, "REVENUE_VISIBILITY") or 0
+    pe_cap = _pe_category_strength(pe_breakdown, "CAPACITY_EXPANSION") or 0
+    pe_growth_avg = (pe_rev + pe_cap) / 2 if (pe_rev or pe_cap) else None
+    fin_revenue = (fin or {}).get("agents", {}).get("revenue") if fin else None
+    rows.append({
+        "dimension": "Growth",
+        "pe_view": f"Revenue+Capacity avg {pe_growth_avg:.1f}/5" if pe_growth_avg is not None else "No data",
+        "indep_view": "—",
+        "fin_view": f"Revenue agent: {fin_revenue}/10" if fin_revenue is not None else "No data",
+        "price_view": "—",
+        "alignment": _classify_alignment([
+            ("Narrative", pe_growth_avg is not None and pe_growth_avg >= 3),
+            ("Financial Quality", fin_revenue is not None and fin_revenue >= 7),
+        ]),
+    })
+
+    # Quality (all three numerical engines)
+    rows.append({
+        "dimension": "Quality",
+        "pe_view": f"Narrative score {pe_score:.0f}/100" if pe_score is not None else "No data",
+        "indep_view": f"Independent Check {indep['master_score']:.0f}/100" if indep and indep.get("master_score") is not None else "No data",
+        "fin_view": f"Financial Quality {fin['score']:.0f}/100" if fin and fin.get("score") is not None else "No data",
+        "price_view": "—",
+        "alignment": _classify_alignment([
+            ("Narrative", pe_score is not None and pe_score >= 70),
+            ("Independent Check", indep and indep.get("master_score") is not None and indep["master_score"] >= 70),
+            ("Financial Quality", fin and fin.get("score") is not None and fin["score"] >= 70),
+        ]),
+    })
+
+    # Momentum (Narrative vs Price Action)
+    rows.append({
+        "dimension": "Momentum",
+        "pe_view": f"Narrative score {pe_score:.0f}/100" if pe_score is not None else "No data",
+        "indep_view": "—",
+        "fin_view": "—",
+        "price_view": f"Price Action {price['total_score']}/100" if price and price.get("total_score") is not None else "No data",
+        "alignment": _classify_alignment([
+            ("Narrative", pe_score is not None and pe_score >= 70),
+            ("Price Action", price and price.get("total_score") is not None and price["total_score"] >= 70),
+        ]),
+    })
+
+    # Credibility (Narrative vs Independent Check)
+    cred_acc = (pe_credibility or {}).get("accuracy_pct") if pe_credibility else None
+    rows.append({
+        "dimension": "Credibility",
+        "pe_view": f"Manager accuracy {cred_acc:.0f}%" if cred_acc is not None else "No track record",
+        "indep_view": _summarize_indep_verdict(indep),
+        "fin_view": "—",
+        "price_view": "—",
+        "alignment": _classify_alignment([
+            ("Narrative", cred_acc is not None and cred_acc >= 70),
+            ("Independent Check", indep is not None and indep.get("master_score") is not None and indep["master_score"] >= 60),
+        ]),
+    })
+
+    return rows
+
+
+def _summarize_indep_verdict(indep: dict[str, Any] | None) -> str:
+    """One-line summary of the Independent Check's master_score for the matrix."""
+    if not indep or indep.get("master_score") is None:
+        return "No data"
+    return _verdict(indep["master_score"]) + f" ({indep['master_score']:.0f}/100)"
+
+
 def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
     """Assemble the full PE Expansion report dict for a symbol.
 
@@ -930,6 +1233,18 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
     # weighted by how often they're right.
     status_grids = _fetch_category_status_grids(sym, _REPORT_CATEGORY_ORDER)
     credibility_snapshot = _fetch_credibility_snapshot(sym)
+
+    # Three cross-checks: Independent Check (forensic audit), Financial
+    # Quality (fundamental verdict), and Price Action (technical momentum).
+    # These turn the report from a transcript-only score into a verifiable
+    # institutional audit. All defensive — return None when data missing.
+    independent_check = _fetch_independent_check(sym)
+    financial_quality = _fetch_financial_quality(sym)
+    price_action = _fetch_price_action(sym)
+    cross_check = _build_cross_check(
+        breakdown, score_doc["pe_score"], credibility_snapshot,
+        independent_check, financial_quality, price_action,
+    )
     for row in breakdown:
         if row.get("missing"):
             continue
@@ -986,6 +1301,10 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
             "scaled_percent": score_doc["pe_score"],
         },
         "credibility": credibility_snapshot,
+        "independent_check": independent_check,
+        "financial_quality": financial_quality,
+        "price_action": price_action,
+        "cross_check": cross_check,
     }
 
 

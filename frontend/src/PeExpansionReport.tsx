@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, ReactNode, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from './api';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -54,6 +54,53 @@ interface Credibility {
   summary: string;
 }
 
+interface IndependentCheck {
+  master_score: number | null;
+  sector: string | null;
+  reasons: string[];
+  updated_at: string | null;
+}
+
+interface FinancialQuality {
+  score: number | null;
+  category: string | null;
+  agents: {
+    revenue?: number | null;
+    margin?: number | null;
+    leverage?: number | null;
+    wc?: number | null;
+    roce?: number | null;
+    evolution?: number | null;
+    translation?: number | null;
+  };
+  flags: string[];
+  updated_at: string | null;
+}
+
+interface PriceAction {
+  total_score: number | null;
+  breakout_state: string | null;
+  conditions: {
+    ema_50_200: boolean;
+    ema_200_slope: boolean;
+    six_m_high: boolean;
+    volume: boolean;
+    rs: boolean;
+    breakout_10d: boolean;
+    price_quality: boolean;
+  };
+  as_of: string | null;
+}
+
+interface CrossCheckRow {
+  dimension: string;
+  pe_view: string;
+  indep_view: string;
+  fin_view: string;
+  price_view: string;
+  alignment: 'all_agree' | 'mostly_agree' | 'mixed' | 'split' | 'no_data';
+}
+
 interface PrimaryRow {
   guidance_type: string;
   current_status: string;
@@ -92,6 +139,10 @@ interface PeReport {
   secondary_detail: SecondaryRow[];
   totals: Totals;
   credibility: Credibility | null;
+  independent_check: IndependentCheck | null;
+  financial_quality: FinancialQuality | null;
+  price_action: PriceAction | null;
+  cross_check: CrossCheckRow[];
 }
 
 // ── Style helpers ────────────────────────────────────────────────────
@@ -145,6 +196,22 @@ const trendColor = (t: string | null | undefined): string => {
   if (u === 'IMPROVING') return colors.strong;
   if (u === 'DETERIORATING') return colors.bad;
   return colors.textMuted;
+};
+
+const scoreVerdict = (s: number | null | undefined): { label: string; color: string } => {
+  if (s === null || s === undefined) return { label: 'No data', color: colors.textMuted };
+  if (s >= 80) return { label: 'Strong', color: colors.strong };
+  if (s >= 60) return { label: 'Holding up', color: colors.accent };
+  if (s >= 40) return { label: 'Mixed', color: colors.warn };
+  return { label: 'Weak', color: colors.bad };
+};
+
+const alignmentLabel: Record<string, { label: string; color: string }> = {
+  all_agree:    { label: 'All agree',         color: '#22c55e' },
+  mostly_agree: { label: 'Mostly agree',      color: '#3b82f6' },
+  mixed:        { label: 'Mixed signals',     color: '#f59e0b' },
+  split:        { label: 'Split',             color: '#ef4444' },
+  no_data:      { label: 'No data',           color: '#64748b' },
 };
 
 // ── Component ────────────────────────────────────────────────────────
@@ -372,6 +439,75 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
             </div>
           );
         })()}
+
+        {/* ── What Other Checks Say (Independent Check + Financial Quality + Price Action) ── */}
+        {(() => {
+          const ic = report.independent_check;
+          const fq = report.financial_quality;
+          const pa = report.price_action;
+          const renderCard = (title: string, score: number | null | undefined, extra: ReactNode) => {
+            const v = scoreVerdict(score);
+            return (
+              <div style={{ flex: 1, minWidth: 240, padding: '18px 20px', background: '#0b1220', border: `1px solid ${colors.border}`, borderRadius: 6 }}>
+                <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 10 }}>
+                  {title}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+                  <div style={{ fontSize: 36, fontWeight: 800, color: colors.text, lineHeight: 1 }}>
+                    {score !== null && score !== undefined ? `${Math.round(score)}/100` : '—'}
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: v.color }}>{v.label}</div>
+                </div>
+                {extra}
+              </div>
+            );
+          };
+          return (
+            <div style={{ padding: '24px 40px', background: colors.panel, borderBottom: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14 }}>
+                What Other Checks Say
+              </div>
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                {renderCard('Independent Check', ic?.master_score ?? null, (
+                  <div>
+                    {ic && ic.reasons && ic.reasons.length > 0 ? (
+                      <ul style={{ margin: '8px 0 0 0', paddingLeft: 18 }}>
+                        {ic.reasons.slice(0, 3).map((r, i) => (
+                          <li key={i} style={{ margin: '3px 0', color: colors.textDim, fontSize: 11, lineHeight: 1.5 }}>{r}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>No audit available</div>
+                    )}
+                  </div>
+                ))}
+                {renderCard('Financial Quality', fq?.score ?? null, (
+                  <div>
+                    {fq && fq.category ? (
+                      <div style={{ fontSize: 11, color: colors.textDim, marginTop: 4 }}>
+                        Category: <span style={{ color: colors.text, fontWeight: 600 }}>{fq.category}</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>No verdict available</div>
+                    )}
+                  </div>
+                ))}
+                {renderCard('Price Action', pa?.total_score ?? null, (
+                  <div>
+                    {pa && pa.breakout_state ? (
+                      <div style={{ fontSize: 11, color: colors.textDim, marginTop: 4 }}>
+                        State: <span style={{ color: colors.text, fontWeight: 600 }}>{pa.breakout_state}</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>No data available</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Header ── */}
         <div style={{ padding: '32px 40px', background: colors.panel, borderBottom: `3px solid ${bucketC}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -567,6 +703,125 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
             </tbody>
           </table>
         </div>
+
+        {/* ── Where the Signals Agree (cross-check matrix) ── */}
+        {report.cross_check && report.cross_check.length > 0 && (
+          <div style={{ padding: '24px 40px', background: '#0b1220', borderTop: `1px solid ${colors.panel2}` }}>
+            <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 6 }}>
+              Where the Signals Agree
+            </div>
+            <div style={{ fontSize: 12, color: colors.textDim, marginBottom: 14, fontStyle: 'italic' }}>
+              Whether the four engines back each other up.
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#cbd5e1' }}>
+              <thead>
+                <tr style={{ background: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Dimension</th>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Narrative</th>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Independent Check</th>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Financial Quality</th>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Price Action</th>
+                  <th align="left" style={{ padding: '8px 12px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.cross_check.map(row => {
+                  const a = alignmentLabel[row.alignment] || alignmentLabel.no_data;
+                  return (
+                    <tr key={row.dimension} style={{ borderBottom: `1px solid ${colors.panel2}` }}>
+                      <td style={{ padding: '10px 12px', color: colors.text, fontWeight: 700 }}>{row.dimension}</td>
+                      <td style={{ padding: '10px 12px', color: colors.textDim, fontSize: 11 }}>{row.pe_view}</td>
+                      <td style={{ padding: '10px 12px', color: colors.textDim, fontSize: 11 }}>{row.indep_view}</td>
+                      <td style={{ padding: '10px 12px', color: colors.textDim, fontSize: 11 }}>{row.fin_view}</td>
+                      <td style={{ padding: '10px 12px', color: colors.textDim, fontSize: 11 }}>{row.price_view}</td>
+                      <td style={{ padding: '10px 12px', color: a.color, fontWeight: 700, fontSize: 12 }}>{a.label}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── Financial Quality breakdown ── */}
+        {report.financial_quality && report.financial_quality.agents && (
+          <div style={{ padding: '24px 40px', background: colors.panel, borderTop: `1px solid ${colors.panel2}` }}>
+            <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14 }}>
+              Financial Quality — 7-Agent Breakdown
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#cbd5e1' }}>
+              <tbody>
+                {([
+                  ['revenue',     'Revenue Quality'],
+                  ['margin',      'Margin Quality'],
+                  ['leverage',    'Leverage'],
+                  ['wc',          'Working Capital'],
+                  ['roce',        'Capital Efficiency (ROCE)'],
+                  ['evolution',   'Business Evolution'],
+                  ['translation', 'Financial Translation'],
+                ] as [string, string][]).map(([key, label]) => {
+                  const score = report.financial_quality!.agents[key as keyof typeof report.financial_quality.agents];
+                  if (score === null || score === undefined) {
+                    return (
+                      <tr key={key} style={{ borderBottom: `1px solid ${colors.panel2}` }}>
+                        <td style={{ padding: '8px 12px', color: colors.text }}>{label}</td>
+                        <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: '#475569', fontWeight: 700 }}>—</td>
+                        <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: '#475569', letterSpacing: '0.05em' }}>{'░'.repeat(10)}</td>
+                      </tr>
+                    );
+                  }
+                  const s = score as number;
+                  const rowColor = s >= 7 ? colors.strong : s >= 4 ? colors.warn : colors.bad;
+                  return (
+                    <tr key={key} style={{ borderBottom: `1px solid ${colors.panel2}` }}>
+                      <td style={{ padding: '8px 12px', color: colors.text }}>{label}</td>
+                      <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: rowColor, fontWeight: 700 }}>{s}/10</td>
+                      <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: rowColor, letterSpacing: '0.05em' }}>{'█'.repeat(s)}{'░'.repeat(10 - s)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── Price Action 7-step checklist ── */}
+        {report.price_action && report.price_action.conditions && (() => {
+          const conds: [string, string][] = [
+            ['ema_50_200',    'EMA 50 above 200'],
+            ['ema_200_slope', '200-day EMA slope positive'],
+            ['six_m_high',    'Near 6-month high'],
+            ['volume',        'Volume confirmation (1.3x)'],
+            ['rs',            'Relative strength vs Nifty'],
+            ['breakout_10d',  'Close above 10-day high'],
+            ['price_quality', 'Strong close (70%+ of day\u2019s range)'],
+          ];
+          const nPass = conds.filter(([k]) => report.price_action!.conditions[k as keyof typeof report.price_action.conditions]).length;
+          return (
+            <div style={{ padding: '24px 40px', background: '#0b1220', borderTop: `1px solid ${colors.panel2}` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 6 }}>
+                Price Action — 7-Step Checklist
+              </div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginBottom: 14, fontStyle: 'italic' }}>
+                {report.price_action.breakout_state} · {nPass} of 7 momentum signals on
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#cbd5e1' }}>
+                <tbody>
+                  {conds.map(([k, label]) => {
+                    const passed = report.price_action!.conditions[k as keyof typeof report.price_action.conditions];
+                    const color = passed ? colors.strong : colors.bad;
+                    return (
+                      <tr key={k} style={{ borderBottom: `1px solid ${colors.panel2}` }}>
+                        <td style={{ padding: '8px 12px', fontFamily: 'monospace', color, fontWeight: 700, fontSize: 14, width: 32 }}>{passed ? '✓' : '✗'}</td>
+                        <td style={{ padding: '8px 12px', color: colors.text }}>{label}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
 
         {/* ── Primary Source ── */}
         <div style={{ padding: '32px 40px', background: '#0b1220', borderTop: `1px solid ${colors.panel2}` }}>
