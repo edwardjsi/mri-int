@@ -423,7 +423,7 @@ def preview_pe_expansion_email(symbol: str) -> HTMLResponse:
 
 @router.get("/suggest")
 def suggest_pe_expansion(q: str = Query("", description="Symbol or company name prefix"),
-                         limit: int = Query(10, ge=1, le=50)) -> dict[str, Any]:
+                         limit: int = Query(10, ge=1, le=500)) -> dict[str, Any]:
     """Autocomplete from the 149-symbol universe (perx_pe_scores JOIN stock_sectors).
 
     Empty `q` returns top N by pe_score desc. Non-empty `q` filters by
