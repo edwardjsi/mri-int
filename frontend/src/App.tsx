@@ -2627,16 +2627,9 @@ function App() {
 
   if (page === 'peexpansion') {
     // Symbol can come from URL param (?symbol=POLYCAB) or from selectedStock.
+    // PeExpansionReport handles empty symbols internally — its search + Top 10 panel
+    // is always visible, so no fallback "No symbol selected" page is needed.
     const peSymbol = urlParams.get('symbol') || (selectedStock && (selectedStock.symbol || selectedStock)) || '';
-    if (!peSymbol) {
-      return (
-        <div style={{ padding: 60, color: '#94a3b8' }}>
-          <div style={{ fontSize: 18, color: '#f1f5f9', marginBottom: 12 }}>No symbol selected</div>
-          <div style={{ fontSize: 13, marginBottom: 20 }}>Open <code>?symbol=POLYCAB</code> in the URL, or click a company on the PERX or 112 Co page.</div>
-          <button className="nav-link" onClick={() => setPage('dashboard')}>← Back to Dashboard</button>
-        </div>
-      );
-    }
     return <PeExpansionReport symbol={peSymbol} onBack={() => setPage('dashboard')} />;
   }
 
