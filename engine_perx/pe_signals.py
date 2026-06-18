@@ -577,7 +577,203 @@ def persist_signals_for_symbols(symbols: list[str]) -> None:
         conn.close()
 
 
-# ── CLI ──────────────────────────────────────────────────────────────
+# ── Report builder (used by both screen and email) ────────────────────
+
+from engine_perx.pe_dictionary import PE_DICTIONARY as _PE_DICT  # alias for local clarity
+
+_REPORT_CATEGORY_ORDER = [c["code"] for c in _PE_DICT]
+
+
+def _score_bucket(score: float) -> str:
+    if score >= 80: return "Strong"
+    if score >= 65: return "Moderate"
+    if score >= 50: return "Watch"
+    if score >= 30: return "Weak"
+    return "Negligible"
+
+
+def _company_meta(symbol: str) -> dict[str, Any]:
+    """Pull company_name + sector from stock_sectors. Returns {} if missing."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT company_name, industry FROM stock_sectors WHERE symbol = %s",
+            (symbol.upper(),),
+        )
+        r = cur.fetchone()
+        if not r:
+            return {}
+        return {"company_name": r["company_name"], "sector": r["industry"]}
+    except Exception:
+        return {}
+    finally:
+        conn.close()
+
+
+def _universe_rank(symbol: str, pe_score: float) -> dict[str, Any]:
+    """Compute rank + total in universe for the symbol."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM perx_pe_scores WHERE pe_score > %s",
+            (pe_score,),
+        )
+        rank = (cur.fetchone() or {"c": 0})["c"] + 1
+        cur.execute("SELECT COUNT(*) AS c FROM perx_pe_scores")
+        total = (cur.fetchone() or {"c": 0})["c"]
+        return {"rank": rank, "total": total}
+    except Exception:
+        return {"rank": None, "total": None}
+    finally:
+        conn.close()
+
+
+def _primary_detail_rows(symbol: str) -> list[dict[str, Any]]:
+    """Pull per-promise detail for the primary-source panel.
+
+    Sorted: most recent quarter first, then by guidance_type, then by target_value desc.
+    Capped at 20 to keep the email under 100 KB.
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT promise_key, guidance_type, guidance_text,
+                      current_status, current_quarter, first_seen_quarter,
+                      target_value, target_unit, target_date, quote_verified,
+                      current_evidence_quote
+               FROM management_narrative_timeline
+               WHERE symbol = %s
+               ORDER BY current_quarter DESC, first_seen_quarter DESC,
+                        guidance_type, target_value DESC NULLS LAST
+               LIMIT 20""",
+            (symbol.upper(),),
+        )
+        return list(cur.fetchall())
+    except Exception:
+        return []
+    finally:
+        conn.close()
+
+
+def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
+    """Assemble the full PE Expansion report dict for a symbol.
+
+    Shape (consumed by both the screen and the HTML email):
+      {
+        "header": {symbol, company_name, sector, pe_score, rank, total,
+                   bucket, generated_at_iso, generated_at_ist},
+        "coverage": {n_promises_total, n_quote_verified, n_transcripts,
+                     n_quarter_span},
+        "category_breakdown": [   # ordered, all 12 categories
+          {"code", "label", "weight", "signal_strength", "contribution",
+           "sources": [primary|secondary], "missing": bool},
+          ...
+        ],
+        "top_drivers": [label, ...],
+        "primary_detail": [
+          {category_code, guidance_type, current_status, current_quarter,
+           target_value, target_unit, target_date, guidance_text,
+           evidence_quote, quote_verified},
+          ...
+        ],
+        "secondary_detail": [   # only categories with mentions>0
+          {category_code, mentions, transcripts_with_hits, has_execution,
+           signal_strength, snippets: [...]},
+          ...
+        ],
+        "totals": {raw_score, max_possible, scaled_percent}
+      }
+    """
+    sym = symbol.upper()
+    meta = _company_meta(sym)
+    score_doc = score_symbol(sym)
+    rank_doc = _universe_rank(sym, score_doc["pe_score"])
+    primary_detail = _primary_detail_rows(sym)
+
+    # Secondary detail: re-scan transcripts to get snippet list (cheap)
+    secondary_scan = score_symbol_from_transcripts(sym)
+
+    # Build category_breakdown ordered list with all 12 categories
+    breakdown: list[dict[str, Any]] = []
+    raw_total = 0
+    for code in _REPORT_CATEGORY_ORDER:
+        cat = next(c for c in _PE_DICT if c["code"] == code)
+        info = score_doc["category_breakdown"].get(code)
+        if info:
+            breakdown.append({
+                "code": code,
+                "label": cat["label"],
+                "weight": cat["weight"],
+                "signal_strength": info["signal_strength"],
+                "contribution": info["contribution"],
+                "sources": info["sources"],
+                "missing": False,
+            })
+            raw_total += info["contribution"]
+        else:
+            breakdown.append({
+                "code": code,
+                "label": cat["label"],
+                "weight": cat["weight"],
+                "signal_strength": 0,
+                "contribution": 0,
+                "sources": [],
+                "missing": True,
+            })
+
+    # Pull secondary snippet detail
+    secondary_detail: list[dict[str, Any]] = []
+    for code, info in secondary_scan.get("categories", {}).items():
+        if info.get("mentions", 0) > 0:
+            cat = next((c for c in _PE_DICT if c["code"] == code), None)
+            secondary_detail.append({
+                "category_code": code,
+                "label": cat["label"] if cat else code,
+                "mentions": info.get("mentions", 0),
+                "transcripts_with_hits": info.get("transcripts_with_hits", 0),
+                "has_execution": info.get("has_execution_language", False),
+                "signal_strength": info.get("signal_strength", 0),
+                "snippets": info.get("snippets", [])[:3],
+            })
+    secondary_detail.sort(key=lambda x: x["mentions"], reverse=True)
+
+    # IST timestamp (UTC+5:30)
+    from datetime import datetime, timezone, timedelta
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(ist)
+
+    return {
+        "header": {
+            "symbol": sym,
+            "company_name": meta.get("company_name") or sym,
+            "sector": meta.get("sector"),
+            "pe_score": score_doc["pe_score"],
+            "rank": rank_doc["rank"],
+            "total": rank_doc["total"],
+            "bucket": _score_bucket(score_doc["pe_score"]),
+            "generated_at_iso": now_ist.isoformat(),
+            "generated_at_ist": now_ist.strftime("%Y-%m-%d %H:%M IST"),
+        },
+        "coverage": {
+            "n_promises_total": score_doc["n_promises_total"],
+            "n_quote_verified": score_doc["n_quote_verified"],
+            "n_transcripts": score_doc["n_transcripts"],
+            "n_quarter_span": score_doc["n_quarter_span"],
+        },
+        "category_breakdown": breakdown,
+        "top_drivers": score_doc["top_drivers"],
+        "primary_detail": primary_detail,
+        "secondary_detail": secondary_detail,
+        "totals": {
+            "raw_score": raw_total,
+            "max_possible": MAX_PE_SCORE,
+            "scaled_percent": score_doc["pe_score"],
+        },
+    }
+
 
 if __name__ == "__main__":
     import argparse

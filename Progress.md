@@ -2,6 +2,58 @@
 
 ---
 
+## 📅 Session: June 18, 2026 (cont.) — Expansion Lens Standalone UI
+
+**Session Start:** ~13:30 IST
+**Session End:** ~14:45 IST
+
+### What Was Done This Session
+
+#### 1. Plan Written First ✅
+- [x] `docs/EXPANSION_LENS_PLAN_2026-06-18.md` (9.2 KB) — 4-chunk execution plan with decision log, verification strategy, out-of-scope section. Per user directive: "before that make an execution plan and add it to docs with date".
+
+#### 2. Expansion Lens UI Built — 4 Chunks Shipped ✅
+
+**Chunk 1 — Backend (`api/pe_expansion.py`):**
+- [x] `GET /api/pe-expansion/suggest?q=POL&limit=10` — autocomplete from `perx_pe_scores JOIN stock_sectors` (149-universe scope, ILIKE on symbol OR company_name)
+- [x] `GET /api/pe-expansion/top10` — top 10 + `as_of = MAX(generated_at)` + `total_in_universe`
+
+**Chunk 2 — Frontend (`frontend/src/PeExpansionReport.tsx`):**
+- [x] Internal symbol state — page can switch on user input
+- [x] Debounced (200 ms) search input with clickable autocomplete dropdown
+- [x] Compact Top 10 panel (2-column grid, clickable rows)
+- [x] Manual-refresh footer: `Last persist: {as_of} IST · To refresh: python -m engine_perx.pe_signals --persist`
+- [x] Per-report data-freshness disclosure: `Data spans N quarters · latest promise QnFYn · Manual refresh only`
+- [x] Restructured return: search/Top 10 always visible, report sections conditional
+
+**Chunk 3 — Renames + Nav (`App.tsx`, `PeExpansionReport.tsx`, `api/pe_expansion.py`):**
+- [x] Sidebar + mobile nav buttons: `📈 Expansion Lens` (between PERX and AAE Console)
+- [x] 7 user-facing string renames: `MRI · PE Expansion Report` → `MRI · Expansion Lens`, `Top PE Expansion Drivers` → `Top Expansion Drivers`, `MRI PE Expansion engine` → `MRI Expansion Lens engine`, `PE Expansion Report — ` → `Expansion Lens — ` (×2: `<title>` and subject), `PE Expansion — ` → `Expansion Lens — ` (email_log)
+- [x] Internal naming intentionally kept stable (route prefix, function names, DB tables, email_type enum) per Decision Log #1+#2
+
+**Chunk 4 — Cleanup + Verify:**
+- [x] `engine_perx/pe_signals.py` — duplicate stub at lines 815–820 deleted; file now 815 lines (was 820)
+- [x] `ast.parse` clean on `api/pe_expansion.py` + `engine_perx/pe_signals.py`
+- [x] `npx tsc --noEmit` — zero errors
+- [x] Email HTML for POLYCAB — 4/4 new strings present, 4/4 old strings gone
+- [x] `/pe-expansion/suggest?q=POL` returns POLYCAB
+- [x] `/pe-expansion/top10` returns 10 rows + `as_of=2026-06-18T06:44:22+00:00` + `total=149`, matching yesterday's `Progress.md` order exactly
+
+#### 3. User Directives Honored ✅
+- **"We want the new report only"** — no integration into `engine_perx/scoring.py:compute_perx_score`. Existing `/perx/[symbol]` page unchanged.
+- **"Keep it manual for now"** — no auto-refresh button, no cron, no transcript-discovery job. CLI command shown in Top 10 footer instead.
+- **"For the 149 scripts alone"** — search/autocomplete scoped to `perx_pe_scores` only (149 rows), not broader `stock_sectors` universe.
+- **Nav label = "📈 Expansion Lens"** — chosen by user from 4-option poll.
+
+### 📌 Current Milestone
+- **Expansion Lens V1 is live and reachable.** Stays standalone, manually-refreshed, 149-universe scope. No schema changes, no new dependencies, no LLM cost.
+- **Next**:
+  - (a) Backfill narrative-tracer for ~43 universe symbols that have transcripts but no promise rows (deferred from earlier today — runner supports `--min-transcripts N` filter).
+  - (b) Decide whether to wire PE score into `compute_perx_score` (yesterday's deferred step (a) — still pending per user's "standalone only" directive).
+  - (c) Refresh ranks on demand via `python -m engine_perx.pe_signals --persist` (~3 min, $0 LLM) — surfaced in Top 10 footer.
+
+---
+
 ## 📅 Session: June 18, 2026 — PE Expansion Scorer (V1) Across 149-Symbol Universe
 
 **Session Start:** ~11:30 IST

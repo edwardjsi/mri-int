@@ -11,6 +11,7 @@ import GuidanceCheck from './GuidanceCheck';
 import ConvictionEngine from './ConvictionEngine';
 import ManagementIntegrityPanel from './ManagementIntegrityPanel';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
+import PeExpansionReport from './PeExpansionReport';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2593,7 +2594,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2622,6 +2623,21 @@ function App() {
 
   if (page === 'unified') {
     return <UnifiedAnalysis onBack={() => setPage('dashboard')} />;
+  }
+
+  if (page === 'peexpansion') {
+    // Symbol can come from URL param (?symbol=POLYCAB) or from selectedStock.
+    const peSymbol = urlParams.get('symbol') || (selectedStock && (selectedStock.symbol || selectedStock)) || '';
+    if (!peSymbol) {
+      return (
+        <div style={{ padding: 60, color: '#94a3b8' }}>
+          <div style={{ fontSize: 18, color: '#f1f5f9', marginBottom: 12 }}>No symbol selected</div>
+          <div style={{ fontSize: 13, marginBottom: 20 }}>Open <code>?symbol=POLYCAB</code> in the URL, or click a company on the PERX or 112 Co page.</div>
+          <button className="nav-link" onClick={() => setPage('dashboard')}>← Back to Dashboard</button>
+        </div>
+      );
+    }
+    return <PeExpansionReport symbol={peSymbol} onBack={() => setPage('dashboard')} />;
   }
 
   return (
@@ -2658,6 +2674,9 @@ function App() {
           </button>
           <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
             <span className="nav-icon">🏛️</span> PERX
+          </button>
+          <button className={`nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')}>
+            <span className="nav-icon">📈</span> Expansion Lens
           </button>
           <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
             <span className="nav-icon">🧬</span> AAE Console
@@ -2730,6 +2749,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')} title="Watchlist">👀</button>
         <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
         <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
+        <button className={`mobile-nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')} title="Expansion Lens">📈</button>
         <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
         <button className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')} title="Unified Scan">🧠</button>
         <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
