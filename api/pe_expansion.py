@@ -176,6 +176,27 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
           <td style="padding:10px 12px;border-bottom:1px solid #1e293b;">{sources_cell}</td>
         </tr>
         """
+        # Inline evidence quote (verbatim from transcript) under each
+        # non-missing category — grounds the abstract score with citation.
+        if not c["missing"] and c.get("quote"):
+            q = c["quote"]
+            attribution = q.get("source", "")
+            if q.get("quarter"):
+                attribution = f"{attribution} ({q['quarter']})" if attribution else q["quarter"]
+            attribution_html = (
+                f'<div style="color:#64748b;font-style:normal;font-size:10px;margin-top:4px;">— {_esc(attribution) if attribution else "transcript"}</div>'
+                if attribution else ""
+            )
+            cats_html += f"""
+        <tr>
+          <td colspan="5" style="padding:0 12px 14px 12px;border-bottom:1px solid #1e293b;">
+            <div style="border-left:3px solid {bar_color};padding:8px 12px;color:#94a3b8;font-size:11px;font-style:italic;line-height:1.55;background:#0b1220;border-radius:0 4px 4px 0;">
+              &ldquo;{_esc(q['text'])}&rdquo;
+              {attribution_html}
+            </div>
+          </td>
+        </tr>
+        """
     cats_html += f"""
         <tr>
           <td colspan="3" style="padding:14px 12px;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;">Total</td>

@@ -584,6 +584,70 @@ from engine_perx.pe_dictionary import PE_DICTIONARY as _PE_DICT  # alias for loc
 _REPORT_CATEGORY_ORDER = [c["code"] for c in _PE_DICT]
 
 
+def _extract_quote_text(item: Any) -> str:
+    """Defensive: evidence_quotes items can be plain strings or dicts."""
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return (
+            item.get("text")
+            or item.get("quote")
+            or item.get("snippet")
+            or item.get("evidence")
+            or ""
+        )
+    return ""
+
+
+def _fetch_category_quotes(symbol: str, category_codes: list[str]) -> dict[str, dict[str, str]]:
+    """Fetch one representative evidence quote per (symbol, category).
+
+    Returns {category_code: {text, source, quarter}}. Prefers primary-source
+    quotes (verbatim from management narrative tracer); falls back to
+    secondary (transcript keyword scan) if no primary quote exists.
+    Omitted categories are simply absent from the returned dict.
+    """
+    if not category_codes:
+        return {}
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT category_code, source, evidence_quotes
+               FROM perx_pe_signals
+               WHERE symbol = %s
+                 AND category_code = ANY(%s)
+                 AND jsonb_array_length(evidence_quotes) > 0
+               ORDER BY CASE source WHEN 'primary' THEN 0 ELSE 1 END,
+                        category_code""",
+            (symbol.upper(), category_codes),
+        )
+        out: dict[str, dict[str, str]] = {}
+        for row in cur.fetchall():
+            code = row["category_code"]
+            if code in out:
+                continue  # primary-source quote already captured for this category
+            quotes = row["evidence_quotes"]
+            if not isinstance(quotes, list) or not quotes:
+                continue
+            text = _extract_quote_text(quotes[0]).strip()
+            if not text:
+                continue
+            entry: dict[str, str] = {
+                "text": text[:400],  # truncate to safe rendering length
+                "source": str(row["source"] or ""),
+            }
+            first = quotes[0]
+            if isinstance(first, dict):
+                q = first.get("quarter") or first.get("period") or first.get("date")
+                if q:
+                    entry["quarter"] = str(q)[:20]
+            out[code] = entry
+        return out
+    finally:
+        conn.close()
+
+
 def _score_bucket(score: float) -> str:
     if score >= 80: return "Strong"
     if score >= 65: return "Moderate"
@@ -723,6 +787,18 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
                 "sources": [],
                 "missing": True,
             })
+
+    # Attach one representative evidence quote per non-missing category.
+    # This grounds the abstract scores with a verbatim citation from the
+    # management narrative tracer (primary source) or transcript keyword
+    # scan (secondary source).
+    quotes_by_cat = _fetch_category_quotes(sym, _REPORT_CATEGORY_ORDER)
+    for row in breakdown:
+        if row.get("missing"):
+            continue
+        q = quotes_by_cat.get(row["code"])
+        if q:
+            row["quote"] = q
 
     # Pull secondary snippet detail
     secondary_detail: list[dict[str, Any]] = []

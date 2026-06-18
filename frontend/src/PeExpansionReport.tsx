@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from './api';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -30,6 +30,11 @@ interface CategoryRow {
   contribution: number;
   sources: string[];
   missing: boolean;
+  quote?: {
+    text: string;
+    source: string;
+    quarter?: string;
+  };
 }
 
 interface PrimaryRow {
@@ -393,7 +398,8 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
             </thead>
             <tbody>
               {report.category_breakdown.map(c => (
-                <tr key={c.code}>
+                <Fragment key={c.code}>
+                <tr>
                   <td style={{ padding: '10px 12px', borderBottom: `1px solid ${colors.panel2}`, color: c.missing ? colors.textMuted : colors.text }}>{c.label}</td>
                   <td style={{ padding: '10px 12px', borderBottom: `1px solid ${colors.panel2}`, textAlign: 'center', color: c.missing ? colors.textMuted : '#cbd5e1', fontWeight: 600 }}>{c.weight}</td>
                   <td style={{ padding: '10px 12px', borderBottom: `1px solid ${colors.panel2}`, textAlign: 'center', color: c.missing ? '#334155' : strengthColor(c.signal_strength), fontFamily: 'monospace', letterSpacing: '0.1em' }}>
@@ -407,6 +413,24 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
                     {c.missing && <span style={{ color: colors.textMuted, fontStyle: 'italic' }}>no evidence</span>}
                   </td>
                 </tr>
+                {!c.missing && c.quote && (() => {
+                  const q = c.quote;
+                  const attribution = q.quarter
+                    ? (q.source ? `${q.source} (${q.quarter})` : q.quarter)
+                    : (q.source || 'transcript');
+                  const barColor = c.signal_strength >= 4 ? colors.strong : c.signal_strength >= 3 ? colors.accent : colors.textMuted;
+                  return (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '0 12px 14px 12px', borderBottom: `1px solid ${colors.panel2}` }}>
+                        <div style={{ borderLeft: `3px solid ${barColor}`, padding: '8px 12px', color: colors.textDim, fontSize: 11, fontStyle: 'italic', lineHeight: 1.55, background: '#0b1220', borderRadius: '0 4px 4px 0' }}>
+                          &ldquo;{q.text}&rdquo;
+                          <div style={{ color: colors.textMuted, fontStyle: 'normal', fontSize: 10, marginTop: 4 }}>— {attribution}</div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })()}
+                </Fragment>
               ))}
               <tr>
                 <td colSpan={3} style={{ padding: '14px 12px', color: colors.textDim, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Total</td>
