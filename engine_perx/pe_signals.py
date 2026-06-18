@@ -1149,6 +1149,110 @@ def _summarize_indep_verdict(indep: dict[str, Any] | None) -> str:
     return _verdict(indep["master_score"]) + f" ({indep['master_score']:.0f}/100)"
 
 
+_ALIGNMENT_LABEL = {
+    "all_agree":    "All agree",
+    "mostly_agree": "Mostly agree",
+    "mixed":        "Mixed signals",
+    "split":        "Split",
+    "no_data":      "No data",
+}
+
+
+def _build_bottom_line(pe_score: float | None,
+                       credibility: dict[str, Any] | None,
+                       indep: dict[str, Any] | None,
+                       fin: dict[str, Any] | None,
+                       price: dict[str, Any] | None,
+                       cross_check: list[dict[str, Any]]) -> dict[str, Any]:
+    """Synthesize all 4 engines + cross-check into one executive paragraph.
+
+    Returns {summary, action, highlights: [{signal, status, status_label}]}.
+    The action is one of: positive, watch, cautious, negative, no_data.
+    """
+    # Collect all engine scores that are present
+    engines: list[tuple[str, float]] = []
+    if pe_score is not None:
+        engines.append(("narrative", pe_score))
+    if indep and indep.get("master_score") is not None:
+        engines.append(("cross-check", indep["master_score"]))
+    if fin and fin.get("score") is not None:
+        engines.append(("fundamentals", fin["score"]))
+    if price and price.get("total_score") is not None:
+        engines.append(("price", price["total_score"]))
+
+    if not engines:
+        return {
+            "summary": "Insufficient data to render a verdict.",
+            "action": "no_data",
+            "highlights": [],
+        }
+
+    avg = sum(s for _, s in engines) / len(engines)
+    min_engine = min(engines, key=lambda x: x[1])
+    max_engine = max(engines, key=lambda x: x[1])
+    all_agree = sum(1 for r in cross_check if r["alignment"] == "all_agree")
+    split = sum(1 for r in cross_check if r["alignment"] in ("split", "mixed"))
+
+    # Action + summary
+    cred_acc = (credibility or {}).get("accuracy_pct") if credibility else None
+    cred_miss = (credibility or {}).get("consecutive_miss_quarters") if credibility else 0
+
+    if min_engine[1] >= 60 and split == 0:
+        action = "positive"
+        summary = (
+            f"All checks agree — the story, fundamentals, and price are all positive (avg {avg:.0f}/100). "
+            f"High-conviction setup."
+        )
+    elif cred_miss is not None and cred_miss >= 4:
+        action = "negative"
+        summary = (
+            f"Management credibility is broken ({cred_miss} consecutive missed quarters). "
+            f"Avoid new positions here."
+        )
+    elif min_engine[1] < 35:
+        action = "negative"
+        weakest = min_engine[0]
+        summary = (
+            f"The {weakest} check ({min_engine[1]:.0f}/100) is deeply negative. "
+            f"Other signals are positive, but the disagreement is a serious red flag."
+        )
+    elif split >= 2:
+        action = "cautious"
+        summary = (
+            f"{split} of 5 dimensions show disagreement between engines. "
+            f"Don't trust any single check here — wait for the signals to resolve."
+        )
+    elif min_engine[1] < 60 and max_engine[1] >= 70:
+        action = "watch"
+        summary = (
+            f"Split verdict: {max_engine[0]} says strong ({max_engine[1]:.0f}/100), "
+            f"but {min_engine[0]} says caution ({min_engine[1]:.0f}/100). "
+            f"Watch for resolution before sizing."
+        )
+    else:
+        action = "watch"
+        summary = (
+            f"Mixed signals across the engines (avg {avg:.0f}/100). "
+            f"No strong consensus — keep on the watchlist."
+        )
+
+    # Highlights from cross-check (one bullet per dimension, color-coded)
+    highlights: list[dict[str, str]] = []
+    for row in cross_check:
+        a = row.get("alignment", "no_data")
+        highlights.append({
+            "signal": row["dimension"],
+            "status": a,
+            "status_label": _ALIGNMENT_LABEL.get(a, "No data"),
+        })
+
+    return {
+        "summary": summary,
+        "action": action,
+        "highlights": highlights,
+    }
+
+
 def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
     """Assemble the full PE Expansion report dict for a symbol.
 
@@ -1245,6 +1349,14 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
         breakdown, score_doc["pe_score"], credibility_snapshot,
         independent_check, financial_quality, price_action,
     )
+    # Bottom Line: 1-paragraph synthesis + 5-bullet highlight bar
+    # at the very top of the report. Combines all 4 engines + cross-check
+    # into a decision-aid the reader can scan in 5 seconds.
+    bottom_line = _build_bottom_line(
+        score_doc["pe_score"], credibility_snapshot,
+        independent_check, financial_quality, price_action,
+        cross_check,
+    )
     for row in breakdown:
         if row.get("missing"):
             continue
@@ -1305,6 +1417,7 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
         "financial_quality": financial_quality,
         "price_action": price_action,
         "cross_check": cross_check,
+        "bottom_line": bottom_line,
     }
 
 

@@ -361,6 +361,51 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
     else:
         price_html = ""
 
+    # ── Bottom Line (executive synthesis at the top of the report) ──
+    bl = report.get("bottom_line") or {}
+    if bl.get("summary"):
+        action = bl.get("action", "no_data")
+        action_styles = {
+            "positive": ("Strong setup", "#22c55e", "#052e16"),
+            "watch":    ("Watch",        "#3b82f6", "#0c2541"),
+            "cautious": ("Caution",      "#f59e0b", "#3a2410"),
+            "negative": ("Avoid",        "#ef4444", "#3b0a0a"),
+            "no_data":  ("Insufficient", "#64748b", "#1c1c1c"),
+        }
+        label, color, bg = action_styles.get(action, action_styles["no_data"])
+        highlights_html = ""
+        for hl in bl.get("highlights", []):
+            hl_color = {
+                "all_agree":    "#22c55e",
+                "mostly_agree": "#3b82f6",
+                "mixed":        "#f59e0b",
+                "split":        "#ef4444",
+                "no_data":      "#64748b",
+            }.get(hl["status"], "#64748b")
+            highlights_html += (
+                f'<span style="display:inline-block;padding:4px 10px;margin:3px 4px 3px 0;'
+                f'background:#0b1220;border:1px solid {hl_color};border-radius:4px;'
+                f'font-size:11px;color:#f1f5f9;">'
+                f'<span style="color:{hl_color};font-weight:700;">{_esc(hl["status_label"])}</span>'
+                f' &middot; <span style="color:#94a3b8;">{_esc(hl["signal"])}</span>'
+                f'</span>'
+            )
+        bottom_line_html = f"""
+    <div style="padding:24px 40px;background:{bg};border-bottom:3px solid {color};">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="display:inline-block;padding:4px 10px;background:{color};color:#020617;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;border-radius:3px;">BOTTOM LINE</span>
+        <span style="font-size:13px;font-weight:700;color:{color};">{_esc(label)}</span>
+      </div>
+      <div style="font-size:14px;color:#f1f5f9;line-height:1.55;font-weight:500;margin-bottom:14px;">
+        {_esc(bl["summary"])}
+      </div>
+      <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:6px;">Across the 5 dimensions:</div>
+      <div>{highlights_html}</div>
+    </div>
+    """
+    else:
+        bottom_line_html = ""
+
     # Section A: header
     bar_color = _bucket_color(h["bucket"])
     header_html = f"""
@@ -644,6 +689,7 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
 </head>
 <body style="margin:0;padding:0;background:#020617;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#cbd5e1;">
   <div style="max-width:920px;margin:0 auto;background:#0f172a;">
+    {bottom_line_html}
     {credibility_html}
     {checks_html}
     {header_html}

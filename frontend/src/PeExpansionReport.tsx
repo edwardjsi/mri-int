@@ -101,6 +101,16 @@ interface CrossCheckRow {
   alignment: 'all_agree' | 'mostly_agree' | 'mixed' | 'split' | 'no_data';
 }
 
+interface BottomLine {
+  summary: string;
+  action: 'positive' | 'watch' | 'cautious' | 'negative' | 'no_data';
+  highlights: Array<{
+    signal: string;
+    status: string;
+    status_label: string;
+  }>;
+}
+
 interface PrimaryRow {
   guidance_type: string;
   current_status: string;
@@ -143,6 +153,7 @@ interface PeReport {
   financial_quality: FinancialQuality | null;
   price_action: PriceAction | null;
   cross_check: CrossCheckRow[];
+  bottom_line: BottomLine | null;
 }
 
 // ── Style helpers ────────────────────────────────────────────────────
@@ -385,6 +396,44 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
           const cov = report.coverage;
           return (
         <>
+        {/* ── Bottom Line (executive synthesis at the top) ── */}
+        {report.bottom_line && report.bottom_line.summary && (() => {
+          const bl = report.bottom_line!;
+          const actionStyles: Record<string, { label: string; color: string; bg: string }> = {
+            positive: { label: 'Strong setup', color: colors.strong, bg: '#052e16' },
+            watch:    { label: 'Watch',        color: colors.accent, bg: '#0c2541' },
+            cautious: { label: 'Caution',      color: colors.warn,   bg: '#3a2410' },
+            negative: { label: 'Avoid',        color: colors.bad,    bg: '#3b0a0a' },
+            no_data:  { label: 'Insufficient', color: colors.textMuted, bg: '#1c1c1c' },
+          };
+          const a = actionStyles[bl.action] || actionStyles.no_data;
+          return (
+            <div style={{ padding: '24px 40px', background: a.bg, borderBottom: `3px solid ${a.color}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <span style={{ display: 'inline-block', padding: '4px 10px', background: a.color, color: '#020617', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', borderRadius: 3 }}>BOTTOM LINE</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: a.color }}>{a.label}</span>
+              </div>
+              <div style={{ fontSize: 14, color: colors.text, lineHeight: 1.55, fontWeight: 500, marginBottom: 14 }}>
+                {bl.summary}
+              </div>
+              <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>
+                Across the 5 dimensions:
+              </div>
+              <div>
+                {bl.highlights.map(h => {
+                  const hlColor = (alignmentLabel[h.status] || alignmentLabel.no_data).color;
+                  return (
+                    <span key={h.signal} style={{ display: 'inline-block', padding: '4px 10px', margin: '3px 4px 3px 0', background: '#0b1220', border: `1px solid ${hlColor}`, borderRadius: 4, fontSize: 11, color: colors.text }}>
+                      <span style={{ color: hlColor, fontWeight: 700 }}>{h.status_label}</span>
+                      <span style={{ color: colors.textMuted }}> &middot; </span>
+                      <span style={{ color: colors.textDim }}>{h.signal}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
         {/* ── Manager Track Record strip ── */}
         {report.credibility && report.credibility.verdict_zone && (() => {
           const cred = report.credibility!;
