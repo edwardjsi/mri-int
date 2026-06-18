@@ -2,6 +2,51 @@
 
 ---
 
+## 📅 Session: June 18, 2026 — PE Expansion Scorer (V1) Across 149-Symbol Universe
+
+**Session Start:** ~11:30 IST
+**Session End:** ~12:30 IST
+
+### What Was Done This Session
+
+#### 1. PE Expansion Vocabulary Ingested ✅
+- [x] Read `~/Downloads/pe expansion vocabulary.md` (15 trigger groups, Master MOSI dictionary A-M, 12 weighted categories).
+- [x] Read `~/Downloads/PERX PRD.md` (V1.0 PRD: orchestrator + report JSON + email + compare mode).
+- [x] User note: **don't re-scan transcripts from scratch — the narrative-tracer universe run from 2026-06-16 (143 companies, $2.80 LLM cost) is the source of truth.** Use `management_narrative_timeline` (2,713 quote-verified promise rows) as PRIMARY input.
+
+#### 2. Engine Built ✅
+- [x] **`engine_perx/pe_dictionary.py`** (NEW, 9.7K) — the 12-category PE Expansion dictionary with weights (5–10), keyword lists, and pre-computed `KEYWORD_INDEX` + `MAX_PE_SCORE` lookup. Verbatim from the Master MOSI doc.
+- [x] **`engine_perx/pe_signals.py`** (NEW, 19K) — scorer with TWO input sources:
+  - **PRIMARY**: `management_narrative_timeline` — bridges `guidance_type` (REVENUE_GROWTH, MARGIN, CAPEX, …) to PE categories. Uses `current_status` (FULFILLED/ON_TRACK/MISSED/…) to compute `weighted_status_score` → 0–5 signal strength.
+  - **SECONDARY**: `aae_transcripts.raw_text` — keyword scan for environmental categories that don't materialize as discrete promises (MOAT_IP, EXPORT_EXPANSION, TECHNOLOGY, STRUCTURAL_TAILWIND, VERTICAL_INTEGRATION, PRODUCTION_INFLECTION). Mentions → 0–5 ladder + execution-word bonus.
+  - **Combination rule**: `PE Score = Σ (weight × max(primary_strength, secondary_strength))` per category, scaled to 0–100.
+  - **CLI**: `python3 -m engine_perx.pe_signals --symbol XYZ` (single), `--limit N` (sample), `--persist` (write to DB).
+
+#### 3. Migration ✅
+- [x] `migrations/003_perx_pe_signals.sql` applied. Two new tables:
+  - `perx_pe_signals` — provenance per (symbol, source, category_code). 1,975 rows after first run.
+  - `perx_pe_scores` — per-symbol aggregate. 149 rows after first run.
+
+#### 4. Universe Scored ✅
+- [x] **149 symbols scored** (the "112-co universe" expanded to 149 with yesterday's transcript batch — `universe_112co` itself has 192 rows; 149 have at least one promise row OR one transcript).
+- [x] **Score distribution**:
+  - 80–100 (Strong): 10 symbols — WAAREEENER, QPOWER, POLYCAB, SKIPPER, LUPIN, SJS, QUESS, SHAILY, CUPID, MANORAMA
+  - 65–79 (Moderate): 64 symbols
+  - 50–64 (Watch): 40 symbols
+  - 30–49 (Weak): 26 symbols
+  - <30 (No data / Negligible): 9 symbols
+- [x] **Top categories across universe (secondary scan, strength≥3)**: MARGIN_EXPANSION (128 syms), TECHNOLOGY (127), MARKET_SHARE (114), SCALABILITY (113), MOAT_IP (108), EXPORT_EXPANSION (107), CAPACITY_EXPANSION (102), PRODUCTION_INFLECTION (93), ROCE_IMPROVEMENT (89), REVENUE_VISIBILITY (76), VERTICAL_INTEGRATION (48), STRUCTURAL_TAILWIND (45).
+- [x] **Spot-checks against known symbols**: POLYCAB #3 (83.6) and BEL #22 (77.2) match PERX PRD's worked examples. EIHAHOTELS at 4.5 (consistent with its THESIS BROKEN credibility). Data Patterns at #24 (77.0) — slightly lower than the worked-example's hand-scored 92/100 because the LLM promise extractor captures only the discrete commitments, not the cumulative narrative depth that the analyst manually tallied.
+
+#### 5. Data Patterns PDFs (Bonus) ✅
+- [x] Converted 3 PDFs (`~/Downloads/data{1,2,3}.pdf` — Q2/Q3/Q4 FY26 earnings-call transcripts) to markdown via `markitdown` into `.kimchi/docs/`. Confirmed they're duplicates of transcripts already in `aae_transcripts` for DATAPATTNS (same BSE filings).
+
+### 📌 Current Milestone
+- **PE Expansion V1 scorer is live and producing universe-wide scores.** Top-10 list is institutional-grade; score distribution is well-spread; all 12 categories are populating.
+- **Next**: validate against ground-truth (e.g. walk through POLYCAB top-categories manually), wire PE score into the existing `compute_perx_score` in `engine_perx/scoring.py` so it appears in the `/perx/[symbol]` report, and add an LLM semantic-match layer (V2) for the categories that the keyword scanner under-weights.
+
+---
+
 ## 📅 Session: June 17, 2026 (continued) — End-of-Day Verification, SIGMA Revert & Push
 
 **Session Start:** ~14:00 IST

@@ -1,3 +1,32 @@
+## **June 18, 2026: PE Expansion Scorer V1 — Universe-Wide Scoring on 149 Symbols**
+
+**Objective**: Stand up a transcript-driven PE Expansion scoring engine using the vocabulary from `~/Downloads/pe expansion vocabulary.md` and the architecture from `~/Downloads/PERX PRD.md`. User directive: **"use any code already written"** — i.e. don't re-scan transcripts; the 2026-06-16 narrative-tracer run (143 companies, $2.80 LLM cost) is the source of truth.
+
+**Actions**:
+- **Converted 3 Data Patterns PDFs** (`~/Downloads/data{1,2,3}.pdf`) to markdown via `markitdown` into `.kimchi/docs/data{1,2,3}.md`. Q2/Q3/Q4 FY26 transcripts. Confirmed they're duplicates of `aae_transcripts` rows already in DB for DATAPATTNS (same BSE filings).
+- **`engine_perx/pe_dictionary.py` (NEW, 9.7K)**: 12-category PE Expansion dictionary. Verbatim from the Master MOSI doc. Categories + weights: REVENUE_VISIBILITY (10), PRODUCTION_INFLECTION (10), MARGIN_EXPANSION (9), MOAT_IP (9), EXPORT_EXPANSION (8), SCALABILITY (8), MARKET_SHARE (8), TECHNOLOGY (7), ROCE_IMPROVEMENT (7), CAPACITY_EXPANSION (7), STRUCTURAL_TAILWIND (6), VERTICAL_INTEGRATION (5). `MAX_PE_SCORE = 480` (sum of weights × 5).
+- **`engine_perx/pe_signals.py` (NEW, 19K)**: Two-source scorer.
+  - PRIMARY source = `management_narrative_timeline` (2,713 LLM-extracted, quote-verified promises across 140 symbols). Bridges `guidance_type` → PE category: REVENUE_GROWTH/DEAL_PIPELINE → REVENUE_VISIBILITY; MARGIN → MARGIN_EXPANSION; CAPACITY_EXPANSION/CAPEX → CAPACITY_EXPANSION; MARKET_SHARE → MARKET_SHARE; WORKING_CAPITAL/DEBT_REDUCTION → ROCE_IMPROVEMENT; HIRING → SCALABILITY; OTHER → keyword fallback.
+  - SECONDARY source = `aae_transcripts.raw_text` keyword scan for environmental cats (MOAT_IP, EXPORT_EXPANSION, TECHNOLOGY, STRUCTURAL_TAILWIND, VERTICAL_INTEGRATION, PRODUCTION_INFLECTION, plus reinforcement of all others). Mentions ladder 0–5 + execution-word bonus.
+  - Combination rule: `PE Score = Σ (weight × max(primary_strength, secondary_strength))` scaled to 0–100. Both sources contribute to provenance table.
+  - Status weighting (PRD ladder): FULFILLED=+4, REVISED_UP=+4, ON_TRACK/PARTIAL=+2, NEW=+1, PENDING=0, MISSED=-1.
+  - CLI: `python3 -m engine_perx.pe_signals --symbol XYZ` or `--limit N --persist`.
+- **`migrations/003_perx_pe_signals.sql` (NEW, 2.4K)**: Two tables.
+  - `perx_pe_signals` — provenance per (symbol, source, category_code). Tracks n_promises, weighted_status_score, mentions, has_execution_language, evidence_quotes, guidance_types.
+  - `perx_pe_scores` — per-symbol aggregate with full category_breakdown JSONB.
+- **Universe run**: 149 symbols scored in ~3 min, no LLM calls (pure keyword scan + DB reads + arithmetic).
+- **Score distribution**: 10 strong (80–100), 64 moderate (65–79), 40 watch (50–64), 26 weak (30–49), 9 negligible (<30). Top-10 reads as institutional: WAAREEENER (88.5), QPOWER (84.9), POLYCAB (83.6 — PERX PRD's worked example), SKIPPER (83.4), LUPIN (82.6), SJS (82.1), QUESS (81.3), SHAILY (80.2), CUPID (80.0), MANORAMA (80.0). BEL #22 (77.2 — also in PERX PRD). EIHAHOTELS at 4.5 (consistent with THESIS BROKEN credibility).
+- **Data Patterns spot-check**: DATAPATTNS ranks #24 at PE=77.0, top drivers PRODUCTION_INFLECTION, MARGIN_EXPANSION, REVENUE_VISIBILITY. Below the worked example's hand-scored 92/100 because the LLM promise extractor captures discrete commitments only, not cumulative narrative depth that an analyst manually tallies.
+
+**Result**: V1 PE Expansion scorer is live and producing universe-wide scores using the existing transcript corpus. Top-10 list passes the smell test (POLYCAB and BEL — explicitly named in PERX PRD — land where expected). Category coverage is balanced: all 12 categories populated, with MARGIN_EXPANSION (128 syms) and TECHNOLOGY (127) most-discussed, STRUCTURAL_TAILWIND (45) rarest as expected (only industry leaders invoke multi-decade supercycle language).
+
+**Next Step**: 
+- (a) Wire PE score into existing `compute_perx_score` in `engine_perx/scoring.py` so the `/perx/[symbol]` report carries the breakdown alongside MRI×QIF×STEE composite.
+- (b) Add LLM semantic-match layer (V2) for the categories that keyword scan under-weights (defence-specific, export terminology nuances).
+- (c) Backfill narrative-tracer for the ~43 universe symbols that have transcripts but no promise rows yet (the runner accepts `--min-transcripts N` to filter).
+
+---
+
 ## **June 17, 2026 (continued): End-of-Day Verification, SIGMA Revert & Push**
 
 **Objective**: Close out the day's 7-phase AAE × Management Integrity integration by re-running the regression suite against the live Neon DB, reverting the SIGMA side-effect from Phase 7 smoke tests, and pushing the 15 local commits to `origin/main`.
