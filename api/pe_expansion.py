@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
 from engine_core.db import get_connection
+from engine_core.email_service import send_email_custom
 from engine_perx.pe_signals import build_pe_expansion_report
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -297,45 +298,38 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
 # ── Email send ───────────────────────────────────────────────────────
 
 def _send_pe_expansion_email(recipient_email: str, report: dict[str, Any]) -> dict[str, Any]:
-    """Send the HTML email via SES (if available) or fallback to a logged dev mode.
+    """Send the Expansion Lens HTML email via the platform's shared SES path.
 
-    Returns {status, message_id_or_error}.
+    Uses engine_core.email_service.send_email_custom() (same as PERX /
+    GuidanceCheck / RiskAudit / Portfolio Regrade) so it inherits the
+    correct region resolution, AWS credentials, and SENDER_EMAIL config.
+
+    Falls back to writing the HTML to outputs/ for local inspection only
+    when SES sending fails — useful for QA without spamming real inboxes.
+
+    Returns {status, message_id_or_path, warning?}.
     """
     h = report["header"]
     subject = f"Expansion Lens — {h['company_name']} ({h['symbol']}) · {h['pe_score']}/100"
-
     html_body = render_pe_expansion_email(report)
 
-    # Try the existing SES path used by other emails.
+    sent = send_email_custom(recipient_email, subject, html_body)
+    if sent:
+        return {"status": "sent"}
+
+    # SES send failed (or AWS not configured) — keep a local copy for QA
+    # so the user can still see what would have been sent.
+    logger.warning(f"SES send failed for {recipient_email}; writing HTML to outputs/ for inspection.")
+    out_dir = "outputs"
     try:
-        import boto3
-        from botocore.exceptions import ClientError
-
-        aws_region = os.environ.get("AWS_REGION", "ap-south-1")
-        ses_client = boto3.client("ses", region_name=aws_region)
-        sender = os.environ.get("SES_SENDER", "alerts@mri-int.com")
-
-        resp = ses_client.send_email(
-            Source=sender,
-            Destination={"ToAddresses": [recipient_email]},
-            Message={
-                "Subject": {"Data": subject, "Charset": "UTF-8"},
-                "Body": {
-                    "Html": {"Data": html_body, "Charset": "UTF-8"},
-                },
-            },
-        )
-        return {"status": "sent", "message_id": resp.get("MessageId")}
-    except Exception as e:
-        # Dev mode or AWS not configured — log and return dev_status.
-        logger.warning(f"SES send failed for {recipient_email}: {e}. Falling back to dev mode.")
-        # Write to disk for inspection in dev.
-        out_dir = "outputs"
         os.makedirs(out_dir, exist_ok=True)
         out_path = os.path.join(out_dir, f"pe_expansion_email_{h['symbol']}.html")
         with open(out_path, "w") as f:
             f.write(html_body)
-        return {"status": "dev_logged", "path": out_path, "warning": str(e)}
+        return {"status": "dev_logged", "path": out_path}
+    except Exception as write_err:
+        logger.error(f"Could not write dev fallback file: {write_err}")
+        return {"status": "send_failed"}
 
 
 def _log_email(client_id: str | None, recipient: str, report: dict[str, Any],
