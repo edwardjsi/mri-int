@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from './api';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -116,40 +116,39 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
   const [emailMsg, setEmailMsg] = useState<string>('');
   const [recipient, setRecipient] = useState('');
 
-  // Search + Top 10 state (manual-refresh, 149-universe scope)
-  const [searchQ, setSearchQ] = useState('');
-  const [searchResults, setSearchResults] = useState<Array<{symbol: string; company_name: string; pe_score: number | null}>>([]);
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-  const [top10, setTop10] = useState<{as_of: string | null; total_in_universe: number; results: any[]} | null>(null);
+  // Universe (all 149 symbols) state — fetched once on mount
+  const [universe, setUniverse] = useState<Array<{symbol: string; company_name: string; pe_score: number | null}>>([]);
+  const [universeLoading, setUniverseLoading] = useState(true);
+  const [universeError, setUniverseError] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
 
-  // Fetch top 10 once on mount
+  // Fetch full universe once on mount
   useEffect(() => {
-    apiFetch('/pe-expansion/top10')
-      .then((r: any) => setTop10(r))
-      .catch(() => setTop10(null));
+    apiFetch('/pe-expansion/suggest?q=&limit=200')
+      .then((r: any) => {
+        // Defensive: only set if response shape matches expectations
+        const list = Array.isArray(r?.results) ? r.results : [];
+        setUniverse(list.filter((x: any) => x && typeof x.symbol === 'string'));
+      })
+      .catch((e: any) => setUniverseError(typeof e === 'string' ? e : (e?.message || 'Failed to load universe')))
+      .finally(() => setUniverseLoading(false));
   }, []);
 
-  // Debounced search
-  useEffect(() => {
-    if (searchQ.trim().length === 0) {
-      setSearchResults([]);
-      return;
-    }
-    const t = setTimeout(() => {
-      apiFetch(`/pe-expansion/suggest?q=${encodeURIComponent(searchQ.trim())}&limit=8`)
-        .then((r: any) => setSearchResults(r.results || []))
-        .catch(() => setSearchResults([]));
-    }, 200);
-    return () => clearTimeout(t);
-  }, [searchQ]);
+  // Client-side filter (no API roundtrip)
+  const filteredUniverse = useMemo(() => {
+    const q = filter.trim().toUpperCase();
+    if (!q) return universe;
+    return universe.filter(r =>
+      r.symbol.toUpperCase().includes(q) ||
+      (r.company_name || '').toUpperCase().includes(q)
+    );
+  }, [universe, filter]);
 
   // Fetch report when symbol changes
   useEffect(() => {
     if (!symbol) return;
     setLoading(true);
     setError(null);
-    setShowSearchDropdown(false);
-    setSearchQ('');
     apiFetch(`/pe-expansion/${encodeURIComponent(symbol)}`)
       .then((r: PeReport) => setReport(r))
       .catch((e: any) => setError(typeof e === 'string' ? e : JSON.stringify(e)))
@@ -182,79 +181,81 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
     if (quarters.length === 0) return null;
     return quarters.sort().reverse()[0];
   })();
-  const asOfIstLabel = top10?.as_of ? new Date(top10.as_of).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  // /suggest doesn't return as_of, so the refresh timestamp is shown only via
+  // the CLI command hint in the universe-list panel footer.
 
   return (
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.text, fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-        {/* ── Search + Top 10 panel (always visible) ── */}
+        {/* ── Universe list panel (always visible) ── */}
         <div style={{ padding: '24px 40px', background: colors.panel, borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>
-            🔍 Search 149-symbol universe
+            📈 Expansion Lens · {universe.length > 0 ? universe.length : '—'}-symbol universe · click any row to load its report
           </div>
-          <div style={{ position: 'relative', marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
             <input
               type="text"
-              value={searchQ}
-              onChange={e => { setSearchQ(e.target.value); setShowSearchDropdown(true); }}
-              onFocus={() => setShowSearchDropdown(true)}
-              onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-              placeholder="Symbol or company name…"
-              style={{ width: '100%', padding: '10px 14px', background: colors.panel2, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              placeholder="Filter by symbol or company name…"
+              style={{ width: '100%', padding: '10px 14px', background: colors.panel2, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
             />
-            {showSearchDropdown && searchResults.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: colors.panel2, border: `1px solid ${colors.border}`, borderRadius: 6, marginTop: 4, zIndex: 10, maxHeight: 320, overflowY: 'auto' }}>
-                {searchResults.map(r => (
-                  <div
-                    key={r.symbol}
-                    onMouseDown={() => { setSymbol(r.symbol); setShowSearchDropdown(false); }}
-                    style={{ padding: '10px 14px', borderBottom: `1px solid ${colors.border}`, cursor: 'pointer', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <div>
-                      <span style={{ fontWeight: 700, marginRight: 12, color: colors.text }}>{r.symbol}</span>
-                      <span style={{ color: colors.textDim }}>{r.company_name}</span>
-                    </div>
-                    {r.pe_score !== null && r.pe_score !== undefined && (
-                      <span style={{ color: r.pe_score >= 80 ? colors.strong : r.pe_score >= 65 ? colors.accent : colors.textMuted, fontWeight: 700 }}>
-                        {r.pe_score.toFixed(1)}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {top10 && (
-            <>
-              <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>
-                Top 10 · {top10.total_in_universe} symbols in universe
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
-                {top10.results.map(r => (
-                  <div
-                    key={r.symbol}
-                    onClick={() => setSymbol(r.symbol)}
-                    style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.panel2, borderRadius: 4, cursor: 'pointer', fontSize: 12, alignItems: 'center' }}
-                  >
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <span style={{ color: colors.textMuted, marginRight: 8 }}>#{r.rank}</span>
-                      <span style={{ fontWeight: 700, marginRight: 8, color: colors.text }}>{r.symbol}</span>
-                      <span style={{ color: colors.textDim }}>{r.company_name}</span>
-                    </div>
-                    <span style={{ color: (r.pe_score ?? 0) >= 80 ? colors.strong : (r.pe_score ?? 0) >= 65 ? colors.accent : colors.textMuted, fontWeight: 700, marginLeft: 8 }}>
-                      {typeof r.pe_score === 'number' ? r.pe_score.toFixed(1) : r.pe_score}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 12, lineHeight: 1.6 }}>
-                Last persist: {asOfIstLabel} IST ·{' '}
-                To refresh: <code style={{ background: colors.panel2, padding: '1px 6px', borderRadius: 3, color: colors.text }}>python -m engine_perx.pe_signals --persist</code>
-              </div>
-            </>
+          {universeError && (
+            <div style={{ padding: 12, color: colors.bad, fontSize: 13 }}>
+              Failed to load universe: {universeError}
+            </div>
           )}
+
+          {universeLoading && (
+            <div style={{ padding: 12, color: colors.textMuted, fontSize: 13 }}>Loading universe…</div>
+          )}
+
+          {!universeLoading && !universeError && filteredUniverse.length === 0 && (
+            <div style={{ padding: 12, color: colors.textMuted, fontSize: 13 }}>
+              {filter ? `No symbols match "${filter}".` : 'Universe is empty.'}
+            </div>
+          )}
+
+          {!universeLoading && !universeError && filteredUniverse.length > 0 && (
+            <div style={{ maxHeight: 480, overflowY: 'auto', border: `1px solid ${colors.border}`, borderRadius: 6, background: colors.panel2 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead style={{ position: 'sticky', top: 0, background: colors.panel2, zIndex: 1 }}>
+                  <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Symbol</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Company</th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em' }}>PE Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUniverse.map(r => {
+                    const score = typeof r.pe_score === 'number' ? r.pe_score : null;
+                    const scoreColor = score === null ? colors.textMuted : score >= 80 ? colors.strong : score >= 65 ? colors.accent : colors.textMuted;
+                    return (
+                      <tr
+                        key={r.symbol}
+                        onClick={() => setSymbol(r.symbol)}
+                        style={{ borderBottom: `1px solid ${colors.border}`, cursor: 'pointer' }}
+                      >
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: colors.text }}>{r.symbol}</td>
+                        <td style={{ padding: '8px 12px', color: colors.textDim, maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.company_name || '—'}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', color: scoreColor, fontWeight: 700 }}>
+                          {score !== null ? score.toFixed(1) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 12, lineHeight: 1.6 }}>
+            Showing {filteredUniverse.length} of {universe.length} · To refresh ranks:{' '}
+            <code style={{ background: colors.panel2, padding: '1px 6px', borderRadius: 3, color: colors.text }}>python -m engine_perx.pe_signals --persist</code>
+          </div>
         </div>
 
         {/* ── Loading / Error states ── */}
@@ -289,7 +290,7 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
               <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 24, lineHeight: 1.5 }}>
                 Data spans {cov.n_quarter_span} quarter{cov.n_quarter_span === 1 ? '' : 's'}
                 {lastPromiseQuarter ? ` · latest promise ${lastPromiseQuarter}` : ''}
-                {' · '}Manual refresh only — last persisted {asOfIstLabel} IST
+                {' · '}Manual refresh only — re-score via CLI
               </div>
             </div>
             {onBack && (
