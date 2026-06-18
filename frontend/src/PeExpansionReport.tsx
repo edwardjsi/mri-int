@@ -35,6 +35,23 @@ interface CategoryRow {
     source: string;
     quarter?: string;
   };
+  status_grid?: Array<{
+    quarter: string;
+    n_promises: number;
+    counts: Record<string, number>;
+  }>;
+}
+
+interface Credibility {
+  accuracy_pct: number | null;
+  verdict_zone: string | null;
+  trend: string | null;
+  consecutive_miss_quarters: number;
+  lag_score: number | null;
+  total_promises: number;
+  achieved_count: number;
+  missed_count: number;
+  summary: string;
 }
 
 interface PrimaryRow {
@@ -74,6 +91,7 @@ interface PeReport {
   primary_detail: PrimaryRow[];
   secondary_detail: SecondaryRow[];
   totals: Totals;
+  credibility: Credibility | null;
 }
 
 // ── Style helpers ────────────────────────────────────────────────────
@@ -109,6 +127,25 @@ const statusColor = (s: string) => ({
   PARTIALLY_FULFILLED: colors.warn, PENDING: colors.textMuted, NEW: colors.textMuted,
   REVISED_DOWN: colors.bad, MISSED: colors.bad,
 }[s] || colors.textMuted);
+
+const verdictColor = (v: string | null | undefined): string => {
+  if (!v) return colors.textMuted;
+  const u = v.toUpperCase();
+  if (u.includes('ADD')) return colors.strong;
+  if (u.includes('HOLD')) return colors.warn;
+  if (u.includes('REDUCE')) return '#fb923c';
+  if (u.includes('WATCH')) return colors.textMuted;
+  if (u.includes('BROKEN') || u.includes('DISTRUST')) return colors.bad;
+  return colors.textMuted;
+};
+
+const trendColor = (t: string | null | undefined): string => {
+  if (!t) return colors.textMuted;
+  const u = t.toUpperCase();
+  if (u === 'IMPROVING') return colors.strong;
+  if (u === 'DETERIORATING') return colors.bad;
+  return colors.textMuted;
+};
 
 // ── Component ────────────────────────────────────────────────────────
 
@@ -281,6 +318,60 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
           const cov = report.coverage;
           return (
         <>
+        {/* ── Manager Track Record strip ── */}
+        {report.credibility && report.credibility.verdict_zone && (() => {
+          const cred = report.credibility!;
+          const streakColor = cred.consecutive_miss_quarters >= 4 ? colors.bad : cred.consecutive_miss_quarters >= 2 ? colors.warn : colors.text;
+          return (
+            <div style={{ padding: '20px 40px', background: '#0b1220', borderBottom: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14 }}>
+                Manager Track Record
+              </div>
+              <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Accuracy</div>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: colors.text, lineHeight: 1, marginTop: 6 }}>
+                    {cred.accuracy_pct !== null && cred.accuracy_pct !== undefined ? `${cred.accuracy_pct.toFixed(0)}%` : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Verdict</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: verdictColor(cred.verdict_zone), marginTop: 14 }}>
+                    {cred.verdict_zone}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Trend</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: trendColor(cred.trend), marginTop: 14 }}>
+                    {cred.trend || '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Miss Streak</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: streakColor, marginTop: 14 }}>
+                    {cred.consecutive_miss_quarters}Q
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Lag Score</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginTop: 14 }}>
+                    {cred.lag_score !== null && cred.lag_score !== undefined ? cred.lag_score.toFixed(0) : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Promises</div>
+                  <div style={{ fontSize: 13, color: colors.text, lineHeight: 1.5, marginTop: 12 }}>
+                    {cred.achieved_count} achieved · {cred.missed_count} missed<br />
+                    <span style={{ color: colors.textMuted }}>of {cred.total_promises} total</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: colors.textDim, marginTop: 12, fontStyle: 'italic', lineHeight: 1.5 }}>
+                {cred.summary}
+              </div>
+            </div>
+          );
+        })()}
         {/* ── Header ── */}
         <div style={{ padding: '32px 40px', background: colors.panel, borderBottom: `3px solid ${bucketC}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -430,6 +521,42 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
                     </tr>
                   );
                 })()}
+                {!c.missing && c.status_grid && c.status_grid.length > 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '0 12px 12px 12px', borderBottom: `1px solid ${colors.panel2}` }}>
+                      <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 4, padding: '10px 12px' }}>
+                        <div style={{ fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 8 }}>
+                          Promise Status — last {c.status_grid.length} quarters
+                        </div>
+                        <table style={{ borderCollapse: 'collapse', fontSize: 11, color: '#cbd5e1' }}>
+                          <thead>
+                            <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+                              <th align="left" style={{ padding: '4px 8px', color: colors.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>Quarter</th>
+                              {['FULFILLED', 'ON_TRACK', 'PARTIALLY_FULFILLED', 'MISSED', 'REVISED_UP', 'REVISED_DOWN'].map(s => (
+                                <th key={s} align="center" style={{ padding: '4px 6px', color: statusColor(s), fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{s.replace(/_/g, ' ').replace('PARTIALLY', 'PART').slice(0, 7)}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {c.status_grid.map(g => (
+                              <tr key={g.quarter} style={{ borderBottom: `1px solid ${colors.panel2}` }}>
+                                <td style={{ padding: '4px 8px', fontFamily: 'monospace', color: colors.text }}>{g.quarter}</td>
+                                {['FULFILLED', 'ON_TRACK', 'PARTIALLY_FULFILLED', 'MISSED', 'REVISED_UP', 'REVISED_DOWN'].map(s => {
+                                  const n = g.counts[s] || 0;
+                                  return (
+                                    <td key={s} align="center" style={{ padding: '4px 6px', fontFamily: 'monospace', fontWeight: 600, color: n > 0 ? statusColor(s) : colors.textMuted }}>
+                                      {n > 0 ? n : '·'}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 </Fragment>
               ))}
               <tr>

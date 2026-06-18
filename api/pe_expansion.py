@@ -73,6 +73,74 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
     secondary = report["secondary_detail"]
     totals = report["totals"]
 
+    # Section A0: Manager Track Record strip (above the header).
+    # Pulled from management_credibility_scores — verdict zone + accuracy
+    # + trend + miss streak + summary. Renders nothing if no track record.
+    cred = report.get("credibility")
+    if cred and cred.get("verdict_zone"):
+        verdict_color = {
+            "ADD ZONE": "#22c55e",
+            "HOLD ZONE": "#f59e0b",
+            "REDUCE ZONE": "#fb923c",
+            "WATCH ZONE": "#94a3b8",
+            "THESIS BROKEN": "#ef4444",
+            "DISTRUSTED": "#ef4444",
+        }.get(str(cred["verdict_zone"]).upper(), "#94a3b8")
+        trend_color = {
+            "IMPROVING": "#22c55e",
+            "STABLE": "#94a3b8",
+            "DETERIORATING": "#ef4444",
+        }.get(str(cred.get("trend") or "").upper(), "#94a3b8")
+        miss_streak = int(cred.get("consecutive_miss_quarters") or 0)
+        accuracy = cred.get("accuracy_pct")
+        accuracy_str = f"{accuracy:.0f}%" if accuracy is not None else "—"
+        lag = cred.get("lag_score")
+        lag_str = f"{lag:.0f}" if lag is not None else "—"
+        n_total = cred.get("total_promises") or 0
+        n_achieved = cred.get("achieved_count") or 0
+        n_missed = cred.get("missed_count") or 0
+
+        credibility_html = f"""
+    <div style="padding:20px 40px;background:#0b1220;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">
+        Manager Track Record
+      </div>
+      <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr>
+          <td style="padding-right:36px;vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Accuracy</div>
+            <div style="font-size:32px;font-weight:800;color:#f1f5f9;line-height:1;margin-top:6px;">{accuracy_str}</div>
+          </td>
+          <td style="padding-right:36px;vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Verdict</div>
+            <div style="font-size:14px;font-weight:700;color:{verdict_color};margin-top:14px;">{_esc(cred['verdict_zone'])}</div>
+          </td>
+          <td style="padding-right:36px;vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Trend</div>
+            <div style="font-size:14px;font-weight:700;color:{trend_color};margin-top:14px;">{_esc(cred.get('trend') or '—')}</div>
+          </td>
+          <td style="padding-right:36px;vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Miss Streak</div>
+            <div style="font-size:14px;font-weight:700;color:{(miss_streak or 0) >= 4 and '#ef4444' or (miss_streak or 0) >= 2 and '#f59e0b' or '#cbd5e1'};margin-top:14px;">{miss_streak}Q</div>
+          </td>
+          <td style="padding-right:36px;vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Lag Score</div>
+            <div style="font-size:14px;font-weight:700;color:#cbd5e1;margin-top:14px;">{lag_str}</div>
+          </td>
+          <td style="vertical-align:top;">
+            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;">Promises</div>
+            <div style="font-size:13px;color:#cbd5e1;line-height:1.5;margin-top:12px;">{n_achieved} achieved · {n_missed} missed<br><span style="color:#64748b;">of {n_total} total</span></div>
+          </td>
+        </tr>
+      </table>
+      <div style="font-size:12px;color:#94a3b8;margin-top:12px;font-style:italic;line-height:1.5;">
+        {_esc(cred.get('summary') or '')}
+      </div>
+    </div>
+    """
+    else:
+        credibility_html = ""
+
     # Section A: header
     bar_color = _bucket_color(h["bucket"])
     header_html = f"""
@@ -197,6 +265,56 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
           </td>
         </tr>
         """
+        # Per-category promise-status grid: last 4 quarters of FULFILLED /
+        # ON_TRACK / MISSED / REVISED counts, sourced from
+        # management_narrative_timeline via GUIDANCE_TYPE_TO_CATEGORY.
+        # Renders nothing for categories with no grid data.
+        if not c["missing"] and c.get("status_grid"):
+            grid_rows_html = []
+            status_colors = {
+                "FULFILLED": "#22c55e", "REVISED_UP": "#22c55e",
+                "ON_TRACK": "#3b82f6", "PARTIALLY_FULFILLED": "#f59e0b",
+                "PENDING": "#64748b", "NEW": "#64748b",
+                "REVISED_DOWN": "#ef4444", "MISSED": "#ef4444",
+            }
+            for g in c["status_grid"]:
+                counts = g.get("counts", {})
+                nz = [(k, v) for k, v in counts.items() if v > 0]
+                if not nz:
+                    continue
+                cells = "".join(
+                    f'<td align="center" style="padding:4px 8px;color:{status_colors.get(k, "#94a3b8")};font-family:monospace;font-size:11px;font-weight:600;">{v}</td>'
+                    for k, v in nz
+                )
+                grid_rows_html.append(
+                    f'<tr><td style="padding:4px 8px;color:#cbd5e1;font-family:monospace;font-size:11px;border-right:1px solid #1e293b;">{_esc(g["quarter"])}</td>{cells}</tr>'
+                )
+            if grid_rows_html:
+                cats_html += f"""
+        <tr>
+          <td colspan="5" style="padding:0 12px 12px 12px;border-bottom:1px solid #1e293b;">
+            <div style="background:#020617;border:1px solid #1e293b;border-radius:4px;padding:8px 10px;margin-top:2px;">
+              <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:6px;">Promise Status — last {len(grid_rows_html)} quarters</div>
+              <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:11px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #1e293b;">
+                    <th align="left" style="padding:4px 8px;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">Quarter</th>
+                    <th align="center" style="padding:4px 6px;color:#22c55e;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">FUL</th>
+                    <th align="center" style="padding:4px 6px;color:#3b82f6;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">ON&nbsp;TRK</th>
+                    <th align="center" style="padding:4px 6px;color:#f59e0b;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">PART</th>
+                    <th align="center" style="padding:4px 6px;color:#ef4444;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">MISS</th>
+                    <th align="center" style="padding:4px 6px;color:#22c55e;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">R↑</th>
+                    <th align="center" style="padding:4px 6px;color:#ef4444;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">R↓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {"".join(grid_rows_html)}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+        """
     cats_html += f"""
         <tr>
           <td colspan="3" style="padding:14px 12px;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;">Total</td>
@@ -306,6 +424,7 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
 </head>
 <body style="margin:0;padding:0;background:#020617;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#cbd5e1;">
   <div style="max-width:920px;margin:0 auto;background:#0f172a;">
+    {credibility_html}
     {header_html}
     {drivers_html}
     {cats_html}

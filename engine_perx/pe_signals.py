@@ -722,6 +722,130 @@ def _primary_detail_rows(symbol: str) -> list[dict[str, Any]]:
         conn.close()
 
 
+def _fetch_credibility_snapshot(symbol: str) -> dict[str, Any] | None:
+    """Pull the latest management credibility row for the symbol.
+
+    Returns None when no credibility row exists (symbol has no track record).
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT accuracy_pct, current_verdict, trend,
+                      consecutive_miss_quarters, lag_score,
+                      total_promises, achieved_count, missed_count,
+                      avg_variance_pct, last_verdict_flip, previous_verdict,
+                      last_updated
+               FROM management_credibility_scores
+               WHERE UPPER(symbol) = %s
+               ORDER BY last_updated DESC NULLS LAST
+               LIMIT 1""",
+            (symbol.upper(),),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        accuracy = float(row["accuracy_pct"]) if row["accuracy_pct"] is not None else None
+        miss_streak = int(row["consecutive_miss_quarters"] or 0)
+        verdict = row["current_verdict"]
+        return {
+            "accuracy_pct": accuracy,
+            "verdict_zone": verdict,
+            "trend": row["trend"],
+            "consecutive_miss_quarters": miss_streak,
+            "lag_score": float(row["lag_score"]) if row["lag_score"] is not None else None,
+            "total_promises": int(row["total_promises"] or 0),
+            "achieved_count": int(row["achieved_count"] or 0),
+            "missed_count": int(row["missed_count"] or 0),
+            "avg_variance_pct": float(row["avg_variance_pct"]) if row["avg_variance_pct"] is not None else None,
+            "last_verdict_flip": row["last_verdict_flip"],
+            "previous_verdict": row["previous_verdict"],
+            "summary": _credibility_summary(accuracy, verdict, row["trend"], miss_streak),
+        }
+    finally:
+        conn.close()
+
+
+def _credibility_summary(accuracy: float | None, verdict: str | None,
+                         trend: str | None, miss_streak: int) -> str:
+    if accuracy is None:
+        return "No track record yet."
+    if accuracy >= 80 and miss_streak == 0:
+        return f"Strong track record ({accuracy:.0f}% accuracy, {miss_streak}Q miss streak)."
+    if accuracy >= 60 and miss_streak <= 1:
+        return f"Generally reliable ({accuracy:.0f}% accuracy)."
+    if miss_streak >= 4:
+        return f"Credibility collapse ({miss_streak}Q miss streak, {accuracy:.0f}% accuracy)."
+    if accuracy < 50:
+        return f"Below-average track record ({accuracy:.0f}% accuracy)."
+    return f"Mixed track record ({accuracy:.0f}% accuracy, {miss_streak}Q miss streak)."
+
+
+# All status values used in management_narrative_timeline.current_status.
+# Used as column keys for the per-category status grid.
+PROMISE_STATUSES: tuple[str, ...] = (
+    "FULFILLED", "REVISED_UP", "ON_TRACK", "PARTIALLY_FULFILLED",
+    "PENDING", "NEW", "REVISED_DOWN", "MISSED",
+)
+
+
+def _fetch_category_status_grids(symbol: str, category_codes: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """For each PE category, return the last 4 quarters of promise-status counts.
+
+    Uses GUIDANCE_TYPE_TO_CATEGORY to map narrative_timeline rows to PE
+    categories, then GROUP BY quarter + status to produce a small per-quarter
+    status grid. Most recent 4 quarters per category.
+
+    Returns {category_code: [{quarter, n_promises, counts: {STATUS: n, ...}}]}.
+    """
+    if not category_codes:
+        return {}
+    # Invert GUIDANCE_TYPE_TO_CATEGORY so we can do one query per category
+    # with `guidance_type = ANY(...)` — cleaner than a CTE CASE.
+    cat_to_types: dict[str, list[str]] = {}
+    for gtype, ccode in GUIDANCE_TYPE_TO_CATEGORY.items():
+        cat_to_types.setdefault(ccode, []).append(gtype)
+
+    out: dict[str, list[dict[str, Any]]] = {c: [] for c in category_codes}
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        for ccode in category_codes:
+            gtypes = cat_to_types.get(ccode, [])
+            if not gtypes:
+                continue
+            cur.execute(
+                """SELECT current_quarter, current_status, COUNT(*) AS n
+                   FROM management_narrative_timeline
+                   WHERE UPPER(symbol) = %s
+                     AND guidance_type = ANY(%s)
+                     AND current_quarter IS NOT NULL
+                   GROUP BY current_quarter, current_status""",
+                (symbol.upper(), gtypes),
+            )
+            by_q: dict[str, dict[str, int]] = {}
+            for r in cur.fetchall():
+                q = str(r["current_quarter"])
+                s = str(r["current_status"] or "UNKNOWN")
+                by_q.setdefault(q, {})[s] = int(r["n"])
+            # Sort quarters desc — 'QnFYY' format sorts correctly as a string.
+            quarters = sorted(by_q.keys(), reverse=True)[:4]
+            grid = []
+            for q in quarters:
+                counts = by_q[q]
+                total = sum(counts.values())
+                grid.append({
+                    "quarter": q,
+                    "n_promises": total,
+                    "counts": {s: counts.get(s, 0) for s in PROMISE_STATUSES},
+                })
+            if grid:
+                out[ccode] = grid
+    finally:
+        conn.close()
+    return out
+
+
 def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
     """Assemble the full PE Expansion report dict for a symbol.
 
@@ -800,6 +924,19 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
         if q:
             row["quote"] = q
 
+    # Attach a per-category status grid (last 4 quarters of promise-status
+    # counts) and a top-level credibility snapshot. Together these turn
+    # the abstract scores into "what management SAID vs what they DID",
+    # weighted by how often they're right.
+    status_grids = _fetch_category_status_grids(sym, _REPORT_CATEGORY_ORDER)
+    credibility_snapshot = _fetch_credibility_snapshot(sym)
+    for row in breakdown:
+        if row.get("missing"):
+            continue
+        grid = status_grids.get(row["code"])
+        if grid:
+            row["status_grid"] = grid
+
     # Pull secondary snippet detail
     secondary_detail: list[dict[str, Any]] = []
     for code, info in secondary_scan.get("categories", {}).items():
@@ -848,6 +985,7 @@ def build_pe_expansion_report(symbol: str) -> dict[str, Any]:
             "max_possible": MAX_PE_SCORE,
             "scaled_percent": score_doc["pe_score"],
         },
+        "credibility": credibility_snapshot,
     }
 
 
