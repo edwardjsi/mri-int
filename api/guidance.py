@@ -887,6 +887,43 @@ def trigger_guidance_scan(
     return {"status": "queued", "symbol": symbol.upper()}
 
 
+# ── Bear vs Bull Debate (FeatureRequest 2026-06-19, Phase 2) ────────
+
+@router.post("/{symbol}/debate")
+def run_guidance_debate(
+    symbol: str,
+    include_adjudicator: bool = Query(
+        False,
+        description="Fire a 3rd LLM call to pick a winner. Costs +$0.001 and +5s.",
+    ),
+):
+    """Generate bear vs bull debate for the management integrity of a symbol.
+
+    On first call for a symbol+context-snapshot, fires ~2 LLM calls (~$0.002
+    on gpt-4o-mini). Result is cached keyed by sha256 of the context payload
+    so re-opening the same report is instant + free. Cache invalidates
+    automatically when the underlying credibility/intonation/verifier data
+    changes (new quarter ingested, verdict flip, etc.).
+
+    Decision 027 RDS rules respected — table is CREATE TABLE IF NOT EXISTS.
+    """
+    from engine_debate.context_guidance import build_guidance_context
+    from engine_debate.debate_engine import run_debate
+
+    sym = symbol.upper().strip()
+    if not sym:
+        raise HTTPException(400, "symbol is required")
+
+    context_payload = build_guidance_context(sym)
+    result = run_debate(
+        sym,
+        context_kind="guidance",
+        context_payload=context_payload,
+        include_adjudicator=include_adjudicator,
+    )
+    return result.to_dict()
+
+
 # ── Thesis Tracking ─────────────────────────────────────────────────────
 
 @router.post("/thesis")

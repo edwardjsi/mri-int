@@ -617,6 +617,7 @@ def ensure_required_tables(conn) -> None:
     ensure_guidance_tables(cur)
     ensure_alert_preferences_table(cur)
     ensure_intonation_table(cur)
+    ensure_debate_cache_table(cur)
 
     conn.commit()
     cur.close()
@@ -936,6 +937,44 @@ def ensure_intonation_table(cur) -> None:
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_intonation_symbol "
         "ON public.management_intonation(symbol, fiscal_year, fiscal_quarter);"
+    )
+
+
+def ensure_debate_cache_table(cur) -> None:
+    """Bear vs Bull debate cache (FeatureRequest 2026-06-19).
+
+    Stores LLM-generated bear/bull debate outputs keyed by
+    (symbol, context_kind, sha256 of canonical context payload).
+    Re-opening a report whose underlying data hasn't changed is a cache
+    hit — instant + $0. Cache miss = context changed since last debate.
+
+    Idempotent. Companion to engine_debate/ and migrations/004_debate_cache.sql.
+    """
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.conviction_debates (
+            id               BIGSERIAL PRIMARY KEY,
+            symbol           VARCHAR(20) NOT NULL,
+            context_kind     VARCHAR(20) NOT NULL,
+            context_hash     VARCHAR(64) NOT NULL,
+            context_payload  JSONB NOT NULL,
+            bear_text        TEXT NOT NULL,
+            bull_text        TEXT NOT NULL,
+            adjudicator      TEXT,
+            model_used       VARCHAR(40),
+            generated_at     TIMESTAMPTZ DEFAULT NOW(),
+            cache_hits       INT DEFAULT 0,
+            UNIQUE (symbol, context_kind, context_hash)
+        );
+        """
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_conviction_debates_lookup "
+        "ON public.conviction_debates(symbol, context_kind, context_hash);"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_conviction_debates_generated "
+        "ON public.conviction_debates(generated_at DESC);"
     )
 
 
