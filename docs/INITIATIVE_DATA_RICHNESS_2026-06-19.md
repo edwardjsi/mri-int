@@ -12,13 +12,15 @@
 The bear vs bull debate engine correctly flagged two structural data gaps in production use:
 
 1. **QPOWER (PE rank #2, 84.9)** has zero AAE forensic data and zero QIF fundamental data. The PE score is built entirely on narrative (transcript keywords + promise extraction). The bear case correctly surfaced this, but the **ranking itself is wrong** — the cross-check matrix says "No data" because the data is missing, not because the data says "no".
-2. **KirlosEngine** has QIF data but only aggregate scores + a single flag (`VALUE DESTRUCTION: ROCE < WACC`). The bear case argued from "ROCE < WACC flag" instead of "ROCE 11.2% vs WACC 14.0%, gap widened from -0.8% to -2.8% over 6 quarters". Not extrapolable.
+2. **KirlosEngine** has QIF data but only aggregate scores + a single flag (`VALUE DESTRUCTION: ROCE < WACC`). The bear case argued from "ROCE < WACC flag" instead of "ROCE 11.2% vs WACC 12.0%, was 13.0% a year ago". The full trajectory was discarded by the QIF agents before persistence.
+
+**Universe coverage today:** 63 of 172 stocks (37%) have financials in `aae_quarterly_financials`. The other 109 lack fundamentals entirely — fixable by running existing `collector.py` + `quarterly_collector.py` (pure yfinance HTTP, no LLM). Same 109 also lack AAE rows — fixable by `scripts/aae_bulk_scan.py` (uses LLM, ~$3.30).
 
 **Two fixes, one sprint:**
-- **Fix A** — Backfill AAE + QIF for universe stocks that lack them (~149 stocks × 2 engines)
-- **Fix D** — Extend QIF agents + context builder to surface underlying financial metrics (ROCE, WACC, margin trends, revenue growth, leverage ratios, working capital days, sector medians)
+- **Fix A** — Backfill AAE + QIF for the 109 universe stocks that lack them. AAE backfill needs LLM (~$3.30). Financials fetch + QIF computation are pure HTTP + Python (no LLM).
+- **Fix D** — Extend QIF agents + context builder to surface per-quarter underlying metrics (ROCE, WACC, margin trends, revenue growth, leverage ratios, working capital days, sector medians) in a JSONB array under `quality_verdicts.agent_details.by_quarter[]` + pre-computed `agent_details.trajectory` summary. **User chose option (c) — full quarterly history, not snapshot.**
 
-**Total: ~6 hours wall time, ~$5 LLM cost one-time.** Affects how every Expansion Lens report and every debate gets generated going forward.
+**Total: ~6-7 hrs wall time, ~$3.30 LLM cost one-time.** Affects how every Expansion Lens report and every debate gets generated going forward.
 
 ---
 
@@ -91,36 +93,69 @@ The 7 agents compute rich per-agent detail (revenue growth YoY, margin trajector
 
 > **Financial Quality is 37/100 (REJECT)** with a "VALUE DESTRUCTION: ROCE < WACC" flag
 
-### KirlosEngine — bear case AFTER Fix D
+### KirlosEngine — bear case AFTER Fix D (option c: full trajectory)
 
-> **Financial Quality is 37/100 (REJECT):**
-> - Revenue agent 3/10: revenue grew **6.1% YoY** vs sector median **27.8%**, decelerating for **4 consecutive quarters**
-> - Margin agent 5/10: OPM compressed **340bps YoY** to **8.2%**, vs sector median **15.0%** and 3-year company average **11.6%**
-> - ROCE agent 2/10: ROCE **11.2%** vs WACC **14.0%**, gap **-2.8%** (widened from **-0.8%** one year ago)
-> - Working capital: WC days at **72** (up from 60 one year ago)
-> - Leverage: D/E **0.8**, interest coverage **3.2x** — within tolerable range but trending wrong
+> **Financial Quality is 37/100 (REJECT), trajectory: DECLINING:**
+> - **Revenue trajectory:** 6 quarters observed, growth decelerated from **+18% YoY** (3 years ago) → **+12%** (2 years ago) → **+9%** (1 year ago) → **+6%** (current). Sector median **+27.8%**. 3-year CAGR **+11.3%** vs sector **+24.1%**.
+> - **Margin trajectory:** OPM compressed from **11.6%** (3-year avg) → **8.2%** (current), a **-340bps YoY** compression. Sector median **15.0%**. Operating leverage agent: profits lagging revenue growth — EBITDA growing at 0.6x sales pace.
+> - **ROCE trajectory:** **11.2%** now, was **13.0%** a year ago, **14.5%** two years ago — **declining -280bps over 2 years**. WACC **12.0%** (hardcoded in `capital_efficiency_agent`). Gap went from **+2.5%** (value creation) to **-0.8%** (value destruction) in 2 years.
+> - **Working capital trajectory:** WC days at **72**, was 60 a year ago — **+12 days worsening**. Receivables growing faster than sales in 2 of last 3 quarters.
+> - **Leverage:** D/E **0.8**, interest coverage **3.2x** — within tolerable range but trending wrong (D/E was 0.5 two years ago).
+>
+> **Trajectory verdict:** "Declining" across all 5 measured dimensions. 3-year revenue CAGR is **half the sector median**. Margin compression accelerating. ROCE crossed from value creation to value destruction. The rerating thesis requires margin recovery + ROCE re-expansion above 14%; neither is visible in the trajectory.
 
-The conclusion is the same. The user can now **verify each number, ask follow-up questions, and stress-test the thesis**.
+The user can now **verify each number, ask follow-up questions, and stress-test the thesis with the actual trajectory data**.
 
 ---
 
 ## The plan — exact steps, exact times
 
-### Phase D1 — Extend QIF agents to persist underlying metrics (~2 hrs)
+### Phase D1 — Extend QIF agents to persist per-quarter underlying metrics (~2.5 hrs)
 
-**Goal:** QIF 7 agents compute scores from rich inputs; persist both the score AND the inputs that drove it.
+**Goal:** QIF 7 agents compute scores from rich inputs; persist **per-quarter trajectory** so the LLM can argue from full history, not just snapshot. **User decision: option (c) — full quarterly history in JSONB array.**
 
 **Files touched:**
-- `engine_fundamental/agents.py` — 7 agents (Revenue, Margin, Leverage, WC, ROCE, Evolution, Translation). Each currently returns a 0-10 score + maybe one flag. Extend to also return a `detail` dict of underlying numbers.
-- `migrations/005_qif_agent_details.sql` — ADD columns to `quality_verdicts` (or use a single JSONB `agent_details` column for cleanliness)
-- `engine_fundamental/pipeline.py` — pass through the detail dict when persisting
-- Tests: extend `engine_fundamental/test_*.py` to verify detail fields are populated
+- `engine_fundamental/agents.py` — 7 agents. Each currently returns a 0-10 score + maybe one flag. Extend to return a per-quarter `by_quarter` array (each entry has score + detail metrics for that quarter).
+- `migrations/005_qif_agent_details.sql` — `ADD COLUMN IF NOT EXISTS agent_details JSONB DEFAULT '{}'::jsonb`
+- `engine_fundamental/pipeline.py` — persist the per-quarter array + compute pre-computed trajectory summary at the top of the JSONB
+- Tests: extend `engine_fundamental/test_*.py` to verify per-quarter fields populated + trajectory summary correct
 
-**Per-agent fields to capture:**
+**JSONB shape (per stock, single row in `quality_verdicts`):**
+```json
+{
+  "by_quarter": [
+    {
+      "year": 2026, "quarter": 1,
+      "revenue": 88644770000, "ebitda": null, "opm_pct": null,
+      "net_profit": 7727660000,
+      "total_assets": 204761900000, "capital_employed": 160780810000,
+      "debt": 43981090000, "equity": 120085760000,
+      "roce_pct": 6.61, "wacc_pct": 12.0, "gap_pct": -5.39,
+      "wc_days": null,
+      "scores": {
+        "revenue": 3, "margin": 5, "leverage": 6, "wc": 7,
+        "roce": 0, "evolution": 5, "translation": 7
+      }
+    },
+    {"year": 2025, "quarter": 4, ...},
+    ...
+  ],
+  "trajectory": {
+    "score_trend": "declining",          // computed: improving/stable/declining over available quarters
+    "score_change_yoy": -1.5,            // score change vs 4 quarters ago
+    "roce_change_yoy_bps": -180,         // ROCE delta vs 4 quarters ago
+    "margin_compression_bps_yoy": -340,  // OPM delta vs 4 quarters ago
+    "revenue_cagr_3y_pct": 12.3,         // 3-year CAGR if 4+ quarters available
+    "quarters_observed": 6
+  }
+}
+```
 
-| Agent | Detail fields |
+**Fields captured per quarter per agent:**
+
+| Agent | Detail fields (per quarter) |
 |---|---|
-| Revenue | `growth_yoy_pct`, `growth_qoq_pct`, `growth_3y_avg_pct`, `sector_median_growth_pct`, `trend` (accelerating/decelerating/stable) |
+| Revenue | `growth_yoy_pct`, `growth_qoq_pct`, `growth_3y_avg_pct`, `sector_median_growth_pct`, `trend` |
 | Margin | `opm_current_pct`, `opm_3y_avg_pct`, `sector_median_opm_pct`, `compression_bps_yoy` |
 | Leverage | `debt_to_equity`, `interest_coverage`, `current_ratio`, `trend` |
 | WC | `wc_days_current`, `wc_days_change_yoy`, `receivable_days`, `inventory_days` |
@@ -128,19 +163,15 @@ The conclusion is the same. The user can now **verify each number, ask follow-up
 | Evolution | `margin_change_3y`, `roce_change_3y`, `revenue_cagr_3y` |
 | Translation | `pe_vs_sector_median`, `ev_ebitda_vs_sector_median`, `pb_vs_sector_median` |
 
-**Decision: columns vs JSONB.** Recommendation: **single `agent_details JSONB` column**. Reasoning:
-- Easier to extend (add fields without migrations)
-- Easier to read (one place for all 7 agents' details)
-- Postgres-native, queryable
-- Schema migration is `ADD COLUMN IF NOT EXISTS agent_details JSONB DEFAULT '{}'::jsonb`
+**LLM payload size estimate:** ~7 quarters × ~25 fields/quarter = ~175 numbers + 7 score objects + trajectory summary = ~2-3 KB per stock. Well within LLM context budget. The context builder will pass the full `by_quarter` array + `trajectory` summary to the bear/bull prompt — gives the LLM enough material to identify inflection points, accelerating deterioration, recovery stories, etc.
 
-**Time breakdown:**
+**Time breakdown (revised for option c):**
 - Read existing 7 agents and understand current return shape: ~20 min
-- Extend each agent to return detail dict: ~45 min
-- Update pipeline to persist + add migration: ~20 min
-- Update tests: ~20 min
+- Extend each agent to return per-quarter detail dict: ~60 min (slightly more than (a)/(b) due to array handling)
+- Update pipeline to compute trajectory summary at persistence time: ~20 min
+- Schema migration + update tests: ~25 min
 - Smoke run on 3 stocks (POLYCAB, QPOWER, KirlosEngine) and verify: ~15 min
-- **Subtotal: ~2 hrs**
+- **Subtotal: ~2.5 hrs**
 
 ### Phase D2 — Extend context builder to surface QIF details (~30 min)
 
@@ -152,14 +183,16 @@ The conclusion is the same. The user can now **verify each number, ask follow-up
 
 **Time:** ~30 min
 
-### Phase D3 — Re-run QIF for all 149 universe stocks (~1 hr wall, ~$1.50 LLM)
+### Phase D3 — Re-run QIF for all 63 stocks with existing financials (~20 min, $0 LLM)
 
-**Goal:** Populate the new `agent_details` field for every stock that already has QIF data.
+**Goal:** Populate the new `agent_details` field (with per-quarter trajectory) for every stock that already has `aae_quarterly_financials` rows.
 
 **Command:** `python -m engine_fundamental.pipeline --rerun-all --persist-details`
 (to be written)
 
-**Time:** ~1 hr wall time (depends on Yahoo Finance rate limits), ~$1.50 in DeepSeek/OpenAI cost
+**Time:** ~20 min wall time. **$0 LLM** — QIF is pure Python math reading from existing `aae_quarterly_financials`. No LLM calls anywhere in the pipeline.
+
+(Initial doc version of this phase quoted "$1.50 LLM" — that was wrong. QIF has never used an LLM. Fix A.2 below is the same: $0.)
 
 ### Phase A1 — Audit which stocks need backfill (~10 min)
 
@@ -222,19 +255,22 @@ Expected output: a list of ~70-90 symbols (per current state, QPOWER is one). Mo
 
 | Phase | Description | Wall time | LLM cost |
 |---|---|---|---|
-| D1 | Extend QIF agents | ~2 hrs | $0 |
+| D1 | Extend QIF agents + per-quarter array | ~2.5 hrs | $0 |
 | D2 | Extend context builder | ~30 min | $0 |
-| D3 | Re-run QIF for 149 stocks | ~1 hr | ~$1.50 |
+| D3 | Re-run QIF for 63 covered stocks (populate JSONB) | ~20 min | $0 |
 | A1 | Audit | ~10 min | $0 |
-| A2 | Backfill AAE | ~1-2 hrs | ~$2.50 |
-| A3 | Backfill QIF | ~1 hr | ~$1.00 |
-| A4 | Verify + regenerate debates | ~30 min | $0 (cached) |
+| A.2a | Fetch financials for 109 missing stocks (yfinance HTTP) | ~30 min | $0 |
+| A.2b | Compute QIF verdicts for those 109 (pure Python) | ~5 min | $0 |
+| A.3 | Run AAE for stocks lacking `aae_results_snapshot` rows | ~30-60 min | ~$3.30 |
+| A.4 | Verify + regenerate debates for changed contexts | ~30 min | $0 (cached) |
 | 5 | Docs + commit | ~30 min | $0 |
-| **Total** | | **~6-7 hrs** | **~$5.00** |
+| **Total** | | **~6-7 hrs** | **~$3.30** |
+
+> **Cost correction vs initial draft:** First version of this doc quoted ~$5.00 total. After investigation, the corrected number is ~$3.30. The LLM cost is purely from Fix A.3 (AAE backfill uses `narrative_engine.py` + `forensic_debate.py`). QIF (`engine_fundamental/agents.py`) and `engine_fundamental/collector.py` are pure Python / yfinance HTTP — no LLM anywhere.
 
 This is a **one-time** investment. After completion:
-- Every Expansion Lens report has real cross-check data (5/5 dimensions populated)
-- Every debate cites specific numbers (ROCE, margin trends, revenue growth) instead of summary flags
+- Every Expansion Lens report has real cross-check data (5/5 dimensions populated) for the 109 currently-uncovered stocks
+- Every debate cites specific numbers + per-quarter trajectory (ROCE 11.2%, was 13.0% a year ago, declining -180bps/year) instead of summary flags
 - The ranking genuinely reflects a corroborated thesis, not narrative alone
 
 ---
@@ -277,7 +313,7 @@ If something breaks, revert the PR, the data stays in the JSONB column (harmless
 ## Open questions for user (defaults proposed)
 
 1. **Schema design: columns vs JSONB for agent details?**
-   - Default: **JSONB** (`agent_details JSONB`). Reasoning: easier to extend, single place to read, queryable in Postgres.
+   - Default: **JSONB** (`agent_details JSONB`). Reasoning: easier to extend, single place to read, queryable in Postgres. **RESOLVED — user picked option (c): full quarterly history in JSONB array under `agent_details.by_quarter[]` + pre-computed `agent_details.trajectory` summary.**
 
 2. **Backfill order: top-N first, or all at once?**
    - Default: **all at once** — the existing AAE bulk scan handles batching + rate limits. If it takes too long, we can split into top-30 + rest later.
@@ -287,6 +323,8 @@ If something breaks, revert the PR, the data stays in the JSONB column (harmless
 
 4. **Should we run a "rerun-all-debates" pass after backfill, or let cache invalidate naturally?**
    - Default: **let cache invalidate naturally**. Old cached debates become stale on next view (the context_hash will differ), and the new debate gets generated. No need to wipe the table — fresh debates are auto-generated on next click.
+
+5. **Trajectory computation cost?** Computing the `trajectory` summary at persistence time requires looping through the by_quarter array. Cost is O(n_quarters × n_agents) ≈ 50 operations per stock — trivial. No concern.
 
 ---
 
