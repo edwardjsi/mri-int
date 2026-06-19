@@ -375,6 +375,16 @@ export const api = {
     apiFetch(`/guidance/conviction?source=${params.source || 'all'}&verdict=${encodeURIComponent(params.verdict || 'any')}&limit=${params.limit || 200}`),
   sendGuidanceEmail: (symbol: string) =>
     apiFetch(`/guidance/${encodeURIComponent(symbol)}/email`, { method: 'POST' }),
+  triggerGuidanceDebate: (symbol: string, opts: { includeAdjudicator?: boolean } = {}) =>
+    apiFetch(
+      `/guidance/${encodeURIComponent(symbol)}/debate${opts.includeAdjudicator ? '?include_adjudicator=true' : ''}`,
+      { method: 'POST' }
+    ),
+  triggerPeExpansionDebate: (symbol: string, opts: { includeAdjudicator?: boolean } = {}) =>
+    apiFetch(
+      `/pe-expansion/${encodeURIComponent(symbol)}/debate${opts.includeAdjudicator ? '?include_adjudicator=true' : ''}`,
+      { method: 'POST' }
+    ),
   getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),
   getGuidanceLeaderboard: (worst: boolean = false, limit: number = 20) =>
     apiFetch(`/guidance/leaderboard?worst=${worst}&limit=${limit}`),

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
 import { api } from './api';
+import DebateModal from './DebateModal';
 
 /**
  * SparklineTimeline — tiny inline SVG showing confidence, hedging, transparency
@@ -320,6 +321,7 @@ export default function GuidanceCheck() {
   const [companiesSortKey, setCompaniesSortKey] = useState<string>('accuracy_pct');
   const [companiesSortDir, setCompaniesSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedSymbol, setSelectedSymbol] = useState<string>('');
+const [showDebate, setShowDebate] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -584,7 +586,19 @@ export default function GuidanceCheck() {
               <h3 style={{fontSize:'1.6rem',fontWeight:800,margin:0}}>{report.symbol}</h3>
               <div style={{color:'#64748b',fontSize:'0.78rem',marginTop:2}}>{report.report_date} · {report.total_material} trackable promises</div>
             </div>
-            <div style={{textAlign:'right'}}>
+            <div style={{textAlign:'right',display:'flex',gap:8,alignItems:'center'}}>
+              <button
+                onClick={() => setShowDebate(true)}
+                title="Generate Bear vs Bull debate from the credibility data"
+                style={{
+                  background:'#1e40af',color:'#fff',border:'none',borderRadius:8,
+                  padding:'8px 14px',fontSize:'0.78rem',fontWeight:700,
+                  cursor:'pointer',letterSpacing:'0.04em',
+                  display:'inline-flex',alignItems:'center',gap:6,
+                }}
+              >
+                🗣️ Run Debate
+              </button>
               <div style={{background:verdictClass==='verdict-watching'?'#1e293b':verdictClass==='verdict-add'?'#14532d':verdictClass==='verdict-hold'?'#451a03':verdictClass==='verdict-reduce'?'#7f1d1d':'#500',color:verdictClass==='verdict-watching'?'#94a3b8':verdictClass==='verdict-add'?'#4ade80':verdictClass==='verdict-hold'?'#fbbf24':verdictClass==='verdict-reduce'?'#f87171':'#fff',fontSize:'0.75rem',fontWeight:700,padding:'6px 14px',borderRadius:20,textTransform:'uppercase',letterSpacing:'0.06em',display:'inline-block'}}>
                 {report.verdict}
               </div>
@@ -756,6 +770,16 @@ export default function GuidanceCheck() {
           Enter a symbol to see the management credibility report.<br/>
           Only promises with numeric targets and defined deadlines are shown.
         </div>
+      )}
+
+      {/* Bear vs Bull Debate Modal (FeatureRequest 2026-06-19, Phase 2) */}
+      {report && (
+        <DebateModal
+          symbol={report.symbol}
+          contextKind="guidance"
+          isOpen={showDebate}
+          onClose={() => setShowDebate(false)}
+        />
       )}
     </div>
   );

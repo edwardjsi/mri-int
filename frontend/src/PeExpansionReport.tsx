@@ -1,5 +1,6 @@
 import { Fragment, ReactNode, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from './api';
+import DebateModal from './DebateModal';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -241,6 +242,7 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
   const [universeLoading, setUniverseLoading] = useState(true);
   const [universeError, setUniverseError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+const [showDebate, setShowDebate] = useState(false);
 
   // Fetch full universe once on mount
   useEffect(() => {
@@ -683,6 +685,18 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
                   {emailMsg}
                 </div>
               )}
+              <button
+                onClick={() => setShowDebate(true)}
+                title="Generate Bear vs Bull debate from the Expansion Lens report data"
+                style={{
+                  marginTop: 10, padding: '8px 14px', background: '#7c2d12', color: '#fef3c7',
+                  border: '1px solid #9a3412', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', letterSpacing: '0.04em',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                🗣️ Bear vs Bull Debate
+              </button>
             </div>
           </div>
         </div>
@@ -997,6 +1011,16 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
         </>
           );
         })()}
+
+        {/* Bear vs Bull Debate Modal (FeatureRequest 2026-06-19, Phase 3) */}
+        {report && !loading && !error && (
+          <DebateModal
+            symbol={report.header.symbol}
+            contextKind="pe_expansion"
+            isOpen={showDebate}
+            onClose={() => setShowDebate(false)}
+          />
+        )}
 
       </div>
     </div>
