@@ -308,6 +308,46 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
     <div style={{ background: colors.bg, minHeight: '100vh', color: colors.text, fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
+        {/* ── Sticky top nav (always visible when onBack is wired) ── */}
+        {onBack && (
+          <div style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            padding: '10px 40px',
+            background: 'rgba(2, 6, 23, 0.92)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderBottom: `1px solid ${colors.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <button
+              onClick={onBack}
+              style={{
+                padding: '6px 12px',
+                background: colors.panel2,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="Back to Dashboard"
+            >
+              ← Back to Dashboard
+            </button>
+            <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              📈 Expansion Lens
+            </div>
+          </div>
+        )}
+
         {/* ── Universe list panel (always visible) ── */}
         <div style={{ padding: '24px 40px', background: colors.panel, borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ fontSize: 11, color: colors.textMuted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>
@@ -582,8 +622,9 @@ export default function PeExpansionReport({ symbol: propSymbol, onBack }: { symb
                   border: `1px solid ${colors.border}`, borderRadius: 6, fontSize: 12,
                   cursor: 'pointer',
                 }}
+                title="Back to Dashboard"
               >
-                ← Back
+                ← Back to Dashboard
               </button>
             )}
           </div>
