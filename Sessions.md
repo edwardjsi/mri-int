@@ -1,3 +1,118 @@
+## **June 18, 2026 (continued, late evening): Expansion Lens Report Depth — Quotes, Track Record, Cross-Check, Bottom Line**
+
+**Objective**: Turn the Expansion Lens from "a scorecard with a score" into a verifiable institutional audit the user can act on in one read. Four sequential feature commits added: verbatim transcript citations under every category score, a manager track-record strip with per-quarter promise grids, plain-English cross-check against AAE/QIF/MRI, and a 1-paragraph Bottom Line synthesis at the very top.
+
+**Actions**:
+
+- **Verbatim transcript quotes** (`389ca60 feat: surface verbatim transcript quotes under each PE category score`):
+  - New `_fetch_category_quotes(symbol, codes)` in `engine_perx/pe_signals.py` — single SQL against `perx_pe_signals.evidence_quotes`, returns `{code: {text, source, quarter}}`. Source preference: primary (narrative tracer) over secondary (keyword scan).
+  - `_extract_quote_text()` defensive unwrap for string-or-dict rows.
+  - `build_pe_expansion_report()` attaches quote to each non-missing category row.
+  - Email: left-bordered blockquote (color matches the strength bar) + attribution line (source + quarter).
+  - Web UI: `<Fragment>` + conditional `<tr colSpan=5>` mirrors the email rendering.
+  - POLYCAB: all 12 categories render with a quote. Email 38.8 → 45.9 KB.
+
+- **Manager Track Record strip + per-category promise-status grid** (`104a0ba feat: Manager Track Record strip + per-category promise-status grid`):
+  - User feedback: "you have the entire database to back you up — why not display the actuals?"
+  - `_fetch_credibility_snapshot(symbol)` — top-level dict from `management_credibility_scores` (accuracy_pct, current_verdict, trend, consecutive_miss_quarters, lag_score, achieved_count, missed_count, total_promises, summary).
+  - `_credibility_summary(...)` — human-readable verdict narrative.
+  - `PROMISE_STATUSES` tuple + `_fetch_category_status_grids(symbol, codes)` — joins `management_narrative_timeline.guidance_type` via `GUIDANCE_TYPE_TO_CATEGORY`, returns last 4 quarters per category as `{quarter, n_promises, counts: {STATUS: n}}`.
+  - Email Section A0 (above header band): Accuracy / Verdict / Trend / Miss Streak / Lag Score / Promises + summary. Verdict and Trend colors driven by zone.
+  - Each category row gets a per-quarter status grid (FULFILLED / ON_TRACK / PARTIAL / MISSED / R↑ / R↓) below the quote.
+  - Live spot-checks: POLYCAB 73% acc HOLD ZONE DETERIORATING 1Q; CGCL 80% ADD ZONE STABLE 0Q; EIHAHOTELS 34% THESIS BROKEN DETERIORATING; SIGMA 0% THESIS BROKEN STABLE 8Q. Email 45.9 → 59.5 KB.
+
+- **"What Other Checks Say" — cross-check matrix** (`67743e6 feat: 'What Other Checks Say' — wire AAE/QIF/MRI into the Expansion Lens report`):
+  - User feedback: "all these alphabetical soups are not good, give them information they can understand." **Reader-facing labels everywhere**: AAE → "Independent Check", QIF → "Financial Quality", MRI → "Price Action", cross-check matrix → "Where the Signals Agree". Engine names never appear in rendered output.
+  - `_fetch_independent_check(symbol)` → `aae_results_snapshot`. `_fetch_financial_quality(symbol)` → `quality_verdicts`. `_fetch_price_action(symbol)` → `stock_scores`.
+  - `_verdict(score)` → `{label, color}` (Strong/Holding up/Mixed/Weak). `_classify_alignment(views)` → `all_agree|mostly_agree|mixed|split|no_data`.
+  - `_build_cross_check(...)` — 5-dimension comparison: Margins, Growth, Quality, Momentum, Credibility. Each row: pe_view, indep_view, fin_view, price_view, alignment.
+  - **Plan doc**: `docs/EXPANSION_LENS_CROSS_CHECK_PLAN_2026-06-18.md` (172 lines) — execution plan written first per user directive.
+  - Email: "What Other Checks Say" strip (3 side-by-side cards) + "Where the Signals Agree" matrix + "Financial Quality — 7-Agent Breakdown" + "Price Action — 7-Step Checklist".
+  - Web UI: new `IndependentCheck`, `FinancialQuality`, `PriceAction`, `CrossCheckRow` interfaces; helpers `scoreVerdict`, `alignmentLabel`; rendered inside the existing IIFE between credibility strip and primary source.
+  - Live POLYCAB: PE 83.6 Strong | IC 47 Mixed | FQ 89 HIGH_QUALITY | PA 80 CONSOLIDATING. Quality dimension: "Mostly agree" (PE 84 + FQ 89 high, IC 47 low) — exactly the kind of split a reader wants to see.
+  - Email 59.5 → 73.0 KB. Bundle clean (0 TS errors, vite 3.06s). engine_fundamental 42/42 + engine_core 8/8 pass.
+
+- **Bottom Line synthesis at the top of the report** (`df2f050 feat: Bottom Line synthesis at the top of the Expansion Lens report`):
+  - User said "you choose the best" for what to tune next. Biggest gap was decision-aid: reader opens the report and has to scan 11 sections to know whether to act. Add a 1-paragraph synthesis + 5-bullet highlight bar at the very top, like the executive summary on a sell-side initiation note.
+  - `_ALIGNMENT_LABEL` — plain-English strings for the cross-check matrix.
+  - `_build_bottom_line(pe_score, credibility, indep, fin, price, cross_check)` → `{summary, action, highlights}`.
+    - Collects all 4 engine scores, computes average, picks worst engine.
+    - Counts cross-check `all_agree` vs `split/mixed` dimensions.
+    - Action label: `positive|watch|cautious|negative|no_data` based on minimum engine score, count of split dimensions, credibility miss streak (override → negative if 4+).
+    - Plain-English summary synthesizes the situation in 1-2 sentences.
+  - Wired into `build_pe_expansion_report` as top-level `bottom_line`.
+  - Email: "Bottom Line" section rendered at the very top (before Manager Track Record). Colored action chip (Strong setup / Watch / Caution / Avoid / Insufficient) with contrasting background band + color-coded highlight pills.
+  - **Bug fix in this commit**: loop variable `h` was shadowing the outer report header variable, causing KeyError on 'bucket' after the Bottom Line loop. Renamed inner var to `hl`.
+  - Web UI: `BottomLine` interface + render before the Manager Track Record strip.
+  - Live spectrum: POLYCAB → Watch (Split verdict: fundamentals strong but cross-check cautious); CGCL → Negative (fundamentals 32, red flag); SIGMA → Negative (credibility broken, 8 missed quarters); EIHAHOTELS → Negative (narrative dead at 4).
+  - Email 73.0 → 75.4 KB. Bundle clean (0 TS errors, vite 2.56s). engine_core 8/8 pass.
+
+**Result**: Expansion Lens report now goes Bottom Line → Manager Track Record → Independent Check / Financial Quality / Price Action cards → Where the Signals Agree matrix → PE categories with verbatim quotes + per-quarter status grids → primary/secondary source breakdown. Every layer of the existing data warehouse is now reachable from one page, and a reader who only reads the top 2 sections still gets a defensible action chip + 1-paragraph thesis.
+
+**Next Step**:
+- (a) Still pending from earlier sessions: backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows.
+- (b) Still pending: decide whether to wire PE score into `compute_perx_score` (user explicitly deferred again today).
+- (c) Decide next roadmap item — Decision 097 ConvictionEngine (cross-list mgmt integrity) is the only documented open plan.
+
+---
+
+## **June 18, 2026 (continued, evening): Expansion Lens Post-Deployment Hardening — 7 Fixes**
+
+**Objective**: Resolve all issues that surfaced when the Standalone UI commit (916060f) hit Railway — TypeScript build failures, route-ordering bugs, UX issues, and email-send opacity. Single-pass bug-bash, seven fixes landed in chronological order.
+
+**Actions**:
+
+- **TS6133 / TS18048 in PeExpansionReport** (`c966678 fix: TS6133/TS18048 in PeExpansionReport — IIFE narrowing + data-freshness disclosure`):
+  - Railway build failed with 16 errors: TS18048 `'h'` / `'cov'` possibly undefined (12 sites), TS6133 `'lastPromiseQuarter'` declared but never read.
+  - Root cause: 916060f wrapped report rendering in `{report && !loading && !error && (...)}` for the loading/error shell, but TypeScript doesn't narrow outer-scope `const h = report?.header` through a JSX guard.
+  - Fix: wrap conditional render in an IIFE that redefines `h` and `cov` from the narrowed `report`. TypeScript correctly infers both as `PeReport.Header` / `PeReport.Coverage` (non-null) inside the IIFE.
+  - Bonus: wired `lastPromiseQuarter` + `asOfIstLabel` into a per-report data-freshness disclosure under the company name (matches plan's "stale disclosure" requirement that 916060f left as a TODO).
+  - Verified with Railway's exact command (`npm run build` → `tsc -b && vite build`): 736 modules, 754 KB bundle, 4.69s, 0 errors.
+
+- **Drop "No symbol selected" guard on nav click** (`f542672 fix: Expansion Lens nav click — drop 'No symbol selected' guard`):
+  - Symptom: clicking "Expansion Lens" in the sidebar showed the empty-state "Open ?symbol=POLYCAB in the URL…" message instead of the page.
+  - Root cause: `App.tsx` wrapped `<PeExpansionReport>` in a `!peSymbol` guard that bypassed the component entirely when no symbol was in the URL or `selectedStock`.
+  - The component already handles empty symbols correctly (search + Top 10 always visible, report-section useEffect short-circuits on `!symbol`). The guard was redundant and broke the nav-click path.
+  - Net −9/+2 lines on `App.tsx`. Verified 0 TS errors.
+
+- **Flat 149-symbol list, simpler UX** (`f9c156c fix: Expansion Lens — flat 149-symbol list (no .map crash, simpler UX)`):
+  - Symptom 1: `TypeError: Cannot read properties of undefined (reading 'map')` — `apiFetch('/pe-expansion/top10')` could return an unexpected shape; catch swallowed it without validating; `top10.results.map(...)` crashed on undefined.
+  - Symptom 2: user UX feedback — "just list the stock symbols so I can click on the symbol and it provides the report." The search + Top 10 was over-engineered.
+  - Refactor: drop `/top10` fetch + Top 10 panel + debounced search. Replace with single `/pe-expansion/suggest?q=&limit=200` fetch on mount → client-side filter → scrollable Symbol / Company / PE Score table, each row clickable. Defensive guards: `Array.isArray` on `response.results`, `typeof x.symbol === 'string'` filter, score null check. Drop unused `asOfIstLabel` (TS6133). Keep `lastPromiseQuarter` and disclosure text.
+  - Verified 0 TS errors.
+
+- **Bump /suggest limit 50 → 500** (`3b94a2f fix: bump /pe-expansion/suggest limit to 500 (was 50, blocked 149-symbol list)`):
+  - `f9c156c` calls `/pe-expansion/suggest?q=&limit=200` for the full 149-symbol universe. Endpoint validates `limit` with `Query(..., ge=1, le=50)`, so `limit=200` returns 422. Frontend fell back to `universeError` → "Failed to load universe: Input should be less than or equal to 50".
+  - Bump `le=50 → le=500` (covers current 149 + headroom without pagination).
+
+- **Move /suggest and /top10 before /{symbol} catch-all** (`7fbee0d fix: register /suggest and /top10 BEFORE /{symbol} catch-all`):
+  - FastAPI matches routes in registration order. `/suggest` and `/top10` (added in 916060f as an append) were defined AFTER `/@router.get('/{symbol}')`, so any `GET /pe-expansion/suggest` was caught by the catch-all and interpreted as `symbol='suggest'`.
+  - Verified live by curling the deployed API: pre-fix `/suggest` returned a PE report for the non-existent "SUGGEST" symbol with `header.symbol='SUGGEST'`, `coverage.n_promises_total=0`. Defensive `.results` check saw no top-level `results` field on the PeReport shape, silently set `universe=[]`, produced "Expansion Lens · 0 of 0 symbols".
+  - Fix: move both endpoints above `/{symbol}` so FastAPI matches them first. Routes now: `/suggest` → `/top10` → `/{symbol}` → `/email/{symbol}` (POST) → `/email/preview/{symbol}`.
+  - Post-fix: `/suggest?q=&limit=5` → 5 rows, top=WAAREEENER (88.5); `/top10` → 149 total, `as_of=2026-06-18T06:44 UTC`.
+
+- **Use platform SES path (not hardcoded ap-south-1)** (`d5addc6 fix: Expansion Lens email uses platform SES path (not hardcoded ap-south-1)`):
+  - `_send_pe_expansion_email` was creating its own boto3 SES client with a hardcoded `'ap-south-1'` region fallback, bypassing the platform's centralized email infrastructure. Two problems:
+    1. Wrong region — `engine_core.email_service.resolve_ses_region()` returns the platform's configured region (`SES_REGION` env var). Hardcoding in one place was a guaranteed inconsistency.
+    2. Silent failure — custom boto3 try/except caught every error and fell back to `dev_logged` status, writing HTML to `outputs/` and never surfacing the real SES error. User got "Dev-logged to outputs/pe_expansion_email_LUPIN.html" with no indication that SES actually rejected the send.
+  - Fix: delegate to `engine_core.email_service.send_email_custom()` — same helper PERX, GuidanceCheck, RiskAudit, Portfolio Regrade all use. Inherits correct region resolution, AWS credentials handling, `SENDER_EMAIL` constant, and logs real SES errors to the platform logger.
+  - Falls back to writing HTML to `outputs/` on failure (same behavior, cleaner code path) so QA can still inspect the email body.
+  - Returns `{status: 'sent'}` | `{status: 'dev_logged', path}` | `{status: 'send_failed'}` — explicit states, no more silent fallback.
+
+- **Surface actual SES error in email response** (`faf3661 fix: surface actual SES error in Expansion Lens email response`):
+  - `d5addc6` still fell back to `dev_logged` on SES failure but the user had no way to see WHY. `send_email_custom` swallows the actual SES error in a try/except and only returns True/False, so UI showed "Dev-logged to …" with zero diagnostic.
+  - Switch `_send_pe_expansion_email` to use platform helpers (`SENDER_EMAIL`, `resolve_ses_region`, `get_ses_client`) directly with own try/except that captures the actual SES error:
+    - `ClientError` → SES `Error.Code + Error.Message` (e.g. "MessageRejected: Email address is not verified", "MailFromDomainNotVerifiedException")
+    - generic `Exception` → type + `str(e)`
+  - Error string returned in the response as `warning`, so UI can show the real reason. `dev_logged` disk fallback still runs so QA can inspect HTML.
+  - **Pre-flight checks** added: `recipient_email` empty → "recipient_email is empty"; `SENDER_EMAIL` not configured → "set SES_SENDER_EMAIL env var"; AWS credentials missing → "AWS credentials not present". These three are 90% of "why isn't email working" tickets.
+
+**Result**: All 7 Railway-surfaced issues from the Standalone UI deploy are fixed. Bundle builds clean on Railway's exact command (`npm run build` → `tsc -b && vite build`, 0 errors). Email send path is now diagnostic-first: pre-flight checks catch the common mistakes, and SES errors surface to the UI rather than being silently swallowed into `dev_logged`.
+
+**Next Step**: Move from "make it work" to "make it useful" — the next 4 commits (389ca60 → df2f050) added report depth on top of the now-stable foundation.
+
+---
+
 ## **June 18, 2026 (continued): Expansion Lens Standalone UI — Search + Top 10 + Manual Refresh**
 
 **Objective**: Turn the PE Expansion scorer (built earlier today) into a reachable, name-driven report screen + email tool. Per user directives: **"we want the new report only"** (no integration into `compute_perx_score`), **"keep it manual for now"** (no auto-scraping / cron), **"for the 149 scripts alone"** (search scoped to the scored universe, no broader stock_sectors search). User also picked the nav label "📈 Expansion Lens" over alternatives (Re-Rating Radar, Expansion Lens, Promise Tracker, Forward Rerating).

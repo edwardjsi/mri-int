@@ -2,6 +2,109 @@
 
 ---
 
+## 📅 Session: June 18, 2026 (cont., late evening) — Expansion Lens Report Depth
+
+**Session Start:** ~20:00 IST
+**Session End:** ~23:40 IST
+
+### What Was Done This Session
+
+#### 1. Verbatim Transcript Quotes Under Each PE Category (`389ca60`) ✅
+- [x] `_fetch_category_quotes(symbol, codes)` — single SQL against `perx_pe_signals.evidence_quotes`, returns `{code: {text, source, quarter}}`. Source preference: primary (narrative tracer) over secondary (keyword scan).
+- [x] `_extract_quote_text()` defensive unwrap for string-or-dict rows.
+- [x] Email: left-bordered blockquote (color matches strength bar) + attribution line (source + quarter).
+- [x] Web UI: `<Fragment>` + conditional `<tr colSpan=5>` mirrors the email rendering.
+- [x] POLYCAB: all 12 categories render with a quote. Email 38.8 → 45.9 KB. Bundle clean (0 TS errors, vite 2.24s).
+
+#### 2. Manager Track Record Strip + Per-Category Promise-Status Grid (`104a0ba`) ✅
+- [x] `_fetch_credibility_snapshot(symbol)` — top-level dict from `management_credibility_scores`.
+- [x] `_credibility_summary(...)` — human-readable verdict narrative.
+- [x] `PROMISE_STATUSES` tuple + `_fetch_category_status_grids(symbol, codes)` — joins `management_narrative_timeline.guidance_type` via `GUIDANCE_TYPE_TO_CATEGORY`, returns last 4 quarters per category.
+- [x] Email Section A0 (above header band): Accuracy / Verdict / Trend / Miss Streak / Lag Score / Promises + summary. Verdict and Trend colors driven by zone.
+- [x] Each category row gets a per-quarter status grid below the quote.
+- [x] Live spot-checks: POLYCAB 73% HOLD DETERIORATING 1Q; CGCL 80% ADD STABLE 0Q; EIHAHOTELS 34% THESIS BROKEN DETERIORATING; SIGMA 0% THESIS BROKEN STABLE 8Q. Email 45.9 → 59.5 KB. Bundle clean (vite 2.33s).
+
+#### 3. "What Other Checks Say" — Cross-Check Matrix (`67743e6`) ✅
+- [x] **Plan doc first**: `docs/EXPANSION_LENS_CROSS_CHECK_PLAN_2026-06-18.md` (172 lines) — per user directive.
+- [x] **Plain-English labels everywhere**: AAE → "Independent Check", QIF → "Financial Quality", MRI → "Price Action", cross-check matrix → "Where the Signals Agree". Engine names never appear in rendered output.
+- [x] `_fetch_independent_check / _fetch_financial_quality / _fetch_price_action` — 3 fetchers from `aae_results_snapshot` / `quality_verdicts` / `stock_scores`.
+- [x] `_verdict(score)` → `{label, color}` (Strong/Holding up/Mixed/Weak). `_classify_alignment(views)` → `all_agree|mostly_agree|mixed|split|no_data`.
+- [x] `_build_cross_check(...)` — 5-dimension comparison: Margins, Growth, Quality, Momentum, Credibility.
+- [x] Email: "What Other Checks Say" strip + "Where the Signals Agree" matrix + "Financial Quality — 7-Agent Breakdown" + "Price Action — 7-Step Checklist".
+- [x] Web UI: new interfaces + `scoreVerdict`, `alignmentLabel` helpers; rendered inside the existing IIFE between credibility strip and primary source.
+- [x] Live POLYCAB: PE 83.6 Strong | IC 47 Mixed | FQ 89 HIGH_QUALITY | PA 80 CONSOLIDATING. Quality: "Mostly agree" (PE+FQ high, IC low). Email 59.5 → 73.0 KB. Bundle clean (vite 3.06s). engine_fundamental 42/42 + engine_core 8/8 pass.
+
+#### 4. Bottom Line Synthesis at the Top of the Report (`df2f050`) ✅
+- [x] `_ALIGNMENT_LABEL` — plain-English strings for the cross-check matrix.
+- [x] `_build_bottom_line(pe_score, credibility, indep, fin, price, cross_check)` → `{summary, action, highlights}`.
+- [x] Algorithm: collect 4 engine scores, compute average, pick worst, count cross-check dimensions, choose action label (positive/watch/cautious/negative/no_data), plain-English summary.
+- [x] Credibility miss streak override: 4+ → `negative`.
+- [x] Email: "Bottom Line" section rendered at the very top. Colored action chip (Strong setup / Watch / Caution / Avoid / Insufficient) with contrasting background band + color-coded highlight pills.
+- [x] **Bug fix**: loop variable `h` shadowing outer report header caused KeyError on 'bucket'; renamed inner var to `hl`.
+- [x] Web UI: `BottomLine` interface + render before Manager Track Record strip.
+- [x] Live spectrum: POLYCAB → Watch (split verdict); CGCL → Negative (fundamentals 32); SIGMA → Negative (8 missed quarters); EIHAHOTELS → Negative (narrative dead at 4). Email 73.0 → 75.4 KB. Bundle clean (vite 2.56s). engine_core 8/8 pass.
+
+### 📌 Current Milestone
+- **Expansion Lens report is now a verifiable institutional audit.** Report structure: Bottom Line → Manager Track Record → Independent Check / Financial Quality / Price Action cards → Where the Signals Agree matrix → PE categories with verbatim quotes + per-quarter status grids → primary/secondary source breakdown. All 4 feature commits pushed to `origin/main`. Bundle builds clean on Railway.
+- **Next**:
+  - (a) Backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows (still deferred from earlier sessions).
+  - (b) Decide whether to wire PE score into `compute_perx_score` (user explicitly deferred again today).
+  - (c) Decide next roadmap item — Decision 097 ConvictionEngine is the only documented open plan.
+
+---
+
+## 📅 Session: June 18, 2026 (cont., evening) — Expansion Lens Post-Deployment Hardening
+
+**Session Start:** ~16:30 IST
+**Session End:** ~19:30 IST
+
+### What Was Done This Session
+
+All 7 fixes landed in chronological order to resolve Railway-surfaced issues from the Standalone UI deploy (`916060f`).
+
+#### 1. TS6133 / TS18048 in PeExpansionReport (`c966678`) ✅
+- [x] Railway build failed with 16 errors. Root cause: 916060f's `{report && !loading && !error && (...)}` JSX guard doesn't narrow outer-scope `const h = report?.header`.
+- [x] Fix: wrap conditional render in an IIFE that redefines `h` and `cov` from the narrowed `report`.
+- [x] Bonus: wired `lastPromiseQuarter` + `asOfIstLabel` into a per-report data-freshness disclosure under the company name (closes plan TODO).
+- [x] Verified with Railway's exact command (`npm run build`): 736 modules, 754 KB bundle, 4.69s, 0 errors.
+
+#### 2. Drop "No symbol selected" guard on nav click (`f542672`) ✅
+- [x] Symptom: clicking "Expansion Lens" in sidebar showed empty-state "Open ?symbol=…" instead of the page.
+- [x] Root cause: `App.tsx` `<PeExpansionReport>` wrapped in `!peSymbol` guard that bypassed the component entirely when no symbol.
+- [x] Fix: drop the guard. Component handles empty symbols correctly. Net −9/+2 lines on `App.tsx`. 0 TS errors.
+
+#### 3. Flat 149-symbol list, simpler UX (`f9c156c`) ✅
+- [x] Symptom 1: `TypeError: Cannot read properties of undefined (reading 'map')` from `top10.results.map()` after swallowed unexpected API shape.
+- [x] Symptom 2: user feedback — "just list the stock symbols so I can click on the symbol and it provides the report." Search + Top 10 was over-engineered.
+- [x] Refactor: drop `/top10` fetch + Top 10 panel + debounced search → single `/pe-expansion/suggest?q=&limit=200` fetch on mount → client-side filter → scrollable Symbol / Company / PE Score table, each row clickable. Defensive guards: `Array.isArray` check, `typeof x.symbol === 'string'` filter, score null check.
+- [x] Verified 0 TS errors.
+
+#### 4. Bump /suggest limit 50 → 500 (`3b94a2f`) ✅
+- [x] Endpoint validated `limit` with `Query(..., ge=1, le=50)`, so `limit=200` (needed for the 149-symbol universe) returned 422.
+- [x] Bump `le=50 → le=500` (covers current 149 + headroom).
+
+#### 5. Move /suggest and /top10 before /{symbol} catch-all (`7fbee0d`) ✅
+- [x] FastAPI matched `/suggest` and `/top10` as `symbol='suggest'` / `symbol='top10'` because they were defined AFTER the catch-all.
+- [x] Verified live by curling: pre-fix `/suggest` returned a PE report for the non-existent "SUGGEST" symbol with `coverage.n_promises_total=0`.
+- [x] Fix: reorder routes. Post-fix: `/suggest?q=&limit=5` → 5 rows, top=WAAREEENER (88.5); `/top10` → 149 total.
+
+#### 6. Use platform SES path (not hardcoded ap-south-1) (`d5addc6`) ✅
+- [x] Symptom: `_send_pe_expansion_email` was creating its own boto3 SES client with hardcoded `'ap-south-1'` region fallback, silently falling back to `dev_logged` on every error.
+- [x] Fix: delegate to `engine_core.email_service.send_email_custom()` — same helper PERX/GuidanceCheck/RiskAudit use. Inherits correct region, credentials, `SENDER_EMAIL`.
+- [x] Returns `{status: 'sent'}` | `{status: 'dev_logged', path}` | `{status: 'send_failed'}` — explicit states.
+
+#### 7. Surface actual SES error in email response (`faf3661`) ✅
+- [x] `d5addc6` still fell back to `dev_logged` on SES failure with zero diagnostic.
+- [x] Switch to platform helpers with own try/except that captures actual SES error: `ClientError` → `Error.Code + Error.Message`; generic `Exception` → type + `str(e)`.
+- [x] Pre-flight checks: `recipient_email` empty / `SENDER_EMAIL` not configured / AWS credentials missing — 90% of "why isn't email working" tickets.
+- [x] Error string returned in response as `warning` so UI can show the real reason.
+
+### 📌 Current Milestone
+- **All 7 Railway-surfaced issues from the Standalone UI deploy are fixed.** Bundle builds clean on Railway's exact command (`npm run build` → `tsc -b && vite build`, 0 errors). Email send path is now diagnostic-first.
+- **Next**: shift from "make it work" to "make it useful" — the next 4 commits add report depth (quotes, track record, cross-check, bottom line).
+
+---
+
 ## 📅 Session: June 18, 2026 (cont.) — Expansion Lens Standalone UI
 
 **Session Start:** ~13:30 IST
