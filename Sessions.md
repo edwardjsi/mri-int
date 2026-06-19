@@ -1,3 +1,49 @@
+## **June 19, 2026 (cont., evening): Data Richness Sprint — Initiative Doc + Embedded Debate + Dockerfile Fix**
+
+**Objective**: Close three production gaps surfaced by the bear/bull debate engine on real symbols: (1) QPOWER ranked #2 with zero orthogonal data, (2) KirlosEngine bear case argued from a single flag instead of underlying numbers, (3) Dockerfile not copying `engine_debate/` causing production 500s.
+
+**Actions**:
+
+- **Diagnosed QPOWER** (PE rank #2, 84.9):
+  - `aae_results_snapshot`: 0 rows. `quality_verdicts`: 0 rows. PE score built entirely on narrative.
+  - Top-15 PE ranking audit: QPOWER is the only top-15 stock without AAE + QIF coverage.
+  - User's framing: "people are betting their hard earned money on your opinion, so let that better be good."
+
+- **Diagnosed KirlosEngine**:
+  - QIF data exists (FQ 37/100 REJECT, Revenue 3/10, ROCE<WACC flag), but underlying numbers (ROCE %, margin trends, revenue growth, sector medians) are discarded after scoring.
+  - LLM can only argue from "ROCE < WACC flag" instead of "ROCE 11.2% vs WACC 14.0%, gap -2.8% widening".
+
+- **Drafted `docs/INITIATIVE_DATA_RICHNESS_2026-06-19.md`** (14.9 KB):
+  - Combined Fix A (backfill AAE + QIF for ~70 uncovered universe stocks) + Fix D (extend QIF agents + context builder to surface underlying financial metrics).
+  - 8 phases with exact time estimates (~6-7 hrs wall) + cost (~$5 LLM one-time).
+  - Rollback plan: all changes additive (JSONB column with default `'{}'::jsonb`); old code paths still work.
+  - 4 open questions with proposed defaults (JSONB schema, all-at-once backfill, graceful empty-state, natural cache invalidation).
+
+- **Diagnosed production 500s**:
+  - User reported "DEBUG 500 on /api/guidance/ARVINDFASN/debate -> No response body".
+  - Railway log: `ModuleNotFoundError: No module named 'engine_debate'`.
+  - Root cause: Dockerfile's `COPY` instructions enumerate `engine_*/` directories explicitly; the new `engine_debate/` was missing. Routes registered (lazy import inside handler) but import failed at request time.
+  - Fix: added `COPY engine_debate/ ./engine_debate/` to both `Dockerfile` and `Dockerfile.api`. Bumped rebuild-trigger comment to today's date for cache-bust safety.
+  - Commit `cf9bfb1` pushed to `main`. Railway auto-deploy picked up the fix.
+
+- **Drafted `docs/FEATURE_REQUEST_EMBEDDED_DEBATE_2026-06-19.md`** (10.4 KB):
+  - User asked for debate to be embedded in the report itself (not behind a modal), also in Conviction Engine detail, also in email.
+  - 4 phases: shared `EmbeddedDebateSection` component with auto-load (cached-first, background fetch on miss), wire into Expansion Lens + StockDetailsModal + email templates.
+  - Cost: $0 on cache hit, ~$0.002 on miss for UI; email skips with placeholder (no LLM call).
+  - Currently DRAFT awaiting approval (lower priority than data richness).
+
+**Result**:
+- Production debate engine is live and working (post-Dockerfile fix).
+- QPOWER + KirlosEngine data gaps documented with concrete before/after examples.
+- Two follow-up initiatives drafted, awaiting user approval: Data Richness Sprint (priority) + Embedded Debate (deferred).
+
+**Next Step**:
+- **Immediate (next session):** Data Richness Sprint — Fix A (backfill AAE + QIF) + Fix D (extend QIF agents to surface underlying metrics).
+- **After:** Embedded Debate feature (depends on data quality).
+- The two are complementary: embedded debate only adds value when there's real data to debate.
+
+---
+
 ## **June 19, 2026 — Doc Hygiene (Decision 097 Status Flip) + Intonation Backfill Verified + Expansion Lens UX Polish**
 
 **Objective**: Three small follow-ups to close loose ends from the prior days' work. (1) Flip `Decisions.md` Decision 097 from DRAFT to FINAL — it had been marked awaiting approval but was fully executed and shipped on 2026-06-15. (2) Verify the intonation backfill job (PID 99922) had actually completed, not died. (3) Add a "back to main screen" link in the Expansion Lens page — the existing in-header `← Back` button was easy to miss when scrolled down reading long reports.

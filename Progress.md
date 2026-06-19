@@ -2,6 +2,51 @@
 
 ---
 
+## 📅 Session: June 19, 2026 (cont., evening) — Data Richness Initiative + Dockerfile Fix + Embedded Debate Draft
+
+**Session Start:** ~19:30 IST
+**Session End:** ~20:30 IST
+
+### What Was Done This Session
+
+#### 1. Production Debug — Dockerfile `engine_debate/` ModuleNotFoundError ✅
+- [x] User reported `DEBUG 500 on /api/guidance/ARVINDFASN/debate` from Railway.
+- [x] Railway logs revealed `ModuleNotFoundError: No module named 'engine_debate'`.
+- [x] Root cause: `Dockerfile` enumerates `engine_*/` directories explicitly in `COPY` instructions; the new `engine_debate/` from the merge wasn't in the list.
+- [x] Fix: added `COPY engine_debate/ ./engine_debate/` to both `Dockerfile` and `Dockerfile.api`. Bumped rebuild-trigger comment to 2026-06-19T14:58Z.
+- [x] Commit `cf9bfb1` pushed. Railway auto-deploy confirmed (DB Schema Synced + Uvicorn running + /api/health 200 OK).
+
+#### 2. Data Quality Diagnosis — QPOWER + KirlosEngine ✅
+- [x] **QPOWER (PE rank #2, 84.9):** zero AAE rows, zero QIF rows. PE score built entirely on narrative. Bear case correctly flagged "narrative without orthogonal verification". But ranking itself is wrong.
+- [x] **KirlosEngine:** QIF data exists but underlying numbers (ROCE %, margin trends, sector medians) discarded after scoring. Bear case argues from "ROCE < WACC flag" instead of "ROCE 11.2% vs WACC 14.0%".
+- [x] Top-15 PE audit: QPOWER is the only top-15 stock without both AAE + QIF coverage.
+
+#### 3. Data Richness Initiative Doc — `INITIATIVE_DATA_RICHNESS_2026-06-19.md` (14.9 KB) ✅
+- [x] Combined Fix A (backfill AAE + QIF for ~70 uncovered universe stocks) + Fix D (extend QIF agents + context builder to surface underlying metrics).
+- [x] 8 phases with time estimates (~6-7 hrs wall) + cost (~$5 LLM one-time).
+- [x] Per-agent field inventory (revenue, margin, leverage, WC, ROCE, evolution, translation — ~20 underlying metrics total).
+- [x] Before/after example for KirlosEngine bear case (flag vs specific numbers).
+- [x] Risk analysis + rollback plan (JSONB default `'{}'::jsonb` keeps old code paths working).
+- [x] 4 open questions with proposed defaults.
+
+#### 4. Embedded Debate FeatureRequest — `FEATURE_REQUEST_EMBEDDED_DEBATE_2026-06-19.md` (10.4 KB) ✅
+- [x] User asked for debate to be embedded in the report (not behind a modal), also in Conviction Engine, also in email.
+- [x] 4-phase plan: shared `EmbeddedDebateSection` component with auto-load (cached-first, background fetch on miss), wire into Expansion Lens + StockDetailsModal + email.
+- [x] Cost analysis: $0 on cache hit, ~$0.002 on miss for UI; email skips with placeholder (no LLM call).
+- [x] DRAFT status, awaiting approval. Lower priority than Data Richness.
+
+### 📌 Current Milestone
+- **Production debate engine is live and stable** (Dockerfile fix shipped).
+- **Two follow-up initiatives drafted, awaiting user approval for next session:**
+  - **Priority 1: Data Richness Sprint** (Fix A + Fix D, ~6-7 hrs, ~$5)
+  - **Priority 2: Embedded Debate** (~3-4 hrs, depends on data quality)
+- **Next:**
+  - (a) Data Richness Sprint — backfill missing AAE + QIF, extend QIF agents to surface underlying metrics
+  - (b) Embedded Debate — auto-loaded section in Expansion Lens + Conviction Engine + email
+  - (c) Once data quality is real, debate engine outputs become truly decision-grade
+
+---
+
 ## 📅 Session: June 19, 2026 — Doc Hygiene + Intonation Backfill Verified + Expansion Lens UX Polish
 
 **Session Start:** ~07:30 IST
