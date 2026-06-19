@@ -902,6 +902,40 @@ def get_pe_expansion(symbol: str) -> dict[str, Any]:
     return report
 
 
+# ── Bear vs Bull Debate (FeatureRequest 2026-06-19, Phase 3) ────────
+
+@router.post("/{symbol}/debate")
+def run_pe_expansion_debate(
+    symbol: str,
+    include_adjudicator: bool = Query(
+        False,
+        description="Fire a 3rd LLM call to pick a winner. Costs +$0.001 and +5s.",
+    ),
+):
+    """Generate bear vs bull debate for the PE Expansion rerating thesis of a symbol.
+
+    Same caching contract as /api/guidance/{symbol}/debate: first call fires
+    ~2 LLM calls (~$0.002), re-opens with unchanged data are instant + free.
+    Cache key = sha256 of the deterministic context payload (built from
+    build_pe_expansion_context, which wraps engine_perx.pe_signals).
+    """
+    from engine_debate.context_pe_expansion import build_pe_expansion_context
+    from engine_debate.debate_engine import run_debate
+
+    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    if not sym:
+        raise HTTPException(status_code=400, detail="symbol is required")
+
+    context_payload = build_pe_expansion_context(sym)
+    result = run_debate(
+        sym,
+        context_kind="pe_expansion",
+        context_payload=context_payload,
+        include_adjudicator=include_adjudicator,
+    )
+    return result.to_dict()
+
+
 @router.post("/email/{symbol}")
 def email_pe_expansion(symbol: str, to: str = Query(..., description="Recipient email"),
                        client_id: str | None = Query(None)) -> dict[str, Any]:

@@ -380,6 +380,11 @@ export const api = {
       `/guidance/${encodeURIComponent(symbol)}/debate${opts.includeAdjudicator ? '?include_adjudicator=true' : ''}`,
       { method: 'POST' }
     ),
+  triggerPeExpansionDebate: (symbol: string, opts: { includeAdjudicator?: boolean } = {}) =>
+    apiFetch(
+      `/pe-expansion/${encodeURIComponent(symbol)}/debate${opts.includeAdjudicator ? '?include_adjudicator=true' : ''}`,
+      { method: 'POST' }
+    ),
   getPortfolioGuidance: () => apiFetch('/guidance/portfolio'),
   getGuidanceLeaderboard: (worst: boolean = false, limit: number = 20) =>
     apiFetch(`/guidance/leaderboard?worst=${worst}&limit=${limit}`),

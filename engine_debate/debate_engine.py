@@ -5,9 +5,11 @@ Phase 1 skeleton: lookup → LLM → store. Falls back to a stub bear/bull when
 no LLM is configured (so the API stays callable in test environments).
 
 Phase 2 wires real prompts via engine_debate.prompts_guidance.
+Phase 3 adds prompts_pe_expansion + dispatches by context_kind.
 """
 from __future__ import annotations
 
+import importlib
 import logging
 import time
 from dataclasses import dataclass
@@ -18,6 +20,53 @@ from engine_core.llm_client import get_llm_client
 from engine_debate.cache import canonical_hash, lookup_debate, store_debate
 
 logger = logging.getLogger("engine_debate.engine")
+
+
+# ── Prompt registry ────────────────────────────────────────────────────
+# Maps context_kind → (module path, tuple of constant names).
+# Adding a new context_kind = add a row here + write a prompts_<kind>.py
+# module that exports those constants.
+
+PROMPT_REGISTRY: dict[str, dict[str, Any]] = {
+    "guidance": {
+        "module": "engine_debate.prompts_guidance",
+        "bear_system": "GUIDANCE_BEAR_SYSTEM",
+        "bear_user": "GUIDANCE_BEAR_USER",
+        "bull_system": "GUIDANCE_BULL_SYSTEM",
+        "bull_user": "GUIDANCE_BULL_USER",
+        "adj_system": "ADJUDICATOR_SYSTEM",
+        "adj_user": "ADJUDICATOR_USER",
+    },
+    "pe_expansion": {
+        "module": "engine_debate.prompts_pe_expansion",
+        "bear_system": "PE_BEAR_SYSTEM",
+        "bear_user": "PE_BEAR_USER",
+        "bull_system": "PE_BULL_SYSTEM",
+        "bull_user": "PE_BULL_USER",
+        "adj_system": "PE_ADJUDICATOR_SYSTEM",
+        "adj_user": "PE_ADJUDICATOR_USER",
+    },
+}
+
+
+def _load_prompts(context_kind: str) -> tuple:
+    """Load (bear_system, bear_user, bull_system, bull_user, adj_system, adj_user)
+    for the given context_kind. Raises if context_kind is unknown."""
+    if context_kind not in PROMPT_REGISTRY:
+        raise ValueError(
+            f"Unknown context_kind={context_kind!r}. "
+            f"Supported: {sorted(PROMPT_REGISTRY.keys())}"
+        )
+    cfg = PROMPT_REGISTRY[context_kind]
+    mod = importlib.import_module(cfg["module"])
+    return (
+        getattr(mod, cfg["bear_system"]),
+        getattr(mod, cfg["bear_user"]),
+        getattr(mod, cfg["bull_system"]),
+        getattr(mod, cfg["bull_user"]),
+        getattr(mod, cfg["adj_system"]),
+        getattr(mod, cfg["adj_user"]),
+    )
 
 
 @dataclass
@@ -116,13 +165,12 @@ def run_debate(
             context_hash=ctx_hash,
         )
 
-    # ── Build prompts (lazy import so Phase 1 stays light) ─────────────
-    from engine_debate.prompts_guidance import (
-        GUIDANCE_BEAR_SYSTEM,
-        GUIDANCE_BEAR_USER,
-        GUIDANCE_BULL_SYSTEM,
-        GUIDANCE_BULL_USER,
-    )
+    # ── Build prompts (lazy load + dispatched by context_kind) ─────────────
+    try:
+        bear_system, bear_user_tpl, bull_system, bull_user_tpl, adj_system, adj_user_tpl = _load_prompts(context_kind)
+    except ValueError as e:
+        logger.error(f"Unknown context_kind: {e}")
+        raise
 
     client, model = get_llm_client()
     if not client:
@@ -132,14 +180,12 @@ def run_debate(
         model_used = "stub"
     else:
         model_used = model
+        context_json = _format_context(context_payload)
         t0 = time.time()
         try:
             bear_text = _call_llm(
-                GUIDANCE_BEAR_SYSTEM,
-                GUIDANCE_BEAR_USER.format(
-                    symbol=sym,
-                    context_json=_format_context(context_payload),
-                ),
+                bear_system,
+                bear_user_tpl.format(symbol=sym, context_json=context_json),
                 model=model,
             )
         except Exception as e:
@@ -148,27 +194,23 @@ def run_debate(
 
         try:
             bull_text = _call_llm(
-                GUIDANCE_BULL_SYSTEM,
-                GUIDANCE_BULL_USER.format(
-                    symbol=sym,
-                    context_json=_format_context(context_payload),
-                ),
+                bull_system,
+                bull_user_tpl.format(symbol=sym, context_json=context_json),
                 model=model,
             )
         except Exception as e:
             logger.exception(f"Bull call failed: {e}")
             bull_text = f"[Bull call failed: {e}]"
 
-        logger.info(f"Debate for {sym} completed in {time.time()-t0:.1f}s")
+        logger.info(f"Debate for {sym}/{context_kind} completed in {time.time()-t0:.1f}s")
 
     # ── Optional adjudicator ───────────────────────────────────────────
     adjudicator = None
     if include_adjudicator and client:
         try:
-            from engine_debate.prompts_guidance import ADJUDICATOR_SYSTEM, ADJUDICATOR_USER
             adjudicator = _call_llm(
-                ADJUDICATOR_SYSTEM,
-                ADJUDICATOR_USER.format(symbol=sym, bear=bear_text, bull=bull_text),
+                adj_system,
+                adj_user_tpl.format(symbol=sym, bear=bear_text, bull=bull_text),
                 model=model,
             )
         except Exception as e:
