@@ -1,3 +1,43 @@
+## **June 19, 2026 — Doc Hygiene (Decision 097 Status Flip) + Intonation Backfill Verified + Expansion Lens UX Polish**
+
+**Objective**: Three small follow-ups to close loose ends from the prior days' work. (1) Flip `Decisions.md` Decision 097 from DRAFT to FINAL — it had been marked awaiting approval but was fully executed and shipped on 2026-06-15. (2) Verify the intonation backfill job (PID 99922) had actually completed, not died. (3) Add a "back to main screen" link in the Expansion Lens page — the existing in-header `← Back` button was easy to miss when scrolled down reading long reports.
+
+**Actions**:
+
+- **Decision 097 status flip** (`Decisions.md`):
+  - Was: `Status: DRAFT — execution plan in docs/ConvictionEngine15June26.md awaiting user approval before any code change.`
+  - Now: `Status: FINAL — executed 2026-06-15.` with pointers to all 7 shipping commits (`6e7c7d7`, `043d2e3`, `0e9743d`, `3a9d87a`, `0598d63`, `8a7eed5`, `a2cb131`) and the intonation backfill result.
+  - Pure docs hygiene — no code change.
+
+- **Intonation backfill verification**:
+  - Log file (`logs/intonation_backfill_20260615.log`, 1978 lines) ends with `Done. 985 scored, 3 skipped (already extracted), 0 failed.`
+  - PID 99922 not running — finished cleanly, didn't crash.
+  - Direct DB query against Neon confirmed: **986 rows in `management_intonation`** across **147 distinct symbols**, all extracted on 2026-06-15. The 3 missing rows (out of 989 transcripts with text > 100 chars) match the log's "3 skipped (already extracted)" — those were probably scored by the inline Step 5 hook in `guidance_primer.py` during ConvictionEngine priming before the standalone backfill reached them.
+  - **Item 2 is closed — no restart needed.**
+
+- **Expansion Lens sticky top nav** (`frontend/src/PeExpansionReport.tsx`):
+  - The existing `← Back` button only renders when a report is loaded, and it sits inside the deep header section next to the company name. When you're scrolled down reading a long report (POLYCAB, CGCL, etc.), it's invisible — you're effectively trapped in the report.
+  - Added a sticky top bar that's always visible when `onBack` is wired:
+    - Position: `sticky; top: 0; z-index: 10`
+    - Background: `rgba(2, 6, 23, 0.92)` + `backdropFilter: blur(8px)` for a subtle frosted look so content scrolls under it cleanly
+    - Layout: `← Back to Dashboard` button on the left (clearer than `← Back`), `📈 Expansion Lens` muted title on the right for orientation
+    - Renders only when `onBack` is provided (same gate as the existing button — no harm on pages where it isn't)
+  - Relabeled the existing in-header button from `← Back` to `← Back to Dashboard` for consistency with the sticky bar.
+  - Added a `title="Back to Dashboard"` tooltip on both buttons.
+  - **Verified**: `npx tsc --noEmit` → 0 errors; `npm run build` → 736 modules, 768.84 kB bundle, 4.80s. No regressions.
+
+**Result**:
+- `Decisions.md` now reflects reality — Decision 097 marked FINAL with a clear audit trail of all 7 commits.
+- Intonation backfill confirmed complete (986/989 rows). ConvictionEngine + Appendix A are fully shipped.
+- Expansion Lens users now have an always-visible, unambiguous way back to the Dashboard regardless of scroll position.
+
+**Next Step**:
+- (a) Still pending: backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows.
+- (b) Still pending: decide whether to wire PE Expansion score into `compute_perx_score`.
+- (c) Decide next roadmap item — the only documented open plan (Decision 097) is now closed.
+
+---
+
 ## **June 18, 2026 (continued, late evening): Expansion Lens Report Depth — Quotes, Track Record, Cross-Check, Bottom Line**
 
 **Objective**: Turn the Expansion Lens from "a scorecard with a score" into a verifiable institutional audit the user can act on in one read. Four sequential feature commits added: verbatim transcript citations under every category score, a manager track-record strip with per-quarter promise grids, plain-English cross-check against AAE/QIF/MRI, and a 1-paragraph Bottom Line synthesis at the very top.

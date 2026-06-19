@@ -2,6 +2,41 @@
 
 ---
 
+## 📅 Session: June 19, 2026 — Doc Hygiene + Intonation Backfill Verified + Expansion Lens UX Polish
+
+**Session Start:** ~07:30 IST
+**Session End:** ~08:30 IST
+
+### What Was Done This Session
+
+#### 1. Decision 097 Status Flipped to FINAL ✅
+- [x] `Decisions.md` Decision 097 was marked `Status: DRAFT — execution plan awaiting user approval` even though all 7 deliverables shipped on 2026-06-15.
+- [x] Now reads `Status: FINAL — executed 2026-06-15` with pointers to all 7 shipping commits (`6e7c7d7`, `043d2e3`, `0e9743d`, `3a9d87a`, `0598d63`, `8a7eed5`, `a2cb131`) and the intonation backfill result.
+- [x] Pure docs hygiene — no code change.
+
+#### 2. Intonation Backfill Verified Complete ✅
+- [x] Log file (`logs/intonation_backfill_20260615.log`) ends with `Done. 985 scored, 3 skipped (already extracted), 0 failed.`
+- [x] PID 99922 finished cleanly (not crashed).
+- [x] Direct DB query against Neon: **986 rows in `management_intonation`** across **147 distinct symbols**, all extracted on 2026-06-15. 3 missing rows (of 989 transcripts with text > 100 chars) match the log's "3 skipped (already extracted)" — those were scored by the inline Step 5 hook in `guidance_primer.py` during ConvictionEngine priming before the standalone backfill reached them.
+- [x] **Item 2 closed — no restart needed.**
+
+#### 3. Expansion Lens Sticky Top Nav Added ✅
+- [x] Existing `← Back` button only rendered inside the deep header section next to the company name — invisible when scrolled down reading a long report.
+- [x] Added sticky top bar in `frontend/src/PeExpansionReport.tsx`: position sticky, top 0, z-index 10, frosted background (`rgba(2, 6, 23, 0.92)` + `backdropFilter: blur(8px)`).
+- [x] Layout: `← Back to Dashboard` button on the left (clearer than `← Back`), `📈 Expansion Lens` muted title on the right for orientation.
+- [x] Renders only when `onBack` is wired — same gate as the existing button.
+- [x] Relabeled the existing in-header button from `← Back` to `← Back to Dashboard` for consistency. Added `title="Back to Dashboard"` tooltip on both buttons.
+- [x] Verified: `npx tsc --noEmit` → 0 errors; `npm run build` → 736 modules, 768.84 kB bundle, 4.80s. No regressions.
+
+### 📌 Current Milestone
+- **All three items closed.** Decision 097 reflects reality; intonation backfill complete (986/989 rows, 147 symbols); Expansion Lens users now have an always-visible way back to the Dashboard.
+- **Next**:
+  - (a) Backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows (still deferred from earlier sessions).
+  - (b) Decide whether to wire PE Expansion score into `compute_perx_score` (still deferred).
+  - (c) Pick the next roadmap item — the only documented open plan (Decision 097) is now closed.
+
+---
+
 ## 📅 Session: June 18, 2026 (cont., late evening) — Expansion Lens Report Depth
 
 **Session Start:** ~20:00 IST
