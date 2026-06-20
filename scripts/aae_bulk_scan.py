@@ -73,23 +73,34 @@ def persist_scan_result(result, scan_source, conn):
         cur.close()
 
 
-def run_bulk_scan(limit=None):
+def run_bulk_scan(limit=None, only_missing=False, missing_file=None):
     """
     AAE V3 Bulk Ingestion Worker.
     Scans the active universe and persists results to history + snapshot.
+    If only_missing=True, reads symbols from missing_file CSV (must have 'symbol' column).
     """
-    # Fetch symbols that have recent technical scores (active universe)
-    query = "SELECT DISTINCT symbol FROM stock_scores WHERE date > NOW() - INTERVAL '30 days'"
-    if limit:
-        query += f" LIMIT {limit}"
-        
-    symbols_df = fetch_df(query)
-    
-    if symbols_df is None or symbols_df.empty:
-        logger.warning("No active symbols found for AAE scan.")
-        return
+    symbols = []
 
-    symbols = symbols_df['symbol'].tolist()
+    if only_missing:
+        if not missing_file:
+            missing_file = "docs/data_richness_audit/missing_aae.csv"
+        import csv as csv_mod
+        with open(missing_file, newline='') as f:
+            reader = csv_mod.DictReader(f)
+            symbols = [row["symbol"] for row in reader]
+        if limit:
+            symbols = symbols[:limit]
+        logger.info(f"Only-missing mode: {len(symbols)} symbols from {missing_file}")
+    else:
+        query = "SELECT DISTINCT symbol FROM stock_scores WHERE date > NOW() - INTERVAL '30 days'"
+        if limit:
+            query += f" LIMIT {limit}"
+        symbols_df = fetch_df(query)
+        if symbols_df is None or symbols_df.empty:
+            logger.warning("No active symbols found for AAE scan.")
+            return
+        symbols = symbols_df['symbol'].tolist()
+
     logger.info(f"Starting AAE Bulk Scan for {len(symbols)} symbols...")
 
     conn = get_connection()
@@ -101,7 +112,6 @@ def run_bulk_scan(limit=None):
             persist_scan_result(res, "PIPELINE", conn)
 
             if res.get('status') == 'REJECTED':
-                # If rejected (kill switch), remove from snapshot
                 cur = conn.cursor()
                 cur.execute("DELETE FROM public.aae_results_snapshot WHERE symbol = %s", (sym,))
                 conn.commit()
@@ -110,7 +120,6 @@ def run_bulk_scan(limit=None):
             count += 1
             if count % 10 == 0:
                 logger.info(f"Progress: {count}/{len(symbols)}")
-                
         except Exception as e:
             logger.error(f"Failed to scan {sym}: {e}")
 
@@ -118,6 +127,13 @@ def run_bulk_scan(limit=None):
     logger.info(f"AAE Bulk Scan Complete. Processed {count} symbols.")
 
 if __name__ == "__main__":
-    # For testing, we can limit to 20 symbols
-    run_bulk_scan(limit=20)
+    import argparse
+    parser = argparse.ArgumentParser(description="AAE V3 Bulk Scan")
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--only-missing", action="store_true",
+                        help="Scan only symbols in docs/data_richness_audit/missing_aae.csv")
+    parser.add_argument("--missing-file", default=None,
+                        help="Custom CSV with 'symbol' column (overrides default)")
+    args = parser.parse_args()
+    run_bulk_scan(limit=args.limit, only_missing=args.only_missing, missing_file=args.missing_file)
 

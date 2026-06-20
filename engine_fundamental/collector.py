@@ -82,7 +82,7 @@ def fetch_and_store_financials(symbol):
         bs_row = balance[balance.index.year == year]
         if bs_row.empty:
             # Fallback to nearest date if exact year match fails
-            bs_row = balance.iloc[(balance.index - date_idx).abs().argmin()]
+            bs_row = balance.iloc[np.abs(balance.index - date_idx).argmin()]
         else:
             bs_row = bs_row.iloc[0]
 
