@@ -33,6 +33,9 @@ TX_COST = 0.002 # 0.2% per leg
 
 def calculate_metrics(dates, values, name: str) -> dict:
     series = pd.Series(values, index=pd.to_datetime(dates)).sort_index()
+    series = series.ffill().bfill().dropna()
+    if len(series) < 2 or series.iloc[0] <= 0:
+        return {"Portfolio": name, "Total Return (%)": 0, "CAGR (%)": 0, "Max Drawdown (%)": 0, "Sharpe Ratio": 0, "Win Rate (%)": 0, "Avg R": 0}
     returns = series.pct_change().dropna()
     years = (series.index[-1] - series.index[0]).days / 365.25
     cagr = ((series.iloc[-1] / series.iloc[0]) ** (1 / years) - 1) if years > 0 else 0
@@ -113,6 +116,9 @@ def run_stee_backtest():
             
             row = today_data.loc[sym]
             price = float(row["close"])
+            if pd.isna(price):
+                remaining_trades.append(t)
+                continue
             ema10 = float(row["ema_10"])
             
             # 1. Hard Stop (5d Low or Breakout Low)
@@ -156,7 +162,9 @@ def run_stee_backtest():
                 if any(t["symbol"] == sym for t in active_trades): continue
                 
                 price = float(row["close"])
+                if pd.isna(price): continue
                 sl = float(row["low_5d"])
+                if pd.isna(sl): continue
                 risk_per_share = price - sl
                 if risk_per_share <= 0: continue
                 
