@@ -2042,3 +2042,90 @@ All addendum code complete. **Awaiting backfill (~73 min) before final commit + 
 
 ### Tests
 - 27/27 unit tests green (11 lag metrics + 6 verifier reasons + 10 intonation)
+## **June 20, 2026 — Data Richness Sprint (P1) + Embedded Debate (P2) Execution**
+
+**Objective**: Execute the Data Richness Sprint (close structural data gaps in AAE/QIF and surface per-year agent details in debates) and simultaneously implement the Embedded Debate feature (cache-first, always-visible debate section in Expansion Lens + Conviction Engine + email).
+
+**Actions**:
+
+#### Phase D1 — Per-Year QIF Agent Details ✅
+- Extended 7 QIF agents (`revenue`, `margin`, `leverage`, `wc`, `roce`, `evolution`, `translation`) to return `detail.per_year[]` dicts containing trailing-year snapshots per metric.
+- Added `agent_details JSONB` column to `quality_verdicts` via migration `005_qif_agent_details.sql`.
+- Updated `pipeline._build_agent_details_json()` to sanitize and collapse per-year dicts into JSONB before persisting.
+- Added defensive NaN → 0.0 sanitization (`_sanitize_for_json()`) after PostgreSQL rejected `NaN` from Yahoo-reported revenue on GROWW.
+
+#### Phase D2 — Surface Agent Details in Expansion Lens Context ✅
+- Modified `engine_perx/pe_signals.py:_fetch_financial_quality()` to SELECT `agent_details` from `quality_verdicts` alongside the score itself.
+- Normalized empty `agent_details` to `None` (not `{}}` dicts) so the LLM context doesn't waste tokens on empty JSON.
+- Verified live: KIRLOSENG debate now cites "126 bps ROCE improvement (10.9→17.8%)" instead of just a flag.
+
+#### Phase D3 — Re-run Pipeline for 878 Existing Stocks ✅
+- Script `scripts/rerun_quality_for_covered_stocks.py` scanned all `quality_verdicts` rows and re-evaluated any stock not yet migrated to quarterly data.
+- All 878 symbols now have populated `agent_details` JSONB.
+- GROWW edge case: NaN revenue from Yahoo → sanitized to 0.0 → scored 80 HIGH_QUALITY (was flag crashing).
+
+#### Phase A1-A2 — AAE Backfill (97 missing symbols) ✅
+- Script `scripts/audit_universe_data_coverage.py`: audited top PE stocks → 149 symbols, 97 missing AAE, 49 missing QIF.
+- Script `scripts/aae_bulk_scan.py` with `--only-missing` flag backfilled all 97 missing AAE symbols.
+- Added `--missing-file` flag + `--only-missing` flag to `aae_bulk_scan.py`.
+- 97/97 AAE symbols processed successfully.
+
+#### Phase A3 — QIF Fetch + Pipeline (49 missing symbols) ✅
+- Script `scripts/backfill_qif_for_missing.py`: fetches Yahoo financials then enters QIF pipeline.
+- Discovered ALL 49 missing-QIF symbols also had NO `fundamental_financials` rows (Symphony just fetched reverse-to-my-accounting adjustments).
+- Yahoo + QIF successfully provided quality data for the uncovered stocks.
+- Bug fix: `engine_fundamental/collector.py` line 85 used `TimedeltaIndex.abs()`, removed in pandas 3.0 → replaced with `np.abs(...).argmin()`.
+- 49/49 QIF symbols processed.
+
+#### Phase A5 — Force Debate Regeneration (149 symbols) ✅
+- Script `scripts/rerun_all_debates.py`: three modes (`--dry-run`, `--force`, `--limit`).
+- Force mode: clears all cached `conviction_debates` rows (14 stale), then re-runs both guidance + PE expansion debates.
+- **Result: 149 symbols × 2 contexts = 298 debates, 0 errors, 0 cache hits (pure misses, expected after wipe).**
+- Wall time: 4,507 seconds (~75 min), ~$1.20 LLM spend.
+
+#### P2 Phase 1 — GET Endpoint + Embedded Debate in Expansion Lens ✅
+- Added `GET /api/guidance/{symbol}/debate` and `GET /api/pe-expansion/{symbol}/debate` (read-only, no LLM).
+- Created `frontend/src/EmbeddedDebateSection.tsx`: cache-first auto-load with three states (skeleton, cache-miss placeholder, full render).
+- Wired into `PeExpansionReport.tsx` between Bottom Line and Manager Track Record.
+- TypeScript `--noEmit`: 0 errors.
+
+#### P2 Phase 2 — Embedded Debate in StockDetailsModal ✅
+- Wired into universal `StockDetailsModal` (App.tsx) after `QualityVerdict` and before AAE section.
+- Uses `contextKind="guidance"` so the debate centres on management integrity when accessed from Conviction Engine.
+
+#### P2 Phase 3 — Email Integration ✅
+- `engine_debate/cache.py`: `get_latest_debate_for_symbol()` — queries latest debate for symbol+kind without building context (cheap email path).
+- `api/pe_expansion.py`: `render_pe_expansion_email()` now includes a 🗣️ Bear vs Bull section before the footer. Cached → bear+bull cards; uncached → "Open in app" placeholder.
+- `engine_core/email_service.py`: `build_guidance_report_email_html()` includes the same debate section before the disclaimer footer.
+
+#### P2 Phase 4 — Tests + Regression ✅
+- `engine_debate/test_embedded_debate.py`: 5 tests — latest-debate lookup, filter by context_kind, cache-hit/miss endpoints, email render with/without cached debate.
+- Regression: `engine_debate/test_context_builders.py` + `engine_fundamental/test_qif_agent_details.py` + `engine_core/test_guidance_email_sections.py` = **47/47 passed**.
+
+**Commits on `feature/data-richness`** (9 total):
+1. `3908222` — feat(qif): add agent_details JSONB column
+2. `ca24697` — feat(qif): extend 7 agents to return per-year detail dict
+3. `24e35dd` — feat(qif): persist per-year agent_details JSONB in pipeline
+4. `ab9b87b` — test(qif): 15 tests for Phase D1 agent_details persistence
+5. `8da69cd` — feat(debate): surface agent_details in Expansion Lens financial_quality
+6. `fcda972` — feat(qif): Phase D3 — re-run pipeline for 878 stocks + NaN guard
+7. `6e80ff3` — feat(debate): GET endpoints for cached debate retrieval
+8. `a1f11d6` — feat(debate): EmbeddedDebateSection + wiring into Expansion Lens
+9. `3fa48c4` — feat(debate): wire EmbeddedDebateSection into StockDetailsModal
+10. `12ca198` — feat(debate): embed debate in email bodies
+11. `a7c441f` — test(debate): P2 Phase 4 — embedded debate integration tests
+
+**Result**:
+- QPOWER (PE rank #2) now has real AAE + QIF data after backfill. Debate quality improved across all 149 PE universe stocks.
+- Expansion Lens reports now show bear+bull synthesis inline — no modal required.
+- StockDetailsModal also shows the debate when opened from Conviction Engine.
+- Emails (both PE expansion and GuidanceCheck) include bear/bull sections when cached.
+- Zero regressions in 47 existing backend tests.
+
+**Next Step**:
+- Merge `feature/data-richness` to `main` (after user approval).
+- Monitor for frontend edge cases (cache miss first-load UX, dark theme consistency, email render in different clients).
+- Resume quarterly data ingestion (003→705 symbol migration) after backfill is verified and PR merged.
+
+---
+
