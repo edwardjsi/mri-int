@@ -669,6 +669,44 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
         """
     secondary_html += "</table></div>"
 
+    # Section D-E debate (embedded, P2 Phase 3)
+    debate = None
+    try:
+        from engine_debate.cache import get_latest_debate_for_symbol
+        debate = get_latest_debate_for_symbol(h["symbol"], "pe_expansion")
+    except Exception:
+        pass
+    if debate:
+        debate_html = f"""
+    <div style="padding:24px 40px;background:#0b1220;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">
+        🗣️ Bear vs Bull Synthesis
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:280px;border-left:3px solid #ef4444;padding:14px 18px;background:#1a0a0a;border-radius:4px;">
+          <div style="font-size:10px;color:#ef4444;text-transform:uppercase;letter-spacing:0.15em;font-weight:800;margin-bottom:8px;">Bear Case</div>
+          <div style="font-size:13px;color:#e2e8f0;line-height:1.6;white-space:pre-wrap;">{_esc(debate['bear'])}</div>
+        </div>
+        <div style="flex:1;min-width:280px;border-left:3px solid #22c55e;padding:14px 18px;background:#0a1a0a;border-radius:4px;">
+          <div style="font-size:10px;color:#22c55e;text-transform:uppercase;letter-spacing:0.15em;font-weight:800;margin-bottom:8px;">Bull Case</div>
+          <div style="font-size:13px;color:#e2e8f0;line-height:1.6;white-space:pre-wrap;">{_esc(debate['bull'])}</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:#475569;">{debate['model_used']} · cache hits {debate['cache_hits']}</div>
+    </div>
+    """
+    else:
+        debate_html = f"""
+    <div style="padding:24px 40px;background:#0b1220;border-bottom:1px solid #1e293b;">
+      <div style="font-size:11px;color:#64748b;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">
+        🗣️ Bear vs Bull Synthesis
+      </div>
+      <div style="font-size:12px;color:#64748b;">
+        Open in the MRI app for the live debate → <a href="https://mri.railway.app/pe-expansion/{_esc(h['symbol'])}" style="color:#0ea5e9;">View Report</a>
+      </div>
+    </div>
+    """
+
     # Section F: footer
     footer_html = f"""
     <div style="padding:24px 40px;background:#020617;border-top:1px solid #1e293b;">
@@ -700,6 +738,7 @@ def render_pe_expansion_email(report: dict[str, Any]) -> str:
     {price_html}
     {primary_html}
     {secondary_html}
+    {debate_html}
     {footer_html}
   </div>
 </body></html>"""

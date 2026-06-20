@@ -1901,6 +1901,36 @@ def build_guidance_report_email_html(payload: dict) -> str:
         '<div style="color:#475569; font-size:0.72rem; margin-top:4px">No verified promises yet</div>'
     )
 
+    # P2 Phase 3: embed debate section (cache-aware, no LLM in email path)
+    debate_section = ''
+    try:
+        from engine_debate.cache import get_latest_debate_for_symbol
+        debate = get_latest_debate_for_symbol(sym, 'guidance')
+        if debate:
+            debate_section = (
+                '<div style="margin-top:24px; padding:20px; background:#0b1220; border:1px solid #1e293b; border-radius:10px;">'
+                + '<div style="font-size:11px; color:#64748b; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:12px;">🗣️ Bear vs Bull Synthesis</div>'
+                + '<div style="display:flex; gap:16px; flex-wrap:wrap;">'
+                + '<div style="flex:1; min-width:220px; border-left:3px solid #ef4444; padding:10px 14px; background:#1a0a0a;">'
+                + '<div style="font-size:10px; color:#ef4444; font-weight:800; text-transform:uppercase; margin-bottom:6px;">Bear Case</div>'
+                + '<div style="font-size:12px; color:#e2e8f0; line-height:1.5;">' + _html_escape(debate['bear']) + '</div></div>'
+                + '<div style="flex:1; min-width:220px; border-left:3px solid #22c55e; padding:10px 14px; background:#0a1a0a;">'
+                + '<div style="font-size:10px; color:#22c55e; font-weight:800; text-transform:uppercase; margin-bottom:6px;">Bull Case</div>'
+                + '<div style="font-size:12px; color:#e2e8f0; line-height:1.5;">' + _html_escape(debate['bull']) + '</div></div>'
+                + '</div>'
+                + '<div style="margin-top:8px; font-size:10px; color:#475569;">' + _html_escape(debate['model_used']) + ' · cache hits ' + str(debate.get('cache_hits', 0)) + '</div>'
+                + '</div>'
+            )
+        else:
+            debate_section = (
+                '<div style="margin-top:24px; padding:16px; background:#0b1220; border:1px solid #1e293b; border-radius:10px;">'
+                + '<div style="font-size:11px; color:#64748b; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:8px;">🗣️ Bear vs Bull Synthesis</div>'
+                + '<div style="font-size:12px; color:#64748b;">Open in the MRI app for the live debate → <a href="https://mri.railway.app/guidance/' + _html_escape(sym) + '" style="color:#0ea5e9;">View Report</a></div>'
+                + '</div>'
+            )
+    except Exception:
+        debate_section = ''
+
     # NOTE: parenthesized string-concat chain below uses explicit '+' on every
     # line. Comments are deliberately placed AFTER the '+' on each line so they
     # do not break implicit string concatenation across newlines.
@@ -1927,6 +1957,7 @@ def build_guidance_report_email_html(payload: dict) -> str:
         + _build_intonation_email_section(payload.get("intonation", {}))  # tone monitor (latest + 9 dims + trajectory)
         + _build_no_verified_promises_warning(payload)  # fallback panel when total_verified == 0
         + achieved_section + missed_section + partial_section + upcoming_section  # promise lists
+        + debate_section
         + '<div style="margin-top:24px; padding:14px; background:#0d1421; border:1px solid #1a2236; border-radius:10px">'  # footer
         + '<div style="color:#475569; font-size:0.72rem; text-align:center; line-height:1.6">'
         + 'GuidanceCheck tracks forward-looking statements from earnings calls and investor presentations.<br>'

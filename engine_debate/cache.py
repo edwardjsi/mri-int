@@ -126,3 +126,48 @@ def store_debate(
         return existing[0] if not isinstance(existing, dict) else existing["id"]
     finally:
         conn.close()
+
+
+def get_latest_debate_for_symbol(symbol: str, context_kind: str) -> Optional[dict]:
+    """Return the most recently cached debate for a symbol + context_kind,
+    regardless of hash. Uses SELECT … ORDER BY generated_at DESC LIMIT 1.
+    Email path uses this because we don't want to build the context just
+    to compute a hash (expensive on the email send-path).
+    """
+    sym = symbol.upper().strip()
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT bear_text, bull_text, adjudicator, model_used,
+                      generated_at, cache_hits
+               FROM conviction_debates
+               WHERE symbol = %s AND context_kind = %s
+               ORDER BY generated_at DESC
+               LIMIT 1""",
+            (sym, context_kind),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        if isinstance(row, dict):
+            return {
+                "bear": row["bear_text"],
+                "bull": row["bull_text"],
+                "adjudicator": row["adjudicator"],
+                "model_used": row["model_used"],
+                "generated_at": row["generated_at"].isoformat() if row["generated_at"] else None,
+                "cache_hits": row["cache_hits"] or 0,
+                "cached": True,
+            }
+        return {
+            "bear": row[0],
+            "bull": row[1],
+            "adjudicator": row[2],
+            "model_used": row[3],
+            "generated_at": row[4].isoformat() if row[4] else None,
+            "cache_hits": row[5] or 0,
+            "cached": True,
+        }
+    finally:
+        conn.close()
