@@ -2129,3 +2129,85 @@ All addendum code complete. **Awaiting backfill (~73 min) before final commit + 
 
 ---
 
+
+---
+
+## 📅 Session: June 20, 2026 — Backtest Architecture Plan (Complete)
+
+**Session Start:** ~14:00 IST
+**Session End:** ~16:30 IST (estimated)
+**Branch:** feature/data-richness
+
+### What Was Done This Session
+
+#### 1. Phase 1 — Signal Discovery + Golden Cross Audit ✅
+- [x] Searched History.html / Performance.html for Golden Cross references — found dead components + AAE quant terminology.
+- [x] Determined original system was NOT Golden Cross; first quant model was aae_quant_backtest_5y.py (fundamental + EMA trend).
+- [x] Documented in docs/BACKTEST_PLAN.md: signal path map, data audit, dead code inventory.
+- **Commit**: 9db2fc7
+
+#### 2. Phase 2 — Individual Subsystem Backtests ✅
+- [x] **STEE**: 10-year backtest using CSV backup. 2,680 trades, 21.53% CAGR. Manual metric corrections for NaN bug.
+- [x] **MRI Score**: 2.25-year backtest using stock_scores DB. 36 trades, -39.41% CAGR.
+- [x] **Breakout Radar**: 2.25-year backtest. 41 trades, -12.92% CAGR.
+- [x] **PERX**: Diagnostic-only. 1 day of data. Cannot backtest.
+- **Commit**: 12f86a3
+
+#### 3. Phase 3 — Composite Ecosystem Backtest ✅
+- [x] Built scripts/backtest_composite.py (174 lines).
+- [x] 10-year simulation: STEE base + MRI overlay (2024+) + 5-position cap.
+- [x] 1,153 trades, 3.0% CAGR, -88.94% Max DD.
+- [x] Advanced metrics: Beta 0.46, Sortino 6.63, Walk-Forward Sharpe 0.42.
+- [x] **Key finding**: Composite underperforms STEE by 18.5% CAGR.
+- **Commit**: 35f422c
+
+#### 4. Phase 4 — Investor Report + Documentation ✅
+- [x] Generated docs/INVESTOR_PERFORMANCE_REPORT.md (11.5KB).
+- [x] Honest NO-GO verdict: Composite fails ALL 6 Go/No-Go criteria.
+- [x] Root cause analysis + action plan + reproducibility instructions.
+- [x] Updated Sessions.md and Progress.md with full backtest history.
+
+### Key Metrics
+
+| Subsystem | Period | CAGR | Win Rate | Sharpe | Max DD |
+|---|---|---|---|---|---|
+| STEE Standalone | 2014-2024 | 21.53% | 41.38% | TBD | TBD |
+| MRI Score | 2024-2026 | -39.41% | 50.0% | -0.37 | -67.35% |
+| Breakout Radar | 2024-2026 | -12.92% | — | -0.78 | -27.96% |
+| PERX | N/A | N/A | — | — | — |
+| Composite | 2014-2024 | 3.0% | 40.4% | 0.63 | -88.94% |
+| Nifty 50 | 2014-2024 | 16.49% | — | — | — |
+
+### Decisions
+
+1. **Original system was not Golden Cross** — AAE quant fundamental + EMA trend (Decision 068).
+2. **STEE standalone produces alpha** — 21.53% CAGR is strongest evidence.
+3. **MRI overlay kills alpha in current config** — composite CAGR drops to 3.0%.
+4. **PERX not ready** — needs 3+ year backfill.
+5. **NO capital deployment** until composite passes 5/6 Go/No-Go criteria.
+
+### Next Steps
+
+1. Reconstruct stock_scores history to 2014
+2. Fix NaN price tracking in composite
+3. Tune MRI score thresholds (40/50/60/70)
+4. Remove 5-position cap, test 10/20/unlimited
+5. Run TC Stress Test at 2× costs
+6. 3-month live paper trading
+
+### Artifacts
+
+- docs/BACKTEST_PLAN.md (12KB)
+- docs/INVESTOR_PERFORMANCE_REPORT.md (11.5KB)
+- scripts/backtest_composite.py | scripts/backtest_mri_score.py | scripts/backtest_breakout.py | scripts/backtest_perx.py
+- outputs/composite_backtest.csv | outputs/composite_backtest_report.md
+- outputs/mri_score_backtest.csv | outputs/mri_score_backtest_report.md
+- outputs/breakout_backtest.csv | outputs/breakout_backtest_report.md
+- outputs/perx_backtest_report.md
+- outputs/stee_backtest_report.md
+
+### Tests
+
+- [x] All 47+ backend tests pass (engine_debate, engine_fundamental, engine_core, api)
+- **No regressions introduced** — all changes confined to scripts/ and docs/
+

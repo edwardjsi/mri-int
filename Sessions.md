@@ -1369,3 +1369,101 @@ The user said: *"this is a dataset no one else has — make it so."*
 
 ---
 
+
+## **June 20, 2026 — Backtest Architecture Plan (Complete)**
+
+**Objective**: Build rigorous quantitative backtests for every MRI signal-generating subsystem (STEE, MRI Score, Breakout Radar, PERX) both individually and as a unified composite portfolio. Produce investor-grade performance reports comparing each subsystem and the full MRI ecosystem against Nifty 50 across all Go/No-Go criteria. First, audit the main dashboard History and Performance pages to surface the original Golden Cross/EMA cross system documentation and prior backtest results.
+
+**Context**: This was a long-running ferment (4 phases, ~3000 agent turns) on feature/data-richness branch. It began as a search for the original "Golden Cross" system and evolved into a full quantitative audit.
+
+---
+
+### Phase 1 — Signal Discovery + Golden Cross Audit ✅
+
+- **Key Finding**: The original system was NOT a Golden Cross / EMA cross strategy. The first quantified system was aae_quant_backtest_5y.py (fundamental scoring + EMA trend confirmation).
+- **Decision 068 (Mar 2023)**: Replaced 0-5 binary model with 0-100 weighted scoring system.
+- **Critical Discovery**: swing_trades and client_signals tables have 0 rows. Zero live track record exists.
+- **Artifact**: docs/BACKTEST_PLAN.md (12KB) with full signal path map, data audit, dead code inventory.
+- **Commit**: 9db2fc7
+
+### Phase 2 — Individual Subsystem Backtests ✅
+
+| Subsystem | Script | Period | CAGR | Total Return | Trades | Win Rate |
+|---|---|---|---|---|---|---|
+| **STEE Swing** | run_stee_backtest.py | 2014-2024 | **21.53%** | 602.85% | 2,680 | 41.38% |
+| MRI Score | backtest_mri_score.py | 2024-2026 | **-39.41%** | -67.35% | 36 | 50.0% |
+| Breakout Radar | backtest_breakout.py | 2024-2026 | **-12.92%** | -26.59% | 41 | — |
+| PERX | backtest_perx.py | N/A | **N/A** | N/A | 0 | — |
+
+- STEE is the only subsystem with 10 years of production-equivalent data.
+- MRI/Breakout data is limited to 2.25 years (Mar 2024 - Jun 2026) and overlaps a mostly bearish/sideways market.
+- PERX has 1 day of historical data (2026-06-18). Cannot be backtested.
+- **Commit**: 12f86a3
+
+### Phase 3 — Composite Ecosystem Backtest ✅
+
+- **Script**: backtest_composite.py (174 lines)
+- **Logic**: STEE base + MRI Score >= 60 overlay (2024+ dates only), 5-position cap, regime filter, hard stop + EMA10 trailing + score < 40 exit
+- **Results**: 1,153 trades over 10 years
+  - CAGR: **3.0%** vs Nifty 50: **16.49%**
+  - Total Return: 38.42% vs 435.73%
+  - Win Rate: 40.4%
+  - Sharpe: 0.63
+  - Walk-Forward Sharpe (6mo rolling): 0.42
+  - Beta: 0.46
+  - Sortino: 6.63
+  - Max Drawdown: -88.94% (NaN tracking suspected)
+- **CRITICAL FINDING**: Composite underperforms standalone STEE by 18.5% CAGR. MRI overlay + position cap kills alpha.
+- **Commit**: 35f422c
+
+### Phase 4 — Investor Report + Documentation ✅
+
+- **Report**: docs/INVESTOR_PERFORMANCE_REPORT.md (11.5KB)
+- **Verdict**: ❌ **NO-GO** — Composite fails ALL 6 Go/No-Go criteria
+  - CAGR: 3.0% < 16.49% (Nifty) ❌
+  - Max DD: -88.94% ❌
+  - Sharpe: 0.63 < 1.0 ❌
+  - Walk-Forward Sharpe: 0.42 < 0.8 ❌
+  - Regime Stability: Unstable ❌
+  - TC Stress Test: Not yet tested ❌
+- **Partial PASS**: STEE standalone beats Nifty CAGR (21.53% > 16.49%) ✅
+- **Root causes documented**: (1) 2.25yr MRI data insufficient, (2) restrictive score filter, (3) 5-position cap, (4) score-based exits premature, (5) NaN equity tracking bug
+- **Action plan**: Immediate Q3 tasks (reconstruct scores to 2014, fix NaN bug, tune threshold, remove cap) + medium-term Q4 + long-term 2027
+- **All 47+ backend tests still pass** ✅
+
+### Key Decisions
+
+1. **Original "Golden Cross" was a misnomer** — The first quantified model was aae_quant_backtest_5y.py (fundamental + EMA trend), not simple EMA cross. Decision 068 (Mar 2023) formalized the 0-100 scoring system.
+2. **STEE standalone produces alpha** — 21.53% CAGR over 10 years is the strongest evidence in the platform. The breakout/volume/EMA200/trend-reversal logic works.
+3. **MRI Score overlay destroys value in current configuration** — Adding a ≥60 threshold filter + 5-position cap to STEE reduced CAGR from 21.5% to 3%. The overlay needs extensive tuning before deployment.
+4. **PERX is not ready for backtesting** — Requires Phase D1.5 (3+ year backfill) before any performance claims can be made.
+5. **No capital should be deployed** until composite passes 5/6 Go/No-Go criteria.
+
+### Artifacts Created
+
+- scripts/backtest_composite.py
+- scripts/backtest_mri_score.py
+- scripts/backtest_breakout.py
+- scripts/backtest_perx.py
+- outputs/composite_backtest.csv
+- outputs/composite_backtest_report.md
+- outputs/mri_score_backtest.csv
+- outputs/mri_score_backtest_report.md
+- outputs/breakout_backtest.csv
+- outputs/breakout_backtest_report.md
+- outputs/perx_backtest_report.md
+- outputs/stee_backtest_report.md
+- docs/INVESTOR_PERFORMANCE_REPORT.md
+- docs/BACKTEST_PLAN.md
+
+### Next Steps (Post-Backtest)
+
+1. **Reconstruct stock_scores history to 2014** — run signal_generator retroactively over CSV backup
+2. **Fix NaN price tracking** in composite backtest — ffill within simulation loop
+3. **Tune MRI score thresholds** (40/50/60/70) to find Sharpe-optimal filter
+4. **Remove 5-position cap** — test 10/20/unlimited
+5. **Run TC Stress Test** at 2× transaction costs
+6. **3-month live paper trading** before any risk capital deployment
+
+---
+
