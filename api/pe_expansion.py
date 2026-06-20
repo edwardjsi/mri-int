@@ -902,6 +902,25 @@ def get_pe_expansion(symbol: str) -> dict[str, Any]:
     return report
 
 
+@router.get("/{symbol}/debate")
+def get_pe_expansion_debate_cached(symbol: str):
+    """Read-only cached debate retrieval. No LLM calls. Returns the cached
+    bear/bull debate if available, or an empty dict with cached=False if
+    the debate hasn't been generated yet.
+    """
+    from engine_debate.cache import canonical_hash, lookup_debate
+    from engine_debate.context_pe_expansion import build_pe_expansion_context
+    sym = symbol.upper().replace(".NS", "").replace(".BO", "").strip()
+    if not sym:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    ctx = build_pe_expansion_context(sym)
+    h = canonical_hash(ctx)
+    cached = lookup_debate(sym, "pe_expansion", h)
+    if cached:
+        cached["cached"] = True
+        cached["context_hash"] = h
+        return cached
+    return {"cached": False, "exists": False, "symbol": sym, "context_hash": h}
 # ── Bear vs Bull Debate (FeatureRequest 2026-06-19, Phase 3) ────────
 
 @router.post("/{symbol}/debate")

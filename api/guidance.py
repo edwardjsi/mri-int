@@ -887,7 +887,28 @@ def trigger_guidance_scan(
     return {"status": "queued", "symbol": symbol.upper()}
 
 
-# ── Bear vs Bull Debate (FeatureRequest 2026-06-19, Phase 2) ────────
+@router.get("/{symbol}/debate")
+def get_guidance_debate_cached(symbol: str):
+    """Read-only cached debate retrieval. No LLM calls. Returns the cached
+    bear/bull debate if available, or an empty dict with cached=False if
+    the debate hasn't been generated yet.
+    """
+    from engine_debate.cache import canonical_hash, lookup_debate
+    from engine_debate.context_guidance import build_guidance_context
+    sym = symbol.upper().strip()
+    if not sym:
+        raise HTTPException(400, "symbol is required")
+    ctx = build_guidance_context(sym)
+    h = canonical_hash(ctx)
+    cached = lookup_debate(sym, "guidance", h)
+    if cached:
+        cached["cached"] = True
+        cached["context_hash"] = h
+        return cached
+    return {"cached": False, "exists": False, "symbol": sym, "context_hash": h}
+
+
+# M-bM-^TM-^@M-bM-^TM-^@ Bear vs Bull Debate (FeatureRequest 2026-06-19, Phase 2) M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@M-bM-^TM-^@
 
 @router.post("/{symbol}/debate")
 def run_guidance_debate(
