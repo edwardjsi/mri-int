@@ -1,4 +1,5 @@
 import logging
+import math
 import json
 from datetime import datetime
 from engine_core.db import get_connection
@@ -64,6 +65,18 @@ def get_qil_sources_for_ticker(symbol):
 
 
 # ─── Phase D1: per-year detail aggregation ────────────────────────────────
+
+def _sanitize_for_json(obj):
+    """Recursively replace NaN/Inf floats with 0.0 so JSON serialization
+    succeeds (Postgres JSONB rejects NaN)."""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else 0.0
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_for_json(v) for v in obj]
+    return obj
+
 
 def _build_agent_details_json(agents_results, financials):
     """
@@ -135,7 +148,8 @@ def _build_agent_details_json(agents_results, financials):
     # Trajectory summary — computed from the latest two years of available data
     trajectory = _compute_trajectory_summary(agents_results, financials, years)
 
-    return {"by_year": by_year, "trajectory": trajectory}
+    sanitized = _sanitize_for_json({"by_year": by_year, "trajectory": trajectory})
+    return sanitized
 
 
 def _compute_trajectory_summary(agents_results, financials, years):
@@ -187,11 +201,23 @@ def _compute_trajectory_summary(agents_results, financials, years):
                 rev_now = float(f.get("revenue") or 0)
             if f.get("year") is not None and int(f["year"]) == years[-4]:
                 rev_3y_prior = float(f.get("revenue") or 0)
-        if rev_now and rev_3y_prior:
+        # Guard against NaN/Inf/zero in either operand — NaN serializes to
+        # invalid JSONB in Postgres, so sanitize upstream.
+        def _is_finite_number(v):
+            try:
+                f = float(v)
+                return math.isfinite(f) and f > 0
+            except (TypeError, ValueError):
+                return False
+        if _is_finite_number(rev_now) and _is_finite_number(rev_3y_prior):
             years_diff = latest_y - years[-4]
             if years_diff > 0:
-                cagr = ((rev_now / rev_3y_prior) ** (1.0 / years_diff) - 1.0) * 100.0
-                revenue_cagr_3y_pct = round(cagr, 2)
+                try:
+                    cagr = ((rev_now / rev_3y_prior) ** (1.0 / years_diff) - 1.0) * 100.0
+                    if math.isfinite(cagr):
+                        revenue_cagr_3y_pct = round(cagr, 2)
+                except (ValueError, OverflowError, ZeroDivisionError):
+                    pass
 
     # Score trend classification — based on roce + margin direction
     score_trend = "stable"

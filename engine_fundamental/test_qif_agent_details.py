@@ -390,3 +390,103 @@ class PipelineDBTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ── NaN/Inf sanitization (GROWW-style defensive fix) ───────────────────
+
+class NaNSanitizationTests(unittest.TestCase):
+    """Defensive: financials with NaN values (e.g. recent IPOs, missing
+    data in early years) must not crash the pipeline. The trajectory
+    summary must sanitize NaN/Inf to 0.0 before JSON serialization."""
+
+    def test_nan_revenue_does_not_crash(self):
+        """GROWW has NaN revenue in 2023/2024 — pipeline should still
+        complete and write a valid (sanitized) agent_details JSONB."""
+        sym = _make_test_symbol()
+        # Insert NaN revenue for early years
+        conn = get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO fundamental_financials
+                (symbol, year, revenue, ebitda, net_profit, total_assets,
+                 capital_employed, receivables, inventory, debt, equity)
+                VALUES (%s, 2023, 'NaN'::numeric, 'NaN'::numeric, NULL,
+                        NULL, NULL, NULL, NULL, NULL, NULL)
+                ON CONFLICT (symbol, year) DO UPDATE SET
+                    revenue = EXCLUDED.revenue,
+                    ebitda = EXCLUDED.ebitda
+            """, (sym,))
+            cur.execute("""
+                INSERT INTO fundamental_financials
+                (symbol, year, revenue, ebitda, net_profit, total_assets,
+                 capital_employed, receivables, inventory, debt, equity)
+                VALUES (%s, 2024, 'NaN'::numeric, 'NaN'::numeric, NULL,
+                        NULL, NULL, NULL, NULL, NULL, NULL)
+                ON CONFLICT (symbol, year) DO UPDATE SET
+                    revenue = EXCLUDED.revenue,
+                    ebitda = EXCLUDED.ebitda
+            """, (sym,))
+            cur.execute("""
+                INSERT INTO fundamental_financials
+                (symbol, year, revenue, ebitda, net_profit, total_assets,
+                 capital_employed, receivables, inventory, debt, equity)
+                VALUES (%s, 2025, 39017230000, 25309310000, NULL,
+                        NULL, NULL, NULL, NULL, NULL, NULL)
+                ON CONFLICT (symbol, year) DO UPDATE SET
+                    revenue = EXCLUDED.revenue,
+                    ebitda = EXCLUDED.ebitda
+            """, (sym,))
+            cur.execute("""
+                INSERT INTO fundamental_financials
+                (symbol, year, revenue, ebitda, net_profit, total_assets,
+                 capital_employed, receivables, inventory, debt, equity)
+                VALUES (%s, 2026, 46445790000, 29152260000, NULL,
+                        NULL, 185409230000, NULL, NULL, NULL, NULL)
+                ON CONFLICT (symbol, year) DO UPDATE SET
+                    revenue = EXCLUDED.revenue,
+                    ebitda = EXCLUDED.ebitda,
+                    capital_employed = EXCLUDED.capital_employed
+            """, (sym,))
+            conn.commit()
+        finally:
+            conn.close()
+
+        try:
+            result = run_quality_pipeline(sym)
+            self.assertIsNotNone(result, "pipeline must not crash on NaN inputs")
+            ad = result["agent_details"]
+            self.assertIn("by_year", ad)
+            self.assertEqual(len(ad["by_year"]), 4)
+            # Trajectory should have a sanitized revenue_cagr_3y_pct (not NaN)
+            traj = ad["trajectory"]
+            self.assertIn("revenue_cagr_3y_pct", traj)
+            self.assertEqual(traj["revenue_cagr_3y_pct"], 0.0,
+                             "NaN revenue in early years must yield CAGR=0, not NaN")
+        finally:
+            conn = get_connection()
+            try:
+                _cleanup(conn.cursor(), sym)
+                conn.commit()
+            finally:
+                conn.close()
+
+    def test_sanitize_helper_replaces_nan_and_inf(self):
+        from engine_fundamental.pipeline import _sanitize_for_json
+        import math
+        # NaN/Inf should become 0.0
+        self.assertEqual(_sanitize_for_json(float("nan")), 0.0)
+        self.assertEqual(_sanitize_for_json(float("inf")), 0.0)
+        self.assertEqual(_sanitize_for_json(float("-inf")), 0.0)
+        # Regular numbers pass through
+        self.assertEqual(_sanitize_for_json(1.5), 1.5)
+        # Nested dicts and lists are recursed
+        d = {"a": float("nan"), "b": [1.0, float("inf"), {"c": float("-inf")}]}
+        s = _sanitize_for_json(d)
+        self.assertEqual(s["a"], 0.0)
+        self.assertEqual(s["b"][0], 1.0)
+        self.assertEqual(s["b"][1], 0.0)
+        self.assertEqual(s["b"][2]["c"], 0.0)
+        # Sanity: result is JSON-serializable
+        import json
+        json.dumps(s)  # should not raise
