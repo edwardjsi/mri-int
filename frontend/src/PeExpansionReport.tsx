@@ -1,6 +1,7 @@
 import { Fragment, ReactNode, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from './api';
 import DebateModal from './DebateModal';
+import EmbeddedDebateSection from './EmbeddedDebateSection';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -476,6 +477,10 @@ const [showDebate, setShowDebate] = useState(false);
             </div>
           );
         })()}
+        {/* ── Bear vs Bull Debate (embedded) ── */}
+        {report.header && (
+          <EmbeddedDebateSection symbol={report.header.symbol} contextKind="pe_expansion" />
+        )}
         {/* ── Manager Track Record strip ── */}
         {report.credibility && report.credibility.verdict_zone && (() => {
           const cred = report.credibility!;
