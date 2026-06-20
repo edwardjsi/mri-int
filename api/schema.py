@@ -307,6 +307,7 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE public.quality_verdicts ADD COLUMN IF NOT EXISTS velocity NUMERIC;")
     cur.execute("ALTER TABLE public.quality_verdicts ADD COLUMN IF NOT EXISTS qil_score DECIMAL DEFAULT 0;")
     cur.execute("ALTER TABLE public.quality_verdicts ADD COLUMN IF NOT EXISTS qil_flags TEXT[] DEFAULT '{}';")
+    cur.execute("ALTER TABLE public.quality_verdicts ADD COLUMN IF NOT EXISTS agent_details JSONB DEFAULT '{}'::jsonb;")
 
     # Quality Verdicts History (for trajectory and trend detection)
     cur.execute(
