@@ -12,6 +12,7 @@ import ConvictionEngine from './ConvictionEngine';
 import ManagementIntegrityPanel from './ManagementIntegrityPanel';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import PeExpansionReport from './PeExpansionReport';
+import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -217,6 +218,9 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
         />
 
         <QualityVerdict symbol={stock.symbol} />
+
+        {/* ── Bear vs Bull Debate (embedded) ── */}
+        <EmbeddedDebateSection symbol={stock.symbol} contextKind="guidance" />
 
         {aaeLoading && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>🔄 Fetching Institutional AAE Data...</div>}
         
