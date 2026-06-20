@@ -912,7 +912,7 @@ def _fetch_financial_quality(symbol: str) -> dict[str, Any] | None:
                        revenue_score, margin_score, leverage_score,
                        wc_score, roce_score, evolution_score
                        {select_translation},
-                       flags, updated_at
+                       flags, agent_details, updated_at
                FROM quality_verdicts
                WHERE UPPER(symbol) = %s
                ORDER BY updated_at DESC NULLS LAST
@@ -940,11 +940,23 @@ def _fetch_financial_quality(symbol: str) -> dict[str, Any] | None:
                 flags = [flags] if flags else []
         if not isinstance(flags, list):
             flags = []
+        agent_details = row.get("agent_details")
+        if isinstance(agent_details, str):
+            try:
+                agent_details = json.loads(agent_details)
+            except (ValueError, TypeError):
+                agent_details = None
+        # Normalize empty {} → None so the LLM context builder doesn't ship
+        # an empty dict and the cache hash treats "no data" consistently.
+        if isinstance(agent_details, dict) and not agent_details:
+            agent_details = None
+
         return {
             "score": float(row["score"]) if row["score"] is not None else None,
             "category": row["category"],
             "agents": agents,
             "flags": [str(f) for f in flags if f],
+            "agent_details": agent_details,
             "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
         }
     finally:
