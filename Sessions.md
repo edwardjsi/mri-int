@@ -1,3 +1,44 @@
+## **July 3, 2026 (cont.): Breakout Age on Swing Momentum — Decision 099 Wiring**
+
+**Objective**: Land the final piece of Decision 099 (Breakout Age Tracking) — wire the existing Breakout Age data into the Swing Momentum page (`ShadowMomentumPage`), reusing the `BreakoutBadge` component already in use on Breakout Radar. No backend invention needed: `api/signals.py` already had the enrichment written but uncommitted.
+
+**Actions**:
+
+- **Audited Decision 099 execution status**:
+  - Phase 1 (Schema + Indicator Engine): `c4f0bbc` shipped — `migrations/006_breakout_age.sql`, `engine_core/indicator_engine.py:288-294` sequential age computation, `api/schema.py:238-241` auto-migration.
+  - Phase 2 (Breakout Radar API): `c4f0bbc` shipped — `api/breakout_status.py` `AGE_DECAY`/`_age_label`/enrichment/age-sorted SQL.
+  - Phase 3 (Breakout Radar UI): `c4f0bbc` + `36c1785` (sort headers) + `9cfa123` (hook-order fix) shipped — `frontend/src/BreakoutRadar.tsx`.
+  - Phase 4 (STEE): `c4f0bbc` shipped — `engine_core/swing_execution_engine.py:46,123` age-aware position sizing.
+  - **Swing Momentum wiring (this session)**: only remaining surface.
+
+- **Backend (already written, never committed)**:
+  - `api/signals.py` had uncommitted changes adding `_age_label` (lines 12-37), `dp.breakout_age` to SELECT (line 50), `age_info = _age_label(...)` per row (line 71), and `breakout_age` + `age_info` in the response dict (lines 88-89). Was likely written in the same prior session that did the rest of Decision 099 but never staged.
+  - Decision: leave the local copy (identical to `api/breakout_status.py:_age_label`) — it's a copy-paste but not a correctness bug, and deduping is scope creep. Documented as a future cleanup item in Progress.md.
+
+- **Frontend (this session's actual edit)** — `frontend/src/App.tsx` `ShadowMomentumPage`:
+  - `BreakoutBadge` already imported at line 5 — no new import needed.
+  - Wrapped the existing `<span className="signal-symbol">{s.symbol}</span>` in a flex row container and placed `<BreakoutBadge state={s.breakout_state} ageInfo={s.age_info} />` immediately after it.
+  - Visual structure now: `[SYMBOL] [BREAKOUT AGE BADGE]` on row 1, then existing `🚀 GOLDEN SETUP` / `✨ BREAKOUT` tags, then Price/V-Surge details, then EMA/Slope/RS chips. No other layout changes.
+  - **Reuse pattern confirmed**: same `<BreakoutBadge state= ageInfo= />` JSX that BreakoutRadar.tsx uses in its status column. Visual consistency comes for free from the shared `BreakoutBadge` component (`frontend/src/BreakoutBadge.tsx`) — zone-based color, emoji, and label are all driven by the same `age_info` dict the API already returns.
+
+- **Decision 099 status flip** (`Decisions.md`):
+  - Was: `Status: DRAFT — awaiting user approval.`
+  - Now: `Status: FINAL — executed 2026-07-03.` with pointers to all 4 phase commits (`c4f0bbc`, `36c1785`, `9cfa123`, `8f6dc5f`) plus this session's Swing Momentum wiring commit.
+
+- **Verification**:
+  - `python3 -m py_compile api/signals.py` → clean.
+  - `cd frontend && npx tsc --noEmit` → "TypeScript: No errors found".
+  - No runtime smoke test in this environment (no live API / browser); Railway will deploy on push and the Swing Momentum page will pick up the new badge automatically since the API contract is additive (existing fields unchanged).
+
+**Result**: Decision 099 is fully closed. Breakout Age is now visible on Breakout Radar (grouped sections + age column + priority column) **and** Swing Momentum (single badge next to each Top-10 pick). Same data, same `age_info` dict, same `BreakoutBadge` component — one source of truth, two surfaces.
+
+**Next Step**:
+- (a) Optional dedupe: collapse the two identical `_age_label` functions into one shared module. Defer until it causes a bug.
+- (b) Backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows (still deferred from June).
+- (c) Decide next roadmap item — Data Richness Sprint (Decision 098) is the highest-value pending work.
+
+---
+
 ## **June 19, 2026 (cont., evening): Data Richness Sprint — Initiative Doc + Embedded Debate + Dockerfile Fix**
 
 **Objective**: Close three production gaps surfaced by the bear/bull debate engine on real symbols: (1) QPOWER ranked #2 with zero orthogonal data, (2) KirlosEngine bear case argued from a single flag instead of underlying numbers, (3) Dockerfile not copying `engine_debate/` causing production 500s.

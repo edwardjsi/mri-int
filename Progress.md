@@ -2,6 +2,38 @@
 
 ---
 
+## 📅 Session: July 3, 2026 (cont.) — Breakout Age on Swing Momentum Page (Decision 099 wiring)
+
+**Session Start:** ~10:30 IST
+**Session End:** ~10:45 IST
+
+### What Was Done This Session
+
+#### 1. Decision 099 Wiring — Swing Momentum Page ✅
+- [x] Audited the codebase for the Breakout Age plan: Phases 1–4 are already shipped across prior commits (`c4f0bbc` schema+indicator+API+STEE, `36c1785` radar sorting, `9cfa123` radar sort hooks fix). Only the Swing Momentum page (`ShadowMomentumPage` in `frontend/src/App.tsx`) was missing.
+- [x] Discovered the backend enrichment for `/api/signals/shadow` was already written but **uncommitted** — `api/signals.py` already SELECTs `dp.breakout_age`, defines a local `_age_label`, computes `age_info` per row, and returns both fields. No backend code change required; just needed to land in git.
+- [x] **Frontend change**: `frontend/src/App.tsx` `ShadowMomentumPage` — wrapped the symbol in a flex row and added `<BreakoutBadge state={s.breakout_state} ageInfo={s.age_info} />` next to it. `BreakoutBadge` component was already imported at line 5 — true reuse, no new components, no copy-paste. Same visual language as Breakout Radar (🔥 ✅ 📈 ⚠️ 💤 for `BROKEN_OUT`; ⚡ 🌀 ⏳ for `READY_TO_BREAKOUT`; ⏳ `CONSOLIDATING`).
+- [x] Decision 099 status flipped from `DRAFT — awaiting user approval` to `FINAL — executed 2026-07-03` with pointers to all 4 phase commits + this session's Swing Momentum wiring commit.
+
+#### 2. Verification ✅
+- [x] `python3 -m py_compile api/signals.py` → clean.
+- [x] `cd frontend && npx tsc --noEmit` → "TypeScript: No errors found".
+- [x] Visual structure: `[SYMBOL] [BREAKOUT AGE BADGE]` on row 1, then `🚀 GOLDEN SETUP` / `✨ BREAKOUT` tags below, then Price/V-Surge details, then condition chips. The existing `✨ BREAKOUT` tag (driven by `condition_breakout_10d`) is preserved alongside the new age badge — they answer different questions ("is this a 10-day high break?" vs "how fresh is the breakout state?").
+
+### 📌 Current Milestone
+- **Decision 099 (Breakout Age Tracking) is FINAL and shipped across 6 commits**:
+  - `c4f0bbc feat: Implement Breakout Age filtering and tracking` (Phases 1, 2, 3-initial, 4)
+  - `36c1785 feat: Add sorting capability to Breakout Radar tables`
+  - `9cfa123 fix: stabilize Breakout Radar sort hooks`
+  - `8f6dc5f fix: Add missing engine_mosi/ to Dockerfile` (Dockerfile fix shipped same morning)
+  - This session: Swing Momentum wiring + Decision 099 status flip
+- **Next:**
+  - (a) Optional cleanup: dedupe `_age_label` between `api/breakout_status.py` and `api/signals.py` (copy-paste — both identical). Defer until it causes a real bug.
+  - (b) Backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows (still deferred from June).
+  - (c) Decide next roadmap item — Data Richness Sprint (Decision 098) is the highest-value pending work.
+
+---
+
 ## 📅 Session: July 3, 2026 — Breakout Radar Sort Verification
 
 **Session Start:** ~10:00 IST

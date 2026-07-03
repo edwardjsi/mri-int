@@ -947,7 +947,10 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
             >
               <div className="signal-header">
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span className="signal-symbol">{s.symbol}</span>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span className="signal-symbol">{s.symbol}</span>
+                    <BreakoutBadge state={s.breakout_state} ageInfo={s.age_info} />
+                  </div>
                   {isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#22c55e', fontWeight: 800 }}>🚀 GOLDEN SETUP</span>}
                   {isBreakout && !isGoldenSetup && <span className="score-trend-indicator" style={{ fontSize: '10px', marginTop: '2px', color: '#60a5fa', fontWeight: 800 }}>✨ BREAKOUT</span>}
                 </div>

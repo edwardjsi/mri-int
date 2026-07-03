@@ -2273,4 +2273,11 @@ Decision:
 5. Add soft age filter to STEE: Day 0-2 = full position, Day 3-5 = 50% size reduction, Day >5 = skip entry.
 6. Schema change is additive-only (`ADD COLUMN IF NOT EXISTS`), idempotent, no destructive change. Safe under Decision 027 RDS protection rules.
 Reason: `breakout_state` is a stateless snapshot — two stocks can both be BROKEN_OUT with MRI Score 95, but one is Day 0 (fresh, actionable) and the other is Day 7 (mature, most thrust spent). Breakout Age adds a timing-freshness dimension that pairs with Trajectory Score: score measures setup quality, age measures timing quality. The Breakout Radar is the primary consumer (discovery + prioritization), STEE uses it for position sizing, and Morning Brief uses it for BUY/SKIP/WATCH verdicts. $0 LLM cost, pure deterministic computation.
-Status: **DRAFT — awaiting user approval.** Full execution plan in `docs/BREAKOUT_AGE_EXECUTION_PLAN_2026-07-03.md`.
+Status: **FINAL — executed 2026-07-03.** All 4 phases shipped across prior commits:
+- Phase 1 (Schema + Indicator Engine): `c4f0bbc feat: Implement Breakout Age filtering and tracking` — `migrations/006_breakout_age.sql`, `engine_core/indicator_engine.py` (`INDICATOR_COLUMNS` +41, sequential age computation lines 288-294, persistence at 323/376/468), `api/schema.py:238-241` auto-migration.
+- Phase 2 (Breakout Radar API): landed in `c4f0bbc` — `api/breakout_status.py` (`AGE_DECAY` 174-181, `_age_label` 184-206, enrichment at 297-319, age-sorted SQL ORDER BY at 281).
+- Phase 3 (Breakout Radar UI): landed in `c4f0bbc` (initial age-grouped sections) + `36c1785 feat: Add sorting capability to Breakout Radar tables` + `9cfa123 fix: stabilize Breakout Radar sort hooks` — `frontend/src/BreakoutRadar.tsx`.
+- Phase 4 (STEE integration): landed in `c4f0bbc` — `engine_core/swing_execution_engine.py:46,123` (age column select + age-aware `size_modifier` reduction for Day 3-5, skip for >5).
+- **Swing Momentum wiring (this session)**: `api/signals.py` enriched `/signals/shadow` with `breakout_age` + `age_info`; `frontend/src/App.tsx ShadowMomentumPage` renders `<BreakoutBadge state={s.breakout_state} ageInfo={s.age_info} />` next to each Top-10 symbol — same pattern as Breakout Radar.
+
+Full execution plan in `docs/BREAKOUT_AGE_EXECUTION_PLAN_2026-07-03.md`.

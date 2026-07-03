@@ -9,6 +9,31 @@ from api.deps import get_db, get_current_client
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
 
+def _age_label(state: str, age: int | None) -> dict:
+    if state == 'CONSOLIDATING' or age is None:
+        return {"label": "CONSOLIDATING", "emoji": "⏳", "zone": "none"}
+
+    if state == 'BROKEN_OUT':
+        if age == 0:
+            return {"label": "BREAKOUT TODAY", "emoji": "🔥", "zone": "fresh"}
+        if age == 1:
+            return {"label": "FIRST FOLLOW-THROUGH", "emoji": "✅", "zone": "fresh"}
+        if age <= 3:
+            return {"label": "EARLY CONTINUATION", "emoji": "📈", "zone": "early"}
+        if age <= 5:
+            return {"label": "LATE ENTRY ZONE", "emoji": "⚠️", "zone": "late"}
+        return {"label": "MATURE BREAKOUT", "emoji": "💤", "zone": "mature"}
+
+    if state == 'READY_TO_BREAKOUT':
+        if age <= 2:
+            return {"label": "FRESH SETUP", "emoji": "⚡", "zone": "fresh"}
+        if age <= 7:
+            return {"label": "VCP COILING", "emoji": "🌀", "zone": "coiling"}
+        return {"label": "MATURE SETUP", "emoji": "⏳", "zone": "mature"}
+
+    return {"label": state, "emoji": '', "zone": 'unknown'}
+
+
 @router.get("/shadow")
 def get_shadow_signals(conn=Depends(get_db)):
     """Top 10 stocks regardless of regime, specifically for swing trade audit."""
@@ -20,7 +45,7 @@ def get_shadow_signals(conn=Depends(get_db)):
                    s.condition_ema_50_200, s.condition_ema_200_slope,
                    s.condition_6m_high, s.condition_volume, s.condition_rs,
                    s.condition_breakout_10d, s.condition_price_quality,
-                   dp.close, dp.breakout_state
+                   dp.close, dp.breakout_state, dp.breakout_age
             FROM public.stock_scores s
             LEFT JOIN public.daily_prices dp
               ON dp.symbol = s.symbol AND dp.date = s.date
@@ -38,12 +63,14 @@ def get_shadow_signals(conn=Depends(get_db)):
                 c_ema, c_slope, c_high, c_vol, c_rs = r['condition_ema_50_200'], r['condition_ema_200_slope'], r['condition_6m_high'], r['condition_volume'], r['condition_rs']
                 c_breakout, c_quality, close = r['condition_breakout_10d'], r['condition_price_quality'], r['close']
                 breakout_state = r.get('breakout_state', 'CONSOLIDATING')
+                breakout_age = r.get('breakout_age')
             else:
-                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs, c_breakout, c_quality, close, breakout_state = r
+                sym, score, dt, c_ema, c_slope, c_high, c_vol, c_rs, c_breakout, c_quality, close, breakout_state, breakout_age = r
             
             # Explicitly force breakout detection
             is_breakout = bool(c_high and c_vol)
-            
+            age_info = _age_label(breakout_state, breakout_age)
+
             stocks.append({
                 "symbol": sym,
                 "total_score": int(score) if score is not None else 0,
@@ -56,7 +83,9 @@ def get_shadow_signals(conn=Depends(get_db)):
                 "condition_price_quality": bool(c_quality),
                 "close": float(close) if close is not None else None,
                 "is_breakout": is_breakout,
-                "breakout_state": breakout_state
+                "breakout_state": breakout_state,
+                "breakout_age": int(breakout_age) if breakout_age is not None else None,
+                "age_info": age_info,
             })
             
         latest_date = rows[0]["date"] if is_dict and rows else (rows[0][2] if rows else None)
