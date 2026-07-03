@@ -2,6 +2,32 @@
 
 ---
 
+## 📅 Session: July 3, 2026 — Breakout Radar Sort Verification
+
+**Session Start:** ~10:00 IST
+**Session End:** ~10:15 IST
+
+### What Was Done This Session
+
+#### 1. Breakout Radar Sort Audit ✅
+- [x] Reviewed `frontend/src/BreakoutRadar.tsx` to verify whether sortable headers already existed.
+- [x] Confirmed the page already had client-side sorting for Symbol, Price, Volume, Platform Interest, Age, and Radar Priority.
+- [x] Identified a React hook-order bug: `sortConfig` state was declared after the early `loading` return, which risks a runtime hooks error and makes the table behavior unreliable.
+
+#### 2. Frontend Fix Applied ✅
+- [x] Moved `sortConfig` state declaration above the loading guard in `BreakoutRadar.tsx`.
+- [x] Kept the existing table UX and sorting logic intact; no redesign needed.
+
+#### 3. Verification Status ✅
+- [x] Confirmed via source audit and git diff that the sortable table is present and the hook-order fix is the only code change.
+- [x] Local frontend build could not be run in this environment because `npm`/`node` are not installed on PATH.
+
+### 📌 Current Milestone
+- **Milestone remains:** Breakout Age Execution Completed.
+- **This session was a targeted hardening pass on the Breakout Radar frontend.**
+
+---
+
 ## 📅 Session: July 3, 2026 — Breakout Age Tracking (Planning)
 
 **Session Start:** ~09:30 IST
@@ -25,6 +51,12 @@
 
 #### 3. Decision 099 Logged ✅
 - [x] Added Decision 099 (Breakout Age Tracking) to `Decisions.md` with DRAFT status.
+
+#### 4. Production Debug — Dockerfile missing `engine_mosi/` ✅
+- [x] User reported build failure on Railway (`ModuleNotFoundError: No module named 'engine_mosi'`).
+- [x] Verified `engine_mosi` was not being copied in `Dockerfile`.
+- [x] Added `COPY engine_mosi/ ./engine_mosi/` to `Dockerfile`.
+- [x] Committed and pushed directly to `main` to trigger a successful Railway rebuild.
 
 ### 📌 Current Milestone
 - **Breakout Age Execution Completed!**

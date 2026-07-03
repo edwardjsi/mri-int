@@ -1467,3 +1467,27 @@ The user said: *"this is a dataset no one else has — make it so."*
 
 ---
 
+## July 3, 2026 — Breakout Radar Sort Verification
+
+**Objective**: Verify whether the Breakout Radar page already had sortable tables and, if necessary, implement the smallest fix to make the interaction work reliably.
+
+**Actions**:
+
+- Audited `frontend/src/BreakoutRadar.tsx` and confirmed the page already rendered sortable headers for Symbol, Price, Volume, Platform Interest, Age, and Radar Priority.
+- Identified the real runtime issue: `sortConfig` used `useState(...)` after an early `if (loading) return ...` branch, which violates stable hook ordering once loading flips from `true` to `false`.
+- Moved the `sortConfig` hook above the loading guard so the component keeps a consistent hook order across renders.
+- Preserved the existing age-grouped layout and current sorting behavior; no API or UI redesign was introduced.
+- Attempted local verification, but this environment does not have `npm` or `node` available on `PATH`, so a frontend production build could not be executed here.
+
+**Result**:
+
+- Breakout Radar already had sortable table functionality in source.
+- The page now has a safe hook order, so the existing sortable-table behavior can render reliably instead of risking a React hooks runtime error.
+- Docs were updated in `Progress.md` and `Sessions.md` to record the audit and fix.
+
+**Files changed**:
+- `frontend/src/BreakoutRadar.tsx`
+- `Progress.md`
+- `Sessions.md`
+
+---

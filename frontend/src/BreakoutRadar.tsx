@@ -5,6 +5,7 @@ import BreakoutBadge from './BreakoutBadge';
 export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [radarData, setRadarData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
 
   useEffect(() => {
     api.getBreakoutRadar()
@@ -23,8 +24,6 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
   
   const ready = radarData.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
   const consolidating = radarData.filter(d => d.breakout_state === 'CONSOLIDATING');
-
-  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
