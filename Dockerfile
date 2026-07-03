@@ -36,6 +36,7 @@ COPY engine_qualitative/ ./engine_qualitative/
 COPY engine_perx/ ./engine_perx/
 COPY engine_guidance/ ./engine_guidance/
 COPY engine_debate/ ./engine_debate/
+COPY engine_mosi/ ./engine_mosi/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
 
