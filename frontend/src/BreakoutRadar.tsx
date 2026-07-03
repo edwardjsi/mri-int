@@ -24,23 +24,68 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
   const ready = radarData.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
   const consolidating = radarData.filter(d => d.breakout_state === 'CONSOLIDATING');
 
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc'; // toggle back
+    } else if (sortConfig && sortConfig.key === key) {
+      direction = 'desc';
+    } else {
+      direction = 'desc'; // default to desc for metrics
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedItems = (items: any[]) => {
+    if (!sortConfig) return items;
+    return [...items].sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+      
+      if (sortConfig.key === 'price') {
+         aVal = parseFloat(a.close || '0');
+         bVal = parseFloat(b.close || '0');
+      } else if (sortConfig.key === 'volume') {
+         aVal = parseInt(a.volume || '0');
+         bVal = parseInt(b.volume || '0');
+      } else if (sortConfig.key === 'interest') {
+         aVal = (a.holders || 0) + (a.watchers || 0);
+         bVal = (b.holders || 0) + (b.watchers || 0);
+      }
+      
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+      
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (!sortConfig || sortConfig.key !== columnKey) return <span style={{ opacity: 0.3, marginLeft: '4px', fontSize: '0.8em' }}>↕</span>;
+    return <span style={{ marginLeft: '4px', color: '#60a5fa', fontSize: '0.8em' }}>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>;
+  };
+
   const renderTable = (items: any[], showAge: boolean = true) => (
     <div className="table-container">
       <table className="data-table">
         <thead>
           <tr>
-            <th>Symbol</th>
-            <th>Price</th>
-            <th>Volume</th>
+            <th onClick={() => requestSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol <SortIcon columnKey="symbol" /></th>
+            <th onClick={() => requestSort('price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price <SortIcon columnKey="price" /></th>
+            <th onClick={() => requestSort('volume')} style={{ cursor: 'pointer', userSelect: 'none' }}>Volume <SortIcon columnKey="volume" /></th>
             <th>Trend</th>
-            <th>Platform Interest</th>
-            {showAge && <th>Age</th>}
-            <th>Radar Priority</th>
+            <th onClick={() => requestSort('interest')} style={{ cursor: 'pointer', userSelect: 'none' }}>Platform Interest <SortIcon columnKey="interest" /></th>
+            {showAge && <th onClick={() => requestSort('breakout_age')} style={{ cursor: 'pointer', userSelect: 'none' }}>Age <SortIcon columnKey="breakout_age" /></th>}
+            <th onClick={() => requestSort('radar_priority')} style={{ cursor: 'pointer', userSelect: 'none' }}>Radar Priority <SortIcon columnKey="radar_priority" /></th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          {items.map(item => (
+          {getSortedItems(items).map(item => (
             <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(item)}>
               <td className="font-bold">{item.symbol}</td>
               <td>₹{parseFloat(item.close).toLocaleString()}</td>
