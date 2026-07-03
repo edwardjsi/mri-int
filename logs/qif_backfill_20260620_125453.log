@@ -1,0 +1,156 @@
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:__main__:Phase D3: re-running QIF pipeline for 49 symbols
+INFO:__main__:[1/49] QPOWER (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for QPOWER. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[2/49] SKIPPER (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SKIPPER. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[3/49] SJS (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SJS. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[4/49] QUESS (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for QUESS. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[5/49] SHAILY (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SHAILY. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[6/49] CUPID (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for CUPID. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[7/49] MANORAMA (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for MANORAMA. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[8/49] SHAKTIPUMP (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SHAKTIPUMP. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[9/49] GENUSPOWER (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for GENUSPOWER. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[10/49] MANAKCOAT (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for MANAKCOAT. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[11/49] KMEW (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for KMEW. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[12/49] HIRECT (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for HIRECT. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[13/49] BALUFORGE (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for BALUFORGE. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[14/49] CARRARO (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for CARRARO. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[15/49] RPTECH (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for RPTECH. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[16/49] EPL (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for EPL. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[17/49] ADVAIT (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for ADVAIT. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[18/49] AEROFLEX (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for AEROFLEX. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[19/49] 3BBLACKBIO (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for 3BBLACKBIO. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[20/49] IFBIND (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for IFBIND. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[21/49] ADFFOODS (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for ADFFOODS. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[22/49] TBZ (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for TBZ. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[23/49] SAATVIKGL (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SAATVIKGL. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[24/49] RTNINDIA (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for RTNINDIA. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[25/49] TI (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for TI. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[26/49] RAMRAT (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for RAMRAT. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[27/49] VINATIORGA (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for VINATIORGA. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[28/49] VISHNU (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for VISHNU. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[29/49] MACPOWER (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for MACPOWER. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[30/49] SRM (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SRM. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[31/49] HERITGFOOD (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for HERITGFOOD. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[32/49] RUBICON (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for RUBICON. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[33/49] GRMOVER (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for GRMOVER. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[34/49] SKYGOLD (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SKYGOLD. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[35/49] WESTLIFE (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for WESTLIFE. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[36/49] UGROCAP (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for UGROCAP. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[37/49] SGFIN (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SGFIN. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[38/49] ICEMAKE (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for ICEMAKE. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[39/49] MCLOUD (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for MCLOUD. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[40/49] JAYNECOIND (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for JAYNECOIND. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[41/49] TIPSMUSIC (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for TIPSMUSIC. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[42/49] SANOFICONR (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SANOFICONR. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[43/49] ASHOKA (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for ASHOKA. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[44/49] SMCGLOBAL (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for SMCGLOBAL. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[45/49] PFS (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for PFS. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[46/49] KERNEX (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for KERNEX. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[47/49] AMRUTANJAN (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for AMRUTANJAN. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[48/49] TAJGVK (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for TAJGVK. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:[49/49] EXPLEOSOL (? yrs)
+ERROR:engine_fundamental.pipeline:No financial history for EXPLEOSOL. Run collector first.
+WARNING:__main__:  ⚠️ pipeline returned None (no fundamentals or other issue)
+INFO:__main__:
+INFO:__main__:🏁 Phase D3 complete in 22.5s
+INFO:__main__:   ✅ success: 0
+INFO:__main__:   ⚠️ skipped: 49
+INFO:__main__:   ❌ failed:  0
+INFO:__main__:   total:     49

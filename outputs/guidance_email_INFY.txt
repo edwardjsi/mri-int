@@ -1,0 +1,17 @@
+{
+  "header_card": true,
+  "header_metadata_band": true,
+  "tone_monitor": true,
+  "tone_shift_chip": false,
+  "no_verified_warning": false,
+  "credibility_summary": true,
+  "achieved_section": false,
+  "missed_section": true,
+  "partial_section": false,
+  "upcoming_section": true,
+  "integrity_signal": true,
+  "quarter_comparison": true,
+  "integrity_timeline": true,
+  "tone_trajectory": true,
+  "size_bytes": 26235
+}

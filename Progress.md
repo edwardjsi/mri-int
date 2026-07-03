@@ -2,6 +2,40 @@
 
 ---
 
+## 📅 Session: July 3, 2026 — Breakout Age Tracking (Planning)
+
+**Session Start:** ~09:30 IST
+**Session End:** ~10:00 IST
+
+### What Was Done This Session
+
+#### 1. Breakout Age Feature Analysis ✅
+- [x] User shared external suggestion: add a "Breakout Age (0–5 days)" filter to differentiate fresh breakouts from mature moves.
+- [x] Reviewed `indicator_engine.py` — confirmed `breakout_state` is a stateless snapshot (BROKEN_OUT / READY_TO_BREAKOUT / CONSOLIDATING) with no memory of duration.
+- [x] Reviewed `swing_execution_engine.py` (STEE) — confirmed all breakout entries treated identically regardless of age.
+- [x] Reviewed `api/breakout_status.py` — confirmed Breakout Radar returns flat list within each state group, no freshness priority.
+- [x] Reviewed `BreakoutRadar.tsx` — confirmed frontend groups by state but no age-based subsections or priority scoring.
+
+#### 2. Execution Plan Written ✅
+- [x] `docs/BREAKOUT_AGE_EXECUTION_PLAN_2026-07-03.md` — 4-phase plan covering Schema + Indicator Engine, Breakout Radar API V2, Frontend Radar V2, and STEE integration.
+- [x] Key design: `breakout_age INTEGER DEFAULT NULL` column on `daily_prices`, computed sequentially by comparing each row's `breakout_state` with the previous day. Resets to 0 on state transition, NULL when CONSOLIDATING.
+- [x] Age labels defined: Day 0 🔥 BREAKOUT TODAY, Day 1 ✅ FIRST FOLLOW-THROUGH, Day 2-3 📈 EARLY CONTINUATION, Day 4-5 ⚠️ LATE ENTRY ZONE, >5 💤 MATURE BREAKOUT.
+- [x] Radar priority formula: `decision_score × age_decay(breakout_age)` with freshest-first sorting.
+- [x] $0 LLM cost, ~3-4 hours wall time, additive schema only.
+
+#### 3. Decision 099 Logged ✅
+- [x] Added Decision 099 (Breakout Age Tracking) to `Decisions.md` with DRAFT status.
+
+### 📌 Current Milestone
+- **Breakout Age Execution Completed!**
+- **Next:**
+  - (a) [x] Phase 1: Schema migration + `indicator_engine.py` breakout_age computation
+  - (b) [x] Phase 2: Breakout Radar API enhancement with age-sorted grouping
+  - (c) [x] Phase 3: Frontend Radar V2 with age-grouped sections and Fresh Today hero
+  - (d) [x] Phase 4: STEE age-aware entry filter + Morning Brief integration
+
+---
+
 ## 📅 Session: June 19, 2026 (cont., evening) — Data Richness Initiative + Dockerfile Fix + Embedded Debate Draft
 
 **Session Start:** ~19:30 IST

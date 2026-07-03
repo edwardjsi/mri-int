@@ -1,0 +1,304 @@
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:__main__:Phase A3: 49 symbols to fetch + QIF
+INFO:__main__:[1/49] QPOWER
+INFO:engine_fundamental.collector:Fetching fundamental data for QPOWER.NS (Database: QPOWER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for QPOWER
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for QPOWER: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: flat | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[2/49] SKIPPER
+INFO:engine_fundamental.collector:Fetching fundamental data for SKIPPER.NS (Database: SKIPPER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SKIPPER
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SKIPPER: HIGH_QUALITY (85.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=85.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[3/49] SJS
+INFO:engine_fundamental.collector:Fetching fundamental data for SJS.NS (Database: SJS)...
+INFO:engine_fundamental.collector:Stored 4 years of financial data for SJS
+INFO:__main__:  📥 fetched 4 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SJS: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 4 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 4 yrs
+INFO:__main__:[4/49] QUESS
+INFO:engine_fundamental.collector:Fetching fundamental data for QUESS.NS (Database: QUESS)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for QUESS
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for QUESS: REJECT (35.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=35.5 REJECT | agent_details: 5 yrs
+INFO:__main__:[5/49] SHAILY
+INFO:engine_fundamental.collector:Fetching fundamental data for SHAILY.NS (Database: SHAILY)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SHAILY
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SHAILY: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[6/49] CUPID
+INFO:engine_fundamental.collector:Fetching fundamental data for CUPID.NS (Database: CUPID)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for CUPID
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for CUPID: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[7/49] MANORAMA
+INFO:engine_fundamental.collector:Fetching fundamental data for MANORAMA.NS (Database: MANORAMA)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MANORAMA
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for MANORAMA: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[8/49] SHAKTIPUMP
+INFO:engine_fundamental.collector:Fetching fundamental data for SHAKTIPUMP.NS (Database: SHAKTIPUMP)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SHAKTIPUMP
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SHAKTIPUMP: WATCHLIST (67.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=67.5 WATCHLIST | agent_details: 5 yrs
+INFO:__main__:[9/49] GENUSPOWER
+INFO:engine_fundamental.collector:Fetching fundamental data for GENUSPOWER.NS (Database: GENUSPOWER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for GENUSPOWER
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for GENUSPOWER: HIGH_QUALITY (81.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=81.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[10/49] MANAKCOAT
+INFO:engine_fundamental.collector:Fetching fundamental data for MANAKCOAT.NS (Database: MANAKCOAT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MANAKCOAT
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for MANAKCOAT: HIGH_QUALITY (88.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=88.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[11/49] KMEW
+INFO:engine_fundamental.collector:Fetching fundamental data for KMEW.NS (Database: KMEW)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for KMEW
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for KMEW: HIGH_QUALITY (85.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=85.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[12/49] HIRECT
+INFO:engine_fundamental.collector:Fetching fundamental data for HIRECT.NS (Database: HIRECT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for HIRECT
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for HIRECT: HIGH_QUALITY (81.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=81.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[13/49] BALUFORGE
+INFO:engine_fundamental.collector:Fetching fundamental data for BALUFORGE.NS (Database: BALUFORGE)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for BALUFORGE
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for BALUFORGE: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[14/49] CARRARO
+INFO:engine_fundamental.collector:Fetching fundamental data for CARRARO.NS (Database: CARRARO)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for CARRARO
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for CARRARO: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[15/49] RPTECH
+INFO:engine_fundamental.collector:Fetching fundamental data for RPTECH.NS (Database: RPTECH)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for RPTECH
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for RPTECH: REJECT (51.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=51.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[16/49] EPL
+INFO:engine_fundamental.collector:Fetching fundamental data for EPL.NS (Database: EPL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for EPL
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for EPL: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[17/49] ADVAIT
+INFO:engine_fundamental.collector:Fetching fundamental data for ADVAIT.NS (Database: ADVAIT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ADVAIT
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for ADVAIT: HIGH_QUALITY (81.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=81.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[18/49] AEROFLEX
+INFO:engine_fundamental.collector:Fetching fundamental data for AEROFLEX.NS (Database: AEROFLEX)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for AEROFLEX
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for AEROFLEX: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[19/49] 3BBLACKBIO
+INFO:engine_fundamental.collector:Fetching fundamental data for 3BBLACKBIO.NS (Database: 3BBLACKBIO)...
+INFO:engine_fundamental.collector:Empty results for 3BBLACKBIO.NS, trying fallback 3BBLACKBIO.BO...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for 3BBLACKBIO
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for 3BBLACKBIO: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[20/49] IFBIND
+INFO:engine_fundamental.collector:Fetching fundamental data for IFBIND.NS (Database: IFBIND)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for IFBIND
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for IFBIND: EARLY_COMPOUNDER (75.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=75.5 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[21/49] ADFFOODS
+INFO:engine_fundamental.collector:Fetching fundamental data for ADFFOODS.NS (Database: ADFFOODS)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ADFFOODS
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for ADFFOODS: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[22/49] TBZ
+INFO:engine_fundamental.collector:Fetching fundamental data for TBZ.NS (Database: TBZ)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TBZ
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for TBZ: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[23/49] SAATVIKGL
+INFO:engine_fundamental.collector:Fetching fundamental data for SAATVIKGL.NS (Database: SAATVIKGL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SAATVIKGL
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SAATVIKGL: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[24/49] RTNINDIA
+INFO:engine_fundamental.collector:Fetching fundamental data for RTNINDIA.NS (Database: RTNINDIA)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for RTNINDIA
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for RTNINDIA: REJECT (16.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=16.5 REJECT | agent_details: 5 yrs
+INFO:__main__:[25/49] TI
+INFO:engine_fundamental.collector:Fetching fundamental data for TI.NS (Database: TI)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TI
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for TI: REJECT (44.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=44.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[26/49] RAMRAT
+INFO:engine_fundamental.collector:Fetching fundamental data for RAMRAT.NS (Database: RAMRAT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for RAMRAT
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for RAMRAT: HIGH_QUALITY (85.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=85.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[27/49] VINATIORGA
+INFO:engine_fundamental.collector:Fetching fundamental data for VINATIORGA.NS (Database: VINATIORGA)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for VINATIORGA
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for VINATIORGA: EARLY_COMPOUNDER (79.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=79.0 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[28/49] VISHNU
+INFO:engine_fundamental.collector:Fetching fundamental data for VISHNU.NS (Database: VISHNU)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for VISHNU
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for VISHNU: EARLY_COMPOUNDER (79.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=79.5 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[29/49] MACPOWER
+INFO:engine_fundamental.collector:Fetching fundamental data for MACPOWER.NS (Database: MACPOWER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MACPOWER
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for MACPOWER: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[30/49] SRM
+INFO:engine_fundamental.collector:Fetching fundamental data for SRM.NS (Database: SRM)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SRM
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SRM: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[31/49] HERITGFOOD
+INFO:engine_fundamental.collector:Fetching fundamental data for HERITGFOOD.NS (Database: HERITGFOOD)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for HERITGFOOD
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for HERITGFOOD: EARLY_COMPOUNDER (75.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=75.5 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[32/49] RUBICON
+INFO:engine_fundamental.collector:Fetching fundamental data for RUBICON.NS (Database: RUBICON)...
+INFO:engine_fundamental.collector:Stored 2 years of financial data for RUBICON
+INFO:__main__:  📥 fetched 2 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for RUBICON: HIGH_QUALITY (91.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 2 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=91.5 HIGH_QUALITY | agent_details: 2 yrs
+INFO:__main__:[33/49] GRMOVER
+INFO:engine_fundamental.collector:Fetching fundamental data for GRMOVER.NS (Database: GRMOVER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for GRMOVER
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for GRMOVER: REJECT (44.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=44.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[34/49] SKYGOLD
+INFO:engine_fundamental.collector:Fetching fundamental data for SKYGOLD.NS (Database: SKYGOLD)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SKYGOLD
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SKYGOLD: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[35/49] WESTLIFE
+INFO:engine_fundamental.collector:Fetching fundamental data for WESTLIFE.NS (Database: WESTLIFE)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for WESTLIFE
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for WESTLIFE: EARLY_COMPOUNDER (74.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=74.5 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[36/49] UGROCAP
+INFO:engine_fundamental.collector:Fetching fundamental data for UGROCAP.NS (Database: UGROCAP)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for UGROCAP
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for UGROCAP: REJECT (44.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: stable
+INFO:__main__:  ✅ QIF score=44.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[37/49] SGFIN
+INFO:engine_fundamental.collector:Fetching fundamental data for SGFIN.NS (Database: SGFIN)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SGFIN
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SGFIN: REJECT (48.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=48.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[38/49] ICEMAKE
+INFO:engine_fundamental.collector:Fetching fundamental data for ICEMAKE.NS (Database: ICEMAKE)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ICEMAKE
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for ICEMAKE: REJECT (44.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=44.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[39/49] MCLOUD
+INFO:engine_fundamental.collector:Fetching fundamental data for MCLOUD.NS (Database: MCLOUD)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MCLOUD
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for MCLOUD: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=89.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[40/49] JAYNECOIND
+INFO:engine_fundamental.collector:Fetching fundamental data for JAYNECOIND.NS (Database: JAYNECOIND)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for JAYNECOIND
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for JAYNECOIND: HIGH_QUALITY (94.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=94.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[41/49] TIPSMUSIC
+INFO:engine_fundamental.collector:Fetching fundamental data for TIPSMUSIC.NS (Database: TIPSMUSIC)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TIPSMUSIC
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for TIPSMUSIC: HIGH_QUALITY (93.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=93.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[42/49] SANOFICONR
+INFO:engine_fundamental.collector:Fetching fundamental data for SANOFICONR.NS (Database: SANOFICONR)...
+INFO:engine_fundamental.collector:Stored 3 years of financial data for SANOFICONR
+INFO:__main__:  📥 fetched 3 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SANOFICONR: EARLY_COMPOUNDER (73.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 3 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=73.5 EARLY_COMPOUNDER | agent_details: 3 yrs
+INFO:__main__:[43/49] ASHOKA
+INFO:engine_fundamental.collector:Fetching fundamental data for ASHOKA.NS (Database: ASHOKA)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ASHOKA
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for ASHOKA: WATCHLIST (68.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=68.5 WATCHLIST | agent_details: 5 yrs
+INFO:__main__:[44/49] SMCGLOBAL
+INFO:engine_fundamental.collector:Fetching fundamental data for SMCGLOBAL.NS (Database: SMCGLOBAL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SMCGLOBAL
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for SMCGLOBAL: REJECT (30.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=30.0 REJECT | agent_details: 5 yrs
+INFO:__main__:[45/49] PFS
+INFO:engine_fundamental.collector:Fetching fundamental data for PFS.NS (Database: PFS)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for PFS
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for PFS: REJECT (23.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=23.5 REJECT | agent_details: 5 yrs
+INFO:__main__:[46/49] KERNEX
+INFO:engine_fundamental.collector:Fetching fundamental data for KERNEX.NS (Database: KERNEX)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for KERNEX
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for KERNEX: HIGH_QUALITY (88.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=88.5 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[47/49] AMRUTANJAN
+INFO:engine_fundamental.collector:Fetching fundamental data for AMRUTANJAN.NS (Database: AMRUTANJAN)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for AMRUTANJAN
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for AMRUTANJAN: EARLY_COMPOUNDER (79.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=79.5 EARLY_COMPOUNDER | agent_details: 5 yrs
+INFO:__main__:[48/49] TAJGVK
+INFO:engine_fundamental.collector:Fetching fundamental data for TAJGVK.NS (Database: TAJGVK)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TAJGVK
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for TAJGVK: HIGH_QUALITY (96.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: improving
+INFO:__main__:  ✅ QIF score=96.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:[49/49] EXPLEOSOL
+INFO:engine_fundamental.collector:Fetching fundamental data for EXPLEOSOL.NS (Database: EXPLEOSOL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for EXPLEOSOL
+INFO:__main__:  📥 fetched 5 year(s)
+INFO:engine_fundamental.pipeline:Quality Verdict for EXPLEOSOL: HIGH_QUALITY (83.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: insufficient | agent_details: 5 years, trajectory trend: declining
+INFO:__main__:  ✅ QIF score=83.0 HIGH_QUALITY | agent_details: 5 yrs
+INFO:__main__:
+INFO:__main__:🏁 Phase A3 complete in 184.0s
+INFO:__main__:   ✅ success:  49
+INFO:__main__:   ⚠️ fetch fail: 0
+INFO:__main__:   ⚠️ QIF fail:  0
+INFO:__main__:   total:      49

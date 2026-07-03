@@ -38,6 +38,7 @@ INDICATOR_COLUMNS = (
     ("condition_breakout_10d", "BOOLEAN"),
     ("condition_price_quality", "NUMERIC"),
     ("breakout_state", "VARCHAR(30) DEFAULT 'CONSOLIDATING'"),
+    ("breakout_age", "INTEGER DEFAULT NULL"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing
@@ -276,6 +277,24 @@ def compute_indicators(df, idx_df):
 
         s_df['breakout_state'] = s_df.apply(_classify_breakout, axis=1)
 
+        # Breakout Age calculation
+        # Age resets to 0 on state change, increments on continuation, NULL when CONSOLIDATING
+        prev_state = None
+        prev_age = None
+        for idx in s_df.index:
+            curr_state = s_df.at[idx, 'breakout_state']
+            
+            if curr_state == 'CONSOLIDATING':
+                s_df.at[idx, 'breakout_age'] = None
+                prev_age = None
+            elif curr_state == prev_state and prev_age is not None:
+                s_df.at[idx, 'breakout_age'] = prev_age + 1
+                prev_age = prev_age + 1
+            else:
+                s_df.at[idx, 'breakout_age'] = 0
+                prev_age = 0
+            prev_state = curr_state
+
         for _, row in s_df.tail(PERSIST_ROWS).iterrows():
             updates.append(
                 {
@@ -301,6 +320,7 @@ def compute_indicators(df, idx_df):
                     "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
                     "condition_price_quality": row.get("price_quality"),
                     "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
+                    "breakout_age": row.get("breakout_age")
                 }
             )
             merged = pd.merge(
@@ -352,7 +372,8 @@ def compute_indicators(df, idx_df):
                     "atr_14": row.get("atr_14"),
                     "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
                     "condition_price_quality": row.get("price_quality"),
-                    "breakout_state": row.get("breakout_state", "CONSOLIDATING")
+                    "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
+                    "breakout_age": row.get("breakout_age")
                 }
             )
 
@@ -443,7 +464,8 @@ def update_db_with_indicators(updates, max_retries=3):
                         atr_14 = %(atr_14)s,
                         condition_breakout_10d = %(condition_breakout_10d)s,
                         condition_price_quality = %(condition_price_quality)s,
-                        breakout_state = %(breakout_state)s
+                        breakout_state = %(breakout_state)s,
+                        breakout_age = %(breakout_age)s
                     WHERE symbol = %(symbol)s AND date = %(date)s
                 """
                 execute_batch(cur, sql, updates, page_size=2000)

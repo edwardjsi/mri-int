@@ -1,0 +1,1377 @@
+2026-06-15 14:54:41,780 - INFO - Found 180 unique symbols: 84 from watchlist, 61 from holdings, 112 from 112Co universe
+
+==================================================
+  Total unique symbols: 180
+==================================================
+
+    1. 3B BLACKBIO DX
+    2. 3BBLACKBIO
+    3. ABBOTINDIA
+    4. ACE
+    5. ACUTAAS
+    6. ADFFOODS
+    7. ADVAIT
+    8. AEROFLEX
+    9. AGI
+   10. AIL
+   11. ALPEXSOLAR
+   12. AMBER
+   13. AMRUTANJAN
+   14. ANGELONE
+   15. APAR INDUSTRIES
+   16. APARINDS
+   17. ARIS
+   18. ARVIND FASHIONS
+   19. ARVINDFASN
+   20. ASHOKA
+   21. ASM TECHNOLOGIES
+   22. ASMTEC
+   23. AVANTIFEED
+   24. AVENUE SUPERMARTS
+   25. BAJAJCON
+   26. BAJAJFINSV
+   27. BALUFORGE
+   28. BBTC
+   29. BEL
+   30. BHARAT ELECTRONICS
+   31. BSE
+   32. BSLGOLDETF
+   33. CARRARO
+   34. CCL
+   35. CGCL
+   36. CGPOWER
+   37. CIPLA
+   38. CPPLUS
+   39. CUMMINS
+   40. CUMMINSIND
+   41. CUPID
+   42. DATAPATTNS
+   43. DEEPAKFERT
+   44. DIVISLAB
+   45. DMART
+   46. DRREDDY
+   47. EIHAHOTELS
+   48. ENGINERSIN
+   49. EPL
+   50. EXPLEOSOL
+   51. FIEMIND
+   52. FRONTIER SPRINGS
+   53. FRONTSP
+   54. GE T&D
+   55. GENUSPOWER
+   56. GILLETTE
+   57. GRANULES
+   58. GRAPHITE
+   59. GRAVITA
+   60. GRMOVER
+   61. GROWW
+   62. GVT&D
+   63. GVTD
+   64. HBLENGINE
+   65. HERITGFOOD
+   66. HIMADRI SPECIALITY
+   67. HIND RECTIFIERS
+   68. HINDALCO
+   69. HINDUNILVR
+   70. HINDZINC
+   71. HIRECT
+   72. HSCL
+   73. ICEMAKE
+   74. IFBIND
+   75. IIFL
+   76. INFY
+   77. ITC
+   78. JAYNECOIND
+   79. JMFINANCIL
+   80. JSWDULUX
+   81. KEC
+   82. KEI
+   83. KEI INDUSTRIES
+   84. KERNEX
+   85. KIRLOSENG
+   86. KMEW
+   87. KPEL
+   88. KPIGREEN
+   89. KPIL
+   90. KRISHANA
+   91. KTKBANK
+   92. LLOYDSME
+   93. LTFOODS
+   94. LUMAXTECH
+   95. LUPIN
+   96. MACPOWER
+   97. MANAKCOAT
+   98. MANORAMA
+   99. MCLOUD
+  100. MCX
+  101. MPHASIS
+  102. MUTHOOTFIN
+  103. NAM-INDIA
+  104. NATCOPHARM
+  105. NATIONALUM
+  106. NAUKRI
+  107. NAVINFLUOR
+  108. NETWEB
+  109. OLECTRA
+  110. PFS
+  111. PGHH
+  112. PNBGILTS
+  113. POCL
+  114. POLYCAB
+  115. PONDY OXIDES & CHEM
+  116. POONAWALLA
+  117. PRECWIRE
+  118. QPOWER
+  119. QUESS
+  120. RAMRAT
+  121. RPTECH
+  122. RTNINDIA
+  123. RUBICON
+  124. SAATVIKGL
+  125. SAFARI
+  126. SANDHAR
+  127. SANOFICONR
+  128. SGFIN
+  129. SHAILY
+  130. SHAILY ENGINEERING
+  131. SHAKTIPUMP
+  132. SHARDACROP
+  133. SHILCHAR TECH
+  134. SHILCTECH
+  135. SIGMA
+  136. SJS
+  137. SKFINDIA
+  138. SKIPPER
+  139. SKYGOLD
+  140. SMCGLOBAL
+  141. SONATSOFTW
+  142. SOUTHBANK
+  143. SRM
+  144. SUNDARAM FINANCE
+  145. SUNDARMFIN
+  146. SUZLON
+  147. SWARAJENG
+  148. SYNCOMF
+  149. TAJGVK
+  150. TARIL
+  151. TBZ
+  152. TCS
+  153. TD POWER SYSTEMS
+  154. TDPOWERSYS
+  155. TEMBO
+  156. TI
+  157. TIMETECHNO
+  158. TIPSMUSIC
+  159. TITAN
+  160. TMCV
+  161. TMPV
+  162. TRENT
+  163. TVS MOTOR COMPANY
+  164. TVSMOTOR
+  165. UGROCAP
+  166. VEDL
+  167. VINATIORGA
+  168. VISHNU
+  169. VISHNU CHEMICALS
+  170. VOLTAMP
+  171. VOLTAMP TRANSFORMERS
+  172. VSTIND
+  173. WAAREEENER
+  174. WAAREERTL
+  175. WEBELSOLAR
+  176. WELCORP
+  177. WELSPUN CORP
+  178. WESTLIFE
+  179. ZENSARTECH
+  180. ZYDUSLIFE
+
+==================================================
+  Priming 180 stocks...
+==================================================
+
+[1/180] 3B BLACKBIO DX ... 2026-06-15 14:54:41,781 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for 3B BLACKBIO DX
+/home/immanuels/Desktop/mri-int/.venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.7.0) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+2026-06-15 14:54:41,883 - INFO - === Concall Finder: 3B BLACKBIO DX ===
+2026-06-15 14:54:41,883 - INFO - Fetching: https://www.screener.in/company/3B BLACKBIO DX/consolidated/
+2026-06-15 14:54:42,038 - WARNING - screener.in returned 404
+2026-06-15 14:54:42,038 - INFO -   Trying normalized symbol: 3BBLACKBIODX
+2026-06-15 14:54:42,038 - INFO - Fetching: https://www.screener.in/company/3BBLACKBIODX/consolidated/
+2026-06-15 14:54:42,201 - WARNING - screener.in returned 404
+2026-06-15 14:54:42,202 - INFO -   screener.in returned 0 — trying NSE fallback...
+2026-06-15 14:54:42,651 - INFO -   NSE: Found 0 transcripts for 3B BLACKBIO DX
+2026-06-15 14:54:42,651 - WARNING - No transcripts found for 3B BLACKBIO DX (screener.in + NSE)
+2026-06-15 14:54:42,652 - WARNING - [GUIDANCE-PRIMER] No transcripts found for 3B BLACKBIO DX — may not be listed on screener.in
+2026-06-15 14:54:42,896 - INFO - Using OpenAI API (gpt-4o-mini)
+2026-06-15 14:54:43,847 - INFO - 3B BLACKBIO DX: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:54:44,584 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for 3B BLACKBIO DX
+OK
+[2/180] 3BBLACKBIO ... 2026-06-15 14:54:44,584 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for 3BBLACKBIO
+2026-06-15 14:54:44,584 - INFO - === Concall Finder: 3BBLACKBIO ===
+2026-06-15 14:54:44,584 - INFO - Fetching: https://www.screener.in/company/3BBLACKBIO/consolidated/
+2026-06-15 14:54:44,856 - INFO -   Found 43 transcripts for 3BBLACKBIO
+2026-06-15 14:54:44,856 - INFO -   screener.in returned 43 transcripts for 3BBLACKBIO
+2026-06-15 14:54:44,856 - INFO -   [Announcement under Regulation 30 (LODR)-Analyst / Investor Meet - Outcome3 Jun - Transcript of Q4 FY] → downloading...
+2026-06-15 14:54:46,425 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:54:46,469 - INFO -   pdftotext fallback: 58498 chars extracted
+2026-06-15 14:54:46,469 - INFO -     58498 chars, preview: (F
+2026-06-15 14:54:47,301 - INFO - Successfully stored transcript for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:54:47,301 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:54:47,738 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:54:51,727 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:54:52,251 - INFO - Stored narrative analysis for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:54:52,251 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.7
+2026-06-15 14:54:52,252 - INFO -     Stored in aae_transcripts
+2026-06-15 14:54:52,252 - INFO -   [Jun 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:54:52,571 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:54:52,614 - INFO -   pdftotext fallback: 58498 chars extracted
+2026-06-15 14:54:52,615 - INFO -     58498 chars, preview: (F
+2026-06-15 14:54:53,278 - INFO - Successfully stored transcript for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:54:53,279 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:54:53,725 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:54:57,024 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:54:57,548 - INFO - Stored narrative analysis for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:54:57,549 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.7
+2026-06-15 14:54:57,549 - INFO -     Stored in aae_transcripts
+2026-06-15 14:54:57,549 - INFO -   [Jun 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:54:58,492 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:54:58,560 - INFO -   pdftotext fallback: 52494 chars extracted
+2026-06-15 14:54:58,562 - INFO -     52494 chars, preview: (F
+2026-06-15 14:54:59,227 - INFO - Successfully stored transcript for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:54:59,227 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:54:59,655 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:02,869 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:03,485 - INFO - Stored narrative analysis for 3BBLACKBIO on 2026-06-15
+2026-06-15 14:55:03,486 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.6
+2026-06-15 14:55:03,486 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:03,487 - INFO -   [Feb 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:55:04,006 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:04,038 - INFO -   pdftotext fallback: 57455 chars extracted
+2026-06-15 14:55:04,039 - INFO -     57455 chars, preview: (F
+2026-06-15 14:55:04,650 - INFO - Successfully stored transcript for 3BBLACKBIO on 2026-02-15
+2026-06-15 14:55:04,651 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:55:05,096 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:11,736 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:12,296 - INFO - Stored narrative analysis for 3BBLACKBIO on 2026-02-15
+2026-06-15 14:55:12,296 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.65
+2026-06-15 14:55:12,296 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:12,296 - INFO -   [Nov 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:55:13,826 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:13,883 - INFO -   pdftotext fallback: 45916 chars extracted
+2026-06-15 14:55:13,884 - INFO -     45916 chars, preview: (F
+2026-06-15 14:55:14,527 - INFO - Successfully stored transcript for 3BBLACKBIO on 2025-11-15
+2026-06-15 14:55:14,527 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:55:14,951 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:18,245 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:18,807 - INFO - Stored narrative analysis for 3BBLACKBIO on 2025-11-15
+2026-06-15 14:55:18,807 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.65
+2026-06-15 14:55:18,808 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:18,808 - INFO -   [Aug 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:55:19,286 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:19,340 - INFO -   pdftotext fallback: 85655 chars extracted
+2026-06-15 14:55:19,341 - INFO -     85655 chars, preview: (F
+2026-06-15 14:55:19,982 - INFO - Successfully stored transcript for 3BBLACKBIO on 2025-08-15
+2026-06-15 14:55:19,982 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:55:20,427 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:23,434 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:23,952 - INFO - Stored narrative analysis for 3BBLACKBIO on 2025-08-15
+2026-06-15 14:55:23,953 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.7
+2026-06-15 14:55:23,953 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:23,953 - INFO -   [May 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:55:25,782 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:25,835 - INFO -   pdftotext fallback: 39248 chars extracted
+2026-06-15 14:55:25,836 - INFO -     39248 chars, preview: (F
+2026-06-15 14:55:26,432 - INFO - Successfully stored transcript for 3BBLACKBIO on 2025-05-15
+2026-06-15 14:55:26,432 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:55:26,900 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:32,485 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:33,015 - INFO - Stored narrative analysis for 3BBLACKBIO on 2025-05-15
+2026-06-15 14:55:33,016 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.65
+2026-06-15 14:55:33,016 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:33,016 - INFO -   [Feb 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:55:34,601 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:34,676 - INFO -   pdftotext fallback: 47963 chars extracted
+2026-06-15 14:55:34,677 - INFO -     47963 chars, preview: (F
+2026-06-15 14:55:35,271 - INFO - Successfully stored transcript for 3BBLACKBIO on 2025-02-15
+2026-06-15 14:55:35,272 - INFO - Triggering Narrative Analysis for 3BBLACKBIO...
+2026-06-15 14:55:36,003 - WARNING - Insufficient quarterly data for delta analysis: 3BBLACKBIO
+2026-06-15 14:55:39,767 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:40,327 - INFO - Stored narrative analysis for 3BBLACKBIO on 2025-02-15
+2026-06-15 14:55:40,327 - INFO - Narrative Analysis Complete for 3BBLACKBIO. Sentiment: 0.7
+2026-06-15 14:55:40,328 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:40,328 - INFO - === 3BBLACKBIO: 8/43 ingested ===
+2026-06-15 14:55:40,329 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for 3BBLACKBIO
+2026-06-15 14:55:42,156 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:42,161 - INFO - Extracted 0 statements for 3BBLACKBIO
+2026-06-15 14:55:42,593 - INFO - 3BBLACKBIO: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:55:43,053 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for 3BBLACKBIO
+OK
+[3/180] ABBOTINDIA ... 2026-06-15 14:55:43,054 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ABBOTINDIA
+2026-06-15 14:55:43,054 - INFO - === Concall Finder: ABBOTINDIA ===
+2026-06-15 14:55:43,054 - INFO - Fetching: https://www.screener.in/company/ABBOTINDIA/consolidated/
+2026-06-15 14:55:43,283 - INFO -   Found 0 transcripts for ABBOTINDIA
+2026-06-15 14:55:43,283 - INFO -   screener.in returned 0 — trying NSE fallback...
+2026-06-15 14:55:44,115 - INFO -   NSE: Found 0 transcripts for ABBOTINDIA
+2026-06-15 14:55:44,117 - WARNING - No transcripts found for ABBOTINDIA (screener.in + NSE)
+2026-06-15 14:55:44,118 - WARNING - [GUIDANCE-PRIMER] No transcripts found for ABBOTINDIA — may not be listed on screener.in
+2026-06-15 14:55:45,154 - INFO - ABBOTINDIA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:55:45,719 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ABBOTINDIA
+OK
+[4/180] ACE ... 2026-06-15 14:55:45,720 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ACE
+2026-06-15 14:55:45,720 - INFO - === Concall Finder: ACE ===
+2026-06-15 14:55:45,721 - INFO - Fetching: https://www.screener.in/company/ACE/consolidated/
+2026-06-15 14:55:46,007 - INFO -   Found 32 transcripts for ACE
+2026-06-15 14:55:46,008 - INFO -   screener.in returned 32 transcripts for ACE
+2026-06-15 14:55:46,008 - INFO -   [May 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:55:46,529 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:46,575 - INFO -   pdftotext fallback: 77291 chars extracted
+2026-06-15 14:55:46,576 - INFO -     77291 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:55:47,235 - INFO - Successfully stored transcript for ACE on 2026-05-15
+2026-06-15 14:55:47,235 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:55:51,511 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:52,025 - INFO - Stored narrative analysis for ACE on 2026-05-15
+2026-06-15 14:55:52,026 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.75
+2026-06-15 14:55:52,026 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:52,026 - INFO -   [Feb 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:55:52,352 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:52,399 - INFO -   pdftotext fallback: 80318 chars extracted
+2026-06-15 14:55:52,400 - INFO -     80318 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:55:53,053 - INFO - Successfully stored transcript for ACE on 2026-02-15
+2026-06-15 14:55:53,054 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:55:56,470 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:55:57,006 - INFO - Stored narrative analysis for ACE on 2026-02-15
+2026-06-15 14:55:57,006 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.75
+2026-06-15 14:55:57,006 - INFO -     Stored in aae_transcripts
+2026-06-15 14:55:57,006 - INFO -   [Nov 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:55:57,557 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:55:57,599 - INFO -   pdftotext fallback: 56394 chars extracted
+2026-06-15 14:55:57,600 - INFO -     56394 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:55:58,261 - INFO - Successfully stored transcript for ACE on 2025-11-15
+2026-06-15 14:55:58,261 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:02,189 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:02,761 - INFO - Stored narrative analysis for ACE on 2025-11-15
+2026-06-15 14:56:02,762 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.75
+2026-06-15 14:56:02,762 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:02,763 - INFO -   [Nov 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:56:04,287 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:56:04,328 - INFO -   pdftotext fallback: 38837 chars extracted
+2026-06-15 14:56:04,330 - INFO -     38837 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:56:04,887 - INFO - Successfully stored transcript for ACE on 2025-11-15
+2026-06-15 14:56:04,887 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:07,836 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:08,373 - INFO - Stored narrative analysis for ACE on 2025-11-15
+2026-06-15 14:56:08,373 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.8
+2026-06-15 14:56:08,374 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:08,374 - INFO -   [Aug 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:56:08,957 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:56:08,993 - INFO -   pdftotext fallback: 63857 chars extracted
+2026-06-15 14:56:08,995 - INFO -     63857 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:56:09,585 - INFO - Successfully stored transcript for ACE on 2025-08-15
+2026-06-15 14:56:09,585 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:13,657 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:14,158 - INFO - Stored narrative analysis for ACE on 2025-08-15
+2026-06-15 14:56:14,158 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.7
+2026-06-15 14:56:14,159 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:14,159 - INFO -   [Jun 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:56:15,597 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:56:15,632 - INFO -   pdftotext fallback: 61774 chars extracted
+2026-06-15 14:56:15,633 - INFO -     61774 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:56:16,232 - INFO - Successfully stored transcript for ACE on 2025-06-15
+2026-06-15 14:56:16,233 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:20,353 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:20,912 - INFO - Stored narrative analysis for ACE on 2025-06-15
+2026-06-15 14:56:20,913 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.75
+2026-06-15 14:56:20,914 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:20,914 - INFO -   [Feb 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:56:21,672 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:56:21,706 - INFO -   pdftotext fallback: 47294 chars extracted
+2026-06-15 14:56:21,707 - INFO -     47294 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:56:22,393 - INFO - Successfully stored transcript for ACE on 2025-02-15
+2026-06-15 14:56:22,393 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:25,621 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:26,165 - INFO - Stored narrative analysis for ACE on 2025-02-15
+2026-06-15 14:56:26,165 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.8
+2026-06-15 14:56:26,165 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:26,165 - INFO -   [Feb 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:56:30,075 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:56:30,109 - INFO -   pdftotext fallback: 38306 chars extracted
+2026-06-15 14:56:30,110 - INFO -     38306 chars, preview: Action Construction Equipment Limited
+   Corporate & Registered Office
+   Dudhola Link Road, Dudh
+2026-06-15 14:56:31,724 - INFO - Successfully stored transcript for ACE on 2025-02-15
+2026-06-15 14:56:31,725 - INFO - Triggering Narrative Analysis for ACE...
+2026-06-15 14:56:38,420 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:41,858 - INFO - Stored narrative analysis for ACE on 2025-02-15
+2026-06-15 14:56:41,858 - INFO - Narrative Analysis Complete for ACE. Sentiment: 0.8
+2026-06-15 14:56:41,858 - INFO -     Stored in aae_transcripts
+2026-06-15 14:56:41,858 - INFO - === ACE: 8/32 ingested ===
+2026-06-15 14:56:41,859 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for ACE
+2026-06-15 14:56:52,171 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:52,174 - INFO - Extracted 0 statements for ACE
+2026-06-15 14:56:54,671 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:54,694 - INFO - Extracted 0 statements for ACE
+2026-06-15 14:56:55,625 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:55,632 - INFO - Extracted 0 statements for ACE
+2026-06-15 14:56:57,531 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:57,559 - INFO - Extracted 0 statements for ACE
+2026-06-15 14:56:58,709 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:56:58,720 - INFO - Extracted 0 statements for ACE
+2026-06-15 14:57:00,863 - INFO - ACE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:57:03,753 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ACE
+OK
+[5/180] ACUTAAS ... 2026-06-15 14:57:03,753 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ACUTAAS
+2026-06-15 14:57:03,754 - INFO - === Concall Finder: ACUTAAS ===
+2026-06-15 14:57:03,754 - INFO - Fetching: https://www.screener.in/company/ACUTAAS/consolidated/
+2026-06-15 14:57:06,262 - INFO -   Found 24 transcripts for ACUTAAS
+2026-06-15 14:57:06,263 - INFO -   screener.in returned 24 transcripts for ACUTAAS
+2026-06-15 14:57:06,263 - INFO -   [Announcement under Regulation 30 (LODR)-Earnings Call Transcript6 May - Transcript of Earnings Call ] → downloading...
+2026-06-15 14:57:32,977 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:57:33,047 - INFO -   pdftotext fallback: 57988 chars extracted
+2026-06-15 14:57:33,048 - INFO -     57988 chars, preview: A            C U T                              S®                    ACUTAAS CHEMICALS LIMITED
+2026-06-15 14:57:35,352 - INFO - Successfully stored transcript for ACUTAAS on 2026-06-15
+2026-06-15 14:57:35,352 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:57:41,562 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:57:43,333 - INFO - Stored narrative analysis for ACUTAAS on 2026-06-15
+2026-06-15 14:57:43,333 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:57:43,333 - INFO -     Stored in aae_transcripts
+2026-06-15 14:57:43,333 - INFO -   [May 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:57:49,712 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:57:49,766 - INFO -   pdftotext fallback: 57988 chars extracted
+2026-06-15 14:57:49,768 - INFO -     57988 chars, preview: A            C U T                              S®                    ACUTAAS CHEMICALS LIMITED
+2026-06-15 14:57:52,850 - INFO - Successfully stored transcript for ACUTAAS on 2026-05-15
+2026-06-15 14:57:52,850 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:00,186 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:01,493 - INFO - Stored narrative analysis for ACUTAAS on 2026-05-15
+2026-06-15 14:58:01,493 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:58:01,494 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:01,494 - INFO -   [Apr 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:58:03,364 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:03,408 - INFO -   pdftotext fallback: 35750 chars extracted
+2026-06-15 14:58:03,410 - INFO -     35750 chars, preview: .                 ACUTAAS CHEMICALS LIMITED
+A
+2026-06-15 14:58:05,233 - INFO - Successfully stored transcript for ACUTAAS on 2026-04-15
+2026-06-15 14:58:05,234 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:10,432 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:11,244 - INFO - Stored narrative analysis for ACUTAAS on 2026-04-15
+2026-06-15 14:58:11,244 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.85
+2026-06-15 14:58:11,244 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:11,244 - INFO -   [Feb 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:58:12,802 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:12,845 - INFO -   pdftotext fallback: 63562 chars extracted
+2026-06-15 14:58:12,846 - INFO -     63562 chars, preview: A              C       U       T         ﬁ       ﬁ    S""                               ACUTAAS CHEM
+2026-06-15 14:58:14,083 - INFO - Successfully stored transcript for ACUTAAS on 2026-02-15
+2026-06-15 14:58:14,083 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:17,897 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:18,392 - INFO - Stored narrative analysis for ACUTAAS on 2026-02-15
+2026-06-15 14:58:18,392 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.85
+2026-06-15 14:58:18,393 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:18,394 - INFO -   [Oct 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:58:19,080 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:19,139 - INFO -   pdftotext fallback: 62547 chars extracted
+2026-06-15 14:58:19,140 - INFO -     62547 chars, preview: ™                         ACUTAAS        CHEM
+2026-06-15 14:58:19,771 - INFO - Successfully stored transcript for ACUTAAS on 2025-10-15
+2026-06-15 14:58:19,771 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:27,195 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:27,697 - INFO - Stored narrative analysis for ACUTAAS on 2025-10-15
+2026-06-15 14:58:27,698 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:58:27,698 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:27,699 - INFO -   [Aug 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:58:29,286 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:29,332 - INFO -   pdftotext fallback: 55527 chars extracted
+2026-06-15 14:58:29,333 - INFO -     55527 chars, preview: =                                         ACUTAAS CHEMICALS LIMITED
+A
+2026-06-15 14:58:29,966 - INFO - Successfully stored transcript for ACUTAAS on 2025-08-15
+2026-06-15 14:58:29,966 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:33,415 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:33,928 - INFO - Stored narrative analysis for ACUTAAS on 2025-08-15
+2026-06-15 14:58:33,929 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:58:33,930 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:33,930 - INFO -   [May 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:58:34,548 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:34,596 - INFO -   pdftotext fallback: 54851 chars extracted
+2026-06-15 14:58:34,597 - INFO -     54851 chars, preview: Aﬁ                       Ami Organics Limited
+2026-06-15 14:58:35,290 - INFO - Successfully stored transcript for ACUTAAS on 2025-05-15
+2026-06-15 14:58:35,291 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:38,315 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:38,882 - INFO - Stored narrative analysis for ACUTAAS on 2025-05-15
+2026-06-15 14:58:38,883 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:58:38,883 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:38,883 - INFO -   [Feb 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:58:39,751 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:39,803 - INFO -   pdftotext fallback: 71963 chars extracted
+2026-06-15 14:58:39,804 - INFO -     71963 chars, preview: Aﬁ                                Ami Organics Limited
+          '
+2026-06-15 14:58:40,458 - INFO - Successfully stored transcript for ACUTAAS on 2025-02-15
+2026-06-15 14:58:40,459 - INFO - Triggering Narrative Analysis for ACUTAAS...
+2026-06-15 14:58:43,607 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:44,151 - INFO - Stored narrative analysis for ACUTAAS on 2025-02-15
+2026-06-15 14:58:44,151 - INFO - Narrative Analysis Complete for ACUTAAS. Sentiment: 0.8
+2026-06-15 14:58:44,152 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:44,152 - INFO - === ACUTAAS: 8/24 ingested ===
+2026-06-15 14:58:44,152 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for ACUTAAS
+2026-06-15 14:58:45,291 - INFO - ACUTAAS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:58:46,104 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ACUTAAS
+OK
+[6/180] ADFFOODS ... 2026-06-15 14:58:46,105 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ADFFOODS
+2026-06-15 14:58:46,105 - INFO - === Concall Finder: ADFFOODS ===
+2026-06-15 14:58:46,105 - INFO - Fetching: https://www.screener.in/company/ADFFOODS/consolidated/
+2026-06-15 14:58:46,454 - INFO -   Found 29 transcripts for ADFFOODS
+2026-06-15 14:58:46,455 - INFO -   screener.in returned 29 transcripts for ADFFOODS
+2026-06-15 14:58:46,455 - INFO -   [Announcement under Regulation 30 (LODR)-Earnings Call Transcript21 May - Transcript of the Earnings ] → downloading...
+2026-06-15 14:58:47,115 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:47,159 - INFO -   pdftotext fallback: 51198 chars extracted
+2026-06-15 14:58:47,160 - INFO -     51198 chars, preview: FOODS
+2026-06-15 14:58:47,912 - INFO - Successfully stored transcript for ADFFOODS on 2026-06-15
+2026-06-15 14:58:47,913 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:58:51,515 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:58:52,015 - INFO - Stored narrative analysis for ADFFOODS on 2026-06-15
+2026-06-15 14:58:52,015 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.8
+2026-06-15 14:58:52,015 - INFO -     Stored in aae_transcripts
+2026-06-15 14:58:52,015 - INFO -   [May 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:58:58,527 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:58:58,566 - INFO -   pdftotext fallback: 51198 chars extracted
+2026-06-15 14:58:58,567 - INFO -     51198 chars, preview: FOODS
+2026-06-15 14:58:59,209 - INFO - Successfully stored transcript for ADFFOODS on 2026-05-15
+2026-06-15 14:58:59,209 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:08,616 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:09,137 - INFO - Stored narrative analysis for ADFFOODS on 2026-05-15
+2026-06-15 14:59:09,137 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.8
+2026-06-15 14:59:09,137 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:09,137 - INFO -   [Feb 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:59:11,954 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:12,000 - INFO -   pdftotext fallback: 65278 chars extracted
+2026-06-15 14:59:12,001 - INFO -     65278 chars, preview: FOO
+2026-06-15 14:59:12,667 - INFO - Successfully stored transcript for ADFFOODS on 2026-02-15
+2026-06-15 14:59:12,667 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:16,553 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:17,292 - INFO - Stored narrative analysis for ADFFOODS on 2026-02-15
+2026-06-15 14:59:17,292 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.8
+2026-06-15 14:59:17,293 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:17,293 - INFO -   [Nov 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:59:17,823 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:17,857 - INFO -   pdftotext fallback: 38086 chars extracted
+2026-06-15 14:59:17,858 - INFO -     38086 chars, preview: 25th November, 2025
+
+ National Stock Exchange of India Limited,                       BSE Limited,
+2026-06-15 14:59:18,430 - INFO - Successfully stored transcript for ADFFOODS on 2025-11-15
+2026-06-15 14:59:18,430 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:21,852 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:22,388 - INFO - Stored narrative analysis for ADFFOODS on 2025-11-15
+2026-06-15 14:59:22,388 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.8
+2026-06-15 14:59:22,389 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:22,390 - INFO -   [Aug 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:59:23,060 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:23,088 - INFO -   pdftotext fallback: 33484 chars extracted
+2026-06-15 14:59:23,089 - INFO -     33484 chars, preview: J),l
+2026-06-15 14:59:23,679 - INFO - Successfully stored transcript for ADFFOODS on 2025-08-15
+2026-06-15 14:59:23,680 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:27,498 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:28,037 - INFO - Stored narrative analysis for ADFFOODS on 2025-08-15
+2026-06-15 14:59:28,037 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.75
+2026-06-15 14:59:28,038 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:28,038 - INFO -   [May 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 14:59:28,691 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:28,736 - INFO -   pdftotext fallback: 43445 chars extracted
+2026-06-15 14:59:28,737 - INFO -     43445 chars, preview: J),
+2026-06-15 14:59:29,800 - INFO - Successfully stored transcript for ADFFOODS on 2025-05-15
+2026-06-15 14:59:29,800 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:32,836 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:33,359 - INFO - Stored narrative analysis for ADFFOODS on 2025-05-15
+2026-06-15 14:59:33,360 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.75
+2026-06-15 14:59:33,360 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:33,360 - INFO -   [Feb 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:59:35,213 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:35,249 - INFO -   pdftotext fallback: 38432 chars extracted
+2026-06-15 14:59:35,250 - INFO -     38432 chars, preview: 
+2026-06-15 14:59:35,868 - INFO - Successfully stored transcript for ADFFOODS on 2025-02-15
+2026-06-15 14:59:35,868 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:39,152 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:39,749 - INFO - Stored narrative analysis for ADFFOODS on 2025-02-15
+2026-06-15 14:59:39,749 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.7
+2026-06-15 14:59:39,749 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:39,749 - INFO -   [Nov 2024TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 14:59:40,805 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:40,843 - INFO -   pdftotext fallback: 32561 chars extracted
+2026-06-15 14:59:40,844 - INFO -     32561 chars, preview: J
+2026-06-15 14:59:41,755 - INFO - Successfully stored transcript for ADFFOODS on 2024-11-15
+2026-06-15 14:59:41,755 - INFO - Triggering Narrative Analysis for ADFFOODS...
+2026-06-15 14:59:46,218 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:48,335 - INFO - Stored narrative analysis for ADFFOODS on 2024-11-15
+2026-06-15 14:59:48,335 - INFO - Narrative Analysis Complete for ADFFOODS. Sentiment: 0.8
+2026-06-15 14:59:48,335 - INFO -     Stored in aae_transcripts
+2026-06-15 14:59:48,335 - INFO - === ADFFOODS: 8/29 ingested ===
+2026-06-15 14:59:48,335 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for ADFFOODS
+2026-06-15 14:59:50,503 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:50,525 - INFO - Extracted 0 statements for ADFFOODS
+2026-06-15 14:59:52,422 - INFO - ADFFOODS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 14:59:53,163 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ADFFOODS
+OK
+[7/180] ADVAIT ... 2026-06-15 14:59:53,163 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ADVAIT
+2026-06-15 14:59:53,163 - INFO - === Concall Finder: ADVAIT ===
+2026-06-15 14:59:53,163 - INFO - Fetching: https://www.screener.in/company/ADVAIT/consolidated/
+2026-06-15 14:59:54,058 - INFO -   Found 15 transcripts for ADVAIT
+2026-06-15 14:59:54,059 - INFO -   screener.in returned 15 transcripts for ADVAIT
+2026-06-15 14:59:54,059 - INFO -   [Announcement under Regulation 30 (LODR)-Earnings Call Transcript6 Jun - Transcript of Post Results C] → downloading...
+2026-06-15 14:59:56,335 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 14:59:56,372 - INFO -   pdftotext fallback: 47120 chars extracted
+2026-06-15 14:59:56,373 - INFO -     47120 chars, preview: Date: 06.06.2026
+
+To,                                              To,
+General Manager
+2026-06-15 14:59:58,183 - INFO - Successfully stored transcript for ADVAIT on 2026-06-15
+2026-06-15 14:59:58,183 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:00:02,411 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:00:04,763 - INFO - Stored narrative analysis for ADVAIT on 2026-06-15
+2026-06-15 15:00:04,763 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.8
+2026-06-15 15:00:04,763 - INFO -     Stored in aae_transcripts
+2026-06-15 15:00:04,763 - INFO -   [Jun 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:00:08,488 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:00:08,537 - INFO -   pdftotext fallback: 47120 chars extracted
+2026-06-15 15:00:08,538 - INFO -     47120 chars, preview: Date: 06.06.2026
+
+To,                                              To,
+General Manager
+2026-06-15 15:00:10,762 - INFO - Successfully stored transcript for ADVAIT on 2026-06-15
+2026-06-15 15:00:10,763 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:00:14,925 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:00:17,431 - INFO - Stored narrative analysis for ADVAIT on 2026-06-15
+2026-06-15 15:00:17,431 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.8
+2026-06-15 15:00:17,431 - INFO -     Stored in aae_transcripts
+2026-06-15 15:00:17,431 - INFO -   [Feb 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:00:19,821 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:00:19,885 - INFO -   pdftotext fallback: 71078 chars extracted
+2026-06-15 15:00:19,886 - INFO -     71078 chars, preview: Date: February 19, 2026
+
+To,                                              To,
+General Manager
+2026-06-15 15:00:21,243 - INFO - Successfully stored transcript for ADVAIT on 2026-02-15
+2026-06-15 15:00:21,243 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:00:26,894 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:00:27,827 - INFO - Stored narrative analysis for ADVAIT on 2026-02-15
+2026-06-15 15:00:27,828 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.85
+2026-06-15 15:00:27,828 - INFO -     Stored in aae_transcripts
+2026-06-15 15:00:27,828 - INFO -   [Nov 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:00:29,428 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:00:29,457 - INFO -   pdftotext fallback: 41051 chars extracted
+2026-06-15 15:00:29,458 - INFO -     41051 chars, preview: Date: November 21, 2025
+
+To,
+The General Manager,
+Corporate Relationship Department
+BSE limited
+P.J
+2026-06-15 15:00:31,146 - INFO - Successfully stored transcript for ADVAIT on 2025-11-15
+2026-06-15 15:00:31,147 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:00:36,071 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:00:37,608 - INFO - Stored narrative analysis for ADVAIT on 2025-11-15
+2026-06-15 15:00:37,608 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.85
+2026-06-15 15:00:37,608 - INFO -     Stored in aae_transcripts
+2026-06-15 15:00:37,608 - INFO -   [Aug 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:00:44,587 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:00:44,636 - INFO -   pdftotext fallback: 67358 chars extracted
+2026-06-15 15:00:44,637 - INFO -     67358 chars, preview: Date: August 5, 2025
+
+To,
+The General Manager,
+Department of Corporate Services,
+BSE Limited
+Listing
+2026-06-15 15:00:45,287 - INFO - Successfully stored transcript for ADVAIT on 2025-08-15
+2026-06-15 15:00:45,287 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:00:49,365 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:00:50,977 - INFO - Stored narrative analysis for ADVAIT on 2025-08-15
+2026-06-15 15:00:50,977 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.9
+2026-06-15 15:00:50,978 - INFO -     Stored in aae_transcripts
+2026-06-15 15:00:50,978 - INFO -   [Jun 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:00:57,103 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:00:57,146 - INFO -   pdftotext fallback: 51750 chars extracted
+2026-06-15 15:00:57,147 - INFO -     51750 chars, preview: Date: June 5, 2025
+
+To,
+The General Manager,
+Department of Corporate Services,
+BSE Limited
+Listing D
+2026-06-15 15:00:57,740 - INFO - Successfully stored transcript for ADVAIT on 2025-06-15
+2026-06-15 15:00:57,740 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:01:01,087 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:01,803 - INFO - Stored narrative analysis for ADVAIT on 2025-06-15
+2026-06-15 15:01:01,803 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.85
+2026-06-15 15:01:01,804 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:01,804 - INFO -   [May 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:01:03,282 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:03,329 - INFO -   pdftotext fallback: 57622 chars extracted
+2026-06-15 15:01:03,330 - INFO -     57622 chars, preview: Date: May 13, 2025
+
+To,
+The General Manager,
+Department of Corporate Services,
+BSE Limited
+Listing D
+2026-06-15 15:01:04,930 - INFO - Successfully stored transcript for ADVAIT on 2025-05-15
+2026-06-15 15:01:04,931 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:01:08,453 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:08,952 - INFO - Stored narrative analysis for ADVAIT on 2025-05-15
+2026-06-15 15:01:08,952 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.9
+2026-06-15 15:01:08,953 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:08,954 - INFO -   [Feb 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:01:10,533 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:10,579 - INFO -   pdftotext fallback: 58814 chars extracted
+2026-06-15 15:01:10,580 - INFO -     58814 chars, preview: Date: February 20, 2025
+
+To,
+The General Manager,
+Corporate Relationship Department
+BSE limited
+P.J
+2026-06-15 15:01:11,384 - INFO - Successfully stored transcript for ADVAIT on 2025-02-15
+2026-06-15 15:01:11,384 - INFO - Triggering Narrative Analysis for ADVAIT...
+2026-06-15 15:01:15,366 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:15,883 - INFO - Stored narrative analysis for ADVAIT on 2025-02-15
+2026-06-15 15:01:15,884 - INFO - Narrative Analysis Complete for ADVAIT. Sentiment: 0.85
+2026-06-15 15:01:15,885 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:15,885 - INFO - === ADVAIT: 8/15 ingested ===
+2026-06-15 15:01:15,886 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for ADVAIT
+2026-06-15 15:01:18,512 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:18,518 - INFO - Extracted 1 statements for ADVAIT
+2026-06-15 15:01:19,125 - INFO - Stored 1 statements
+2026-06-15 15:01:19,963 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:19,981 - INFO - Extracted 0 statements for ADVAIT
+2026-06-15 15:01:19,982 - INFO - [GUIDANCE-PRIMER] Extracted guidance from 1 transcripts for ADVAIT
+2026-06-15 15:01:21,584 - INFO - ADVAIT: {'verified': 0, 'pending': 1, 'unable': 0}
+2026-06-15 15:01:22,416 - INFO - ADVAIT: 0.0% (0/1) — INSUFFICIENT_DATA
+2026-06-15 15:01:22,416 - INFO - [GUIDANCE-PRIMER] Credibility: 0.0% (0/1) — INSUFFICIENT_DATA
+2026-06-15 15:01:22,416 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ADVAIT
+OK
+[8/180] AEROFLEX ... 2026-06-15 15:01:22,416 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for AEROFLEX
+2026-06-15 15:01:22,416 - INFO - === Concall Finder: AEROFLEX ===
+2026-06-15 15:01:22,416 - INFO - Fetching: https://www.screener.in/company/AEROFLEX/consolidated/
+2026-06-15 15:01:22,697 - INFO -   Found 16 transcripts for AEROFLEX
+2026-06-15 15:01:22,698 - INFO -   screener.in returned 16 transcripts for AEROFLEX
+2026-06-15 15:01:22,698 - INFO -   [Announcement under Regulation 30 (LODR)-Earnings Call Transcript11 May - Transcript of the Investor'] → downloading...
+2026-06-15 15:01:23,457 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:23,496 - INFO -   pdftotext fallback: 69399 chars extracted
+2026-06-15 15:01:23,497 - INFO -     69399 chars, preview: May 11, 2026
+
+ To,                                          To,
+ The General Manager,
+2026-06-15 15:01:24,242 - INFO - Successfully stored transcript for AEROFLEX on 2026-06-15
+2026-06-15 15:01:24,242 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:01:28,737 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:29,256 - INFO - Stored narrative analysis for AEROFLEX on 2026-06-15
+2026-06-15 15:01:29,257 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.85
+2026-06-15 15:01:29,257 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:29,257 - INFO -   [May 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:01:29,708 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:29,752 - INFO -   pdftotext fallback: 69399 chars extracted
+2026-06-15 15:01:29,753 - INFO -     69399 chars, preview: May 11, 2026
+
+ To,                                          To,
+ The General Manager,
+2026-06-15 15:01:30,389 - INFO - Successfully stored transcript for AEROFLEX on 2026-05-15
+2026-06-15 15:01:30,389 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:01:37,864 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:38,419 - INFO - Stored narrative analysis for AEROFLEX on 2026-05-15
+2026-06-15 15:01:38,419 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.85
+2026-06-15 15:01:38,419 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:38,419 - INFO -   [Feb 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:01:39,180 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:39,220 - INFO -   pdftotext fallback: 68337 chars extracted
+2026-06-15 15:01:39,221 - INFO -     68337 chars, preview: February 02, 2026
+ To,                                             To,
+ The General Manager,
+2026-06-15 15:01:39,945 - INFO - Successfully stored transcript for AEROFLEX on 2026-02-15
+2026-06-15 15:01:39,945 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:01:43,882 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:44,906 - INFO - Stored narrative analysis for AEROFLEX on 2026-02-15
+2026-06-15 15:01:44,906 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.8
+2026-06-15 15:01:44,906 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:44,906 - INFO -   [Jan 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:01:48,354 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:48,397 - INFO -   pdftotext fallback: 52302 chars extracted
+2026-06-15 15:01:48,398 - INFO -     52302 chars, preview: January 28, 2026
+
+ To,                                                 To,
+ The General Manager,
+2026-06-15 15:01:49,206 - INFO - Successfully stored transcript for AEROFLEX on 2026-01-15
+2026-06-15 15:01:49,207 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:01:53,011 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:01:53,704 - INFO - Stored narrative analysis for AEROFLEX on 2026-01-15
+2026-06-15 15:01:53,704 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.8
+2026-06-15 15:01:53,706 - INFO -     Stored in aae_transcripts
+2026-06-15 15:01:53,706 - INFO -   [Nov 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:01:54,151 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:01:54,197 - INFO -   pdftotext fallback: 49349 chars extracted
+2026-06-15 15:01:54,198 - INFO -     49349 chars, preview: November 03, 2025
+ To,                                             To,
+ The General Manager,
+2026-06-15 15:01:54,814 - INFO - Successfully stored transcript for AEROFLEX on 2025-11-15
+2026-06-15 15:01:54,815 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:01:59,954 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:00,511 - INFO - Stored narrative analysis for AEROFLEX on 2025-11-15
+2026-06-15 15:02:00,512 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.8
+2026-06-15 15:02:00,512 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:00,512 - INFO -   [Aug 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:00,966 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:00,992 - INFO -   pdftotext fallback: 57040 chars extracted
+2026-06-15 15:02:00,993 - INFO -     57040 chars, preview: August 04, 2025
+ To,                                             To,
+ The General Manager,
+2026-06-15 15:02:01,625 - INFO - Successfully stored transcript for AEROFLEX on 2025-08-15
+2026-06-15 15:02:01,626 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:02:06,790 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:07,323 - INFO - Stored narrative analysis for AEROFLEX on 2025-08-15
+2026-06-15 15:02:07,323 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.7
+2026-06-15 15:02:07,324 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:07,324 - INFO -   [May 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:07,908 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:07,952 - INFO -   pdftotext fallback: 60448 chars extracted
+2026-06-15 15:02:07,953 - INFO -     60448 chars, preview: May 06, 2025
+ To,                                                 To,
+ The General Manager,
+2026-06-15 15:02:08,610 - INFO - Successfully stored transcript for AEROFLEX on 2025-05-15
+2026-06-15 15:02:08,610 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:02:12,811 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:13,408 - INFO - Stored narrative analysis for AEROFLEX on 2025-05-15
+2026-06-15 15:02:13,408 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.8
+2026-06-15 15:02:13,408 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:13,409 - INFO -   [Jan 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:14,012 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:14,056 - INFO -   pdftotext fallback: 63143 chars extracted
+2026-06-15 15:02:14,057 - INFO -     63143 chars, preview: January 21, 2025
+ To,                                             To,
+ The General Manager,
+2026-06-15 15:02:14,859 - INFO - Successfully stored transcript for AEROFLEX on 2025-01-15
+2026-06-15 15:02:14,859 - INFO - Triggering Narrative Analysis for AEROFLEX...
+2026-06-15 15:02:29,342 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:29,869 - INFO - Stored narrative analysis for AEROFLEX on 2025-01-15
+2026-06-15 15:02:29,869 - INFO - Narrative Analysis Complete for AEROFLEX. Sentiment: 0.8
+2026-06-15 15:02:29,869 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:29,869 - INFO - === AEROFLEX: 8/16 ingested ===
+2026-06-15 15:02:29,869 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for AEROFLEX
+2026-06-15 15:02:31,342 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:31,353 - INFO - Extracted 0 statements for AEROFLEX
+2026-06-15 15:02:32,034 - INFO - AEROFLEX: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 15:02:32,497 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for AEROFLEX
+OK
+[9/180] AGI ... 2026-06-15 15:02:32,497 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for AGI
+2026-06-15 15:02:32,497 - INFO - === Concall Finder: AGI ===
+2026-06-15 15:02:32,497 - INFO - Fetching: https://www.screener.in/company/AGI/consolidated/
+2026-06-15 15:02:32,775 - INFO -   Found 25 transcripts for AGI
+2026-06-15 15:02:32,775 - INFO -   screener.in returned 25 transcripts for AGI
+2026-06-15 15:02:32,775 - INFO -   [Apr 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:02:34,116 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:34,154 - INFO -   pdftotext fallback: 45578 chars extracted
+2026-06-15 15:02:34,155 - INFO -     45578 chars, preview: NEAPS/BSE ONLINE
+
+            27th April,
+2026-06-15 15:02:34,789 - INFO - Successfully stored transcript for AGI on 2026-04-15
+2026-06-15 15:02:34,789 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:02:35,472 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:02:38,331 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:39,003 - INFO - Stored narrative analysis for AGI on 2026-04-15
+2026-06-15 15:02:39,003 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.6
+2026-06-15 15:02:39,004 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:39,004 - INFO -   [Feb 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:02:39,510 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:39,555 - INFO -   pdftotext fallback: 60841 chars extracted
+2026-06-15 15:02:39,556 - INFO -     60841 chars, preview: AGI
+2026-06-15 15:02:40,154 - INFO - Successfully stored transcript for AGI on 2026-02-15
+2026-06-15 15:02:40,154 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:02:40,650 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:02:43,659 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:44,194 - INFO - Stored narrative analysis for AGI on 2026-02-15
+2026-06-15 15:02:44,194 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.65
+2026-06-15 15:02:44,195 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:44,195 - INFO -   [Oct 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:44,998 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:45,039 - INFO -   pdftotext fallback: 54513 chars extracted
+2026-06-15 15:02:45,040 - INFO -     54513 chars, preview: NEAPS/BSE ONLINE
+
+            29th Octo
+2026-06-15 15:02:45,657 - INFO - Successfully stored transcript for AGI on 2025-10-15
+2026-06-15 15:02:45,658 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:02:46,360 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:02:50,118 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:50,648 - INFO - Stored narrative analysis for AGI on 2025-10-15
+2026-06-15 15:02:50,649 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.75
+2026-06-15 15:02:50,649 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:50,649 - INFO -   [Jul 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:51,566 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:51,613 - INFO -   pdftotext fallback: 64897 chars extracted
+2026-06-15 15:02:51,614 - INFO -     64897 chars, preview: NEAPS/BSE ONLINE
+
+            28th Jul
+2026-06-15 15:02:52,296 - INFO - Successfully stored transcript for AGI on 2025-07-15
+2026-06-15 15:02:52,296 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:02:53,488 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:02:56,502 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:02:57,023 - INFO - Stored narrative analysis for AGI on 2025-07-15
+2026-06-15 15:02:57,023 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.8
+2026-06-15 15:02:57,024 - INFO -     Stored in aae_transcripts
+2026-06-15 15:02:57,024 - INFO -   [May 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:02:58,103 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:02:58,144 - INFO -   pdftotext fallback: 54633 chars extracted
+2026-06-15 15:02:58,145 - INFO -     54633 chars, preview: NEAPS/BSE ONLINE
+
+            22nd May
+2026-06-15 15:02:58,952 - INFO - Successfully stored transcript for AGI on 2025-05-15
+2026-06-15 15:02:58,952 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:02:59,383 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:03:02,136 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:02,659 - INFO - Stored narrative analysis for AGI on 2025-05-15
+2026-06-15 15:03:02,659 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.75
+2026-06-15 15:03:02,659 - INFO -     Stored in aae_transcripts
+2026-06-15 15:03:02,659 - INFO -   [Jan 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:03:03,289 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:03:03,325 - INFO -   pdftotext fallback: 47132 chars extracted
+2026-06-15 15:03:03,326 - INFO -     47132 chars, preview: NEAPS/BSE ONLINE
+
+            27th Jan
+2026-06-15 15:03:03,950 - INFO - Successfully stored transcript for AGI on 2025-01-15
+2026-06-15 15:03:03,950 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:03:04,410 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:03:07,489 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:08,042 - INFO - Stored narrative analysis for AGI on 2025-01-15
+2026-06-15 15:03:08,043 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.75
+2026-06-15 15:03:08,044 - INFO -     Stored in aae_transcripts
+2026-06-15 15:03:08,044 - INFO -   [Nov 2024TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:03:08,517 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:03:08,555 - INFO -   pdftotext fallback: 50416 chars extracted
+2026-06-15 15:03:08,556 - INFO -     50416 chars, preview: NEAPS/BSE ONLINE
+
+            14th Nov
+2026-06-15 15:03:09,176 - INFO - Successfully stored transcript for AGI on 2024-11-15
+2026-06-15 15:03:09,177 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:03:09,657 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:03:12,050 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:12,912 - INFO - Stored narrative analysis for AGI on 2024-11-15
+2026-06-15 15:03:12,912 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.75
+2026-06-15 15:03:12,913 - INFO -     Stored in aae_transcripts
+2026-06-15 15:03:12,913 - INFO -   [Aug 2024TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:03:13,406 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:03:13,452 - INFO -   pdftotext fallback: 62324 chars extracted
+2026-06-15 15:03:13,453 - INFO -     62324 chars, preview: NEAPS/BSE ONLINE
+
+             5th Aug
+2026-06-15 15:03:14,087 - INFO - Successfully stored transcript for AGI on 2024-08-15
+2026-06-15 15:03:14,088 - INFO - Triggering Narrative Analysis for AGI...
+2026-06-15 15:03:14,530 - WARNING - Insufficient quarterly data for delta analysis: AGI
+2026-06-15 15:03:17,183 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:17,666 - INFO - Stored narrative analysis for AGI on 2024-08-15
+2026-06-15 15:03:17,667 - INFO - Narrative Analysis Complete for AGI. Sentiment: 0.75
+2026-06-15 15:03:17,668 - INFO -     Stored in aae_transcripts
+2026-06-15 15:03:17,668 - INFO - === AGI: 8/25 ingested ===
+2026-06-15 15:03:17,669 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for AGI
+2026-06-15 15:03:19,501 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:19,506 - INFO - Extracted 0 statements for AGI
+2026-06-15 15:03:22,469 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:22,475 - INFO - Extracted 2 statements for AGI
+2026-06-15 15:03:23,069 - INFO - Stored 2 statements
+2026-06-15 15:03:28,138 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:28,152 - INFO - Extracted 4 statements for AGI
+2026-06-15 15:03:29,053 - INFO - Stored 4 statements
+2026-06-15 15:03:35,227 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:35,239 - INFO - Extracted 4 statements for AGI
+2026-06-15 15:03:36,332 - INFO - Stored 4 statements
+2026-06-15 15:03:38,344 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:38,348 - INFO - Extracted 1 statements for AGI
+2026-06-15 15:03:39,059 - INFO - Stored 1 statements
+2026-06-15 15:03:40,295 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:40,302 - INFO - Extracted 0 statements for AGI
+2026-06-15 15:03:42,170 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:42,172 - INFO - Extracted 0 statements for AGI
+2026-06-15 15:03:43,361 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:43,365 - INFO - Extracted 0 statements for AGI
+2026-06-15 15:03:43,365 - INFO - [GUIDANCE-PRIMER] Extracted guidance from 4 transcripts for AGI
+2026-06-15 15:03:45,393 - ERROR - [GUIDANCE-PRIMER] Guidance verification failed for AGI: not all arguments converted during string formatting
+2026-06-15 15:03:45,876 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for AGI
+OK
+[10/180] AIL ... 2026-06-15 15:03:45,876 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for AIL
+2026-06-15 15:03:45,876 - INFO - === Concall Finder: AIL ===
+2026-06-15 15:03:45,876 - INFO - Fetching: https://www.screener.in/company/AIL/consolidated/
+2026-06-15 15:03:46,067 - WARNING - screener.in returned 404
+2026-06-15 15:03:46,072 - INFO -   screener.in returned 0 — trying NSE fallback...
+2026-06-15 15:03:46,498 - INFO -   NSE: Found 0 transcripts for AIL
+2026-06-15 15:03:46,499 - WARNING - No transcripts found for AIL (screener.in + NSE)
+2026-06-15 15:03:46,499 - WARNING - [GUIDANCE-PRIMER] No transcripts found for AIL — may not be listed on screener.in
+2026-06-15 15:03:47,391 - INFO - AIL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 15:03:47,818 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for AIL
+OK
+[11/180] ALPEXSOLAR ... 2026-06-15 15:03:47,818 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ALPEXSOLAR
+2026-06-15 15:03:47,818 - INFO - === Concall Finder: ALPEXSOLAR ===
+2026-06-15 15:03:47,818 - INFO - Fetching: https://www.screener.in/company/ALPEXSOLAR/consolidated/
+2026-06-15 15:03:48,080 - INFO -   Found 0 transcripts for ALPEXSOLAR
+2026-06-15 15:03:48,080 - INFO -   screener.in returned 0 — trying NSE fallback...
+2026-06-15 15:03:48,512 - INFO -   NSE: Found 0 transcripts for ALPEXSOLAR
+2026-06-15 15:03:48,513 - WARNING - No transcripts found for ALPEXSOLAR (screener.in + NSE)
+2026-06-15 15:03:48,513 - WARNING - [GUIDANCE-PRIMER] No transcripts found for ALPEXSOLAR — may not be listed on screener.in
+2026-06-15 15:03:49,401 - INFO - ALPEXSOLAR: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 15:03:49,890 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for ALPEXSOLAR
+OK
+[12/180] AMBER ... 2026-06-15 15:03:49,890 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for AMBER
+2026-06-15 15:03:49,890 - INFO - === Concall Finder: AMBER ===
+2026-06-15 15:03:49,890 - INFO - Fetching: https://www.screener.in/company/AMBER/consolidated/
+2026-06-15 15:03:50,255 - INFO -   Found 47 transcripts for AMBER
+2026-06-15 15:03:50,256 - INFO -   screener.in returned 47 transcripts for AMBER
+2026-06-15 15:03:50,256 - INFO -   [Announcement under Regulation 30 (LODR)-Earnings Call Transcript22 May - Pursuant to Regulation 30 o] → downloading...
+2026-06-15 15:03:54,089 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:03:54,135 - INFO -   pdftotext fallback: 60913 chars extracted
+2026-06-15 15:03:54,136 - INFO -     60913 chars, preview: Date: 22nd May 2026
+
+To                                                 To
+Secretary
+2026-06-15 15:03:54,757 - INFO - Successfully stored transcript for AMBER on 2026-06-15
+2026-06-15 15:03:54,758 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:03:58,314 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:03:58,837 - INFO - Stored narrative analysis for AMBER on 2026-06-15
+2026-06-15 15:03:58,838 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:03:58,839 - INFO -     Stored in aae_transcripts
+2026-06-15 15:03:58,839 - INFO -   [May 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:03:59,172 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:03:59,222 - INFO -   pdftotext fallback: 60913 chars extracted
+2026-06-15 15:03:59,223 - INFO -     60913 chars, preview: Date: 22nd May 2026
+
+To                                                 To
+Secretary
+2026-06-15 15:03:59,824 - INFO - Successfully stored transcript for AMBER on 2026-05-15
+2026-06-15 15:03:59,824 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:03,025 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:03,565 - INFO - Stored narrative analysis for AMBER on 2026-05-15
+2026-06-15 15:04:03,566 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:03,567 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:03,567 - INFO -   [Feb 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:04:03,977 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:04,024 - INFO -   pdftotext fallback: 62036 chars extracted
+2026-06-15 15:04:04,025 - INFO -     62036 chars, preview: Date: 16 February 2026
+
+To                                                  To
+Secretary
+2026-06-15 15:04:04,639 - INFO - Successfully stored transcript for AMBER on 2026-02-15
+2026-06-15 15:04:04,640 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:08,145 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:08,703 - INFO - Stored narrative analysis for AMBER on 2026-02-15
+2026-06-15 15:04:08,703 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:08,704 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:08,704 - INFO -   [Nov 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:04:09,165 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:09,216 - INFO -   pdftotext fallback: 54091 chars extracted
+2026-06-15 15:04:09,217 - INFO -     54091 chars, preview: Date: 13 November 2025
+
+To                                                    To
+Secretary
+2026-06-15 15:04:10,474 - INFO - Successfully stored transcript for AMBER on 2025-11-15
+2026-06-15 15:04:10,474 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:14,569 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:15,109 - INFO - Stored narrative analysis for AMBER on 2025-11-15
+2026-06-15 15:04:15,110 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.7
+2026-06-15 15:04:15,110 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:15,110 - INFO -   [Aug 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:04:16,075 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:16,120 - INFO -   pdftotext fallback: 68779 chars extracted
+2026-06-15 15:04:16,121 - INFO -     68779 chars, preview: Date: 05 August 2025
+
+To                                                      To
+Secretary
+2026-06-15 15:04:16,795 - INFO - Successfully stored transcript for AMBER on 2025-08-15
+2026-06-15 15:04:16,795 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:20,844 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:21,385 - INFO - Stored narrative analysis for AMBER on 2025-08-15
+2026-06-15 15:04:21,386 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:21,386 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:21,386 - INFO -   [May 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:04:21,906 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:21,948 - INFO -   pdftotext fallback: 65701 chars extracted
+2026-06-15 15:04:21,949 - INFO -     65701 chars, preview: Date: 23 May 2025
+
+To                                                     To
+Secretary
+2026-06-15 15:04:22,599 - INFO - Successfully stored transcript for AMBER on 2025-05-15
+2026-06-15 15:04:22,600 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:25,867 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:26,394 - INFO - Stored narrative analysis for AMBER on 2025-05-15
+2026-06-15 15:04:26,394 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:26,395 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:26,395 - INFO -   [Jan 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:04:26,950 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:26,992 - INFO -   pdftotext fallback: 64268 chars extracted
+2026-06-15 15:04:26,993 - INFO -     64268 chars, preview: www.amb
+2026-06-15 15:04:27,660 - INFO - Successfully stored transcript for AMBER on 2025-01-15
+2026-06-15 15:04:27,661 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:30,627 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:31,110 - INFO - Stored narrative analysis for AMBER on 2025-01-15
+2026-06-15 15:04:31,114 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:31,114 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:31,114 - INFO -   [Oct 2024TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:04:32,012 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:32,062 - INFO -   pdftotext fallback: 70325 chars extracted
+2026-06-15 15:04:32,063 - INFO -     70325 chars, preview: www.amb
+2026-06-15 15:04:32,678 - INFO - Successfully stored transcript for AMBER on 2024-10-15
+2026-06-15 15:04:32,678 - INFO - Triggering Narrative Analysis for AMBER...
+2026-06-15 15:04:35,885 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:36,686 - INFO - Stored narrative analysis for AMBER on 2024-10-15
+2026-06-15 15:04:36,686 - INFO - Narrative Analysis Complete for AMBER. Sentiment: 0.8
+2026-06-15 15:04:36,686 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:36,686 - INFO - === AMBER: 8/47 ingested ===
+2026-06-15 15:04:36,686 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for AMBER
+2026-06-15 15:04:42,040 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:42,049 - INFO - Extracted 3 statements for AMBER
+2026-06-15 15:04:42,695 - INFO - Stored 3 statements
+2026-06-15 15:04:42,695 - INFO - [GUIDANCE-PRIMER] Extracted guidance from 1 transcripts for AMBER
+2026-06-15 15:04:44,216 - INFO - AMBER: {'verified': 0, 'pending': 2, 'unable': 0}
+2026-06-15 15:04:44,840 - INFO - AMBER: 25.0% (1/4) — INSUFFICIENT_DATA
+2026-06-15 15:04:44,840 - INFO - [GUIDANCE-PRIMER] Credibility: 25.0% (1/4) — INSUFFICIENT_DATA
+2026-06-15 15:04:44,840 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for AMBER
+OK
+[13/180] AMRUTANJAN ... 2026-06-15 15:04:44,840 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for AMRUTANJAN
+2026-06-15 15:04:44,840 - INFO - === Concall Finder: AMRUTANJAN ===
+2026-06-15 15:04:44,840 - INFO - Fetching: https://www.screener.in/company/AMRUTANJAN/consolidated/
+2026-06-15 15:04:45,109 - INFO -   Found 30 transcripts for AMRUTANJAN
+2026-06-15 15:04:45,110 - INFO -   screener.in returned 30 transcripts for AMRUTANJAN
+2026-06-15 15:04:45,110 - INFO -   [May 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:04:46,143 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:46,182 - INFO -   pdftotext fallback: 30732 chars extracted
+2026-06-15 15:04:46,183 - INFO -     30732 chars, preview: AHCL/SE/9/2026-27                                                             May 9, 2026
+2026-06-15 15:04:46,734 - INFO - Successfully stored transcript for AMRUTANJAN on 2026-05-15
+2026-06-15 15:04:46,734 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:04:47,174 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:04:51,509 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:04:51,997 - INFO - Stored narrative analysis for AMRUTANJAN on 2026-05-15
+2026-06-15 15:04:51,997 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.7
+2026-06-15 15:04:51,997 - INFO -     Stored in aae_transcripts
+2026-06-15 15:04:51,998 - INFO -   [Feb 2026TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:04:52,979 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:04:53,015 - INFO -   pdftotext fallback: 31168 chars extracted
+2026-06-15 15:04:53,016 - INFO -     31168 chars, preview: AHCL/SE/40/2025-26                                                           February 4, 2026
+2026-06-15 15:04:53,602 - INFO - Successfully stored transcript for AMRUTANJAN on 2026-02-15
+2026-06-15 15:04:53,603 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:04:54,036 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:02,273 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:05:02,763 - INFO - Stored narrative analysis for AMRUTANJAN on 2026-02-15
+2026-06-15 15:05:02,764 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.7
+2026-06-15 15:05:02,765 - INFO -     Stored in aae_transcripts
+2026-06-15 15:05:02,765 - INFO -   [Nov 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:05:06,772 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:05:06,812 - INFO -   pdftotext fallback: 37998 chars extracted
+2026-06-15 15:05:06,813 - INFO -     37998 chars, preview: AHCL/SE/33/2025-26                                                             November 11, 2025
+2026-06-15 15:05:07,396 - INFO - Successfully stored transcript for AMRUTANJAN on 2025-11-15
+2026-06-15 15:05:07,397 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:05:07,862 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:11,437 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:05:12,037 - INFO - Stored narrative analysis for AMRUTANJAN on 2025-11-15
+2026-06-15 15:05:12,037 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.7
+2026-06-15 15:05:12,037 - INFO -     Stored in aae_transcripts
+2026-06-15 15:05:12,037 - INFO -   [Aug 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:05:13,417 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:05:13,460 - INFO -   pdftotext fallback: 22699 chars extracted
+2026-06-15 15:05:13,462 - INFO -     22699 chars, preview: AHCL/ SE/15 /2025-26                                                               August 13, 20
+2026-06-15 15:05:14,417 - INFO - Successfully stored transcript for AMRUTANJAN on 2025-08-15
+2026-06-15 15:05:14,417 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:05:14,853 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:19,009 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:05:20,703 - INFO - Stored narrative analysis for AMRUTANJAN on 2025-08-15
+2026-06-15 15:05:20,704 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.75
+2026-06-15 15:05:20,704 - INFO -     Stored in aae_transcripts
+2026-06-15 15:05:20,705 - INFO -   [May 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:05:30,244 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:05:30,286 - INFO -   pdftotext fallback: 35700 chars extracted
+2026-06-15 15:05:30,288 - INFO -     35700 chars, preview: AHCL/ SE/7/2025-26                                                                May 19, 2025
+2026-06-15 15:05:31,893 - INFO - Successfully stored transcript for AMRUTANJAN on 2025-05-15
+2026-06-15 15:05:31,893 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:05:33,063 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:36,967 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:05:37,798 - INFO - Stored narrative analysis for AMRUTANJAN on 2025-05-15
+2026-06-15 15:05:37,798 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.7
+2026-06-15 15:05:37,798 - INFO -     Stored in aae_transcripts
+2026-06-15 15:05:37,798 - INFO -   [Feb 2025TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:05:43,739 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:05:43,775 - INFO -   pdftotext fallback: 26596 chars extracted
+2026-06-15 15:05:43,776 - INFO -     26596 chars, preview: AHCL/ SE/ 54/2024-25                                                         February 14, 2025
+2026-06-15 15:05:44,545 - INFO - Successfully stored transcript for AMRUTANJAN on 2025-02-15
+2026-06-15 15:05:44,545 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:05:45,843 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:49,208 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:05:50,069 - INFO - Stored narrative analysis for AMRUTANJAN on 2025-02-15
+2026-06-15 15:05:50,069 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.75
+2026-06-15 15:05:50,070 - INFO -     Stored in aae_transcripts
+2026-06-15 15:05:50,070 - INFO -   [Nov 2024TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:05:54,528 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:05:54,570 - INFO -   pdftotext fallback: 26764 chars extracted
+2026-06-15 15:05:54,571 - INFO -     26764 chars, preview: AHCL/ SE/42/2024-25                                                              November 13, 20
+2026-06-15 15:05:55,787 - INFO - Successfully stored transcript for AMRUTANJAN on 2024-11-15
+2026-06-15 15:05:55,787 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:05:56,328 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:05:59,768 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:00,263 - INFO - Stored narrative analysis for AMRUTANJAN on 2024-11-15
+2026-06-15 15:06:00,263 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.75
+2026-06-15 15:06:00,263 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:00,263 - INFO -   [Aug 2024TranscriptAI SummaryPPT] → downloading...
+2026-06-15 15:06:02,102 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:02,152 - INFO -   pdftotext fallback: 26520 chars extracted
+2026-06-15 15:06:02,153 - INFO -     26520 chars, preview: AHCL/ SE/25 /2024-25                                                               August 14, 20
+2026-06-15 15:06:02,729 - INFO - Successfully stored transcript for AMRUTANJAN on 2024-08-15
+2026-06-15 15:06:02,729 - INFO - Triggering Narrative Analysis for AMRUTANJAN...
+2026-06-15 15:06:03,211 - WARNING - Insufficient quarterly data for delta analysis: AMRUTANJAN
+2026-06-15 15:06:07,763 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:09,369 - INFO - Stored narrative analysis for AMRUTANJAN on 2024-08-15
+2026-06-15 15:06:09,369 - INFO - Narrative Analysis Complete for AMRUTANJAN. Sentiment: 0.75
+2026-06-15 15:06:09,370 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:09,370 - INFO - === AMRUTANJAN: 8/30 ingested ===
+2026-06-15 15:06:09,370 - INFO - [GUIDANCE-PRIMER] Ingested 8 transcripts for AMRUTANJAN
+2026-06-15 15:06:11,237 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:11,245 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:12,214 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:12,219 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:12,927 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:12,934 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:14,032 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:14,045 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:15,391 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:15,397 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:16,391 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:16,404 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:17,128 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:17,137 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:18,111 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:18,120 - INFO - Extracted 0 statements for AMRUTANJAN
+2026-06-15 15:06:18,619 - INFO - AMRUTANJAN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-15 15:06:19,057 - INFO - [GUIDANCE-PRIMER] Guidance prime complete for AMRUTANJAN
+OK
+[14/180] ANGELONE ... 2026-06-15 15:06:19,057 - INFO - [GUIDANCE-PRIMER] Starting guidance prime for ANGELONE
+2026-06-15 15:06:19,057 - INFO - === Concall Finder: ANGELONE ===
+2026-06-15 15:06:19,057 - INFO - Fetching: https://www.screener.in/company/ANGELONE/consolidated/
+2026-06-15 15:06:19,372 - INFO -   Found 32 transcripts for ANGELONE
+2026-06-15 15:06:19,372 - INFO -   screener.in returned 32 transcripts for ANGELONE
+2026-06-15 15:06:19,373 - INFO -   [Apr 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:20,001 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:20,048 - INFO -   pdftotext fallback: 85091 chars extracted
+2026-06-15 15:06:20,049 - INFO -     85091 chars, preview: To,
+ Listing Department                                                                         Depa
+2026-06-15 15:06:20,719 - INFO - Successfully stored transcript for ANGELONE on 2026-04-15
+2026-06-15 15:06:20,719 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:23,556 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:24,217 - INFO - Stored narrative analysis for ANGELONE on 2026-04-15
+2026-06-15 15:06:24,217 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.8
+2026-06-15 15:06:24,217 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:24,217 - INFO -   [Jan 2026TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:24,804 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:24,860 - INFO -   pdftotext fallback: 75050 chars extracted
+2026-06-15 15:06:24,860 - INFO -     75050 chars, preview: To,
+Listing Department                                                                        Depart
+2026-06-15 15:06:25,480 - INFO - Successfully stored transcript for ANGELONE on 2026-01-15
+2026-06-15 15:06:25,481 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:29,236 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:29,789 - INFO - Stored narrative analysis for ANGELONE on 2026-01-15
+2026-06-15 15:06:29,790 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.8
+2026-06-15 15:06:29,790 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:29,790 - INFO -   [Oct 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:30,278 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:30,330 - INFO -   pdftotext fallback: 83376 chars extracted
+2026-06-15 15:06:30,331 - INFO -     83376 chars, preview: To,
+Listing Department                                                              Department of Co
+2026-06-15 15:06:31,020 - INFO - Successfully stored transcript for ANGELONE on 2025-10-15
+2026-06-15 15:06:31,021 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:36,496 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:37,000 - INFO - Stored narrative analysis for ANGELONE on 2025-10-15
+2026-06-15 15:06:37,000 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.8
+2026-06-15 15:06:37,000 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:37,000 - INFO -   [Jul 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:37,679 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:37,744 - INFO -   pdftotext fallback: 97828 chars extracted
+2026-06-15 15:06:37,745 - INFO -     97828 chars, preview: To,
+ Listing Department                                                   Department of Corporate Se
+2026-06-15 15:06:38,409 - INFO - Successfully stored transcript for ANGELONE on 2025-07-15
+2026-06-15 15:06:38,409 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:41,945 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:42,443 - INFO - Stored narrative analysis for ANGELONE on 2025-07-15
+2026-06-15 15:06:42,443 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.8
+2026-06-15 15:06:42,444 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:42,444 - INFO -   [Apr 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:42,969 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:43,033 - INFO -   pdftotext fallback: 105877 chars extracted
+2026-06-15 15:06:43,034 - INFO -     105877 chars, preview: To,
+Listing Department                                                                Department of
+2026-06-15 15:06:43,730 - INFO - Successfully stored transcript for ANGELONE on 2025-04-15
+2026-06-15 15:06:43,730 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:47,234 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:47,777 - INFO - Stored narrative analysis for ANGELONE on 2025-04-15
+2026-06-15 15:06:47,777 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.75
+2026-06-15 15:06:47,777 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:47,778 - INFO -   [Jan 2025TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:48,486 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:48,566 - INFO -   pdftotext fallback: 107220 chars extracted
+2026-06-15 15:06:48,567 - INFO -     107220 chars, preview: To,
+ Listing Department                                                                     Departme
+2026-06-15 15:06:49,280 - INFO - Successfully stored transcript for ANGELONE on 2025-01-15
+2026-06-15 15:06:49,280 - INFO - Triggering Narrative Analysis for ANGELONE...
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:36: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_qoq'] = df['revenue'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:37: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_qoq'] = df['ebitda'].pct_change()
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:42: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['rev_yoy'] = df['revenue'].pct_change(4)
+/home/immanuels/Desktop/mri-int/engine_fundamental/delta_engine.py:43: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+  df['ebitda_yoy'] = df['ebitda'].pct_change(4)
+2026-06-15 15:06:53,275 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 15:06:53,758 - INFO - Stored narrative analysis for ANGELONE on 2025-01-15
+2026-06-15 15:06:53,758 - INFO - Narrative Analysis Complete for ANGELONE. Sentiment: 0.75
+2026-06-15 15:06:53,758 - INFO -     Stored in aae_transcripts
+2026-06-15 15:06:53,758 - INFO -   [Oct 2024TranscriptAI SummaryPPTREC] → downloading...
+2026-06-15 15:06:56,193 - WARNING - markitdown not installed — falling back to pdftotext
+2026-06-15 15:06:56,256 - INFO -   pdftotext fallback: 87559 chars extracted
+2026-06-15 15:06:56,257 - INFO -     87559 chars, preview: To,
+Listing Department                                                                   Department

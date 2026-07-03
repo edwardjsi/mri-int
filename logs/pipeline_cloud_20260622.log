@@ -1,0 +1,931 @@
+=== MRI Cloud Pipeline — Monday 22 June 2026 07:57:40 PM IST ===
+[1/10] Ingesting today's market data...
+<stdin>:1: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:engine_core.ingestion_engine:📡 [engine_core] Ingesting Index Data...
+INFO:engine_core.db:✅ Core schema initialized (market_index_prices hardened)
+INFO:engine_core.ingestion_engine:  ✅ NIFTY50 synced (297 rows).
+INFO:engine_core.ingestion_engine:  ✅ SENSEX synced (297 rows).
+INFO:engine_core.ingestion_engine:📡 [engine_core] Processing 502 stocks (CSV list)...
+WARNING:engine_core.ingestion_engine:  ⚠️ ABFRL rejected by Audit: Detected suspicious >50% price spike
+WARNING:engine_core.ingestion_engine:  ⚠️ VEDL rejected by Audit: Detected suspicious >50% price spike
+INFO:engine_core.ingestion_engine:✅ CSV Ingestion Complete: 500/502 symbols synced.
+[2/10] Running Indicator Engine...
+/home/immanuels/Desktop/mri-int/engine_core/indicator_engine.py:5: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+2026-06-22 20:01:14,556 - INFO - Starting validated indicator recomputation
+2026-06-22 20:01:24,150 - INFO - Found 961 symbols with NULL indicators
+2026-06-22 20:01:24,151 - INFO - Processing indicator batch 1 (25 symbols)
+2026-06-22 20:01:24,497 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:01:27,478 - WARNING - Symbol 3BBLACKBIO has insufficient data: 15 rows
+2026-06-22 20:01:40,542 - INFO - Prepared 2880 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:01:42,266 - INFO - Wrote 2880 indicator updates to DB (Attempt 1)
+2026-06-22 20:01:45,304 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:01:45,304 - INFO - Completed batch 1: 2880 updates written; running total 2880
+2026-06-22 20:01:45,304 - INFO - Processing indicator batch 2 (25 symbols)
+2026-06-22 20:01:45,615 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:02:01,744 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:02:03,345 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:02:06,423 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:02:06,425 - INFO - Completed batch 2: 3000 updates written; running total 5880
+2026-06-22 20:02:06,426 - INFO - Processing indicator batch 3 (25 symbols)
+2026-06-22 20:02:06,752 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:02:22,471 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:02:24,785 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:02:27,923 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:02:27,926 - INFO - Completed batch 3: 3000 updates written; running total 8880
+2026-06-22 20:02:27,926 - INFO - Processing indicator batch 4 (25 symbols)
+2026-06-22 20:02:28,252 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:02:44,217 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:02:47,181 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:02:50,571 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:02:50,572 - INFO - Completed batch 4: 3000 updates written; running total 11880
+2026-06-22 20:02:50,573 - INFO - Processing indicator batch 5 (25 symbols)
+2026-06-22 20:02:50,908 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:03:06,275 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:03:08,833 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:03:13,240 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:03:13,242 - INFO - Completed batch 5: 3000 updates written; running total 14880
+2026-06-22 20:03:13,242 - INFO - Processing indicator batch 6 (25 symbols)
+2026-06-22 20:03:13,583 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:03:28,650 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:03:30,662 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:03:33,748 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:03:33,749 - INFO - Completed batch 6: 3000 updates written; running total 17880
+2026-06-22 20:03:33,749 - INFO - Processing indicator batch 7 (25 symbols)
+2026-06-22 20:03:34,111 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:03:50,268 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:03:53,709 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:03:56,983 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:03:56,985 - INFO - Completed batch 7: 3000 updates written; running total 20880
+2026-06-22 20:03:56,985 - INFO - Processing indicator batch 8 (25 symbols)
+2026-06-22 20:03:57,325 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:04:12,735 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:04:15,861 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:04:18,984 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:04:18,985 - INFO - Completed batch 8: 3000 updates written; running total 23880
+2026-06-22 20:04:18,985 - INFO - Processing indicator batch 9 (25 symbols)
+2026-06-22 20:04:19,333 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:04:35,050 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:04:37,927 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:04:40,962 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:04:40,963 - INFO - Completed batch 9: 3000 updates written; running total 26880
+2026-06-22 20:04:40,964 - INFO - Processing indicator batch 10 (25 symbols)
+2026-06-22 20:04:41,303 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:04:57,887 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:05:01,104 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:05:04,002 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:05:04,004 - INFO - Completed batch 10: 3000 updates written; running total 29880
+2026-06-22 20:05:04,005 - INFO - Processing indicator batch 11 (25 symbols)
+2026-06-22 20:05:04,349 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:05:20,459 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:05:22,869 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:05:26,213 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:05:26,215 - INFO - Completed batch 11: 3000 updates written; running total 32880
+2026-06-22 20:05:26,216 - INFO - Processing indicator batch 12 (25 symbols)
+2026-06-22 20:05:26,554 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:05:42,189 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:05:48,756 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:05:54,340 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:05:54,341 - INFO - Completed batch 12: 3000 updates written; running total 35880
+2026-06-22 20:05:54,341 - INFO - Processing indicator batch 13 (25 symbols)
+2026-06-22 20:05:55,228 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:06:13,471 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:06:21,270 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:06:27,325 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:06:27,326 - INFO - Completed batch 13: 3000 updates written; running total 38880
+2026-06-22 20:06:27,327 - INFO - Processing indicator batch 14 (25 symbols)
+2026-06-22 20:06:27,907 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:06:51,989 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:07:00,060 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:07:10,464 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:07:10,465 - INFO - Completed batch 14: 3000 updates written; running total 41880
+2026-06-22 20:07:10,466 - INFO - Processing indicator batch 15 (25 symbols)
+2026-06-22 20:07:11,778 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:07:38,713 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:07:45,338 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:07:51,573 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:07:51,573 - INFO - Completed batch 15: 3000 updates written; running total 44880
+2026-06-22 20:07:51,573 - INFO - Processing indicator batch 16 (25 symbols)
+2026-06-22 20:07:52,026 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:08:17,244 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:08:25,541 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:08:35,132 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:08:35,133 - INFO - Completed batch 16: 3000 updates written; running total 47880
+2026-06-22 20:08:35,133 - INFO - Processing indicator batch 17 (25 symbols)
+2026-06-22 20:08:36,121 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:09:07,334 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:09:15,904 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:09:24,591 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:09:24,593 - INFO - Completed batch 17: 3000 updates written; running total 50880
+2026-06-22 20:09:24,593 - INFO - Processing indicator batch 18 (25 symbols)
+2026-06-22 20:09:25,550 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:09:58,920 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:10:07,253 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:10:14,617 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:10:14,619 - INFO - Completed batch 18: 3000 updates written; running total 53880
+2026-06-22 20:10:14,620 - INFO - Processing indicator batch 19 (25 symbols)
+2026-06-22 20:10:15,339 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:10:39,132 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:10:46,866 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:10:54,324 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:10:54,325 - INFO - Completed batch 19: 3000 updates written; running total 56880
+2026-06-22 20:10:54,325 - INFO - Processing indicator batch 20 (25 symbols)
+2026-06-22 20:10:55,261 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:11:49,999 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:11:57,626 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:12:06,241 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:12:06,241 - INFO - Completed batch 20: 3000 updates written; running total 59880
+2026-06-22 20:12:06,241 - INFO - Processing indicator batch 21 (25 symbols)
+2026-06-22 20:12:06,697 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:13:02,177 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:13:12,677 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:13:19,313 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:13:19,314 - INFO - Completed batch 21: 3000 updates written; running total 62880
+2026-06-22 20:13:19,314 - INFO - Processing indicator batch 22 (25 symbols)
+2026-06-22 20:13:20,334 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:13:53,418 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:13:58,434 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:14:04,682 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:14:04,683 - INFO - Completed batch 22: 3000 updates written; running total 65880
+2026-06-22 20:14:04,683 - INFO - Processing indicator batch 23 (25 symbols)
+2026-06-22 20:14:05,415 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:14:32,046 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:14:40,664 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:14:49,093 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:14:49,095 - INFO - Completed batch 23: 3000 updates written; running total 68880
+2026-06-22 20:14:49,096 - INFO - Processing indicator batch 24 (25 symbols)
+2026-06-22 20:14:49,894 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:15:16,848 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:15:25,384 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:15:33,544 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:15:33,546 - INFO - Completed batch 24: 3000 updates written; running total 71880
+2026-06-22 20:15:33,546 - INFO - Processing indicator batch 25 (25 symbols)
+2026-06-22 20:15:34,563 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:16:03,043 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:16:11,243 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:16:19,708 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:16:19,709 - INFO - Completed batch 25: 3000 updates written; running total 74880
+2026-06-22 20:16:19,710 - INFO - Processing indicator batch 26 (25 symbols)
+2026-06-22 20:16:20,755 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:16:47,692 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:16:57,006 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:17:04,376 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:17:04,376 - INFO - Completed batch 26: 3000 updates written; running total 77880
+2026-06-22 20:17:04,376 - INFO - Processing indicator batch 27 (25 symbols)
+2026-06-22 20:17:05,115 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:17:31,943 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:17:41,586 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:17:49,118 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:17:49,120 - INFO - Completed batch 27: 3000 updates written; running total 80880
+2026-06-22 20:17:49,120 - INFO - Processing indicator batch 28 (25 symbols)
+2026-06-22 20:17:49,819 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:18:16,972 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:18:24,420 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:18:32,041 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:18:32,043 - INFO - Completed batch 28: 3000 updates written; running total 83880
+2026-06-22 20:18:32,045 - INFO - Processing indicator batch 29 (25 symbols)
+2026-06-22 20:18:32,865 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:19:11,583 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:19:19,579 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:19:28,038 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:19:28,039 - INFO - Completed batch 29: 3000 updates written; running total 86880
+2026-06-22 20:19:28,040 - INFO - Processing indicator batch 30 (25 symbols)
+2026-06-22 20:19:28,915 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:19:59,111 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:20:00,964 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:20:04,051 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:20:04,053 - INFO - Completed batch 30: 3000 updates written; running total 89880
+2026-06-22 20:20:04,053 - INFO - Processing indicator batch 31 (25 symbols)
+2026-06-22 20:20:04,421 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:20:25,394 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:20:27,851 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:20:30,861 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:20:30,863 - INFO - Completed batch 31: 3000 updates written; running total 92880
+2026-06-22 20:20:30,863 - INFO - Processing indicator batch 32 (25 symbols)
+2026-06-22 20:20:31,207 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:20:49,104 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:20:51,633 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:20:54,824 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:20:54,826 - INFO - Completed batch 32: 3000 updates written; running total 95880
+2026-06-22 20:20:54,827 - INFO - Processing indicator batch 33 (25 symbols)
+2026-06-22 20:20:55,148 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:21:14,672 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:21:16,327 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:21:19,600 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:21:19,601 - INFO - Completed batch 33: 3000 updates written; running total 98880
+2026-06-22 20:21:19,602 - INFO - Processing indicator batch 34 (25 symbols)
+2026-06-22 20:21:19,920 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:21:41,569 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:21:43,839 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:21:46,921 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:21:46,923 - INFO - Completed batch 34: 3000 updates written; running total 101880
+2026-06-22 20:21:46,923 - INFO - Processing indicator batch 35 (25 symbols)
+2026-06-22 20:21:47,278 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:21:53,327 - WARNING - Symbol SKFINDUS has insufficient data: 8 rows
+2026-06-22 20:22:09,104 - INFO - Prepared 2880 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:22:11,368 - INFO - Wrote 2880 indicator updates to DB (Attempt 1)
+2026-06-22 20:22:14,399 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:22:14,400 - INFO - Completed batch 35: 2880 updates written; running total 104760
+2026-06-22 20:22:14,400 - INFO - Processing indicator batch 36 (25 symbols)
+2026-06-22 20:22:14,724 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:22:36,115 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:22:38,897 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:22:42,107 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:22:42,109 - INFO - Completed batch 36: 3000 updates written; running total 107760
+2026-06-22 20:22:42,109 - INFO - Processing indicator batch 37 (25 symbols)
+2026-06-22 20:22:42,445 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:23:05,210 - INFO - Prepared 3000 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:23:07,470 - INFO - Wrote 3000 indicator updates to DB (Attempt 1)
+2026-06-22 20:23:10,471 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:23:10,473 - INFO - Completed batch 37: 3000 updates written; running total 110760
+2026-06-22 20:23:10,474 - INFO - Processing indicator batch 38 (25 symbols)
+2026-06-22 20:23:10,805 - INFO - Computing indicators for 25 symbols with missing data
+2026-06-22 20:23:18,289 - WARNING - Symbol VAML has insufficient data: 6 rows
+2026-06-22 20:23:19,707 - WARNING - Symbol VEDPOWER has insufficient data: 4 rows
+2026-06-22 20:23:23,334 - WARNING - Symbol VISL has insufficient data: 4 rows
+2026-06-22 20:23:23,968 - WARNING - Symbol VOGL has insufficient data: 6 rows
+2026-06-22 20:23:29,920 - INFO - Prepared 2520 indicator updates across 25 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:23:32,238 - INFO - Wrote 2520 indicator updates to DB (Attempt 1)
+2026-06-22 20:23:35,363 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:23:35,365 - INFO - Completed batch 38: 2520 updates written; running total 113280
+2026-06-22 20:23:35,365 - INFO - Processing indicator batch 39 (11 symbols)
+2026-06-22 20:23:35,700 - INFO - Computing indicators for 11 symbols with missing data
+2026-06-22 20:23:47,203 - INFO - Prepared 1320 indicator updates across 11 symbols (persisting last 60 rows per symbol)
+2026-06-22 20:23:48,805 - INFO - Wrote 1320 indicator updates to DB (Attempt 1)
+2026-06-22 20:23:51,933 - INFO - Update verification rate: 50/50 (100.0%)
+2026-06-22 20:23:51,935 - INFO - Completed batch 39: 1320 updates written; running total 114600
+2026-06-22 20:23:52,386 - INFO - Post-update validation: 2/500 NULL EMA-50 (0.4%)
+2026-06-22 20:23:52,439 - INFO - Indicator validation passed: NULL rate 0.4%
+2026-06-22 20:23:52,441 - INFO - Indicator fix complete; NULL EMA-50 rate: 0.4%; total updates written: 114600
+[3/10] Running Regime Engine...
+/home/immanuels/Desktop/mri-int/engine_core/regime_engine.py:1: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+INFO:__main__:Market regime and stock scores tables ready.
+INFO:__main__:Computing Market Regime based on Nifty 50...
+INFO:__main__:✅ Wrote 4601 rows to public.market_regime.
+INFO:__main__:✅ Regime updated through 2026-06-22 -> BEARISH
+INFO:__main__:Market regime and stock scores tables ready.
+INFO:__main__:📊 Computing/Refreshing scores for 961 symbols...
+INFO:__main__:Market regime and stock scores tables ready.
+INFO:__main__:Top 10 scores for 2026-06-22:
+INFO:__main__:  ZYDUSWELL: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  MEDANTA: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  DELHIVERY: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  GABRIEL: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  KIRLOSENG: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  KPIL: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  MANAPPURAM: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  BHARATFORG: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  TRITURBINE: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:  ABCAPITAL: 100 (EMA:True, Slope:True, RS:True, High:True, Vol:True)
+INFO:__main__:✅ Scoring complete: 138336 score rows written for 961 symbols
+DEBUG: LOADING engine_core/regime_engine.py VERSION 100.6
+[4/10] Generating client signals...
+2026-06-22 20:25:14,921 - INFO - === Signal Generator — 2026-06-22 ===
+2026-06-22 20:25:15,029 - INFO - Current Regime: BEARISH
+2026-06-22 20:25:15,249 - INFO - Stocks scored: 479
+2026-06-22 20:25:15,370 - INFO - Prices available: 500
+2026-06-22 20:25:15,450 - INFO - Active clients: 5
+2026-06-22 20:25:19,702 - INFO - Updated Hall of Fame tracking for 78 top-scoring stocks.
+2026-06-22 20:25:20,310 - INFO - Updated Strategy Shadow Tracker for 10 current candidates.
+2026-06-22 20:25:20,650 - INFO - === Signal Generation Complete: 0 signals for 5 clients ===
+[5/10] Running STEE swing execution engine...
+/home/immanuels/Desktop/mri-int/engine_core/swing_execution_engine.py:9: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+2026-06-22 20:25:21,741 - INFO - Market Regime: BEARISH
+2026-06-22 20:25:22,046 - INFO - Qualified Watchlist: 204 stocks
+2026-06-22 20:25:22,312 - INFO - Regime is BEARISH. Skipping all new entries.
+2026-06-22 20:25:22,366 - INFO - STEE Run Complete.
+[6/10] Sending signal emails via SES...
+2026-06-22 20:25:23,457 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-06-22 20:25:23,855 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2026-06-22 20:25:25,096 - ERROR -   ❌ Failed to send to wealthu2021@gmail.com (MessageRejected): Email address is not verified. The following identities failed the check in region AP-SOUTHEAST-1: wealthu2021@gmail.com
+2026-06-22 20:25:25,744 - INFO -   ✅ Sent to johncyedward@gmail.com: MRI Daily Update: BEARISH Market Summary
+2026-06-22 20:25:26,128 - ERROR -   ❌ Failed to send to rjpraveen.hr@gmail.com (MessageRejected): Email address is not verified. The following identities failed the check in region AP-SOUTHEAST-1: rjpraveen.hr@gmail.com
+2026-06-22 20:25:26,607 - INFO -   ✅ Sent to edwardjsi@gmail.com: MRI Daily Update: BEARISH Market Summary
+2026-06-22 20:25:26,963 - ERROR -   ❌ Failed to send to paper@mri.in (MessageRejected): Email address is not verified. The following identities failed the check in region AP-SOUTHEAST-1: paper@mri.in
+2026-06-22 20:25:27,067 - INFO - === Email Service Complete: 2/5 emails sent ===
+2026-06-22 20:25:27,435 - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+[7/10] Running Pipeline Health Monitor...
+2026-06-22 20:25:28,337 - INFO - === Starting Pipeline Health Audit ===
+2026-06-22 20:25:28,837 - INFO - Integrity check PASSED. Coverage: 99.6%, Drift: 0d.
+[8/10] Running Fundamental Quality Analysis for top candidates...
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:engine_fundamental.collector:Fetching fundamental data for ABCAPITAL.NS (Database: ABCAPITAL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ABCAPITAL
+INFO:engine_fundamental.pipeline:Quality Verdict for ABCAPITAL: REJECT (31.5/100) | Change: +0.0 | Velocity: 3.5 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for GABRIEL.NS (Database: GABRIEL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for GABRIEL
+INFO:engine_fundamental.pipeline:Quality Verdict for GABRIEL: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: -2.3 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for TRITURBINE.NS (Database: TRITURBINE)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TRITURBINE
+INFO:engine_fundamental.pipeline:Quality Verdict for TRITURBINE: HIGH_QUALITY (83.0/100) | Change: +0.0 | Velocity: 3.2 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for BHARATFORG.NS (Database: BHARATFORG)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for BHARATFORG
+INFO:engine_fundamental.pipeline:Quality Verdict for BHARATFORG: EARLY_COMPOUNDER (75.5/100) | Change: +0.0 | Velocity: 4.4 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for MEDANTA.NS (Database: MEDANTA)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MEDANTA
+INFO:engine_fundamental.pipeline:Quality Verdict for MEDANTA: HIGH_QUALITY (89.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for MANAPPURAM.NS (Database: MANAPPURAM)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for MANAPPURAM
+INFO:engine_fundamental.pipeline:Quality Verdict for MANAPPURAM: REJECT (12.5/100) | Change: +0.0 | Velocity: -2.5 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for DELHIVERY.NS (Database: DELHIVERY)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for DELHIVERY
+INFO:engine_fundamental.pipeline:Quality Verdict for DELHIVERY: REJECT (48.0/100) | Change: +3.0 | Velocity: 1.0 | Trend: uptrend | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for ZYDUSWELL.NS (Database: ZYDUSWELL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ZYDUSWELL
+INFO:engine_fundamental.pipeline:Quality Verdict for ZYDUSWELL: REJECT (44.0/100) | Change: +0.0 | Velocity: 6.2 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for KPIL.NS (Database: KPIL)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for KPIL
+INFO:engine_fundamental.pipeline:Quality Verdict for KPIL: REJECT (48.0/100) | Change: +0.0 | Velocity: 11.8 | Trend: flat | agent_details: 5 years, trajectory trend: improving
+INFO:engine_fundamental.collector:Fetching fundamental data for KIRLOSENG.NS (Database: KIRLOSENG)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for KIRLOSENG
+INFO:engine_fundamental.pipeline:Quality Verdict for KIRLOSENG: HIGH_QUALITY (81.5/100) | Change: +0.0 | Velocity: 14.8 | Trend: flat | agent_details: 5 years, trajectory trend: improving
+INFO:engine_fundamental.collector:Fetching fundamental data for HONAUT.NS (Database: HONAUT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for HONAUT
+INFO:engine_fundamental.pipeline:Quality Verdict for HONAUT: EARLY_COMPOUNDER (75.5/100) | Change: +1.0 | Velocity: 0.3 | Trend: uptrend | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for AEGISLOG.NS (Database: AEGISLOG)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for AEGISLOG
+INFO:engine_fundamental.pipeline:Quality Verdict for AEGISLOG: HIGH_QUALITY (88.5/100) | Change: +0.0 | Velocity: 15.9 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for TATACOMM.NS (Database: TATACOMM)...
+INFO:engine_fundamental.collector:Stored 4 years of financial data for TATACOMM
+INFO:engine_fundamental.pipeline:Quality Verdict for TATACOMM: EARLY_COMPOUNDER (75.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for TIMKEN.NS (Database: TIMKEN)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for TIMKEN
+INFO:engine_fundamental.pipeline:Quality Verdict for TIMKEN: HIGH_QUALITY (83.0/100) | Change: +0.0 | Velocity: 6.8 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for ENRIN.NS (Database: ENRIN)...
+INFO:engine_fundamental.collector:Stored 2 years of financial data for ENRIN
+INFO:engine_fundamental.pipeline:Quality Verdict for ENRIN: HIGH_QUALITY (85.5/100) | Change: +0.0 | Velocity: 0.0 | Trend: flat | agent_details: 2 years, trajectory trend: improving
+INFO:engine_fundamental.collector:Fetching fundamental data for SCHNEIDER.NS (Database: SCHNEIDER)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for SCHNEIDER
+INFO:engine_fundamental.pipeline:Quality Verdict for SCHNEIDER: EARLY_COMPOUNDER (75.5/100) | Change: -20.5 | Velocity: -10.2 | Trend: downtrend | agent_details: 5 years, trajectory trend: declining
+INFO:engine_fundamental.collector:Fetching fundamental data for ADANIGREEN.NS (Database: ADANIGREEN)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for ADANIGREEN
+INFO:engine_fundamental.pipeline:Quality Verdict for ADANIGREEN: REJECT (45.0/100) | Change: +0.0 | Velocity: -0.8 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for ADANIENT.NS (Database: ADANIENT)...
+INFO:engine_fundamental.collector:Stored 4 years of financial data for ADANIENT
+INFO:engine_fundamental.pipeline:Quality Verdict for ADANIENT: REJECT (37.0/100) | Change: +0.0 | Velocity: 0.0 | Trend: flat | agent_details: 5 years, trajectory trend: stable
+INFO:engine_fundamental.collector:Fetching fundamental data for AIAENG.NS (Database: AIAENG)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for AIAENG
+INFO:engine_fundamental.pipeline:Quality Verdict for AIAENG: HIGH_QUALITY (82.0/100) | Change: +0.0 | Velocity: 3.0 | Trend: flat | agent_details: 5 years, trajectory trend: improving
+INFO:engine_fundamental.collector:Fetching fundamental data for DEEPAKFERT.NS (Database: DEEPAKFERT)...
+INFO:engine_fundamental.collector:Stored 5 years of financial data for DEEPAKFERT
+INFO:engine_fundamental.pipeline:Quality Verdict for DEEPAKFERT: REJECT (38.0/100) | Change: +0.0 | Velocity: -12.6 | Trend: flat | agent_details: 5 years, trajectory trend: declining
+Analyzing ABCAPITAL.NS...
+Analyzing GABRIEL.NS...
+Analyzing TRITURBINE.NS...
+Analyzing BHARATFORG.NS...
+Analyzing MEDANTA.NS...
+Analyzing MANAPPURAM.NS...
+Analyzing DELHIVERY.NS...
+Analyzing ZYDUSWELL.NS...
+Analyzing KPIL.NS...
+Analyzing KIRLOSENG.NS...
+Analyzing HONAUT.NS...
+Analyzing AEGISLOG.NS...
+Analyzing TATACOMM.NS...
+Analyzing TIMKEN.NS...
+Analyzing ENRIN.NS...
+Analyzing SCHNEIDER.NS...
+Analyzing ADANIGREEN.NS...
+Analyzing ADANIENT.NS...
+Analyzing AIAENG.NS...
+Analyzing DEEPAKFERT.NS...
+[8.5/10] Running PRDE Feature Engine + Scoring...
+{
+  "run_id": "404a1a98-f69b-4c93-a60a-3e62a561638d",
+  "dry_run": false,
+  "companies_seen": 14,
+  "generated": [
+    {
+      "ticker": "BAJFINANCE",
+      "snapshot_id": "8412a90e-d0b9-4fc9-97f9-ec7b77951feb",
+      "feature_hash": "a2401d4e2c5ba5eac12f1bdad270a20fa7cd85e311b370d9f9832ea6bf1ac5fb",
+      "years_available": 5
+    },
+    {
+      "ticker": "DIVISLAB",
+      "snapshot_id": "55215dc8-9bda-4207-94f8-8ec99d1e9ce0",
+      "feature_hash": "904b573bfe686d056838a20b351c58a5f4c0e60faeca28f35196544199ef72fb",
+      "years_available": 4
+    },
+    {
+      "ticker": "HCLTECH",
+      "snapshot_id": "713f0e88-0070-46d0-a4b0-a83ce04d3c09",
+      "feature_hash": "5629f7979de32b5a61bcd6b7ca6a8cf2438c5bac79af54a90a99233d685a35ea",
+      "years_available": 5
+    },
+    {
+      "ticker": "HDFCBANK",
+      "snapshot_id": "ba5462ed-0c5b-46ef-9502-5ee26f098375",
+      "feature_hash": "e8d4bb69f91353cfbdc2957f0a86a73713abb73ddc25408a9110854b69f9e1d3",
+      "years_available": 4
+    },
+    {
+      "ticker": "HINDUNILVR",
+      "snapshot_id": "cf49ee71-ba43-4fd1-8bca-073dd685338b",
+      "feature_hash": "f9f932544a657af93369fb8793d01d2a4952cc418e44ac25c52a0cfbd8f3cc7c",
+      "years_available": 5
+    },
+    {
+      "ticker": "ICICIBANK",
+      "snapshot_id": "66de2dc8-ffb9-40bd-9007-77a0dee1e957",
+      "feature_hash": "eb88c0557a68f3a4f155239fc2017e340e321796b1ad280aa0538a7ccb672f5c",
+      "years_available": 5
+    },
+    {
+      "ticker": "INFY",
+      "snapshot_id": "a4cacafa-703f-4fd4-b2ba-b9849bcb08ef",
+      "feature_hash": "9ce9ef4e5bed50f56abcc54ae32f7fe289a0449ced5a2af15917d52490e37bdd",
+      "years_available": 5
+    },
+    {
+      "ticker": "MARUTI",
+      "snapshot_id": "8f2fa60d-da5b-4415-a17a-0b8d4911b8bb",
+      "feature_hash": "72b669cc61d8bfaf0aac2d9f633e865b7a66d5486f7665947033c088ab348230",
+      "years_available": 5
+    },
+    {
+      "ticker": "NESTLEIND",
+      "snapshot_id": "a074fa36-edaa-4a66-b8cb-13c0d8647313",
+      "feature_hash": "728aee06a8c27930f24b46d57a81bbf6b051adc992e28b176b375c883615a938",
+      "years_available": 3
+    },
+    {
+      "ticker": "RELIANCE",
+      "snapshot_id": "fe50ca26-79f0-47e0-ae6d-d3a9fb079d87",
+      "feature_hash": "a29d20aefcb92c8f910b033628391737c390ddfbd777ca7ade76df71c333494c",
+      "years_available": 5
+    },
+    {
+      "ticker": "SBIN",
+      "snapshot_id": "b0c54e9e-80ef-4790-b4e3-8c9c0de71ef3",
+      "feature_hash": "f455d8372d7e0cd6024ff46625a729f2028ea6a506485b9118ee8292ae29a592",
+      "years_available": 5
+    },
+    {
+      "ticker": "SUNPHARMA",
+      "snapshot_id": "99d25ed6-b5a8-4019-8700-02f6824a4418",
+      "feature_hash": "6e5ff82e7a5e7456fbe13e7ec9a620caf43f61f7407fb201dd451bad392f7a70",
+      "years_available": 4
+    },
+    {
+      "ticker": "TCS",
+      "snapshot_id": "0deb2742-0ae8-427e-82b6-dc5cb085d648",
+      "feature_hash": "5d655218672ade2acad296c3f6a42c0920d8594b8981935baf611f96b3428a52",
+      "years_available": 5
+    },
+    {
+      "ticker": "WIPRO",
+      "snapshot_id": "131f015e-94e3-4230-aad6-aa1c2a330edc",
+      "feature_hash": "56d56b30fd4e036898cde38eded986c407f70d4d031cff7edb224930076f82c0",
+      "years_available": 4
+    }
+  ],
+  "skipped": []
+}
+Run ID: a9e0ff89-4501-4bbe-8137-25067f867d00
+Snapshots found: 14
+Scored: 14
+
+Rank  Ticker        Master    Risk    MRI  Name
+----------------------------------------------------------------------
+   1  SUNPHARMA       74.8    10.0    5.0  Sun Pharmaceutical
+   2  MARUTI          66.0     0.0    0.0  Maruti Suzuki
+   3  NESTLEIND       55.5    10.0    2.0  Nestle India
+   4  SBIN            55.2     0.0    2.0  State Bank of India
+   5  ICICIBANK       54.8     0.0    0.0  ICICI Bank
+   6  HDFCBANK        54.0     0.0    0.0  HDFC Bank
+   7  HINDUNILVR      52.0    10.0    0.0  Hindustan Unilever
+   8  HCLTECH         49.8    10.0    0.0  HCL Technologies
+   9  TCS             48.8    10.0    0.0  Tata Consultancy Services
+  10  INFY            48.2    10.0    0.0  Infosys
+  11  WIPRO           45.0    10.0    0.0  Wipro
+  12  BAJFINANCE      43.5    10.0    0.0  Bajaj Finance
+  13  RELIANCE        33.5    10.0    0.0  Reliance Industries
+  14  DIVISLAB        26.0    18.0    2.0  Divi's Laboratories
+[9/10] Running AAE V3 Production Cycle...
+/home/immanuels/Desktop/mri-int/venv/lib/python3.12/site-packages/requests/__init__.py:109: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+INFO:__main__:Starting AAE V3 Production Cycle...
+INFO:__main__:Step 0: Fetching Sector Indices History...
+INFO:engine_fundamental.sector_collector:Fetching Nifty 50 (^NSEI) for baseline RS calculation...
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXIT (ID: 1)
+INFO:engine_fundamental.sector_collector:Saved 493 records for ^CNXIT.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXPHARMA (ID: 2)
+INFO:engine_fundamental.sector_collector:Saved 492 records for ^CNXPHARMA.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXAUTO (ID: 3)
+INFO:engine_fundamental.sector_collector:Saved 491 records for ^CNXAUTO.
+INFO:engine_fundamental.sector_collector:Fetching history for ^NSEBANK (ID: 4)
+INFO:engine_fundamental.sector_collector:Saved 493 records for ^NSEBANK.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXFMCG (ID: 5)
+INFO:engine_fundamental.sector_collector:Saved 491 records for ^CNXFMCG.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXMETAL (ID: 6)
+INFO:engine_fundamental.sector_collector:Saved 491 records for ^CNXMETAL.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXENERGY (ID: 7)
+INFO:engine_fundamental.sector_collector:Saved 491 records for ^CNXENERGY.
+INFO:engine_fundamental.sector_collector:Fetching history for ^CNXHEALTH (ID: 8)
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ^CNXHEALTH"}}}
+ERROR:yfinance:$^CNXHEALTH: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+ERROR:yfinance:
+1 Failed download:
+ERROR:yfinance:['^CNXHEALTH']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+WARNING:engine_fundamental.sector_collector:No data fetched for ^CNXHEALTH
+INFO:engine_fundamental.sector_collector:Sector history ingestion complete.
+INFO:__main__:Priority Discovery Candidates: ['526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '524394', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783', '526783']
+INFO:__main__:Executing AAE Scan for Top Picks: ['ANANDRATHI', 'ABCAPITAL', '539407', 'AARTIIND', 'ABB', 'ABB', '520073', '539044', '540724', 'AADHARHFC', '520051', '522285', '522285', '536960', '520051', '520051', '501298', '505242', '520073', 'ABCAPITAL']
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for ANANDRATHI...
+INFO:engine_fundamental.sector_engine:Using ManufacturingEngine for ANANDRATHI (ASSET MANAGEMENT)
+INFO:engine_core.llm_client:Using DeepSeek API (deepseek-chat)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for ANANDRATHI...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for ANANDRATHI...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for ANANDRATHI. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for ANANDRATHI. Master Score: 54.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for ABCAPITAL...
+INFO:engine_fundamental.sector_engine:Using ManufacturingEngine for ABCAPITAL (FINANCIAL CONGLOMERATES)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for ABCAPITAL...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for ABCAPITAL...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for ABCAPITAL. Master Score: 63.5
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 539407...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 539407.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 539407.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 539407, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 539407...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 539407...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 539407. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 539407. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for AARTIIND...
+INFO:engine_fundamental.sector_engine:Using ManufacturingEngine for AARTIIND (CHEMICALS)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for AARTIIND...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for AARTIIND...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for AARTIIND. Master Score: 68.1
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for ABB...
+INFO:engine_fundamental.sector_engine:Using ElectricalEngine for ABB (CAPITAL GOODS)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for ABB...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for ABB...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for ABB. Master Score: 70.2
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for ABB...
+INFO:engine_fundamental.sector_engine:Using ElectricalEngine for ABB (CAPITAL GOODS)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for ABB...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for ABB...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for ABB. Master Score: 70.2
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 520073...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520073.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520073.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 520073, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 520073...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 520073...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 520073. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 520073. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 539044...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 539044.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 539044.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 539044, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 539044...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 539044...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 539044. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 539044. Master Score: 51.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 540724...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 540724.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 540724.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 540724, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 540724...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 540724...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 540724. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 540724. Master Score: 51.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for AADHARHFC...
+INFO:engine_fundamental.sector_engine:Using BankEngine for AADHARHFC (FINANCIAL SERVICES)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for AADHARHFC...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for AADHARHFC...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for AADHARHFC. Master Score: 60.5
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 520051...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 520051, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 520051. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 520051. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 522285...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 522285.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 522285.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 522285, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 522285...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 522285...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 522285. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 522285. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 522285...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 522285.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 522285.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 522285, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 522285...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 522285...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 522285. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 522285. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 536960...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 536960.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 536960, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 536960...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 536960...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 536960. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 536960. Master Score: 60.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 520051...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 520051, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 520051. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 520051. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 520051...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520051.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 520051, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 520051...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 520051. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 520051. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 501298...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 501298.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 501298.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 501298, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 501298...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 501298...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 501298. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 501298. Master Score: 51.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 505242...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 505242.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 505242.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 505242, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 505242...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 505242...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 505242. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 505242. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for 520073...
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520073.NS"}}}
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 520073.NS"}}}
+WARNING:engine_fundamental.sector_engine:No sector info for 520073, defaulting to ManufacturingEngine
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for 520073...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for 520073...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+WARNING:engine_fundamental.aae_orchestrator:⚠️ Only 1/6 engine layers returned real data for 520073. The master score is heavily influenced by default values. Check if this symbol has been ingested into all AAE data pipelines.
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for 520073. Master Score: 57.0
+INFO:engine_fundamental.aae_orchestrator:Starting AAE V3 10-Layer Scan for ABCAPITAL...
+INFO:engine_fundamental.sector_engine:Using ManufacturingEngine for ABCAPITAL (FINANCIAL CONGLOMERATES)
+INFO:engine_fundamental.forensic_debate:Starting Layer 9 (Bear) for ABCAPITAL...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.forensic_debate:Starting Layer 10 (Bull) for ABCAPITAL...
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+INFO:engine_fundamental.aae_orchestrator:AAE 10-Layer Scan Complete for ABCAPITAL. Master Score: 63.5
+INFO:__main__:Persisted 20 AAE results to snapshot.
+[10/10] Running Quarterly Guidance Check...
+2026-06-22 20:33:00,824 - INFO - 360ONE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:01,617 - INFO - 3BBLACKBIO: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:02,625 - INFO - AARTIIND: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:03,487 - INFO - ACE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:04,344 - INFO - ACUTAAS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:05,051 - INFO - ADFFOODS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:06,009 - INFO - ADVAIT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:06,979 - INFO - AEROFLEX: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:07,773 - INFO - AGI: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:08,514 - INFO - AMBER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:09,283 - INFO - ANGELONE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:11,757 - INFO - APARINDS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:12,574 - INFO - ARIS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:13,289 - INFO - ARVINDFASN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:13,844 - INFO - ASHOKA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:14,361 - INFO - AVANTIFEED: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:14,951 - INFO - BAJAJCON: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:15,577 - INFO - BALUFORGE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:16,340 - INFO - BEL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:17,037 - INFO - CARRARO: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:18,015 - INFO - CCL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:18,845 - INFO - CGCL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:19,593 - INFO - CGPOWER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:20,784 - INFO - CIPLA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:21,654 - INFO - CPPLUS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:22,615 - INFO - CUMMINSIND: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:23,931 - INFO - CUPID: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:25,090 - INFO - DATAPATTNS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:25,989 - INFO - DEEPAKFERT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:26,745 - INFO - DIVISLAB: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:27,519 - INFO - DMART: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:28,014 - INFO - DRREDDY: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:28,698 - INFO - EIHAHOTELS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:29,559 - INFO - ENGINERSIN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:30,339 - INFO - EPL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:31,484 - INFO - FIEMIND: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:32,477 - INFO - FRONTSP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:33,106 - INFO - GENUSPOWER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:33,844 - INFO - GRANULES: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:34,719 - INFO - GRAPHITE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:35,435 - INFO - GVTD: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:36,236 - INFO - HBLENGINE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:36,884 - INFO - HINDALCO: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:37,721 - INFO - HINDUNILVR: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:38,531 - INFO - HINDZINC: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:39,391 - INFO - HIRECT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:40,224 - INFO - HSCL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:41,033 - INFO - ICEMAKE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:41,791 - INFO - IFBIND: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:42,666 - INFO - INFY: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:43,467 - INFO - ITC: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:44,341 - INFO - JMFINANCIL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:45,324 - INFO - KEI: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:46,141 - INFO - KIRLOSENG: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:47,053 - INFO - KMEW: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:47,911 - INFO - KPEL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:48,719 - INFO - KPIGREEN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:49,224 - INFO - KPIL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:49,771 - INFO - KTKBANK: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:50,425 - INFO - LLOYDSME: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:51,366 - INFO - LTFOODS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:52,670 - INFO - LUMAXTECH: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:53,599 - INFO - LUPIN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:54,510 - INFO - MACPOWER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:55,320 - INFO - MANAKCOAT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:56,212 - INFO - MANORAMA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:57,027 - INFO - MCLOUD: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:57,867 - INFO - MCX: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:58,715 - INFO - MPHASIS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:33:59,743 - INFO - MUTHOOTFIN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:00,527 - INFO - NAM-INDIA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:01,330 - INFO - NATCOPHARM: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:02,246 - INFO - NATIONALUM: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:03,233 - INFO - NAUKRI: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:04,200 - INFO - NAVINFLUOR: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:05,281 - INFO - NETWEB: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:06,197 - INFO - PFS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:07,438 - INFO - POCL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:08,549 - INFO - POLYCAB: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:09,691 - INFO - POONAWALLA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:10,740 - INFO - QPOWER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:11,774 - INFO - QUESS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:12,682 - INFO - RAMRAT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:13,702 - INFO - RELIANCE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:14,156 - INFO - RPTECH: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:14,613 - INFO - RUBICON: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:15,090 - INFO - SAATVIKGL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:15,569 - INFO - SANDHAR: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:16,088 - INFO - SGFIN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:16,590 - INFO - SHAILY: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:17,147 - INFO - SHAKTIPUMP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:17,797 - INFO - SHARDACROP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:18,705 - INFO - SHILCTECH: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:19,696 - INFO - SIGMA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:20,647 - INFO - SJS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:21,590 - INFO - SKIPPER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:22,987 - INFO - SKYGOLD: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:24,224 - INFO - SONATSOFTW: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:25,392 - INFO - SOUTHBANK: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:26,295 - INFO - SRM: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:27,479 - INFO - SUZLON: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:28,330 - INFO - TARIL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:29,873 - INFO - TCS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:30,817 - INFO - TDPOWERSYS: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:32,685 - INFO - TI: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:34,316 - INFO - TIMETECHNO: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:35,271 - INFO - TIPSMUSIC: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:36,354 - INFO - TITAN: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:36,992 - INFO - TMCV: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:38,294 - INFO - TMPV: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:39,548 - INFO - TRENT: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:40,484 - INFO - TVSMOTOR: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:41,561 - INFO - UGROCAP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:42,642 - INFO - VEDL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:43,825 - INFO - VINATIORGA: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:45,364 - INFO - VISHNU: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:46,700 - INFO - VOLTAMP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:48,304 - INFO - WAAREEENER: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:48,947 - INFO - WAAREERTL: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:51,173 - INFO - WELCORP: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:53,276 - INFO - WESTLIFE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:34:54,796 - INFO - ZYDUSLIFE: {'verified': 0, 'pending': 0, 'unable': 0}
+2026-06-22 20:35:02,593 - INFO - ADVAIT: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:35:06,754 - INFO - AMBER: 25.0% (1/4) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=0q lag_score=0.0
+2026-06-22 20:35:13,891 - INFO - AVANTIFEED: 50.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=0q lag_score=0.0
+2026-06-22 20:35:18,272 - INFO - CARRARO: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:35:24,049 - INFO - DATAPATTNS: 0.0% (0/3) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=3q lag_score=100.0
+2026-06-22 20:35:26,155 - INFO - DRREDDY: 100.0% (1/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=0q lag_score=0.0
+2026-06-22 20:35:27,352 - INFO - ENGINERSIN: 33.3% (1/3) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=0q lag_score=0.0
+2026-06-22 20:35:31,306 - INFO - HBLENGINE: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:35:35,250 - INFO - INFY: 0.0% (0/2) — INSUFFICIENT_DATA — verdict=WATCHING lag=2q lag_score=100.0
+2026-06-22 20:35:37,039 - INFO - KEI: 50.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=0q lag_score=0.0
+2026-06-22 20:35:38,338 - INFO - KMEW: 0.0% (0/2) — INSUFFICIENT_DATA — verdict=WATCHING lag=2q lag_score=100.0
+2026-06-22 20:35:40,685 - INFO - KTKBANK: 0.0% (0/2) — INSUFFICIENT_DATA — verdict=WATCHING lag=2q lag_score=100.0
+2026-06-22 20:35:42,305 - INFO - LUMAXTECH: 33.3% (1/3) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=0q lag_score=0.0
+2026-06-22 20:35:43,081 - INFO - LUPIN: 37.5% (1/4) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=1q lag_score=25.0
+2026-06-22 20:35:43,800 - INFO - MACPOWER: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:35:44,946 - INFO - MANORAMA: 0.0% (0/2) — INSUFFICIENT_DATA — verdict=WATCHING lag=2q lag_score=100.0
+2026-06-22 20:35:47,291 - INFO - MUTHOOTFIN: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:35:51,302 - INFO - POCL: 75.0% (3/4) — INSUFFICIENT_DATA — verdict=ADD ZONE lag=0q lag_score=0.0
+2026-06-22 20:35:58,935 - INFO - SIGMA: 0.0% (0/8) — STABLE — verdict=THESIS BROKEN lag=8q lag_score=100.0
+2026-06-22 20:36:00,543 - INFO - SKYGOLD: 25.0% (1/4) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=0q lag_score=0.0
+2026-06-22 20:36:03,078 - INFO - TARIL: 0.0% (0/3) — INSUFFICIENT_DATA — verdict=THESIS BROKEN lag=3q lag_score=100.0
+2026-06-22 20:36:04,246 - INFO - TDPOWERSYS: 0.0% (0/2) — INSUFFICIENT_DATA — verdict=WATCHING lag=2q lag_score=100.0
+2026-06-22 20:36:04,987 - INFO - TI: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:36:06,203 - INFO - TIPSMUSIC: 0.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=1q lag_score=100.0
+2026-06-22 20:36:11,770 - INFO - VISHNU: 50.0% (0/1) — INSUFFICIENT_DATA — verdict=WATCHING lag=0q lag_score=0.0
+PROMISES DUE (4):
+  AGI          [CAPACITY_EXPANSION  ] Container Glass capacity to increase to 1,900 TPD by March 2
+    Target: 1900 units by Q1FY26
+  FRONTSP      [CAPEX               ] We plan to invest additional 15 crore in plant and machinery
+    Target: 15.0 cr by Q1FY26
+  HINDZINC     [CAPEX               ] The commissioning activities have started and will be commis
+    Target: 160000 tons per annum by Q1FY26
+  POONAWALLA   [CAPACITY_EXPANSION  ] Launch of 400 new branches planned beginning Q1 FY26.
+    Target: 400 units by Q1FY26
+
+Verified: 0 new. Updating scores...
+  ADVAIT         0.0% (0/1) INSUFFICIENT_DATA
+  AMBER         25.0% (1/4) INSUFFICIENT_DATA
+  AVANTIFEED    50.0% (0/1) INSUFFICIENT_DATA
+  CARRARO        0.0% (0/1) INSUFFICIENT_DATA
+  DATAPATTNS     0.0% (0/3) INSUFFICIENT_DATA
+  DRREDDY      100.0% (1/1) INSUFFICIENT_DATA
+  ENGINERSIN    33.3% (1/3) INSUFFICIENT_DATA
+  HBLENGINE      0.0% (0/1) INSUFFICIENT_DATA
+  INFY           0.0% (0/2) INSUFFICIENT_DATA
+  KEI           50.0% (0/1) INSUFFICIENT_DATA
+  KMEW           0.0% (0/2) INSUFFICIENT_DATA
+  KTKBANK        0.0% (0/2) INSUFFICIENT_DATA
+  LUMAXTECH     33.3% (1/3) INSUFFICIENT_DATA
+  LUPIN         37.5% (1/4) INSUFFICIENT_DATA
+  MACPOWER       0.0% (0/1) INSUFFICIENT_DATA
+  MANORAMA       0.0% (0/2) INSUFFICIENT_DATA
+  MUTHOOTFIN     0.0% (0/1) INSUFFICIENT_DATA
+  POCL          75.0% (3/4) INSUFFICIENT_DATA
+  SIGMA          0.0% (0/8) STABLE
+  SKYGOLD       25.0% (1/4) INSUFFICIENT_DATA
+  TARIL          0.0% (0/3) INSUFFICIENT_DATA
+  TDPOWERSYS     0.0% (0/2) INSUFFICIENT_DATA
+  TI             0.0% (0/1) INSUFFICIENT_DATA
+  TIPSMUSIC      0.0% (0/1) INSUFFICIENT_DATA
+  VISHNU        50.0% (0/1) INSUFFICIENT_DATA
+=== Cloud Pipeline Complete — Monday 22 June 2026 08:36:14 PM IST ===
+ATA
+=== Cloud Pipeline Complete — Monday 22 June 2026 08:36:14 PM IST ===

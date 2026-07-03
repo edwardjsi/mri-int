@@ -2,9 +2,212 @@ from fastapi import APIRouter, Depends
 from api.deps import get_db
 import psycopg2.extras
 import logging
+from typing import Any
+
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from engine_mosi.mosi_lite import analyze_stock
 
 router = APIRouter(prefix="/api/breakout", tags=["Breakout Status"])
 log = logging.getLogger(__name__)
+
+
+# ── Helper: enrich radar rows with MOSI Lite data ────────────────────────
+
+def _enrich_with_mosi_lite(
+    conn: Any,
+    rows: list[dict],
+) -> list[dict]:
+    """
+    Take base radar rows (symbol, close, volume, ema_50, ema_200, breakout_state)
+    and add: mri_technical_score, QIF scores, fundamental data, then call
+    analyze_stock() to compute mosi_lite_score, decision_score, etc.
+
+    Returns the same list with new fields appended. Mutates in-place for
+    simplicity.
+    """
+    if not rows:
+        return rows
+
+    symbols = [r["symbol"] for r in rows]
+    placeholders = ",".join("%%(%(i)s)s" % {"i": i} for i in range(len(symbols)))
+    # Actually simpler: use a single SQL with psycopg2 list param
+
+    # ── 1. Fetch MRI technical scores from stock_scores ──
+    score_sql = """
+        SELECT DISTINCT ON (symbol)
+            symbol,
+            total_score
+        FROM stock_scores
+        WHERE symbol = ANY(%(symbols)s)
+        ORDER BY symbol, date DESC
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(score_sql, {"symbols": symbols})
+        scores = {r["symbol"]: r["total_score"] for r in cur.fetchall()}
+    except Exception:
+        scores = {}
+    finally:
+        cur.close()
+
+    # ── 2. Fetch QIF / fundamental data ──
+    fund_sql = """
+        SELECT DISTINCT ON (symbol)
+            symbol,
+            roce_score,
+            revenue_score,
+            margin_score,
+            leverage_score,
+            wc_score,
+            evolution_score,
+            agent_details
+        FROM quality_verdicts
+        WHERE symbol = ANY(%(symbols)s)
+        ORDER BY symbol
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(fund_sql, {"symbols": symbols})
+        qif = {r["symbol"]: r for r in cur.fetchall()}
+    except Exception:
+        qif = {}
+    finally:
+        cur.close()
+
+    # ── 3. Fetch latest 2-year financials (for YoY growth) ──
+    ff_sql = """
+        SELECT
+            symbol,
+            year,
+            revenue,
+            net_profit,
+            debt,
+            equity,
+            capital_employed
+        FROM fundamental_financials
+        WHERE symbol = ANY(%(symbols)s)
+        ORDER BY symbol, year DESC
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(ff_sql, {"symbols": symbols})
+        ff_rows = cur.fetchall()
+        # Group by symbol: {symbol: [year N, year N-1]}
+        fin_year_map: dict[str, list[dict]] = {}
+        for r in ff_rows:
+            sym = r["symbol"]
+            if sym not in fin_year_map:
+                fin_year_map[sym] = []
+            fin_year_map[sym].append(r)
+    except Exception:
+        fin_year_map = {}
+    finally:
+        cur.close()
+
+    # ── 4. For each row, build StockData and call analyze_stock ──
+    for row in rows:
+        sym = row["symbol"]
+
+        # MRI technical score
+        row["mri_technical_score"] = scores.get(sym, 0)
+
+        # QIF fields
+        qif_row = qif.get(sym, {})
+        row["roce_score"] = qif_row.get("roce_score", 0)
+        row["revenue_score"] = qif_row.get("revenue_score", 0)
+        row["margin_score"] = qif_row.get("margin_score", 0)
+        row["leverage_score"] = qif_row.get("leverage_score", 0)
+        row["wc_score"] = qif_row.get("wc_score", 0)
+        row["evolution_score"] = qif_row.get("evolution_score", 0)
+
+        # Agent details JSONB — extract key metrics
+        agent_details = qif_row.get("agent_details")
+        if agent_details and isinstance(agent_details, dict):
+            row["sales_growth_pct"] = agent_details.get("growth_yoy_pct", 0)
+            row["profit_growth_pct"] = agent_details.get("profit_growth_yoy", 0)
+            row["roce_pct"] = agent_details.get("roce_pct", 0)
+        else:
+            row["sales_growth_pct"] = 0
+            row["profit_growth_pct"] = 0
+            row["roce_pct"] = 0
+
+        # Fundamental financials: use latest 2 years
+        fin_years = fin_year_map.get(sym, [])
+        if len(fin_years) >= 2:
+            cur_, prev_ = fin_years[0], fin_years[1]
+            # Sales growth
+            cur_rev = cur_.get("revenue", 0) or 0
+            prev_rev = prev_.get("revenue", 0) or 0
+            if prev_rev > 0:
+                row["sales_growth_pct"] = ((cur_rev - prev_rev) / prev_rev) * 100
+            # Profit growth
+            cur_np = cur_.get("net_profit", 0) or 0
+            prev_np = prev_.get("net_profit", 0) or 0
+            if prev_np > 0:
+                row["profit_growth_pct"] = ((cur_np - prev_np) / prev_np) * 100
+            # Debt / Equity
+            row["debt_to_equity"] = (cur_.get("debt", 0) or 0) / max((cur_.get("equity", 0) or 1), 1)
+        else:
+            # Use QIF fallback
+            row["sales_growth_pct"] = row.get("sales_growth_pct", 0)
+            row["profit_growth_pct"] = row.get("profit_growth_pct", 0)
+            row["debt_to_equity"] = (
+                (qif_row.get("debt", 0) or 0)
+                / max((qif_row.get("equity", 0) or 1), 1)
+            )
+
+        # Call MOSI Lite scorer
+        mosi_output = analyze_stock(row)
+        row["mosi_lite_score"] = mosi_output["mosi_lite_score"]
+        row["decision_score"] = mosi_output["decision_score"]
+        row["confidence"] = mosi_output["confidence"]
+        row["recommendation"] = mosi_output["recommendation"]
+        row["m_macro_score"] = mosi_output["m_macro_score"]
+        row["o_operating_score"] = mosi_output["o_operating_score"]
+        row["s_structural_score"] = mosi_output["s_structural_score"]
+        row["i_institutional_score"] = mosi_output["i_institutional_score"]
+
+    return rows
+
+
+AGE_DECAY = {
+    0: 1.00,
+    1: 1.00,
+    2: 0.90,
+    3: 0.85,
+    4: 0.70,
+    5: 0.65,
+}
+DEFAULT_DECAY = 0.40
+
+def _age_label(state: str, age: int | None) -> dict:
+    """Return human-readable label and emoji for breakout age."""
+    if state == 'CONSOLIDATING' or age is None:
+        return {"label": "CONSOLIDATING", "emoji": "⏳", "zone": "none"}
+    
+    if state == 'BROKEN_OUT':
+        if age == 0:
+            return {"label": "BREAKOUT TODAY", "emoji": "🔥", "zone": "fresh"}
+        elif age == 1:
+            return {"label": "FIRST FOLLOW-THROUGH", "emoji": "✅", "zone": "fresh"}
+        elif age <= 3:
+            return {"label": "EARLY CONTINUATION", "emoji": "📈", "zone": "early"}
+        elif age <= 5:
+            return {"label": "LATE ENTRY ZONE", "emoji": "⚠️", "zone": "late"}
+        else:
+            return {"label": "MATURE BREAKOUT", "emoji": "💤", "zone": "mature"}
+    
+    if state == 'READY_TO_BREAKOUT':
+        if age <= 2:
+            return {"label": "FRESH SETUP", "emoji": "⚡", "zone": "fresh"}
+        elif age <= 7:
+            return {"label": "VCP COILING", "emoji": "🌀", "zone": "coiling"}
+        else:
+            return {"label": "MATURE SETUP", "emoji": "⏳", "zone": "mature"}
+    
+    return {"label": state, "emoji": "", "zone": "unknown"}
+
 
 @router.get("/map")
 def get_breakout_map(conn=Depends(get_db)):
@@ -42,12 +245,17 @@ def get_breakout_radar(conn=Depends(get_db)):
     Return: (1) all watchlist/portfolio stocks with their breakout state,
     plus (2) any BROKEN_OUT or READY_TO_BREAKOUT stocks from the full
     universe that aren't already in a watchlist (for discovery).
+    
+    Each row now also carries MOSI Lite fields: mri_technical_score,
+    mosi_lite_score, decision_score, confidence, recommendation. These
+    are computed server-side by calling analyze_stock() from
+    engine_mosi.mosi_lite.
     """
     query = """
-        SELECT symbol, close, volume, ema_50, ema_200, breakout_state, watchers, holders
+        SELECT symbol, close, volume, ema_50, ema_200, breakout_state, breakout_age, watchers, holders
         FROM (
             SELECT 
-                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state,
+                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
                 (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
                 (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
                 0 as sort_grp
@@ -59,7 +267,7 @@ def get_breakout_radar(conn=Depends(get_db)):
             UNION
 
             SELECT 
-                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state,
+                dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
                 (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
                 (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
                 1 as sort_grp
@@ -76,12 +284,30 @@ def get_breakout_radar(conn=Depends(get_db)):
                 WHEN 'READY_TO_BREAKOUT' THEN 2
                 ELSE 3
             END,
+            COALESCE(breakout_age, 999) ASC,
             symbol;
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         cur.execute(query)
         rows = cur.fetchall()
+        # ── Enrich each row with MOSI Lite scores ──
+        rows = _enrich_with_mosi_lite(conn, rows)
+        
+        # ── Add Breakout Age labels and priority ──
+        for row in rows:
+            age = row.get("breakout_age")
+            state = row.get("breakout_state", "CONSOLIDATING")
+            row["age_info"] = _age_label(state, age)
+            
+            # Compute radar priority
+            base_score = row.get("decision_score", 0)
+            if state == 'BROKEN_OUT' and age is not None:
+                decay = AGE_DECAY.get(age, DEFAULT_DECAY)
+                row["radar_priority"] = round(base_score * decay, 1)
+            else:
+                row["radar_priority"] = base_score
+                
         return rows
     except Exception as e:
         log.error(f"Breakout radar error: {e}")

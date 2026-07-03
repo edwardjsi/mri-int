@@ -1,0 +1,261 @@
+{
+  "id": "019ed4d1-ff43-7499-bf05-4f493a8640de",
+  "name": "MRI-Int Subscription Marketing Plan",
+  "description": "wear the hat of a marketer/copywriter and software architect. Get inside the repo. Especially all docs and docs folder. I want you to create a marketing plan to sell subscriptions to that software.",
+  "status": "complete",
+  "worktree": {
+    "path": "/home/immanuels/Desktop/mri-int",
+    "branch": "main",
+    "commit": "4bcd569ac17451855eebab3535ef23c2137a4935"
+  },
+  "scoping": {
+    "goal": {
+      "answer": "Create a launch-ready, B2B-focused marketing plan that positions Market Regime Intelligence (MRI) as the leading quantitative decision-support platform for Indian SEBI-registered advisors, RIAs, family offices, and wealth managers — and gives the solo-founder operator a week-by-week 0→1 playbook to acquire the first 10 paying advisor subscriptions.",
+      "confirmedAt": "2026-06-17T09:44:35.681Z"
+    },
+    "criteria": {
+      "answer": "Document `docs/MARKETING_PLAN.md` exists as a single comprehensive marketing plan with 8 required top-level sections (Executive Summary, Market Context & ICP, Positioning & Messaging, Pricing & Packaging, Go-to-Market Plan, Sales Playbook, Copy Samples, Content Plan & KPIs). Verify: file exists and grep finds each H2 heading.\nPositioning & Messaging section delivers a tagline, an elevator pitch ≤30 words, a value proposition ≤100 words, an advisor ICP definition (role, firm type, AUM range, geography, pain points), and a 3-pillar messaging hierarchy. Verify: section contains each artifact verbatim.\nPricing & Packaging section proposes 2+ subscription tiers with specific INR amounts, a free trial or guided demo motion, and an explicit ACV target for the advisor wedge. Verify: section contains 2+ tier rows with INR pricing and a named trial/demo model.\nGo-to-Market plan identifies 3+ primary channels (LinkedIn organic + outbound, broker/AMC partnerships, advisor community content, etc.) with channel-specific tactics AND a 90-day launch sequence with week-by-week milestones. Verify: GTM section lists ≥3 named channels and a phased week-1 through week-12 plan.\nSales Playbook section includes a cold email template, a LinkedIn outreach message template, a discovery call script (5+ questions), and 5+ common advisor objections with drafted responses. Verify: section contains each artifact with concrete copy.\nCopy Samples section includes landing page hero copy (headline + subhead + CTA), 3+ LinkedIn post drafts, 3+ cold email variants, and 5+ ad headline options — all lift-and-paste ready. Verify: section contains each artifact type with concrete copy.\nContent Plan lists 12+ topic ideas mapped to advisor pain points with distribution channel per topic; KPI section defines one North Star metric, 3+ leading indicators, and quantified 90-day targets. Verify: content plan has 12+ rows; KPI section has named metric + numeric targets.",
+      "confirmedAt": "2026-06-17T09:44:35.681Z"
+    },
+    "constraints": {
+      "answer": "Pre-launch context — no paying subscriptions yet (treat any existing mentions as pilot, not revenue). B2B primary ICP: Indian SEBI-registered advisors, RIAs, family offices, PMS, wealth managers. Solo-developer bandwidth — every tactic must be executable without a dedicated sales/marketing hire. SEBI compliance required in all advisor-facing copy: \"decision-support\" framing only, no guaranteed returns, no buy/sell recommendation language, mandatory disclaimers. Geography: India-only. INR pricing. Single deliverable: one comprehensive `docs/MARKETING_PLAN.md` (no multi-file sprawl).",
+      "confirmedAt": "2026-06-17T09:44:35.681Z"
+    },
+    "phases": {
+      "answer": "Discovery + Drafting + Verification",
+      "confirmedAt": "2026-06-17T09:44:35.681Z"
+    },
+    "assumptions": {
+      "answer": "Market and copy: India-only, English-language primary copy (Hindi/regional variants deferred to post-launch). Motion: self-serve trial + guided demo hybrid — no full sales team required. Pricing: advisor tier priced materially above retail benchmark of ₹1,499–₹2,999/mo (will propose ₹4,999–₹24,999/mo advisor range; user can adjust). Channel priority (cost-to-execute for a solo dev): LinkedIn organic + outbound > broker/AMC partnerships > advisor community content > targeted webinars. Compliance posture: heavy SEBI disclaimers, decision-support framing, no performance promises, no testimonials claiming returns. Existing vision language from `docs/investor/INVESTOR_DECK_V2.md` (\"Bridging the information asymmetry gap between retail markets and institutional quant desks\") can be lifted as positioning foundation. Existing `SaaS_Blueprint.md` Retail + Advisor tier names inform but do not constrain final pricing recommendations.",
+      "confirmedAt": "2026-06-17T09:44:35.681Z"
+    }
+  },
+  "phases": [
+    {
+      "id": "phase-1",
+      "index": 1,
+      "name": "Discovery + Drafting + Verification",
+      "goal": "Produce `docs/MARKETING_PLAN.md` that satisfies all 7 success criteria, grounded in the actual MRI product surface and aimed at the advisor/wealth-manager ICP.",
+      "description": "Single phase covering targeted reading of remaining product docs (AAE PRD, investor deck, guidance plan), drafting all 8 sections of the marketing plan, and final verification against the 7 confirmed criteria.",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Read docs/AAE_PRD.md, docs/investor/INVESTOR_DECK_V2.md, and docs/GUIDANCE_EMAIL_ENHANCEMENT_PLAN_2026-06-17.md to harvest product vision, existing positioning language, and advisor-facing feature surface for the marketing plan.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -c '^#' docs/MARKETING_PLAN.md 2>/dev/null; ls docs/AAE_PRD.md docs/investor/INVESTOR_DECK_V2.md docs/GUIDANCE_EMAIL_ENHANCEMENT_PLAN_2026-06-17.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T09:44:52.037Z",
+          "completedAt": "2026-06-17T09:47:33.337Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T09:47:33.337Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Draft sections 1–2 (Executive Summary + Market Context & ICP): 1-page summary, advisor ICP definition (role, firm type, AUM range, geography, top pain points), and the market context that makes MRI timely (SEBI RIA growth, retail equity AUM boom, regulatory tailwinds).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -E '^## (Executive Summary|Market Context)' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T09:53:42.471Z",
+          "completedAt": "2026-06-17T09:56:35.719Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T09:56:35.719Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Draft section 3 (Positioning & Messaging): tagline, ≤30-word elevator pitch, ≤100-word value prop, ICP one-liner, and 3-pillar messaging hierarchy (e.g. (1) Quant edge without in-house team, (2) Daily decision-ready signal, (3) Compliance-friendly framing).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -E 'Elevator Pitch|Value Proposition|3-Pillar|## Positioning' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T09:56:38.242Z",
+          "completedAt": "2026-06-17T10:01:57.757Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:01:57.757Z"
+          }
+        },
+        {
+          "id": "step-4",
+          "index": 4,
+          "description": "Draft section 4 (Pricing & Packaging): 2+ advisor-tier SKUs in INR (e.g. Solo Advisor ₹4,999/mo, Practice ₹14,999/mo, Enterprise custom), free trial vs guided demo motion, ACV target, feature gating per tier, and discount levers (annual prepay, multi-seat).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '₹[0-9,]+' docs/MARKETING_PLAN.md; grep -E 'ACV|Trial|Demo' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:02:40.739Z",
+          "completedAt": "2026-06-17T10:04:41.635Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:04:41.635Z"
+          }
+        },
+        {
+          "id": "step-5",
+          "index": 5,
+          "description": "Draft section 5 (Go-to-Market Plan): ≥3 named channels (LinkedIn organic, LinkedIn outbound, broker/AMC partnerships, advisor community content, webinars) with channel-specific tactics, and a 90-day launch sequence broken into week-by-week milestones for weeks 1–12.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^### Channel' docs/MARKETING_PLAN.md; grep -E 'Week [0-9]+' docs/MARKETING_PLAN.md | wc -l",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:04:51.076Z",
+          "completedAt": "2026-06-17T10:08:33.247Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:08:33.247Z"
+          }
+        },
+        {
+          "id": "step-6",
+          "index": 6,
+          "description": "Draft section 6 (Sales Playbook): cold email template, LinkedIn outreach template (connection request + follow-up), discovery call script with 5+ questions, and 5+ advisor objections (price, accuracy, SEBI compliance, broker integration, switching cost) with drafted responses.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -E 'Cold Email|LinkedIn Outreach|Discovery Call|Objection' docs/MARKETING_PLAN.md; grep -cE '^### Objection' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:08:58.552Z",
+          "completedAt": "2026-06-17T10:13:02.909Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:13:02.909Z"
+          }
+        },
+        {
+          "id": "step-7",
+          "index": 7,
+          "description": "Draft section 7 (Copy Samples): landing page hero (headline + subhead + CTA + 3 supporting bullets), 3+ LinkedIn post drafts, 3+ cold email variants, 5+ ad headline options — all ready to lift verbatim.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^### (LinkedIn Post|Cold Email Variant|Ad Headline)' docs/MARKETING_PLAN.md; grep -E 'Hero Copy|Landing Page' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:13:45.889Z",
+          "completedAt": "2026-06-17T10:21:18.404Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:21:18.404Z"
+          }
+        },
+        {
+          "id": "step-8",
+          "index": 8,
+          "description": "Draft section 8 (Content Plan & KPIs): 12+ content topic rows mapped to advisor pain points with distribution channel per topic; KPI block with 1 North Star metric (e.g. paying advisor subscriptions), 3+ leading indicators (LinkedIn followers, qualified discovery calls, trial activations), and quantified 90-day targets.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^\\| .* \\| .* \\|' docs/MARKETING_PLAN.md; grep -E 'North Star|Leading Indicator' docs/MARKETING_PLAN.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:21:58.644Z",
+          "completedAt": "2026-06-17T10:27:31.743Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:27:31.743Z"
+          }
+        },
+        {
+          "id": "step-9",
+          "index": 9,
+          "description": "Final pass: read the completed `docs/MARKETING_PLAN.md`, verify all 7 success criteria are met (each H2 heading present, all required artifacts present, copy is concrete and not placeholder), and produce a verification log.",
+          "status": "verified",
+          "verification": {
+            "command": "bash -lc 'set -e; F=docs/MARKETING_PLAN.md; for h in \"Executive Summary\" \"Market Context\" \"Positioning\" \"Pricing\" \"Go-to-Market\" \"Sales Playbook\" \"Copy Samples\" \"Content Plan\"; do grep -q \"## $h\" \"$F\" || { echo \"MISSING: $h\"; exit 1; }; done; echo OK'",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-17T10:28:04.119Z",
+          "completedAt": "2026-06-17T10:37:24.512Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-17T10:37:24.512Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-17T09:44:38.932Z",
+      "completedAt": "2026-06-17T10:37:42.421Z",
+      "summary": "Phase 1 complete. The deliverable `docs/MARKETING_PLAN.md` (1,750 lines, 144KB) satisfies all 7 success criteria substantively and the final verify command now returns OK after a small polish (stripped `## N.` prefixes from sections 3-8). The verification log at `.kimchi/ferments/019ed4d1-ff43-7499-bf05-4f493a8640de/docs/step-9-verification-log.md` documents SHIP verdict across: 8 H2 sections, tagline + 28-word elevator pitch + 72-word value prop + ICP def + 3-pillar hierarchy, 4 INR-priced tiers + trial motions + ACV targets, 4 GTM channels + 12-week launch sequence, cold email + LinkedIn sequence + discovery script + 8 objections, hero copy + 3 LinkedIn posts + 3 cold email variants + 5+ ad headlines, 15 content topics + North Star + 7 leading indicators + Day 30/60/90 targets. No placeholders remain, SEBI compliance language consistently applied.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-17T10:37:42.421Z"
+      }
+    }
+  ],
+  "decisions": [],
+  "memories": [],
+  "createdAt": "2026-06-17T09:03:12.707Z",
+  "updatedAt": "2026-06-17T10:40:27.445Z",
+  "goal": "Create a launch-ready, B2B-focused marketing plan that positions Market Regime Intelligence (MRI) as the leading quantitative decision-support platform for Indian SEBI-registered advisors, RIAs, family offices, and wealth managers — and gives the solo-founder operator a week-by-week 0→1 playbook to acquire the first 10 paying advisor subscriptions.",
+  "successCriteria": [
+    "Document `docs/MARKETING_PLAN.md` exists as a single comprehensive marketing plan with 8 required top-level sections (Executive Summary, Market Context & ICP, Positioning & Messaging, Pricing & Packaging, Go-to-Market Plan, Sales Playbook, Copy Samples, Content Plan & KPIs). Verify: file exists and grep finds each H2 heading.",
+    "Positioning & Messaging section delivers a tagline, an elevator pitch ≤30 words, a value proposition ≤100 words, an advisor ICP definition (role, firm type, AUM range, geography, pain points), and a 3-pillar messaging hierarchy. Verify: section contains each artifact verbatim.",
+    "Pricing & Packaging section proposes 2+ subscription tiers with specific INR amounts, a free trial or guided demo motion, and an explicit ACV target for the advisor wedge. Verify: section contains 2+ tier rows with INR pricing and a named trial/demo model.",
+    "Go-to-Market plan identifies 3+ primary channels (LinkedIn organic + outbound, broker/AMC partnerships, advisor community content, etc.) with channel-specific tactics AND a 90-day launch sequence with week-by-week milestones. Verify: GTM section lists ≥3 named channels and a phased week-1 through week-12 plan.",
+    "Sales Playbook section includes a cold email template, a LinkedIn outreach message template, a discovery call script (5+ questions), and 5+ common advisor objections with drafted responses. Verify: section contains each artifact with concrete copy.",
+    "Copy Samples section includes landing page hero copy (headline + subhead + CTA), 3+ LinkedIn post drafts, 3+ cold email variants, and 5+ ad headline options — all lift-and-paste ready. Verify: section contains each artifact type with concrete copy.",
+    "Content Plan lists 12+ topic ideas mapped to advisor pain points with distribution channel per topic; KPI section defines one North Star metric, 3+ leading indicators, and quantified 90-day targets. Verify: content plan has 12+ rows; KPI section has named metric + numeric targets."
+  ],
+  "constraints": [
+    "Pre-launch context — no paying subscriptions yet (treat any existing mentions as pilot, not revenue). B2B primary ICP: Indian SEBI-registered advisors, RIAs, family offices, PMS, wealth managers. Solo-developer bandwidth — every tactic must be executable without a dedicated sales/marketing hire. SEBI compliance required in all advisor-facing copy: \"decision-support\" framing only, no guaranteed returns, no buy/sell recommendation language, mandatory disclaimers. Geography: India-only. INR pricing. Single deliverable: one comprehensive `docs/MARKETING_PLAN.md` (no multi-file sprawl)."
+  ],
+  "lastActiveAt": "2026-06-17T09:44:38.932Z"
+}

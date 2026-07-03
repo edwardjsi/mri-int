@@ -2262,3 +2262,15 @@ Status: **DRAFT — awaiting user approval.** Full scope, time estimates, cost b
 - **Q5 (trajectory compute cost):** O(n_quarters × n_agents) ≈ 50 ops/stock. Trivial. No concern.
 
 **Corrected cost estimate:** ~$3.30 LLM one-time (was incorrectly $5.00 in first draft). Wall time unchanged: ~6-7 hrs. LLM cost is purely from AAE backfill (`scripts/aae_bulk_scan.py` uses `narrative_engine.py` + `forensic_debate.py`). QIF (`engine_fundamental/agents.py`) and `engine_fundamental/collector.py` are pure Python / yfinance HTTP — no LLM anywhere. Universe coverage today: 63 of 172 stocks (37%) have financials; CGCL (used as positive example) is among the 109 uncovered.
+
+## Decision 099 — Breakout Age Tracking (STEE + Breakout Radar Enhancement)
+Date: 2026-07-03
+Decision:
+1. Add `breakout_age INTEGER DEFAULT NULL` column to `daily_prices` — tracks consecutive trading days a stock has been in its current `breakout_state` (BROKEN_OUT or READY_TO_BREAKOUT). Resets to 0 on state transition. NULL when CONSOLIDATING.
+2. Compute `breakout_age` in `indicator_engine.py` as part of the daily pipeline, immediately after `breakout_state` classification. Uses sequential row comparison within each symbol's time-sorted dataframe.
+3. Enhance `/api/breakout/radar` to return `breakout_age`, `age_label` (human-readable zone), and `radar_priority` (MOSI score × age decay factor). Sort BROKEN_OUT stocks by age ASC (freshest first).
+4. Redesign `BreakoutRadar.tsx` with age-grouped sections: 🔥 Fresh (Day 0-1), 📈 Early (Day 2-3), ⚠️ Late (Day 4-5), 💤 Mature (>5). Add "New Today" hero section for Day 0 breakouts.
+5. Add soft age filter to STEE: Day 0-2 = full position, Day 3-5 = 50% size reduction, Day >5 = skip entry.
+6. Schema change is additive-only (`ADD COLUMN IF NOT EXISTS`), idempotent, no destructive change. Safe under Decision 027 RDS protection rules.
+Reason: `breakout_state` is a stateless snapshot — two stocks can both be BROKEN_OUT with MRI Score 95, but one is Day 0 (fresh, actionable) and the other is Day 7 (mature, most thrust spent). Breakout Age adds a timing-freshness dimension that pairs with Trajectory Score: score measures setup quality, age measures timing quality. The Breakout Radar is the primary consumer (discovery + prioritization), STEE uses it for position sizing, and Morning Brief uses it for BUY/SKIP/WATCH verdicts. $0 LLM cost, pure deterministic computation.
+Status: **DRAFT — awaiting user approval.** Full execution plan in `docs/BREAKOUT_AGE_EXECUTION_PLAN_2026-07-03.md`.

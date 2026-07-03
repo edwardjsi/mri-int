@@ -1,0 +1,30 @@
+form_in_140_list,form_in_112_db,likely_same_company,recommendation
+ADITYAINFO,INFY,Infosys,Use ADITYAINFO (full) from 140 — INFY is already in 112
+BAJAJCONSUM,BAJAJCON,Bajaj Consumer,Use BAJAJCONSUM from 140
+BILLIONBRAINS,BSE,"different — BSE is BSE Ltd, BillionBrains is a separate smallcap",Both are valid distinct companies; consider keeping both
+HBL,HBLENGINE,HBL Engineering,Use HBLENGINE from 112 (more specific) or HBL from 140 — verify NSE ticker
+HERITAGEFOOD,HERITGFOOD,Heritage Foods,Use HERITAGEFOOD from 140
+IFB,IFBIND,IFB Industries,Use IFBIND from 112 (more specific) — verify IFB is NSE-listed
+JMFINANC,JMFINANCIL,JM Financial,Use JMFINANC from 140
+MACPOWERCNC,MACPOWER,Macpower CNC,Use MACPOWERCNC from 140
+MANORAMAIND,MANORAMA,Manorama Industries,Use MANORAMAIND from 140
+NATCOPHARMA,NATCOPHARM,Natco Pharma,Use NATCOPHARMA from 140
+RAMRATNA,RAMRAT,Ram Ratna Wires,Use RAMRATNA from 140
+RUBICONRES,RUBICON,Rubicon Research,Use RUBICONRES from 140
+SANOFI,SANOFICONR,Sanofi India,Use SANOFI from 140 (cleaner)
+SGFINSERVE,SGFIN,SG Finserve,Use SGFINSERVE from 140
+SHAKTIPUMPS,SHAKTIPUMP,Shakti Pumps,Use SHAKTIPUMPS from 140
+SMCGLOBALSEC,SMCGLOBAL,SMC Global Securities,Use SMCGLOBALSEC from 140
+SONATASOFTWARE,SONATSOFTW,Sonata Software,Use SONATASOFTWARE from 140
+SRMCONTRACT,SRM,SRM Contractors / SRM Global — different companies,Verify — SRM may refer to a different company
+SYNCOMFORM,SYNCOMF,Syncom Formulations,Use SYNCOMFORM from 140
+TARIL,TI,different — TARIL is Trans India; TI is Titan Company,Distinct companies — both valid
+TEMBOGLOBAL,TEMBO,Temco Global (Tyre Company?),Verify NSE ticker — TEMBOGLOBAL may not exist; TEMBO was delisted/suspended
+TILAKNAGAR,TI,different — Tilaknagar Industries,Distinct from TI (Titan)
+TITANBIOTECH,TI,different — Titan Biotech vs Titan Company,Distinct companies
+TIPSFILMS,TIPSMUSIC,Tips Films vs Tips Music,Distinct companies — both valid
+UGRO,UGROCAP,UGRO Capital,Use UGRO from 140 (cleaner)
+VEDANTA,VEDL,Vedanta Ltd,Use VEDANTA from 140 (full name)
+WEBSOLENERGY,WEBELSOLAR,Websol Energy vs Webel Solar Energy,Distinct companies — both valid
+ZENSARTECH,RPTECH,different — Zensar Tech vs RPSG Ventures / Persistent,Distinct companies
+B&B,-,Bombay Burmah Trading (NSE: BBTC),B&B is not a valid NSE ticker format — likely should be BBTC or BOMDYEING

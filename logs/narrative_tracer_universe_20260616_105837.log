@@ -1,0 +1,4 @@
+2026-06-16 10:58:37,868 - INFO - === Universe narrative tracer run ===
+2026-06-16 10:58:37,869 - INFO - Args: {'limit': 0, 'skip': [], 'min_transcripts': 1, 'max_chars': 100000, 'dry_run': True}
+2026-06-16 10:58:37,869 - INFO - Log file: logs/narrative_tracer_universe_20260616_105837.log
+2026-06-16 10:58:42,389 - INFO - Found 149 companies to process (min_transcripts=1)

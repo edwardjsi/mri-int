@@ -43,7 +43,7 @@ def get_qualified_watchlist(cur):
         SELECT ss.symbol, ss.total_score, ss.date,
                dp.close, dp.high, dp.low, dp.open, dp.volume,
                dp.ema_10, dp.ema_50, dp.ema_200, dp.high_10d, dp.low_5d, dp.atr_14, dp.avg_volume_20d,
-               dp.rolling_high_6m
+               dp.rolling_high_6m, dp.breakout_age
         FROM stock_scores ss
         JOIN daily_prices dp ON dp.symbol = ss.symbol AND dp.date = ss.date
         WHERE ss.date = (SELECT MAX(date) FROM stock_scores)
@@ -119,6 +119,17 @@ def process_entries(cur, regime_row, watchlist, clients):
             logger.info(f"  Skipping {sym}: Overextended candle ({candle_range:.2f} > {MAX_ATR_MULT} * ATR)")
             continue
 
+        # Breakout Age Filter
+        age = stock.get("breakout_age")
+        current_size_modifier = size_modifier
+        if age is not None:
+            if age > 5:
+                logger.info(f"  Skipping {sym}: mature breakout (Day {age})")
+                continue
+            elif age >= 3:
+                logger.info(f"  Warning {sym}: late entry zone (Day {age}), reducing size 50%")
+                current_size_modifier *= 0.5
+
         # 5. Generate Signal for each client
         # Stop Loss = max(Lowest Low of last 5 candles, Close - 2x ATR)
         # ATR-based stop prevents getting shaken out on normal volatility
@@ -144,8 +155,8 @@ def process_entries(cur, regime_row, watchlist, clients):
             client_id = client["id"]
             capital = float(client["initial_capital"] or 100000)
             
-            # Risk amount = 1% of capital * size_modifier
-            risk_amount = capital * RISK_PER_TRADE_PCT * size_modifier
+            # Risk amount = 1% of capital * current_size_modifier
+            risk_amount = capital * RISK_PER_TRADE_PCT * current_size_modifier
             quantity = int(risk_amount / risk_per_share) if risk_per_share > 0 else 0
             
             if quantity <= 0:

@@ -235,6 +235,12 @@ def ensure_required_tables(conn) -> None:
 
     # 12c. Breakout State column for daily_prices and stock_scores
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS breakout_age INTEGER DEFAULT NULL;")
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_daily_prices_breakout_age "
+        "ON daily_prices (date, breakout_state, breakout_age) "
+        "WHERE breakout_state IN ('BROKEN_OUT', 'READY_TO_BREAKOUT');"
+    )
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_21d NUMERIC;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_63d NUMERIC;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_126d NUMERIC;")
