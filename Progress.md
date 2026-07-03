@@ -2,6 +2,42 @@
 
 ---
 
+## 📅 Session: July 3, 2026 (cont., late afternoon) — Breakout Age Backfill + `_age_label` Fix
+
+**Session Start:** ~13:00 IST
+**Session End:** ~13:30 IST
+
+### What Was Done This Session
+
+#### 1. Bug Diagnosed ✅
+- [x] User reported Swing Momentum page didn't show Breakout Age badge. Investigation revealed two bugs:
+  - **`breakout_age` was NULL for every row in history** — 929 BROKEN_OUT/READY rows, 0 with non-null age. Indicator engine code at `engine_core/indicator_engine.py:282-295` exists but never produced values.
+  - **`_age_label` fallback bug** in both `api/signals.py` and `api/breakout_status.py` — `if state == 'CONSOLIDATING' or age is None` conflated "no age data" with "no breakout", so even BROKEN_OUT stocks with NULL age rendered as `⏳ CONSOLIDATING`.
+
+#### 2. Backfill Script ✅
+- [x] `scripts/backfill_breakout_age.py` (~4.5 KB, new file).
+- [x] Walks 961 symbols × 2.15M rows in a single SELECT. Mirrors indicator engine loop.
+- [x] Writes only rows where `breakout_state IN ('BROKEN_OUT', 'READY_TO_BREAKOUT')` and age is NULL or differs.
+- [x] Verified: 929 UPDATE rows in ~2s. Post-distribution matches pre-count.
+
+#### 3. `_age_label` Fix ✅
+- [x] Three-way branch: state=CONSOLIDATING → `⏳`; state=BROKEN_OUT but age NULL → `🚀 BROKEN OUT` (zone=`unknown`); state=READY but age NULL → `⚡ READY` (zone=`unknown`); state+age known → existing ladder.
+- [x] Applied identically to `api/signals.py` and `api/breakout_status.py`.
+
+#### 4. Verified Against EOD Data ✅
+- [x] Yesterday's Swing Momentum Top 4 (score=100 Golden Setups) — EXIDEIND, OBEROIRLTY, SONACOMS, ZYDUSWELL — all BROKEN_OUT age=0 → render `🔥 BREAKOUT TODAY` (would have rendered `⏳ CONSOLIDATING` before fix).
+- [x] Yesterday's Breakout Radar — 7 `🔥 BREAKOUT TODAY` + 1 `✅ FIRST FOLLOW-THROUGH` + 1 `⚡ FRESH SETUP`.
+- [x] Today's Swing Momentum (2026-07-03, all CONSOLIDATING) correctly renders `⏳ CONSOLIDATING` — no false freshness signal on a quiet day.
+
+### 📌 Current Milestone
+- **Decision 099 fully working with EOD data.** User can now see age badges on Swing Momentum (when state is set) and Breakout Radar (always, when state is set).
+- **Next:**
+  - (a) Investigate why indicator engine's breakout_age computation never wrote values (deferred — backfill makes the symptom moot).
+  - (b) Dedupe `_age_label` into shared module (deferred).
+  - (c) Data Richness Sprint (Decision 098) is still the highest-value pending work.
+
+---
+
 ## 📅 Session: July 3, 2026 (cont.) — Breakout Age on Swing Momentum Page (Decision 099 wiring)
 
 **Session Start:** ~10:30 IST

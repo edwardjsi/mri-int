@@ -183,9 +183,19 @@ DEFAULT_DECAY = 0.40
 
 def _age_label(state: str, age: int | None) -> dict:
     """Return human-readable label and emoji for breakout age."""
-    if state == 'CONSOLIDATING' or age is None:
+    if state == 'CONSOLIDATING' or state is None:
         return {"label": "CONSOLIDATING", "emoji": "⏳", "zone": "none"}
-    
+
+    # State is BROKEN_OUT or READY_TO_BREAKOUT, but age is unknown.
+    # Show state-only fallback so the UI is useful even before the backfill
+    # populates breakout_age. Distinguishes "no age data yet" from "no breakout".
+    if age is None:
+        if state == 'BROKEN_OUT':
+            return {"label": "BROKEN OUT", "emoji": "🚀", "zone": "unknown"}
+        if state == 'READY_TO_BREAKOUT':
+            return {"label": "READY", "emoji": "⚡", "zone": "unknown"}
+        return {"label": state, "emoji": "", "zone": "unknown"}
+
     if state == 'BROKEN_OUT':
         if age == 0:
             return {"label": "BREAKOUT TODAY", "emoji": "🔥", "zone": "fresh"}
@@ -197,7 +207,7 @@ def _age_label(state: str, age: int | None) -> dict:
             return {"label": "LATE ENTRY ZONE", "emoji": "⚠️", "zone": "late"}
         else:
             return {"label": "MATURE BREAKOUT", "emoji": "💤", "zone": "mature"}
-    
+
     if state == 'READY_TO_BREAKOUT':
         if age <= 2:
             return {"label": "FRESH SETUP", "emoji": "⚡", "zone": "fresh"}
@@ -205,7 +215,7 @@ def _age_label(state: str, age: int | None) -> dict:
             return {"label": "VCP COILING", "emoji": "🌀", "zone": "coiling"}
         else:
             return {"label": "MATURE SETUP", "emoji": "⏳", "zone": "mature"}
-    
+
     return {"label": state, "emoji": "", "zone": "unknown"}
 
 

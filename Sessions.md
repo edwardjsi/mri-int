@@ -1,3 +1,39 @@
+## **July 3, 2026 (cont., late afternoon): Breakout Age Backfill + `_age_label` Fallback Fix**
+
+**Objective**: Two real bugs surfaced when the Swing Momentum wiring went live:
+1. `daily_prices.breakout_age` was `NULL` for **every row in the entire history** — the indicator engine computation at `engine_core/indicator_engine.py:282-295` was never producing values that reached the DB (929 BROKEN_OUT/READY rows, 0 with non-null age).
+2. `_age_label(state, age)` in both `api/signals.py` and `api/breakout_status.py` had a logic bug: `if state == 'CONSOLIDATING' or age is None` — when state was set but age was NULL (the pre-backfill reality for every breakout row), it returned `⏳ CONSOLIDATING` instead of a state-aware fallback. So even with state=BROKEN_OUT and age=NULL, the badge rendered as `⏳ CONSOLIDATING`.
+
+User insight that drove the fix: "till yesterday Swing Momentum page identified several golden setups and breakouts. Can the stock identify data from there? Besides we use eod data not current one per se." — yesterday's EOD data already has 8 BROKEN_OUT rows; the backfill + helper fix lets the existing data drive the badge.
+
+**Actions**:
+
+- **New script** `scripts/backfill_breakout_age.py` (~4.5 KB):
+  - Walks all 961 symbols × 2.15M `daily_prices` rows in a single SELECT (no per-symbol round-trips).
+  - Mirrors the indicator engine loop: NULL on CONSOLIDATING, 0 on state transition, prev_age+1 on continuation.
+  - Only writes rows where `state IN ('BROKEN_OUT', 'READY_TO_BREAKOUT')` and age is NULL or differs — safe to re-run.
+  - Dry-run: `--dry-run` flag (used during testing).
+  - Verified output: 929 UPDATE rows written in ~2s. Post-backfill distribution: 689 BROKEN_OUT age=0, 146 age=1, 30 age=2, 8 age=3, 1 age=4, 1 age=5; 30 READY age=0, 15 age=1, 7 age=2, 2 age=3. Total = 929 (matches pre-backfill count exactly).
+
+- **`_age_label` fallback fix** (`api/signals.py` and `api/breakout_status.py`, identical change to both):
+  - Before: `if state == 'CONSOLIDATING' or age is None: return CONSOLIDATING` — conflates "no age data" with "no breakout".
+  - After: three-way branch — state=CONSOLIDATING → `⏳ CONSOLIDATING`; state=BROKEN_OUT but age NULL → `🚀 BROKEN OUT` (state-only); state=READY but age NULL → `⚡ READY` (state-only); state+age known → existing emoji/label ladder.
+  - The `zone` for the no-age fallbacks is `unknown`, distinct from `none` (real CONSOLIDATING) so the BreakoutBadge color logic doesn't pick a misleading zone color.
+
+- **Verified end-to-end against yesterday's EOD data**:
+  - Yesterday's Swing Momentum Top 4 (the score=100 "Golden Setups") — EXIDEIND, OBEROIRLTY, SONACOMS, ZYDUSWELL — all BROKEN_OUT age=0 → badges now render `🔥 BREAKOUT TODAY`. (They would have rendered `⏳ CONSOLIDATING` before the fix.)
+  - Yesterday's Breakout Radar — 7 stocks at `🔥 BREAKOUT TODAY` (Day 0), IKS at `✅ FIRST FOLLOW-THROUGH` (Day 1 follow-through), SUNPHARMA at `⚡ FRESH SETUP` (VCP coiling Day 1).
+  - Today's Swing Momentum (2026-07-03, all CONSOLIDATING) correctly renders `⏳ CONSOLIDATING` on every card — no false freshness signal on a quiet day.
+
+**Result**: Breakout Age badges are now data-driven from existing EOD data. The feature works as designed without waiting for a fresh indicator engine run. The 929-row backfill closes Decision 099's "historical age not populated" known limitation.
+
+**Next Step**:
+- (a) Investigate why the indicator engine's breakout_age computation never wrote values to the DB in the first place (the code at lines 282-295 looks correct on inspection). Likely cause: the engine hasn't been re-run since `c4f0bbc` shipped. Defer.
+- (b) Optional dedupe: now that both `_age_label` functions match byte-for-byte, extract into `api/_age_label.py` and import from both. Defer.
+- (c) Backfill narrative-tracer for ~43 universe symbols with transcripts but no promise rows (still deferred from June).
+
+---
+
 ## **July 3, 2026 (cont.): Breakout Age on Swing Momentum — Decision 099 Wiring**
 
 **Objective**: Land the final piece of Decision 099 (Breakout Age Tracking) — wire the existing Breakout Age data into the Swing Momentum page (`ShadowMomentumPage`), reusing the `BreakoutBadge` component already in use on Breakout Radar. No backend invention needed: `api/signals.py` already had the enrichment written but uncommitted.

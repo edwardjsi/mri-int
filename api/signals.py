@@ -10,8 +10,18 @@ router = APIRouter(prefix="/api/signals", tags=["signals"])
 
 
 def _age_label(state: str, age: int | None) -> dict:
-    if state == 'CONSOLIDATING' or age is None:
+    if state == 'CONSOLIDATING' or state is None:
         return {"label": "CONSOLIDATING", "emoji": "⏳", "zone": "none"}
+
+    # State is BROKEN_OUT or READY_TO_BREAKOUT, but age is unknown.
+    # Show state-only fallback so the UI is useful even before the backfill
+    # populates breakout_age. Distinguishes "no age data yet" from "no breakout".
+    if age is None:
+        if state == 'BROKEN_OUT':
+            return {"label": "BROKEN OUT", "emoji": "🚀", "zone": "unknown"}
+        if state == 'READY_TO_BREAKOUT':
+            return {"label": "READY", "emoji": "⚡", "zone": "unknown"}
+        return {"label": state, "emoji": '', "zone": "unknown"}
 
     if state == 'BROKEN_OUT':
         if age == 0:
