@@ -296,6 +296,10 @@ export const api = {
         apiFetch(`/watchlist/${symbol}`, {
             method: 'DELETE',
         }),
+    clearWatchlist: () =>
+        apiFetch('/watchlist/clear-all', {
+            method: 'POST',
+        }),
     searchStocks: (q: string) => apiFetch(`/watchlist/search?q=${q}`),
 
     // Breakout Radar

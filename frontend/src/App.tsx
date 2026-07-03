@@ -1544,6 +1544,15 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     } catch (err: any) { alert(err.message); }
   };
 
+  const handleRemoveHolding = async (symbol: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Remove ${symbol} from Digital Twin?`)) return;
+    try {
+      await api.deleteHolding(symbol);
+      await loadStatus();
+    } catch (err: any) { alert(err.message || 'Failed to remove holding'); }
+  };
+
   const handleRegrade = async () => {
     const doEmail = confirm("Email you the updated Risk Audit report after regrading?");
     setIsRegrading(true);
@@ -1632,13 +1641,23 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                       )}
                     </td>
                     <td>
-                      <button 
-                        className="btn-primary" 
-                        onClick={(e) => { e.stopPropagation(); onSelectStock(r); }}
-                        style={{ padding: '4px 8px', fontSize: '11px', background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', border: 'none' }}
-                      >
-                        🤖 AAE Audit
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap' }}>
+                        <button
+                          className="btn-primary"
+                          onClick={(e) => { e.stopPropagation(); onSelectStock(r); }}
+                          style={{ padding: '4px 8px', fontSize: '11px', background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)', border: 'none' }}
+                        >
+                          🤖 AAE Audit
+                        </button>
+                        <button
+                          className="btn-danger"
+                          onClick={(e) => handleRemoveHolding(r.symbol, e)}
+                          title={`Remove ${r.symbol} from Digital Twin`}
+                          style={{ padding: '4px 8px', fontSize: '11px' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1666,6 +1685,7 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -1765,6 +1785,23 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
     }
   };
 
+  const handleClearAll = async () => {
+    if (!showClearConfirm) {
+      setShowClearConfirm(true);
+      window.setTimeout(() => setShowClearConfirm(false), 8000);
+      return;
+    }
+    try {
+      const res = await api.clearWatchlist();
+      setShowClearConfirm(false);
+      alert(res.message || 'Watchlist cleared.');
+      loadWatchlist();
+    } catch (err: any) {
+      setShowClearConfirm(false);
+      alert(err.message || 'Failed to clear watchlist');
+    }
+  };
+
   const handleRunDigitalTwin = async (symbol: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDigitalTwinStock(symbol);
@@ -1827,14 +1864,23 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
               className="form-input" 
               style={{ width: 'auto', fontSize: '12px' }} 
             />
-            <button 
-              className="btn-secondary" 
-              onClick={handleUpload} 
+            <button
+              className="btn-secondary"
+              onClick={handleUpload}
               disabled={!uploadFile || isUploading}
               style={{ width: 'auto', padding: '0 20px', fontSize: '13px' }}
             >
               {isUploading ? 'Uploading...' : '📁 Bulk Upload CSV'}
             </button>
+            {watchlist.length > 0 && (
+              <button
+                className="btn-danger"
+                onClick={handleClearAll}
+                style={{ width: 'auto', padding: '0 20px', fontSize: '13px', opacity: showClearConfirm ? 1 : 0.6 }}
+              >
+                {showClearConfirm ? '⚠️ Click to Confirm Clear' : '🗑️ Clear All'}
+              </button>
+            )}
           </div>
         </div>
       </section>

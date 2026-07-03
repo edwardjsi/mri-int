@@ -1,5 +1,36 @@
 ## **July 3, 2026 (cont., late afternoon): Breakout Age Backfill + `_age_label` Fallback Fix**
 
+### Post-fix addendum: Watchlist + Risk Audit per-stock/clear-all removal UX
+
+User follow-up after Breakout Age shipped: "i want an ability to remove the stocks in the digital twin and the watchlist one by one and as a whole? can you do that?(risk Audit and watchlist pages)"
+
+Audited state:
+- **Watchlist page**: already had per-row `🗑️ Remove` button wired to `DELETE /api/watchlist/{symbol}` — but **no Clear All button** and **no `clear-all` backend endpoint**.
+- **Risk Audit (Digital Twin) page**: already had `🗑️ Clear Digital Twin` button (two-step confirm) wired to `POST /api/portfolio-review/holdings/delete-all` and `DELETE /portfolio-review/holdings/{symbol}` already existed — but **no per-row remove button** in the holdings table (only `🤖 AAE Audit` button).
+
+So the matrix was missing two cells: Watchlist-clear-all and RiskAudit-per-row. Both needed:
+
+1. **`api/watchlist.py`** — new `POST /api/watchlist/clear-all` (mirrors `holdings/delete-all` pattern: scoped by `client_id`, returns `{message, deleted_count}`).
+2. **`frontend/src/api.ts`** — new `clearWatchlist()` method (POST `/watchlist/clear-all`).
+3. **`frontend/src/App.tsx` `WatchlistPage`** — `showClearConfirm` state, `handleClearAll` handler (two-step confirm), `🗑️ Clear All` button next to the `📁 Bulk Upload CSV` button. Only renders when `watchlist.length > 0`.
+4. **`frontend/src/App.tsx` `RiskAuditPage`** — `handleRemoveHolding(symbol, e)` with `e.stopPropagation()` and native `confirm()`, `🗑️` button in a flex row next to `🤖 AAE Audit` in the Actions column. Backend `deleteHolding(symbol)` was already wired.
+
+Conventions followed:
+- Two-step confirmation pattern (8-second window) for "Clear All" matches the existing `handleDeleteAll` in `RiskAuditPage` — no new UX pattern introduced.
+- Per-row remove uses native `confirm()` dialog, matches existing `handleRemove` in `WatchlistPage`.
+- Backend uses `POST /clear-all` (not `DELETE /all`) to match the existing `POST /holdings/delete-all` convention.
+- Logged `[WATCHLIST_CLEAR_ALL] Client {client_id} clearing entire watchlist` for ops visibility, matching the `[BULK_UPLOAD]` log style.
+
+Verification:
+- `python3 -c "ast.parse(...)"` on `api/watchlist.py` — OK.
+- `npx tsc --noEmit` — "TypeScript: No errors found".
+- `npx vite build` — "✓ built in 2.50s" (only the pre-existing chunk-size warning, unrelated).
+- Both pages now have symmetric remove UX: per-row + clear-all.
+
+---
+
+## **July 3, 2026 (cont., late afternoon): Breakout Age Backfill + `_age_label` Fallback Fix**
+
 **Objective**: Two real bugs surfaced when the Swing Momentum wiring went live:
 1. `daily_prices.breakout_age` was `NULL` for **every row in the entire history** — the indicator engine computation at `engine_core/indicator_engine.py:282-295` was never producing values that reached the DB (929 BROKEN_OUT/READY rows, 0 with non-null age).
 2. `_age_label(state, age)` in both `api/signals.py` and `api/breakout_status.py` had a logic bug: `if state == 'CONSOLIDATING' or age is None` — when state was set but age was NULL (the pre-backfill reality for every breakout row), it returned `⏳ CONSOLIDATING` instead of a state-aware fallback. So even with state=BROKEN_OUT and age=NULL, the badge rendered as `⏳ CONSOLIDATING`.

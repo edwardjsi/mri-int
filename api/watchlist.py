@@ -229,6 +229,23 @@ def remove_from_watchlist(symbol: str, client=Depends(get_current_client), conn=
     cur.close()
     return {"message": f"{symbol} removed from watchlist"}
 
+@router.post("/clear-all")
+def clear_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
+    """Remove all symbols from the authenticated client's watchlist."""
+    client_id = str(client["id"])
+    logger.info(f"[WATCHLIST_CLEAR_ALL] Client {client_id} clearing entire watchlist")
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "DELETE FROM client_watchlist WHERE client_id = %s::uuid",
+            (client_id,)
+        )
+        deleted = cur.rowcount
+        conn.commit()
+        return {"message": f"Watchlist cleared. Removed {deleted} symbols.", "deleted_count": deleted}
+    finally:
+        cur.close()
+
 @router.post("/upload-csv")
 async def upload_watchlist_csv(
     background_tasks: BackgroundTasks,
