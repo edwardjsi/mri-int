@@ -248,9 +248,22 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE stock_scores ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
 
     # 12b. Migration: 7-Step System Expansion
+    # Auto-heal ALL 7 forensic condition columns on both stock_scores and client_signals.
+    # Historical gap: only condition_breakout_10d and condition_price_quality were originally
+    # added to the auto-heal block. The other 5 (condition_ema_50_200, condition_ema_200_slope,
+    # condition_rs, condition_6m_high, condition_volume) lived only in the CREATE TABLE
+    # statements — which is a no-op when the table already exists (e.g. legacy Neon tables
+    # created via migrations/001_client_tables.sh). This caused the 2026-07-06 pipeline
+    # crash: `UndefinedColumn: column "condition_ema_50_200" of relation "client_signals"
+    # does not exist`. Extending the list heals both tables on next API startup.
     score_cols = [
+        ("condition_ema_50_200", "BOOLEAN"),
+        ("condition_ema_200_slope", "BOOLEAN"),
+        ("condition_rs", "BOOLEAN"),
+        ("condition_6m_high", "BOOLEAN"),
+        ("condition_volume", "BOOLEAN"),
         ("condition_breakout_10d", "BOOLEAN"),
-        ("condition_price_quality", "BOOLEAN")
+        ("condition_price_quality", "BOOLEAN"),
     ]
     for col, col_type in score_cols:
         cur.execute(f"ALTER TABLE stock_scores ADD COLUMN IF NOT EXISTS {col} {col_type};")

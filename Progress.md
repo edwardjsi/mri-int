@@ -2,6 +2,45 @@
 
 ---
 
+## 📅 Session: July 6, 2026 — Pipeline Crash Fix: `client_signals` 7-Step Forensic Columns
+
+**Session Start:** ~22:00 IST
+**Session End:** ~22:30 IST
+
+### What Was Done This Session
+
+#### 1. Pipeline Crash Diagnosed ✅
+- [x] User reported GitHub Actions failed email with: `psycopg2.errors.UndefinedColumn: column "condition_ema_50_200" of relation "client_signals" does not exist` at `engine_core/signal_generator.py:360` → `execute_batch`.
+- [x] Pipeline log confirmed prior steps ran cleanly: regime updated through 2026-07-06 (SIDEWAYS), scoring wrote 134,733 rows for 961 symbols, Hall of Fame + Strategy Shadow tracking updated for 73 + 10 stocks. Crash was on first client_signals INSERT.
+- [x] Root cause: Day 69 7-step upgrade added 7 forensic condition columns to the `CREATE TABLE IF NOT EXISTS` in `api/schema.py:80-100`, but the auto-heal block at lines 252-258 only listed the 2 newest (`condition_breakout_10d`, `condition_price_quality`). The other 5 (`condition_ema_50_200`, `condition_ema_200_slope`, `condition_rs`, `condition_6m_high`, `condition_volume`) never got ALTERed onto existing `client_signals` tables. `stock_scores` had all 7 because `engine_core/regime_engine.py:42-49` does its own fresh CREATE TABLE on first Neon run.
+
+#### 2. Auto-Heal Extended ✅
+- [x] Extended `api/schema.py` auto-heal `score_cols` list from 2 elements to all 7. Both `stock_scores` and `client_signals` get idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` on next API startup.
+- [x] Added inline comment documenting the historical gap so the next schema change author knows to extend the auto-heal block alongside any CREATE TABLE change.
+
+#### 3. Explicit Migration File ✅
+- [x] Created `migrations/007_client_signals_7step.sql` (1.6 KB) — explicit, runnable form of the auto-heal for the 5 missing columns. Matches the `006_breakout_age.sql` auditability pattern. Can be run manually via `psql "$DATABASE_URL" -f migrations/007_client_signals_7step.sql` if API restart is undesired.
+
+#### 4. Verification ✅
+- [x] `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())" api/schema.py` — clean.
+- [x] `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())" engine_core/signal_generator.py` — clean.
+- [x] No live DB to test against in this session. The auto-heal will fire on the next Railway API restart triggered by this push.
+
+#### 5. Push + Railway Auto-Deploy ⏳
+- [ ] Commit + push to `origin/main` to trigger Railway auto-deploy.
+- [ ] Verify next GitHub Actions run completes all 10 pipeline steps without error.
+- [ ] Verify daily digest email delivered to all 5 active clients.
+
+### 📌 Current Milestone
+- **Pipeline crash root-caused and fix landed locally.** Awaiting push to trigger auto-heal on production Neon DB.
+- **Next**:
+  - (a) Push → verify GitHub Actions succeeds → verify daily email sends.
+  - (b) Still pending: Data Richness Sprint (Decision 098) — highest-value open work.
+  - (c) Still pending: ~43-symbol narrative-tracer backfill.
+  - (d) Still pending: wire PE score into `compute_perx_score`.
+
+---
+
 ## 📅 Session: July 3, 2026 (cont., late afternoon) — Breakout Age Backfill + `_age_label` Fix
 
 **Session Start:** ~13:00 IST

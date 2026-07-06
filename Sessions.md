@@ -1,3 +1,36 @@
+## **July 6, 2026: Pipeline Crash Fix — `client_signals` 7-Step Forensic Columns Missing**
+
+**Objective**: Daily pipeline at step `[4/10] Generating client signals` crashed on GitHub Actions with `psycopg2.errors.UndefinedColumn: column "condition_ema_50_200" of relation "client_signals" does not exist`. No daily email went out. Triage and one-shot fix.
+
+**Actions**:
+
+- **Diagnosed root cause**:
+  - `engine_core/signal_generator.py:329-336` INSERTs 7 forensic condition columns into `client_signals` (Day 69 7-step upgrade). Production Neon `client_signals` table was created via the legacy `migrations/001_client_tables.sh` (which has zero condition columns), or via an older `api/schema.py` snapshot that lacked all 7.
+  - `api/schema.py` lines 252-258 had `score_cols = [("condition_breakout_10d", ...), ("condition_price_quality", ...)]` — only the 2 newest columns auto-healed on API startup. The other 5 (`condition_ema_50_200`, `condition_ema_200_slope`, `condition_rs`, `condition_6m_high`, `condition_volume`) lived only in the `CREATE TABLE IF NOT EXISTS` block (no-op when table already exists).
+  - Net effect: stock_scores had all 7 (Neon CREATE happened on a fresh DB via `engine_core/regime_engine.py:42-49`), but client_signals was missing 5 of 7. Pipeline log confirms: scoring step wrote 134,733 rows successfully (stock_scores OK), then signal_generator INSERT failed.
+  - This is a textbook schema-drift gap: the README's "Schema Auto-Heal" pattern only works if all new columns are listed in the auto-heal block. The Day 69 code added columns to the CREATE TABLE statement but missed the corresponding ALTER TABLE entries.
+
+- **Fix shipped** (`fix(schema): auto-heal all 7 7-step forensic columns on client_signals + stock_scores`):
+  - **Extended `api/schema.py` auto-heal** (lines 252-269): replaced the 2-element `score_cols` with a 7-element list. `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` is idempotent and safe on tables that already have the column. Heals both `stock_scores` (defense in depth) and `client_signals` (fixes today's crash).
+  - **New migration `migrations/007_client_signals_7step.sql`** (1.6 KB) — explicit, runnable form of the auto-heal for the 5 missing columns. Matches the `006_breakout_age.sql` auditability pattern. Comments document the historical gap so this doesn't happen again.
+  - Comment in `api/schema.py` auto-heal block documents the root cause inline (so the next person who touches this won't reintroduce the gap).
+
+- **Verification**:
+  - `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())" api/schema.py` — clean.
+  - `python3 -m py_compile` not used (per project rule).
+  - No live DB to test against in this session. The auto-heal will fire on the next Railway API restart triggered by this push.
+
+- **Push to `origin/main`**: pending (will be in the same commit as this session log).
+
+**Result**: Pipeline crash root-caused and fixed. Once Railway auto-deploys the new `api/schema.py`, the next API startup will add the 5 missing columns to production `client_signals`. The next pipeline run will then succeed at step `[4/10]` and the daily client emails will go out.
+
+**Next Step**:
+- (a) After push: monitor next GitHub Actions run — `[4/10] Generating client signals` should now succeed.
+- (b) After successful run: re-verify daily digest email delivered to all 5 active clients.
+- (c) Still pending from prior sessions: Data Richness Sprint (Decision 098) — highest-value open work. ~43-symbol narrative-tracer backfill. Wire PE score into `compute_perx_score`. None of these were impacted by today's fix.
+
+---
+
 ## **July 3, 2026 (cont., late afternoon): Breakout Age Backfill + `_age_label` Fallback Fix**
 
 ### Post-fix addendum: Watchlist + Risk Audit per-stock/clear-all removal UX
