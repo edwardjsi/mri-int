@@ -1,3 +1,62 @@
+## **July 7, 2026: Capital Allocation Score V1.0 — Session N+1 (Migration + Pure Engine + Tests)**
+
+**Objective**: Ship the smallest testable unit of CAS V1.0: schema migration, pure-logic engine module, and unit tests. No API, no frontend, no DB writes.
+
+**Why this is incremental work**: Per §7 of the design doc, the full CAS implementation is split into 3 sessions. N+1 is the "pure logic + schema" foundation that N+2 (indicator_engine wiring) and N+3 (API + UI) build on.
+
+**Actions**:
+
+- **Flipped Decision 100** from `DRAFT — implementation pending` → `APPROVED — Session N+1 implementation in progress`. Implementation log line added so the decision now reflects live status.
+- **Installed `pyyaml>=6.0`** in the venv (was missing) and added to `requirements.txt`. Pulled forward from N+3 because N+1 tests need it.
+- **Migration `migrations/008_capital_allocation_columns.sql`** (NEW, 4 columns + 3 indexes):
+  - `daily_prices.ema_100`, `rolling_high_52w`, `weekly_trend_score`, `overhead_supply_score` (all NUMERIC DEFAULT NULL, idempotent `ADD COLUMN IF NOT EXISTS`).
+  - Indexes: `idx_daily_prices_weekly_trend_score`, `idx_daily_prices_overhead_supply_score` (partial on non-NULL), `idx_daily_prices_cas_eligible` (composite for future `/top-by-cas` query). Mirrors migration 006 (`breakout_age`) pattern.
+  - **NOT yet run against prod DB.** Run manually with `psql "$DATABASE_URL" -f migrations/008_capital_allocation_columns.sql` or let `api/schema.py` auto-heal handle it when N+2 wires that block.
+- **`engine_core/capital_allocation.py`** (NEW, ~450 lines) — pure-logic CAS engine:
+  - `load_config(path)` — YAML loader with weights-must-sum-to-100 validation.
+  - `check_eligibility(row, regime, config)` — 6 hard gates (regime, EMA stack, breakout, liquidity, quality, 52w position); ADTV convention matches `engine_core/signal_generator.py`: `avg_volume_20d × close` in INR, divided by 1e7 for Cr.
+  - `check_market_subgates(row, config)` — 3 PASS/FAIL sub-gates (trend/breakout/quality), stricter than eligibility.
+  - `compute_market_score(sub_scores, config)` — weighted sum, overhead_supply inverted (0 = clear air = max contribution).
+  - `compute_portfolio_allocation_score(market, winner_profit, concentration_weight, config)` — CAS = market × winner_mult × conc_mult, both clamped.
+  - `compute_confidence_stars(row, sub_scores, proxies_used, config)` — 5-criterion star rating, clamped [0, 5].
+  - `render_why_checklist(row, config)` — iterates YAML `why_templates`, evaluates condition, formats template; skips lines with missing interpolation values.
+  - 6 sub-score helpers (`_regime_score`, `_weekly_score`, `_breakout_score`, `_rs_score`, `_volume_score`, `_sector_score`) imported by tests; V1.0 sector = neutral 50 proxy.
+- **`engine_core/test_capital_allocation.py`** (NEW, 24 scenarios / 92 test cases via parametrization):
+  - 5 sub-score tests (regime BULLISH/SIDEWAYS/BEARISH, weekly multi-component 6 cases, breakout age-decay 11 cases, overhead_supply pass-through, RS/volume/sector combined).
+  - 3 multiplier tests (winner cap 8 cases, concentration curve 5 cases, combined stack 1 case).
+  - 8 eligibility/sub-gate tests (combined PASS, multi-fail returns all gate names, regime 4 cases, EMA stack 4 conditions, trend/breakout/quality sub-gates, all-required combined).
+  - 5 confidence tests (per-star 11 cases, full/zero/partial/clamp).
+  - 3 why-checklist tests (matching lines render, missing fields skipped, value interpolation).
+
+**Verification**:
+
+```bash
+pytest engine_core/test_capital_allocation.py -v
+# Result: 92 passed in 0.28s
+```
+
+- All 92 test cases pass on the first run after fixing one test-data bug (the `no_proxy_used` parametrization accidentally triggered `factor_agreement` because its sub_scores had low std-dev; fixed by using wide-range values).
+- Integration sanity check on a gold-platter row: eligibility PASS, sub-gates PASS, Market Score 84.98, CAS 88.72 (with 8% winner profit, 5% portfolio weight), 4 stars (factor_agreement std-dev is high because overhead_supply_score=18 is on the "badness" scale while others are on "goodness"), 8 ✓ checklist lines.
+- Migration SQL is structurally clean (idempotent ALTER + CREATE INDEX pattern, mirrors migrations 006 and 007). NOT yet executed against the DB — columns will land via this migration or via the N+2 `api/schema.py` auto-heal extension.
+
+**Result**: Session N+1 ships. Decision 100 is APPROVED. 4 columns reserved on `daily_prices`. Pure-logic CAS engine module + 92 passing unit tests on disk. Zero changes to `api/`, `frontend/`, or `engine_core/indicator_engine.py`. End-to-end wiring waits for N+2 (indicator column computations) and N+3 (API + UI).
+
+**Known design question (carry to N+2 review)**: Should `overhead_supply` be inverted before passing to `compute_confidence_stars` so `factor_agreement` std-dev is apples-to-apples? Currently the literal spec is implemented (raw sub_scores in, std-dev compared directly). For a stock with overhead=18 (clear air) and other factors at 50–100, the std-dev will exceed 20, losing 1 confidence star. Either (a) caller pre-inverts before calling `compute_confidence_stars`, or (b) the engine does the inversion internally. Decision needed before N+3 wires the real `/top-by-cas` endpoint.
+
+**Next Step (Session N+2, 1.5–2 hrs)**:
+- Wire the 4 new indicator column computations into `engine_core/indicator_engine.py`:
+  - `ema_100` — EMA over 100 days (reuses existing EMA code, just different period).
+  - `rolling_high_52w` — rolling max over 252 trading days.
+  - `weekly_trend_score` — 5-component composite (HH + HL + above weekly EMA-13/20 + within 5% of 52w high). Needs resample to weekly + forward-fill.
+  - `overhead_supply_score` — distinct swing highs in last 6m above current close, normalized 0–100.
+- Extend the `INDICATOR_COLUMNS` tuple + `add_indicator_columns_if_missing()` in `indicator_engine.py` (mirrors the breakout_age pattern from Decision 099).
+- Extend the `api/schema.py` auto-heal block (defense in depth — the migration 008 already covers this but the auto-heal pattern is what protects against legacy DBs).
+- Run `migrations/008_capital_allocation_columns.sql` against the DB to create the columns (or rely on the auto-heal on next API startup).
+- Run a backfill script to populate the 4 columns for the entire Nifty 500 universe (~1.6M rows). Estimated runtime: 5–10 min on Railway.
+- Smoke-test: query a few symbols to confirm columns are populated and the eligibility/sub-gate logic produces sensible results.
+
+---
+
 ## **July 6, 2026 (late evening): Capital Allocation Score V1.0 — Design Freeze (rev 2)**
 
 **Objective**: Add a **Capital Allocation Score (0–100)** to the Breakout Radar + Dashboard that answers "Which breakout deserves fresh capital today?" — a question the existing Breakout Radar does not answer. Score must be defensible, not just arithmetically computed.
