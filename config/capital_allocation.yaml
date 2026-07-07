@@ -1,0 +1,213 @@
+# MRI Capital Allocation Score — Configuration
+# Decision doc: docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md
+# Frozen 2026-07-06 (rev 2) per user spec. Edit here, not in code.
+# Rev 2 changes: Market Score = 3 hard sub-gates (Trend/Breakout/Quality);
+#   relaxed EMA stack; QIF >= 70; R/R removed (deferred to V1.1); Overhead Supply
+#   added; Weekly Trend multi-component; Winner cap 1.10; Confidence stars added.
+
+version: "1.0.0-rev2"
+
+# ── Stage 1: Eligibility Filter (pass/fail) ──────────────────────────────────
+# If a stock fails ANY of these gates, it does NOT receive a Capital Allocation
+# Score. Keeps the scoreboard focused on actionable candidates, not every stock.
+eligibility:
+  # Market Regime: BULLISH or SIDEWAYS pass; BEARISH passes only if
+  # aggressive_mode is enabled (avoids swimming against the tide).
+  allowed_regimes:
+    - BULLISH
+    - SIDEWAYS
+  aggressive_mode: false
+
+  # EMA Stack (RELAXED in rev 2 — see plan doc §2.2). All 4 conditions must hold.
+  ema_conditions:  # all must be True
+    close_gt_ema20: true
+    ema20_gt_ema50: true
+    ema50_gt_ema200: true
+    ema100_rising: true  # slope(EMA100, 5d) > 0
+  # Note: full strict stack (EMA20>50>100>200) was rejected because plenty of
+  # fantastic reratings happen before EMA100 fully crosses.
+
+  # Breakout: must be BROKEN_OUT state AND within N trading days of breakout.
+  breakout_max_age_days: 5  # Breakout Today or Early Continuation (Day 0-5)
+
+  # Liquidity: Average Daily Traded Value >= min_liquidity_crores × 1e7 INR.
+  # ₹10 Cr/day matches Decision 029 (₹10 Cr ADTV Liquidity Gate).
+  min_liquidity_crores: 10
+
+  # Quality Score: QIF overall score (0-100) must be >= this threshold.
+  # Rev 2: raised from 65 to 70. The point of MRI is fewer, better ideas.
+  min_quality: 70
+
+  # 52-Week Position: close must be within X% of the 52-week rolling high.
+  max_distance_from_52wh_pct: 10
+
+# ── Stage 2: Market Score Hard Sub-Gates (PASS/FAIL) ─────────────────────────
+# NEW in rev 2: the Market Score is no longer a simple weighted sum. It has
+# 3 hard PASS/FAIL sub-gates. Stocks that fail any sub-gate are REJECTED and
+# receive no numeric score. This prevents a stock from compensating for a
+# weak weekly trend with huge volume, etc.
+#
+# Only SURVIVORS (all 3 PASS) get the weighted Market Numeric Score computed.
+market_subgates:
+  trend:
+    # "Trend PASS/FAIL" — weekly structure must be meaningfully bullish.
+    # Threshold: weekly_trend_score >= 50 (i.e., at least half of the
+    # HH/HL/EMA/52WH criteria pass — see weekly_trend subscore section).
+    min_weekly_trend_score: 50
+  breakout:
+    # "Breakout PASS/FAIL" — stricter than eligibility: age <= 3 (early continuation).
+    # Eligibility already requires age <= 5; the sub-gate further filters for
+    # "fresh" rather than "early but not stale".
+    max_breakout_age_days: 3
+  quality:
+    # "Quality PASS/FAIL" — stricter than eligibility: QIF >= 75.
+    # Eligibility already requires QIF >= 70; the sub-gate enforces "high quality".
+    min_quality: 75
+
+# ── Stage 3: Market Numeric Score (for survivors) ───────────────────────────
+# Weighted factors. Each sub-score is independently normalized to 0-100, then
+# summed with these weights. Total weights (Market Score only) MUST sum to 100.
+#
+# Rev 2 changes:
+#   - R/R REMOVED (deferred to V1.1 — proxy was too arbitrary)
+#   - Overhead Supply ADDED (took R/R's old weight + small rebalance)
+#   - Other factors slightly scaled up to sum to 100
+weights:
+  regime: 23      # Market Regime: BULLISH=100, SIDEWAYS=60, BEARISH=20
+  weekly: 21      # Weekly Structure (multi-component: HH, HL, above EMAs, near 52w high)
+  breakout: 17    # Breakout Quality: breakout_age + volume bonus
+  overhead_supply: 14  # NEW: 0=clear air, 100=massive overhead resistance
+  rs: 11          # Relative Strength: stock vs Nifty 50 over 90d
+  volume: 8       # Volume Confirmation: volume vs 20d average
+  sector: 6       # Sector Strength: industry RS-90d percentile
+  # Concentration is NOT a Market Score weight — it's a portfolio multiplier (below).
+
+# ── Stage 4: Portfolio Multipliers (applied to Market Numeric Score) ─────────
+# Per user spec: portfolio context (existing winner, over-allocation) should be
+# a MULTIPLIER, not a weight, so it reinforces the base signal rather than
+# competing with it.
+multiplier:
+  winner:
+    # profit_pct = (current_close - avg_cost) / avg_cost × 100
+    # multiplier = 1 + (profit_pct / scale_pct) × max_boost, clamped
+    # Rev 2: max_boost reduced from 0.15 to 0.10 (cap at +10%, not +15%)
+    # Existing holdings should reinforce, not dominate rankings.
+    scale_pct: 10
+    max_boost: 0.10      # max +10% multiplier at or above scale_pct profit
+    min_multiplier: 0.85 # floor (e.g. -10% loss → 0.90x; -15% loss → 0.85x clamped)
+  concentration:
+    # Penalize over-allocation. weight_pct = (current_value / total_capital) × 100.
+    # multiplier = 1 - clamp(weight_pct / max_weight_pct, 0, 1) × max_penalty
+    max_weight_pct: 15
+    max_penalty: 0.10    # at 15% weight → 0.90x (max -10% penalty)
+
+# ── Stage 5: Confidence (star rating, NOT a numeric) ─────────────────────────
+# NEW in rev 2: Confidence is a 0-5 star rating shown next to the CAS number.
+# Stars depend on 5 binary criteria. Each contributes 1 star if met. Max = 5.
+#
+# Why stars (not numbers): users grasp "5 of 5 stars" faster than "92% confidence".
+confidence:
+  factors:
+    no_proxy_used:        # 1 star if all sub-scores use real data (no V1 proxies)
+      weight: 1
+    data_completeness:    # 1 star if >= 90% of expected columns are populated
+      weight: 1
+      threshold_pct: 90
+    factor_agreement:     # 1 star if sub-scores are within 20 points of each other
+      weight: 1
+      max_std_dev: 20
+    trend_maturity:       # 1 star if weekly_trend_score >= 75 (established, not nascent)
+      weight: 1
+      min_weekly_trend: 75
+    breakout_maturity:    # 1 star if breakout_age in 1..3 (not too fresh, not too stale)
+      weight: 1
+      age_min: 1
+      age_max: 3
+
+# ── Sub-Score Normalization ──────────────────────────────────────────────────
+subscore:
+  regime:
+    bullish: 100
+    sideways: 60
+    bearish: 20
+  weekly:
+    # Multi-component score (rev 2 upgrade). Sum of 5 binary components, max 100:
+    #   +25 if Higher Highs confirmed (current swing high > previous)
+    #   +25 if Higher Lows confirmed
+    #   +20 if close > weekly EMA-13
+    #   +15 if close > weekly EMA-20
+    #   +15 if close >= 0.95 × rolling_high_52w (within 5% of 52w high)
+    hh_weight: 25
+    hl_weight: 25
+    above_weekly_ema13_weight: 20
+    above_weekly_ema20_weight: 15
+    within_52wh_weight: 15
+  breakout:
+    # Score = base + volume_bonus, clamped to [0, 100]
+    # base: 100 if age 0, decays via AGE_DECAY table (Decision 099)
+    #   age 0 -> 100, age 1 -> 95, age 2 -> 90, age 3 -> 85, age 4 -> 70, age 5 -> 65, beyond -> 40
+    volume_bonus_threshold: 2.0  # 2x avg volume
+    volume_bonus_points: 10
+  overhead_supply:
+    # NEW rev 2. 0 = clear air, 100 = massive overhead resistance.
+    # Compute: count distinct local swing highs in last 6m above current close,
+    # weighted by recency and volume.
+    lookback_days: 126  # ~6 months
+    max_count_for_100: 10  # 10+ distinct overhead swing highs = max score
+  rr:
+    # NOT USED IN V1.0 — rev 2 removed the proxy. Configured here for V1.1
+    # readiness when a real `support_3m` column ships.
+    rr_at_zero: 1.0
+    rr_at_100: 4.0
+    enabled_v1: false
+  rs:
+    # Score = clamp((rs_90d - 0) / 0.10 × 100, 0, 100) — 100 = Nifty +10% over 90d
+  volume:
+    # Score = 100 × clamp((volume / avg_volume_20d - 1.0) / 2.0, 0, 1)
+    # 100 = 3× average, 0 = at or below average
+    vol_ratio_for_100: 3.0
+  sector:
+    # V1.0: proxy = 50 for all (real sector RS lands in V1.2 via sector_rs_60d).
+    proxy_score_v1: 50
+
+# ── Stage 6: Action Chip Thresholds ──────────────────────────────────────────
+actions:
+  add_second_tranche: 85   # >= 85 -> "ADD SECOND TRANCHE"
+  first_tranche: 70        # 70-84  -> "FIRST TRANCHE"
+  watch: 50                # 50-69  -> "WATCH"
+  # < 50 -> no chip (stock didn't make the banner)
+
+# ── Breakout Age UI Emoji (rev 2) ────────────────────────────────────────────
+# Surfaced in the UI so users understand urgency at a glance.
+breakout_age_emoji:
+  0: "🔥"  # Today
+  1: "🟢"  # Yesterday
+  2: "🟢"  # 2 Days
+  3: "🟡"  # 3 Days
+  4: "🟡"  # 4 Days
+  5: "⚪"  # 5 Days
+
+# ── Why Templates (rev 2: structured checklist, not single sentence) ─────────
+# Each entry is (condition_name, template_string). The renderer evaluates
+# each condition against the row + sub-scores and appends matching lines.
+why_templates:
+  - condition: regime_strong
+    template: "✓ Strong market regime ({regime_label})"
+  - condition: weekly_strong
+    template: "✓ Weekly trend strengthening (HH + HL)"
+  - condition: breakout_today
+    template: "✓ Fresh breakout today (Day 0)"
+  - condition: breakout_early
+    template: "✓ Early continuation (Day {breakout_age})"
+  - condition: near_52wh
+    template: "✓ Near 52-week high"
+  - condition: rs_strong
+    template: "✓ Strong RS (top quartile)"
+  - condition: volume_confirmed
+    template: "✓ Volume confirmation ({vol_ratio:.1f}x average)"
+  - condition: winner_profit
+    template: "✓ Existing winner (+{profit_pct:.0f}%)"
+  - condition: clear_overhead
+    template: "✓ Clear overhead supply (score {overhead_supply_score}/100)"
+  - condition: high_quality
+    template: "✓ High QIF ({qif_score:.0f}/100)"

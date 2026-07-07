@@ -2,6 +2,90 @@
 
 ---
 
+## 📅 Session: July 6, 2026 (late evening) — Capital Allocation Score V1.0 Design Freeze (rev 2) — DESIGN ONLY, NO CODE
+
+**Session Start:** ~23:30 IST
+**Session End:** ~00:30 IST (July 7)
+
+> **Multi-session work.** This session ships **design artifacts only** — implementation will land in 3 follow-up sessions per the ordered plan in §7 of `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`. Sessions.md has a detailed "Multi-session handoff notes" block at the bottom of today's entry so the next session can resume cold.
+
+### What Was Done This Session
+
+#### 1. Capital Allocation Score V1.0 — Design Iterated & Frozen ✅
+- [x] User asked to add a Capital Allocation Score to Breakout Radar answering "Which breakout deserves fresh capital today?"
+- [x] First draft: 9-factor weighted score with Market Score + Portfolio Allocation Score + 4 new indicator columns.
+- [x] User critique ("I'd choose Option 2 before a single line of code is written"): freeze eligibility thresholds + weights FIRST.
+- [x] User rev 2 critique ("an 8.5/10 design — a few things I'd change before any code is written"): 13 design points iterated, all locked.
+
+#### 2. Design Artifacts Written ✅
+- [x] **`config/capital_allocation.yaml`** (10.1 KB, NEW) — all thresholds, weights (sum to 100), sub-gate thresholds, multipliers, confidence rules, action thresholds, breakout-age emoji map, Why-checklist templates.
+- [x] **`docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`** (18.0 KB, NEW) — 12-section design doc: Goal, Frozen Decisions, Per-Factor Formulas, Confidence, V1.0/V1.1/V2 Scope, File Changes, Verification Plan, Risk Analysis, Out-of-Scope, Rev 2 Rationale.
+- [x] **`Decisions.md` Decision 100** — 13-point architectural decision, DRAFT (pending implementation) status, cross-links to YAML + plan doc.
+
+#### 3. Architecture Frozen ✅
+- [x] Pipeline: `Eligibility (6 hard gates) → Market Sub-Gates (3 hard PASS/FAIL: Trend/Breakout/Quality) → Numeric Score (weighted 7 factors, survivors only) → Portfolio Multipliers (Winner × Concentration) → CAS → Confidence ★ → Action chip`.
+- [x] **Eligibility (rev 2)**: Regime ∈ {BULLISH, SIDEWAYS}, 4-component EMA stack (Close>EMA20, EMA20>EMA50, EMA50>EMA200, EMA100 rising), Breakout age ≤ 5, Liquidity ≥ ₹10 Cr, QIF ≥ **70** (raised), 52w position within 10%.
+- [x] **Sub-Gates (NEW rev 2)**: Weekly trend ≥ 50, Breakout age ≤ 3, QIF ≥ 75.
+- [x] **Weighted factors (sum to 100)**: Regime 23, Weekly 21, Breakout 17, **Overhead Supply 14 (NEW)**, RS 11, Volume 8, Sector 6. Concentration = multiplier only.
+- [x] **Multipliers (rev 2 — softened)**: Winner cap 1.10 (was 1.15); Concentration unchanged (max 0.90x at 15% weight).
+- [x] **R/R REMOVED** from V1.0 — proxy was too arbitrary. Returns in V1.1 with real `support_3m` column.
+- [x] **Confidence (NEW)**: 0–5 ★ rating. 5 criteria: no_proxy_used, data_completeness≥90%, factor_agreement (std≤20), trend_maturity (weekly≥75), breakout_maturity (age 1-3).
+- [x] **Breakout Age UI emoji**: 🔥🟢🟡⚪⚫.
+- [x] **Structured Why checklist** (multi-line ✓ bullets) via template list, not single sentence.
+
+#### 4. 4 New Indicator Columns Specified ✅
+- [x] `daily_prices.ema_100` (NUMERIC) — for relaxed EMA gate (`ema100_rising` check).
+- [x] `daily_prices.rolling_high_52w` (NUMERIC) — for 52w position eligibility + Weekly Trend within-52wh component.
+- [x] `daily_prices.weekly_trend_score` (NUMERIC 0-100) — multi-component: HH(25) + HL(25) + above weekly EMA-13(20) + above weekly EMA-20(15) + within 5% of 52w high(15).
+- [x] `daily_prices.overhead_supply_score` (NUMERIC 0-100) — count of distinct swing highs in last 6m above current close; 0=clear air, 100=massive overhead.
+- [x] **Dropped** from V1.0: `resistance_6m` (no longer needed without R/R).
+
+#### 5. Verification of Design Artifacts ✅
+- [x] `python3 -c "import yaml; cfg = yaml.safe_load(open('config/capital_allocation.yaml')); ..."` → parses cleanly; `sum(weights.values()) == 100`; all top-level sections present.
+- [x] Plan doc cross-references YAML via `Decision doc:` comment so future agents find it.
+- [x] No code touched in this session — `engine_core/`, `api/`, `frontend/`, `migrations/` byte-for-byte unchanged.
+
+### 📌 Current Milestone
+- **V1.0 (rev 2) design fully frozen. Zero code changes this session.** Next session implements per the 3-session plan below.
+- **Implementation plan** (ordered for smallest-verifiable-units-first):
+
+#### Session N+1 — Engine Core (1.5–2 hrs wall time)
+- [ ] `migrations/008_capital_allocation_columns.sql` — 4 new `ADD COLUMN IF NOT EXISTS` on `daily_prices`.
+- [ ] `engine_core/capital_allocation.py` — NEW module: `load_config(path)`, `check_eligibility(row, config)`, `check_market_subgates(row, sub_scores, config)`, `compute_market_score(sub_scores, weights)`, `compute_portfolio_allocation_score(market_score, winner_pct, weight_pct, config)`, `compute_confidence_stars(row, sub_scores, proxies_used, config)`, `render_why_checklist(row, sub_scores, templates)`.
+- [ ] `engine_core/test_capital_allocation.py` — NEW test file: 5 sub-score cases + 3 portfolio multiplier cases (rev 2 cap is 1.10) + 8 eligibility/sub-gate scenarios + 5 confidence scenarios + 3 why-checklist scenarios.
+- [ ] Commit + push: `feat(cas): add engine_core/capital_allocation.py + unit tests`.
+
+#### Session N+2 — Indicator Engine + Schema Auto-Heal (1.5–2 hrs wall time)
+- [ ] `engine_core/indicator_engine.py` — add 4 new column computations to `INDICATOR_COLUMNS`. `weekly_trend_score` uses `daily_prices.resample('W-FRI')` for weekly EMAs; `overhead_supply_score` uses a 5-bar fractal swing detector on the last 126 days.
+- [ ] `api/schema.py` — add the 4 new columns to the auto-heal block (defense in depth, mirrors Decision 099 pattern).
+- [ ] Spot-check on 5 hand-picked symbols: `INDUSINDBK`, `RADICO`, `ZYDUSLIFE`, `CHOLAFIN`, `ABDL` — verify all 4 new columns populate for last 60 trading days.
+- [ ] Manual cross-check: `Poonawalla` should have HIGH `overhead_supply_score` (~80-100); `NAVINFLUOR` should have LOW (~0-20).
+- [ ] Commit + push: `feat(cas): compute 4 new indicator columns + auto-heal extension`.
+
+#### Session N+3 — API + UI + Deploy (2–3 hrs wall time)
+- [ ] `api/breakout_status.py` — wire CAS into existing `/api/breakout/radar` (each row gets `market_score`, `cas`, `confidence_stars`, `breakout_age_emoji`, `why_checklist[]`, `subgates_passed`); new endpoint `GET /api/breakout/top-by-cas?limit=5&client_id=...`.
+- [ ] `frontend/src/api.ts` — new `getTopByCAS(limit, clientId?)` method.
+- [ ] `frontend/src/CapitalAllocationCard.tsx` — NEW card component: symbol, CAS, ★ confidence, action chip (color-coded), breakout age emoji, multi-line Why checklist.
+- [ ] `frontend/src/BreakoutRadar.tsx` — compact CAS banner above existing sections; 5-card grid.
+- [ ] `frontend/src/Dashboard.tsx` — top banner; same endpoint; same card design.
+- [ ] `requirements.txt` — add `pyyaml>=6.0`.
+- [ ] Verification: `ast.parse` on Python files, `tsc --noEmit` on frontend, `vite build` succeeds.
+- [ ] Commit + push: `feat(cas): wire CAS into radar + dashboard banners`.
+- [ ] Post-deploy: Railway auto-deploys; smoke-test `/api/breakout/top-by-cas?limit=5`; visual spot-check.
+
+### 📌 Decisions.md State After This Session
+- **Decision 100** added: Capital Allocation Score V1.0 (rev 2). Status: **DRAFT — implementation pending**.
+- **Decision 099** still FINAL (Breakout Age — already shipped).
+- **Decision 098** still DRAFT (Data Richness Sprint — pending).
+
+### 📌 Next
+- (a) **Session N+1**: implementation starts at `migrations/008_capital_allocation_columns.sql`. See Sessions.md "Multi-session handoff notes" for resume-cold pointers.
+- (b) **In parallel (any session)**: Decision 098 Data Richness Sprint can proceed independently (no blocker on CAS).
+- (c) After all 3 implementation sessions ship + Railway deploys: mark Decision 100 as **FINAL — executed**.
+
+
+---
+
 ## 📅 Session: July 6, 2026 — Pipeline Crash Fix: `client_signals` 7-Step Forensic Columns
 
 **Session Start:** ~22:00 IST

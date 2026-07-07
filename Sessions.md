@@ -1,3 +1,61 @@
+## **July 6, 2026 (late evening): Capital Allocation Score V1.0 — Design Freeze (rev 2)**
+
+**Objective**: Add a **Capital Allocation Score (0–100)** to the Breakout Radar + Dashboard that answers "Which breakout deserves fresh capital today?" — a question the existing Breakout Radar does not answer. Score must be defensible, not just arithmetically computed.
+
+**Why this is multi-session work**: The user explicitly framed this as "an 8.5/10 design — a few things I'd change before any code is written." We iterated through 2 design revisions in this session and ended with a fully-frozen V1.0 spec (rev 2). **This session ships design artifacts only — no code touched.** Implementation will land across 1–2 follow-up sessions per the plan in §7 of the design doc.
+
+**Actions**:
+
+- **Iterated from rev 1 → rev 2** through an in-session design critique. User pushed back on:
+  1. **Market Score = PASS/FAIL hard sub-gates, not weighted sum.** Three sub-gates (Trend, Breakout, Quality) must all PASS before any numeric scoring. "A stock cannot compensate for a weak weekly trend with huge volume."
+  2. **Relax EMA stack** from strict `EMA20 > EMA50 > EMA100 > EMA200` to 4 conditions: `Close > EMA20`, `EMA20 > EMA50`, `EMA50 > EMA200`, `EMA100 rising`. The strict stack "rejects some of the biggest winners" (EMA100 hasn't crossed yet).
+  3. **Raise Quality threshold** from 65 → 70. "The whole point of MRI is fewer, better ideas."
+  4. **Add Overhead Supply** as new 14%-weighted factor. The Poonawalla (rejected — massive overhead) vs NAVINFLUOR (passes — clear air) test case motivated this.
+  5. **Upgrade Weekly Trend** from "EMA distance" to multi-component: HH (+25) + HL (+25) + above weekly EMA-13 (+20) + above weekly EMA-20 (+15) + within 5% of 52w high (+15) = max 100.
+  6. **Remove R/R from V1.0.** The proxy (`support = min(close × 0.92, rolling_high_52w × 0.85)`) was "arbitrary". Returns in V1.1 with real `support_3m` column.
+  7. **Soften Winner multiplier cap** from 1.15 → 1.10. "Existing holdings should reinforce, not dominate rankings."
+  8. **Add Confidence (★)** as a 0–5 star rating, NOT a numeric confidence score. "Users grasp 5 of 5 stars faster than 92% confidence."
+  9. **Surface Breakout Age in UI with emoji**: 🔥 Today / 🟢 Yesterday / 🟡 3 Days / ⚪ 5 Days / ⚫ Stale.
+  10. **Structured Why checklist** (multi-line ✓ bullets) instead of single-sentence summary.
+
+- **Spec artifacts written** (rev 2, frozen 2026-07-06):
+  - **`config/capital_allocation.yaml`** (10.1 KB, NEW) — all thresholds, weights, multipliers, sub-gate thresholds, confidence rules, action thresholds, breakout-age emoji map, and Why-checklist templates. YAML-validated: `yaml.safe_load` parses cleanly, `sum(weights.values()) = 100`.
+  - **`docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`** (18.0 KB, NEW) — full 12-section design doc: Goal, Frozen Decisions, Per-Factor Formulas, Confidence formula, V1.0/V1.1/V2 Scope Split, File Changes, Verification Plan, Risk Analysis, Out-of-Scope, Rev 2 Rationale.
+  - **`Decisions.md` Decision 100** (NEW) — 13-point architectural decision with full rev-2 rationale, link to plan doc, explicit DRAFT (pending implementation) status.
+
+- **Architecture frozen as**: `Eligibility (6 hard gates) → Sub-Gates (3 hard PASS/FAIL on Trend/Breakout/Quality) → Numeric Score (weighted 7 factors, survivors only) → Portfolio Multipliers (Winner × Concentration) → CAS → Confidence ★ → Action chip`.
+
+- **Weighted factors (sum to 100)**: Regime 23, Weekly 21, Breakout 17, **Overhead Supply 14**, RS 11, Volume 8, Sector 6. Concentration = multiplier only (not a weight).
+
+- **Implementation split across sessions** (per §7 of plan doc). Ordered to land smallest-verifiable-units first:
+  - Session N+1: migration + `engine_core/capital_allocation.py` (pure logic) + unit tests
+  - Session N+2: `engine_core/indicator_engine.py` 4 new columns + `api/schema.py` auto-heal extension
+  - Session N+3: `api/breakout_status.py` wiring + `/top-by-cas` endpoint + frontend `CapitalAllocationCard.tsx` + Radar/Dashboard banners + `requirements.txt` pyyaml
+
+- **Verification**:
+  - `python3 -c "import yaml; yaml.safe_load(open('config/capital_allocation.yaml'))"` → parses, weights sum = 100, all top-level sections present (`eligibility`, `market_subgates`, `weights`, `multiplier`, `confidence`, `subscore`, `actions`, `breakout_age_emoji`, `why_templates`).
+  - Plan doc cross-references the YAML via `Decision doc: docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` so future agents know where to look.
+  - No code touched in this session — `engine_core/`, `api/`, `frontend/`, `migrations/` byte-for-byte unchanged.
+
+**Result**: V1.0 (rev 2) design fully frozen. No code touched. Three artifacts on disk (`config/capital_allocation.yaml`, `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`, `Decisions.md` Decision 100). Next session picks up at migration `008_capital_allocation_columns.sql` and `engine_core/capital_allocation.py`.
+
+**Next Step (multi-session — pick up exactly here)**:
+- (a) **Session N+1 (1.5–2 hrs)**: Migration `migrations/008_capital_allocation_columns.sql` (4 new columns on `daily_prices`); new `engine_core/capital_allocation.py` with `load_config`, `check_eligibility`, `check_market_subgates`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist`. Unit tests `engine_core/test_capital_allocation.py` — 5 sub-score cases + 3 portfolio multiplier cases + 8 eligibility/sub-gate scenarios + 5 confidence scenarios + 3 why-checklist scenarios. Land + push as `feat(cas): add engine_core/capital_allocation.py + unit tests`.
+- (b) **Session N+2 (1.5–2 hrs)**: `engine_core/indicator_engine.py` adds the 4 new column computations (multi-component weekly_trend_score, overhead_supply_score, ema_100, rolling_high_52w). `api/schema.py` auto-heal block gets the 4 new column entries (defense in depth, mirrors Decision 099/100 pattern). Land + push.
+- (c) **Session N+3 (2–3 hrs)**: `api/breakout_status.py` — wire CAS into existing `/radar`; new `GET /api/breakout/top-by-cas?limit=5&client_id=...`. `frontend/src/api.ts` — new `getTopByCAS(limit, clientId?)`. New `frontend/src/CapitalAllocationCard.tsx` component. `BreakoutRadar.tsx` + Dashboard banners. `requirements.txt` — add `pyyaml>=6.0`. Land + push.
+- (d) **After N+3 deploys**: Railway auto-deploys, then visual + curl smoke tests against the new `/top-by-cas` endpoint. Document the deploy in this same Sessions.md entry under "Session N+3 addendum".
+
+**Multi-session handoff notes** (so future-you/agent can resume cold):
+- Config lives in **`config/capital_allocation.yaml`** — never hardcode thresholds in code. Use `yaml.safe_load` and pass the dict around.
+- The 4 new columns on `daily_prices` are: `ema_100` (NUMERIC), `rolling_high_52w` (NUMERIC), `weekly_trend_score` (NUMERIC), `overhead_supply_score` (NUMERIC). All nullable, all idempotent `ADD COLUMN IF NOT EXISTS`. Same pattern as Decision 099's `breakout_age`.
+- `market_subgates` is the rev-2 change: `weekly_trend_score >= 50`, `breakout_age <= 3`, `qif >= 75`. These are SEPARATE from the eligibility gates; eligibility uses `qif >= 70` and `breakout_age <= 5`. Do not collapse them — they have different intent (eligibility = "in the running", sub-gate = "high enough quality to actually score").
+- Confidence stars count toward the badge rendering. Each is a boolean check against a single threshold; if any check returns False, that star is empty (`☆`), not hidden.
+- The `why_templates` block has 10 condition names. Implement them as Python functions taking `(row, sub_scores)` and returning `bool`. Renderer iterates the list, calls each, formats matching templates with row fields. Skip entries where the field is missing (e.g. `winner_profit` skipped when no `client_external_holdings` row).
+- Existing Decision 099 (`breakout_age`) is reused — don't recompute. Just SELECT from `daily_prices.breakout_age`.
+- Decision 098 Data Richness Sprint is still the highest-value deferred work. CAS V1.0 does NOT block it; both can ship independently.
+
+---
+
 ## **July 6, 2026: Pipeline Crash Fix — `client_signals` 7-Step Forensic Columns Missing**
 
 **Objective**: Daily pipeline at step `[4/10] Generating client signals` crashed on GitHub Actions with `psycopg2.errors.UndefinedColumn: column "condition_ema_50_200" of relation "client_signals" does not exist`. No daily email went out. Triage and one-shot fix.

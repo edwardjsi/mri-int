@@ -1,0 +1,379 @@
+# Capital Allocation Score — V1.0 Design Doc
+
+> **Status:** DRAFT — rev 2, awaiting owner approval before any code change.
+> **Frozen:** 2026-07-06 (rev 1) → revised 2026-07-06 (rev 2)
+> **Owner:** Immanuel Santosh
+> **Source spec:** User-supplied observation 2026-07-06 ("Breakout Radar identifies who is breaking out, but not which deserves fresh capital today.") + rev 2 critique of the initial design.
+
+---
+
+## 1. Goal
+
+A two-stage **Capital Allocation Score (CAS)** that answers two questions:
+
+| Score | Question | Scope |
+|---|---|---|
+| **Market Score** | "How attractive is this stock today?" | Universal — identical for all users |
+| **Portfolio Allocation Score** | "Should **I** put my next ₹20,000 here?" | Per-user — uses portfolio context |
+
+The banner at the top of the **Breakout Radar** and **Dashboard** pages surfaces the top N candidates by Portfolio Allocation Score. Each card shows: Symbol, CAS, **Confidence (★)**, Action chip (FIRST TRANCHE / ADD SECOND TRANCHE / WATCH), **Breakout Age emoji** (🔥 Today / 🟢 Yesterday / 🟡 3 Days / ⚪ 5 Days), and a structured **Why** checklist (multi-line ✓ bullets, not a single sentence).
+
+---
+
+## 2. Frozen Decisions (rev 2)
+
+### 2.1 Architecture: Hard Sub-Gates + Weighted Ranking
+
+The Market Score is NOT a simple weighted sum. It is a sequence of hard PASS/FAIL checks followed by a weighted numeric score for survivors only.
+
+```
+Eligibility Filter (6 hard gates)
+   ↓
+   reject → out
+   ↓
+Market Score Hard Sub-Gates (3 hard gates: Trend, Breakout, Quality)
+   ↓
+   reject → out  (a stock cannot compensate for a weak weekly trend
+                    with huge volume — we don't allow that in MRI)
+   ↓
+Market Numeric Score = weighted sum of remaining factors
+                       (Regime, RS, Volume, Sector, Overhead Supply, plus
+                        a softer numeric component from Weekly/Breakout/Quality)
+   ↓
+Portfolio Multipliers (Winner × Concentration)
+   ↓
+Portfolio Allocation Score (CAS)
+   ↓
+Confidence (★)
+   ↓
+Action Chip
+```
+
+### 2.2 Eligibility Filter Thresholds
+
+| Rule | Threshold | Reason |
+|---|---|---|
+| Market Regime | BULLISH or SIDEWAYS (BEARISH passes only if `aggressive_mode = true`) | Avoid swimming against the tide |
+| EMA Stack (RELAXED rev 2) | **4 conditions** (all must hold): `Close > EMA20` AND `EMA20 > EMA50` AND `EMA50 > EMA200` AND `EMA100_rising` | Strict `20>50>100>200` rejects some of the biggest winners (EMA100 hasn't crossed yet). The relaxed stack still enforces bullish structure. |
+| Breakout | `breakout_state = BROKEN_OUT` AND `breakout_age ≤ 5` | Avoid stale setups |
+| Liquidity | Avg traded value ≥ ₹10 Cr/day | Matches Decision 029 |
+| Quality Score (RAISED rev 2) | QIF overall ≥ **70** (was 65) | "Fewer, better ideas" — MRI's whole point |
+| 52-Week Position | `close ≥ 0.90 × rolling_high_52w` | Within 10% of 52w high — leaders, not laggards |
+
+### 2.3 Market Score Hard Sub-Gates (rev 2 — these cannot be compensated)
+
+| Sub-Gate | Threshold | Why |
+|---|---|---|
+| **Trend PASS/FAIL** | `weekly_trend_score ≥ 50` | Weekly structure must be meaningfully bullish. If not, stock is out regardless of volume/RS/sector strength. |
+| **Breakout PASS/FAIL** | `breakout_age ≤ 3` | Stricter than eligibility (≤ 5). Filters for "fresh" not "early but no longer fresh". |
+| **Quality PASS/FAIL** | `QIF ≥ 75` | Stricter than eligibility (≥ 70). Enforces high quality on top of passable quality. |
+
+### 2.4 Market Score Weighted Factors (rev 2 rebalance)
+
+R/R was **removed** (proxy was too arbitrary). Overhead Supply was **added**. Other factors were rebalanced to sum to 100.
+
+| Factor | Weight | Why |
+|---|---|---|
+| Market Regime | 23% | Never fight the market — single biggest edge |
+| Weekly Structure | 21% | Multi-component: HH + HL + above EMAs + near 52w high |
+| Breakout Quality | 17% | Revised up — strategy is about fresh reratings |
+| **Overhead Supply** (NEW) | 14% | The user's rev 2 insight: clean air matters; Poonawalla-style overhead is a real reason to pass |
+| Relative Strength | 11% | Leaders keep leading |
+| Volume | 8% | Institutions leave footprints |
+| Sector Strength | 6% | Sector rotation matters but isn't decisive |
+| **Total** | **100%** | |
+
+`winner` (existing holding with profit) and `concentration` are **multipliers**, not weights.
+
+### 2.5 Two-Score Model
+- **Market Score** = weighted sum of sub-scores (only for stocks passing all sub-gates). Universal.
+- **Portfolio Allocation Score** = Market Score × `winner_multiplier` × `concentration_multiplier`. Personalized.
+
+### 2.6 Multiplier Model — "Existing Winner" (rev 2 — softened cap)
+
+Per user spec: existing profit is a multiplier, not a weight. Cap reduced from +15% to **+10%** so existing holdings reinforce without dominating rankings.
+
+| Profit % | Multiplier (rev 2) |
+|---|---|
+| +30% | 1.10 (clamped) |
+| +10% | 1.10 |
+| +5% | 1.05 |
+| 0% | 1.00 |
+| -5% | 0.95 |
+| -10% | 0.90 |
+| -15% | 0.85 (clamped) |
+
+### 2.7 Concentration Penalty (unchanged)
+At 0% weight → 1.00×. At ≥15% weight → 0.90× (max -10%).
+
+### 2.8 Confidence (NEW rev 2)
+
+A 0–5 **★** rating displayed next to the CAS. Stars depend on 5 binary criteria. Users grasp "5 of 5 stars" faster than "92% confidence".
+
+| Star | Criterion | Threshold |
+|---|---|---|
+| ★ | No proxies used | All sub-scores use real data (no V1.0 sector proxy, no V1.0 RR proxy since RR is deferred) |
+| ★ | Data completeness | ≥ 90% of expected columns populated |
+| ★ | Factor agreement | Sub-scores within 20 std-dev (low disagreement) |
+| ★ | Trend maturity | `weekly_trend_score ≥ 75` |
+| ★ | Breakout maturity | `breakout_age ∈ [1, 3]` (not too fresh, not too stale) |
+
+### 2.9 Breakout Age in UI (NEW rev 2)
+
+Surfaced with emoji so users understand urgency:
+
+| Age | Emoji | Meaning |
+|---|---|---|
+| 0 | 🔥 | Today |
+| 1 | 🟢 | Yesterday |
+| 2 | 🟢 | 2 Days |
+| 3 | 🟡 | 3 Days |
+| 4 | 🟡 | 4 Days |
+| 5 | ⚪ | 5 Days |
+| > 5 | ⚫ | Stale (not shown in eligibility-passing banner) |
+
+### 2.10 Structured "Why" Templates (rev 2)
+
+Multi-line ✓ checklist instead of single sentence. Templates evaluate row + sub-scores; matching lines are appended.
+
+Example output:
+```
+✓ Weekly trend strengthening (HH + HL)
+✓ Fresh breakout today (Day 0)
+✓ Near 52-week high
+✓ Strong RS (top quartile)
+✓ Volume confirmation (2.3x average)
+✓ Clear overhead supply (score 18/100)
+✓ High QIF (82/100)
+✓ Existing winner (+18%)
+```
+
+---
+
+## 3. Per-Factor Sub-Score Formulas (rev 2)
+
+### 3.1 Market Regime (23%)
+- BULLISH → 100
+- SIDEWAYS → 60
+- BEARISH → 20
+
+### 3.2 Weekly Structure (21%) — Multi-Component (rev 2)
+
+NOT just EMA distance. Five binary components, summed, max 100:
+
+| Component | Weight | Definition |
+|---|---|---|
+| Higher Highs confirmed | 25 | Current swing high > previous swing high (last N weeks) |
+| Higher Lows confirmed | 25 | Current swing low > previous swing low |
+| Above weekly EMA-13 | 20 | Close > `weekly_ema13` (forward-filled to daily) |
+| Above weekly EMA-20 | 15 | Close > `weekly_ema20` |
+| Within 5% of 52w high | 15 | `close ≥ 0.95 × rolling_high_52w` |
+
+Note: `weekly_ema13` and `weekly_ema20` are computed via `daily_prices.resample('W-FRI').agg(...)` then forward-filled to daily. Higher Highs/Lows use a swing-detection algorithm (e.g., 5-bar fractal or rolling max with confirmation lag).
+
+### 3.3 Breakout Quality (17%)
+- Base = `100` if `breakout_age == 0`, else `AGE_DECAY[breakout_age]` per Decision 099.
+- Volume bonus: `+10` if `volume ≥ 2 × avg_volume_20d`.
+- Final = `clamp(base + volume_bonus, 0, 100)`.
+
+### 3.4 Overhead Supply (14%, NEW rev 2)
+
+Counts distinct swing highs in the last 6m that are above the current close. The more overhead resistance, the higher the score (worse for breakout).
+
+```python
+def overhead_supply_score(prices_df, current_close, lookback=126, max_count=10):
+    recent = prices_df.tail(lookback)
+    above_close = recent[recent['high'] > current_close]
+    distinct_highs = above_close['high'].drop_duplicates()
+    score = min(len(distinct_highs) / max_count * 100, 100)
+    return score  # 0 = clear air, 100 = max resistance
+```
+
+**NEW column**: `overhead_supply_score` on `daily_prices`.
+
+### 3.5 Risk/Reward (REMOVED from V1.0)
+
+Per rev 2: dropped because the proxy was arbitrary. Returns in V1.1 with a real `support_3m` column.
+
+### 3.6 Relative Strength (11%)
+- `rs_90d` already on `daily_prices` (Decision 030).
+- `score = clamp(rs_90d / 0.10 × 100, 0, 100)` (100 = Nifty +10% over 90d).
+
+### 3.7 Volume (8%)
+- `score = 100 × clamp((volume / avg_volume_20d - 1.0) / 2.0, 0, 1)`.
+
+### 3.8 Sector Strength (6%)
+- V1.0: `score = 50` (neutral proxy).
+- V1.2: real `sector_rs_60d` column.
+
+### 3.9 Portfolio Concentration (multiplier only)
+- `weight_pct = (current_position_value / total_capital) × 100` (per-client).
+- `multiplier = 1 - clamp(weight_pct / 15, 0, 1) × 0.10`.
+
+---
+
+## 4. Final Score → Action Chip
+
+```
+if cas >= 85:   action = "ADD SECOND TRANCHE"
+elif cas >= 70: action = "FIRST TRANCHE"
+elif cas >= 50: action = "WATCH"
+else:           # not on banner
+```
+
+---
+
+## 5. Confidence Stars → Display
+
+```python
+def compute_confidence(row, sub_scores, proxies_used):
+    stars = 0
+    if not any(proxies_used.values()):
+        stars += 1
+    if row.get('data_completeness_pct', 0) >= 90:
+        stars += 1
+    if pd.Series(sub_scores).std() <= 20:
+        stars += 1
+    if sub_scores.get('weekly', 0) >= 75:
+        stars += 1
+    if 1 <= row.get('breakout_age', 99) <= 3:
+        stars += 1
+    return min(stars, 5)
+```
+
+UI renders as `★★★★★` (filled), `☆☆☆☆☆` (empty), with hover tooltip explaining each star's state.
+
+---
+
+## 6. V1.0 / V1.1 / V1.2 Scope (rev 2)
+
+### V1.0 — THIS RELEASE (4 new columns)
+
+| New column | Factor(s) it serves | Engine |
+|---|---|---|
+| `ema_100` | Eligibility (EMA stack — `ema100_rising` check) | `engine_core/indicator_engine.py` |
+| `rolling_high_52w` | Eligibility (52w position) + Weekly Structure | `engine_core/indicator_engine.py` |
+| `weekly_trend_score` | Weekly Structure + Trend sub-gate | `engine_core/indicator_engine.py` |
+| `overhead_supply_score` | Overhead Supply | `engine_core/indicator_engine.py` |
+
+Dropped from V1.0: `resistance_6m` (no longer needed without R/R; replaced by `overhead_supply_score`).
+
+Intermediate columns computed in memory (not persisted): `weekly_ema13`, `weekly_ema20`, `hh_confirmed`, `hl_confirmed`.
+
+**R/R fallback**: not used in V1.0. CAS formula just doesn't reference it.
+**Sector fallback**: `score = 50` (neutral proxy) until V1.2.
+
+### V1.1 — NEXT RELEASE (1 new column)
+- `support_3m` on `daily_prices`. Enables real R/R sub-score, weight restored at 12% (Regime/Weekly/Breakout rebalance accordingly).
+
+### V1.2 — LATER (1 new column + engine)
+- `sector_rs_60d` on `stock_sectors`. Real Sector Strength sub-score.
+
+### V2 — FUTURE (deferred)
+- Per-row CAS column in radar tables.
+- Cross-sectional ranking / z-score normalization.
+- Weight rebalancing from backtest.
+- Historical CAS time series.
+- Dedicated "Capital Allocation" page (full-page UI with sortable columns, filters, position-size controls).
+- Portfolio optimizer (sell-what-to-fund, sector exposure caps).
+- Email integration (add CAS section to daily digest).
+
+---
+
+## 7. File Changes — V1.0 (rev 2)
+
+| File | Change |
+|---|---|
+| `config/capital_allocation.yaml` (NEW) | Threshold + weight config (this doc is the spec) |
+| `migrations/008_capital_allocation_columns.sql` (NEW) | `ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS ...` for 4 new columns |
+| `engine_core/indicator_engine.py` | Add 4 new column computations; multi-component weekly trend; overhead supply |
+| `engine_core/capital_allocation.py` (NEW) | `load_config(path)`, `check_eligibility`, `check_market_subgates`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist` |
+| `engine_core/email_service.py` (no change in V1.0) | V2: add CAS section to daily email |
+| `api/breakout_status.py` | Wire CAS into existing `/radar`; new endpoint `GET /api/breakout/top-by-cas?limit=5&client_id=...`; include `market_score`, `cas`, `confidence_stars`, `breakout_age_emoji`, `why_checklist` in response |
+| `api/schema.py` | Add 4 new indicator columns to auto-heal block (defense in depth) |
+| `requirements.txt` | Add `pyyaml>=6.0` (needed to parse the YAML config) |
+| `frontend/src/BreakoutRadar.tsx` | Compact CAS banner above existing sections; 5-card grid |
+| `frontend/src/Dashboard.tsx` | Top banner; same endpoint; same card design |
+| `frontend/src/api.ts` | New `getTopByCAS(limit, clientId?)` method |
+| `frontend/src/CapitalAllocationCard.tsx` (NEW) | Card component: symbol, CAS, ★ confidence, action chip (color-coded), breakout age emoji, multi-line Why checklist |
+| `docs/Sessions.md` + `docs/Progress.md` | Session entry |
+| `Decisions.md` | Decision 100 — Capital Allocation Score V1.0 (rev 2) |
+
+---
+
+## 8. Verification Plan — V1.0 (rev 2)
+
+1. **Indicator engine** (`engine_core/indicator_engine.py`):
+   - `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"` → clean.
+   - Run on 5 hand-picked symbols (INDUSINDBK, RADICO, ZYDUSLIFE, CHOLAFIN, ABDL); verify all 4 new columns populate with non-null values for the last 60 trading days.
+   - Manual cross-check of `weekly_trend_score` for 1 stock: should sum the 5 components correctly per the plan doc §3.2.
+   - Manual cross-check of `overhead_supply_score` for Poonawalla (should be HIGH, lots of overhead) vs NAVINFLUOR (should be LOW, clear air).
+2. **CAS unit tests** (`engine_core/test_capital_allocation.py`, NEW):
+   - 5 hand-built rows → expected sub-scores → expected Market Score (rounded to 0.1).
+   - 3 portfolio scenarios: +10% winner, 0% (no holding), -10% loser → expected multipliers → expected CAS (rev 2 cap is 1.10, not 1.15).
+   - 8 eligibility/sub-gate scenarios: 4 pass / 4 fail (relaxed EMA stack, QIF 70, breakout age 3, weekly trend 50).
+   - 5 confidence scenarios: 5 stars (everything passes) down to 0 stars (everything fails).
+   - 3 why-checklist scenarios: full checklist, partial, empty (no qualifying conditions).
+3. **API** (`api/breakout_status.py`):
+   - `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"` → clean.
+   - Curl `/api/breakout/top-by-cas?limit=5` against Railway → 5 cards with non-null `cas`, `confidence_stars`, `action`, `breakout_age_emoji`, `why_checklist[]`.
+   - Curl `/api/breakout/radar` → each row now includes `market_score`, `cas`, `confidence_stars`, `eligibility_passed`, `subgates_passed` (e.g. `{"trend": true, "breakout": true, "quality": true}`).
+4. **Frontend**:
+   - `npx tsc --noEmit` → 0 errors.
+   - `npm run build` → 0 errors, no chunk-size regression.
+   - Visual spot-check on Railway: banner renders, action chips color-coded (green/amber/blue), Why text shows as multi-line checklist, confidence stars render correctly, breakout age emoji visible.
+5. **Live**: Railway deploy + visual banner spot-check + curl smoke tests.
+
+---
+
+## 9. Risk Analysis
+
+| Risk | Likelihood | Mitigation |
+|---|---|---|
+| 4 new columns blow up indicator runtime | Med | Each is single pandas op; ~10% overhead |
+| Weekly aggregation DST/holiday edge cases | Low | `resample('W-FRI')` is stable for Indian market |
+| Sub-gate rejection rate too high (banner empty) | Med | "Show all" fallback bypasses eligibility + sub-gates, returns top 5 by raw Market Score |
+| Overhead Supply score too noisy | Med | Conservative max_count = 10 swing highs; verify on Poonawalla vs NAVINFLUOR before shipping |
+| HH/HL swing detection false positives | Low | Use 5-bar fractal with confirmation lag (require 3 bars after to confirm); test on 5 known symbols |
+| Confidence stars always 3/5 (mediocre) | Low | Tunable via YAML per criterion; can rebalance weights later |
+| EMA `ema100_rising` noise | Low | Use 5-day slope; only fires if slope > 0 with absolute magnitude > 0.1% |
+
+---
+
+## 10. Out of Scope (V1.0)
+
+- Per-row CAS column in the radar tables (V2)
+- Cross-sectional ranking / z-score normalization (V2)
+- Weight rebalancing from backtest (V2)
+- Historical CAS time series (V2)
+- Dedicated "Capital Allocation" page (V2)
+- Portfolio optimizer (V2)
+- LLM explanation of top drivers (defer unless requested)
+- Email integration (V2 — add CAS section to daily digest)
+- Webhook / push notification on banner change (V2+)
+
+---
+
+## 11. Rev 2 Design Rationale
+
+This is the user's rev 2 critique distilled:
+
+1. **"Don't use a weighted score for the Market Score."** — Fixed by adding hard sub-gates for Trend, Breakout, Quality. A weak weekly trend no longer gets papered over by huge volume.
+2. **"EMA Stack is too strict."** — Relaxed from `20>50>100>200` to 4-component check (Close>20, 20>50, 50>200, EMA100 rising).
+3. **"Quality ≥ 70."** — Raised from 65 to 70.
+4. **"Liquidity 10 Cr is fine."** — Unchanged.
+5. **"Biggest missing feature: Overhead Supply."** — Added new 14% weighted factor; new `overhead_supply_score` column.
+6. **"Weekly Trend Score too simplistic."** — Upgraded from EMA distance to 5-component score (HH, HL, above weekly EMA-13/20, within 52w high).
+7. **"R/R proxy worries me. Remove it."** — Dropped from V1.0. Returns in V1.1 with real `support_3m`.
+8. **"Sector = 50. Perfect."** — Kept.
+9. **"Winner multiplier cap 1.10."** — Reduced from 1.15 to 1.10.
+10. **"Concentration penalty excellent. No change."** — Kept.
+11. **"Surface Breakout Age in UI with emoji."** — Added: 🔥🟢🟡⚪⚫.
+12. **"Make Why a structured checklist, not a single sentence."** — Done via `why_templates` list with template strings and conditions.
+13. **"Biggest missing: Confidence (★), not Score."** — Added 5-star rating with 5 binary criteria, displayed next to CAS.
+
+---
+
+## 12. Open Questions for Owner (before code)
+
+None. All 13 design points locked 2026-07-06 (rev 2).
