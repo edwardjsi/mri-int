@@ -1871,3 +1871,64 @@ The user said: *"this is a dataset no one else has — make it so."*
 - `Sessions.md`
 
 ---
+
+### **V1.1a Session — Engine Correctness (2026-07-08 afternoon, completed)**
+
+**Status:** COMPLETE.
+
+**Scope:** Decision 101 mandatory fixes + recommended refinements.
+
+**Deliverables:**
+
+1. **Gap 1 fix — `ema_100_slope_5d` column** added to `daily_prices`. The `ema100_rising` eligibility gate now works (was always failing before).
+2. **Gap 5 fix — `normalize_row()` helper** — Decimal → float coercion in ONE place. Engine no longer knows about Decimal.
+3. **Age transition zones** (Q5) — replaced single cliff at breakout_age=4 with 4-zone map (excellent 0-2 / good 3 / transition 4-5 / stale 6+). Stable_calculations star fires only in excellent/good.
+4. **Overhead 0.5% bucketing** (Q1) — distinct highs rounded to nearest 0.5% before dedup. Avoids float granularity.
+5. **Engine signature** — `compute_engine_signature()` returns `{cas_version, config_hash, commit_sha, signature}`. Composite format: `v{version}-{commit_sha}-{config_hash}`. Stored with every recommendation in V1.1b.
+
+**New helpers in `engine_core/capital_allocation.py`:**
+- `normalize_row(row)` — Decimal → float, returns new dict
+- `derive_metadata(row, required_fields, last_indicator_run, today, proxies_used)` — single source for completeness/age/proxies
+- `compute_engine_signature(config)` — provenance for every recommendation
+- `REQUIRED_FIELDS_FOR_COMPLETENESS` tuple (used by derive_metadata)
+- `CAS_VERSION = "1.1.0"` constant
+- `COMMIT_SHA` constant (git rev-parse at module import)
+
+**Test results:**
+
+| File | Tests | Pass | Time |
+|------|-------|------|------|
+| `test_capital_allocation.py` | 107 | ✅ | 0.47s (was 104, +3 zone tests) |
+| `test_cas_indicators.py` | 25 | ✅ | 0.67s |
+| `test_cas_helpers.py` (NEW) | 37 | ✅ | 0.40s |
+| **Total** | **169** | **✅** | **0.97s** |
+
+Plus 5 slow integration tests = **174 total pass in 21s**.
+
+**DB changes:**
+- Migration 008 extended with `ema_100_slope_5d` column (idempotent ALTER)
+- `api/schema.py` auto-heal extended with same column
+- Full Nifty 500 backfill: 961 symbols, 114,600 updates, ~47 min runtime
+- 498/498 symbols have all 5 CAS columns populated on latest date
+
+**End-to-end verification (INDUSINDBK row):**
+- Engine signature: `v1.1.0-{commit_sha}-{config_hash}` — works
+- `ema_100_slope_5d = 7.81` — positive → `ema100_rising` gate PASSES
+- All 8 eligibility gates: PASS (was failing on ema100_rising before)
+- All 3 structure sub-gates: PASS
+
+**Commits on this branch** (`feature/capital-allocation-v1`):
+```
+50d1638 feat(cas): V1.1a — engine correctness (Decision 101)
+4361ae1 docs(cas): Decision 101 updated with expert refinements + status APPROVED
+ca0f4fa docs(cas): Decision 101 — expert architectural review + V1.1 scope
+2f39437 docs(cas): append N+2b update + V1.1 questions to handoff
+0938bb0 docs(cas): record N+2b completion
+75f32b3 fix(indicator): reset_index in per-symbol filter
+b2c4a4a feat(cas): N+2a — wire 4 indicator columns
+287f27c refactor(cas): N+1 rev 3 refinements
+f4dc161 feat(cas): N+1 — migration + engine + tests
+63f5fca docs(cas): freeze V1.0 design (rev 2)
+```
+
+**Ready for V1.1b**: Outcome Tracking + UUIDs + Daily EOD worker. The engine now has all the required primitives (engine_signature, normalize_row, derive_metadata) that V1.1b will consume.
