@@ -2231,3 +2231,97 @@ driven calibration. The Outcome Tracking (V1.1b) and Decision Layer
 5. 5-bar fractals (V2+)
 
 **Ready for:** Expert review → open PR → merge to `main`.
+
+### **V1.1d Post-Review Calibration Session (2026-07-08 evening, completed)**
+
+**Trigger:** Expert reviewed V1.1d validation report and made 5 decisions:
+
+1. **Q1: Accept** — 0.9% eligibility is market-state signal, but validate across history
+2. **Q2: OVERRIDE** — raise `max_count_for_100` from 10 to 20 (saturation too high)
+3. **Q3: Accept** — thin-history symbols as known limitation
+4. **Q4: Accept outcomes-driven approach** — but trigger at 100/250/500 recs (not 30 days)
+5. **Q5: One PR** — review summary, expand validation doc with Known Limitations
+
+Plus two expert additions:
+- **Rank Correlation metric** — before/after calibration leaderboard stability
+- **Calibration freeze** — no weight tweaks for 100 recommendations after merge
+
+**Calibration change applied:**
+
+```
+subscore.overhead_supply.max_count_for_100: 10 → 20
+```
+
+**YAML wiring (Magic Numbers eliminated):**
+- `OVERHEAD_MAX_COUNT = 20` in cas_indicators.py (single source of truth)
+- `_get_overhead_max_count()` helper in indicator_engine.py reads from YAML
+- Falls back to constant if YAML unavailable (test environments)
+- Module-level read = requires process restart for YAML changes (intentional —
+  indicator recomputation is batch, not hot path)
+
+**Backfill re-run:**
+
+Initial run hit DNS hiccup mid-run (Neon connection transient failure).
+Resumed from symbol 626 of 961. Completed 961/961 symbols with new max_count.
+
+**Distribution re-validation (Gate 3 rerun):**
+
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| Overhead % at cap (100) | 83% | **35.5%** | −47.5pp |
+| Overhead mean | 90.25 | 85.59 | −4.66 |
+| Overhead p5 | 20.0 | 10.0 | −10.0 |
+| CAS mean (eligible) | 64.62 | 58.83 | −5.79 |
+
+Saturation in target range (20-40%) ✅
+
+**Rank correlation analysis (Gate 5):**
+
+| Metric | Value | Verdict |
+|--------|-------|---------|
+| Top-9 overlap | 9/9 (100%) | ✅ No stocks dropped |
+| Spearman ρ | 0.683 (p=0.0424) | ✅ Significant positive correlation |
+| CAS range shift | −10 to −15 points | Expected (overhead halved) |
+
+**Historical distribution analysis (Q1 follow-up):**
+
+Sampled 6 weekly trading dates (most recent 5 weeks of data):
+
+| Date | Eligible % | CAS mean | % ≥ 80 |
+|------|-----------|----------|--------|
+| 2026-06-03 | 0.2% | 60.6 | 0% |
+| 2026-06-10 | 0.4% | 57.2 | 0% |
+| 2026-06-17 | 0.9% | 58.1 | 0% |
+| 2026-06-24 | 1.4% | 61.0 | 0% |
+| 2026-07-01 | 0.8% | 59.8 | 0% |
+| 2026-07-08 | 0.3% | 60.8 | 0% |
+| **Avg** | **0.67%** | 59.6 | **0%** |
+
+Consistently sparse-breakout market. Engine correctly defensive.
+
+**Validation doc updates:**
+
+- Gate 5 (Rank Correlation) added with before/after data
+- Historical Distribution section added (Q1 follow-up)
+- Known Limitations section added verbatim from expert
+- Pre/post calibration table added to Gate 3
+
+**Calibration registry:**
+
+- New entry: `subscore.overhead_supply.max_count_for_100`
+- Status: `validated` (via distribution check, not outcomes yet)
+- Calibration debt: 12 → 12 total, 1 validated, debt=11
+
+**Test results:** 259/259 pass (3 updated for new max_count).
+
+**Commits:**
+```
+2059d08 feat(cas): V1.1d calibration override (max_count 10→20) + 5-gate validation
+```
+
+**Strategic next steps (post-merge):**
+
+- Freeze V1.1 for 100 recommendations (no weight tweaks)
+- Re-validate at 100/250/500 recommendations (not 30 days)
+- V1.2 starts with Regime-aware API (Decision 102 Q4)
+- Known limitations deferred: fractal HH/HL, ATR buckets, sector proxy, regime/QIF joins
