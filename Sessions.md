@@ -2127,3 +2127,107 @@ a0a56da docs(cas): Progress.md entry for V1.1a
 
 **Ready for V1.1d:** Validation + PR — backfill re-run for overhead buckets,
 golden case regression, all tests green, ready to merge.
+
+### **V1.1d Session — Release Candidate Validation (2026-07-08 evening, completed)**
+
+**Status:** COMPLETE — 4-gate review PASS, ready for expert review before merge.
+
+**Scope change:** Per Decision 102 expert feedback, V1.1d is treated as a
+**RELEASE CANDIDATE**, not a routine validation session. Expert prefers
+30 minutes of deliberate review over rushed merge that lives for years.
+
+**Four mandatory gates (all PASS):**
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| 1. All tests green | ✅ | 259/259 pass in 28.51s |
+| 2. Golden cases | ✅ | 7/7 pass within ±2.0 CAS tolerance |
+| 3. Distribution sanity | ✅ | 2 WARN (informational); no FAIL |
+| 4. Top-20 eyeball | ✅ | 9 candidates all pass Buffett sniff test |
+
+**Two new tools (Decision 102 gates 3 & 4):**
+
+- `tools/distribution_sanity_check.py` (~440 lines): runs engine on all
+  961 symbols, computes mean/median/p5/p95 for cas, weekly_trend_score,
+  overhead_supply_score, confidence_stars distribution. Detects 7 anomaly
+  types with configurable thresholds. Outputs human report + JSON.
+  Exit 1 on FAIL, 0 on PASS. Supports `--as-of`, `--no-strict`, `--json`.
+
+- `tools/top20_report.py` (~190 lines): ranks all eligible symbols by CAS
+  desc, outputs table (rank, symbol, CAS, market_score, stars, reasons)
+  + Markdown archival. Includes eyeball test prompt.
+
+**Full Nifty universe backfill (Decision 102 Q1):**
+
+Ran `scripts/backfill_indicators.py`:
+- Total daily_prices rows: 2,156,992
+- Symbols with overhead_supply_score: **955 of 961** (99.4%)
+- 6 thin-history symbols (4-15 rows each) remain indicator-less:
+  `3BBLACKBIO`, `SKFINDUS`, `VAML`, `VEDPOWER`, `VISL`, `VOGL`
+- These 6 fail the indicator engine's 20-row minimum history check
+- Status: **known engine limitation**, not a bug — they will populate
+  automatically when they accumulate more data
+
+**Distribution findings (real signals, not bugs):**
+
+- **Eligible universe: 0.9%** (9 of 961 stocks) — current market has
+  very few BROKEN_OUT names
+- **No eligible stock scored CAS >= 80** — engine returns WATCH, not BUY
+- This is exactly the scenario the expert's "min_deployable_cas" trigger
+  was designed to recognize. The Decision Layer correctly fires
+  `reason='BELOW_DEPLOYMENT_THRESHOLD'` when best eligible < 70.
+- **Overhead supply saturating at 100** (83% of stocks at exactly 100):
+  793 of 955 have value=100, suggesting the formula may benefit from a
+  wider dynamic range. Documented for V1.2 follow-up.
+
+**Top-9 eyeball test verdict:**
+
+All 9 candidates pass: TITAN, GLAND, INDUSINDBK, JBCHEPHARM, PNBHOUSING,
+INOXINDIA, ALKEM, ADANIENSOL, PAYTM. Mix of large-cap bellwethers
+(TITAN, INDUSINDBK) and quality compounders (JBCHEPHARM, GLAND, ALKEM)
+with confirmed breakouts. Stars distributed correctly: 5★ for INOXINDIA
+and ADANIENSOL (high data completeness + fresh breakouts), 4★ for the rest.
+
+**Decision Layer behavior validated:**
+
+When the scanner runs on 2026-07-07 data:
+- 8 BROKEN_OUT stocks get recorded as WATCH (per Decision 101 expert
+  pushback — capture every eligible stock)
+- None qualify for BUY (CAS < 80) or ADD (CAS < 85)
+- API should return `NO_ACTION` with reason `BELOW_DEPLOYMENT_THRESHOLD`
+  in current market state
+
+**Commits on this branch** (`feature/capital-allocation-v1`):
+```
+e5c2171 docs(cas): V1.1d release candidate validation report (4-gate review)
+6bc173b feat(tools): distribution sanity check + Top-20 manual review (Decision 102)
+aed5b20 docs(cas): Progress.md entry for V1.1c completion
+020960c docs(cas): Session V1.1c entry
+967b64c feat(cas): V1.1c — Decision Layer + Calibration Journal
+8392823 docs(cas): Session V1.1b entry
+83750f0 feat(cas): V1.1b — outcome tracking + persistence
+a0a56da docs(cas): Progress.md entry for V1.1a
+250a748 docs(cas): Session V1.1a entry
+50d1638 feat(cas): V1.1a — engine correctness
+```
+
+**Strategic insight from Decision 102:**
+
+> "You're getting very close to the point where the engine should stop
+> being judged by code quality and start being judged by decision quality.
+> After V1.1, I would spend more effort measuring recommendation outcomes
+> than adding new scoring factors. That's where the next major improvements
+> are likely to come from."
+
+This marks a transition: V1.x = scoring infrastructure; V2.x = outcomes-
+driven calibration. The Outcome Tracking (V1.1b) and Decision Layer
+(V1.1c) are the foundation for this shift.
+
+**V1.2 priority order (per Decision 102 Q4):**
+1. Regime-aware API (highest impact)
+2. QIF joins (replace proxy=75)
+3. EMA50 fallback for thin-history stocks
+4. ATR-aware overhead buckets
+5. 5-bar fractals (V2+)
+
+**Ready for:** Expert review → open PR → merge to `main`.
