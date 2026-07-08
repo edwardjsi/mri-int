@@ -2022,3 +2022,108 @@ ca0f4fa docs(cas): Decision 101 — expert architectural review + V1.1 scope
 
 **Ready for V1.1c:** Decision layer — `stabilize_action()` + No Action path +
 Calibration.md seeded + Calibration Debt counter + spec §0/§1.0/§1.1.
+
+### **V1.1c Session — Decision Layer + Calibration Journal (2026-07-08 evening, completed)**
+
+**Status:** COMPLETE.
+
+**Scope:** Decision Stability + No Action + Calibration + Philosophy doc.
+
+**Expert feedback addressed (5 design pivots from V1.1b):**
+
+1. **Tier-based hysteresis, NOT CAS delta.**
+   - "84→85 shouldn't necessarily upgrade. 78→90 absolutely should."
+   - Tiers: NO_ACTION < WATCH < FIRST_TRANCHE < ADD_SECOND_TRANCHE
+   - ±3 point hysteresis around tier boundaries (configurable)
+
+2. **Hysteresis on ACTION only, never on Confidence/Stars.**
+   - "Action should be stable. Confidence should reflect today's data."
+   - stabilize_action() returns ONLY action+stability; stars bypass entirely
+
+3. **NO_ACTION now has 3 triggers, not 2:**
+   - (a) No eligible stocks
+   - (b) Top-N empty
+   - (c) Best eligible CAS < min_deployable_cas (70)
+   - "(c) is FUNDAMENTALLY DIFFERENT from (a). Different market conditions
+     should be reported separately."
+
+4. **Calibration lives in a separate registry, not in capital_allocation.yaml.**
+   - "YAML should answer 'What are the current parameters?' not 'What is
+     the research status of those parameters?' Different concerns."
+   - config/calibration_registry.yaml tracks hypothesis/validated/deprecated
+   - tools/calibration_debt.py computes running debt
+
+5. **Recommendation Lifecycle: NEW → ACTIVE → MATURED → ARCHIVED.**
+   - "Every recommendation should move through states."
+   - compute_recommendation_lifecycle() — pure function derived from
+     created_at + milestones_reached. No DB column — single source of truth.
+
+**Deliverables:**
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `engine_core/cas_decision_layer.py` (NEW) | ~340 | Pure logic: stabilize_action, NO_ACTION, lifecycle, regression tolerance |
+| `engine_core/test_cas_decision_layer.py` (NEW) | ~360 | 39 tests (TDD-first) |
+| `Calibration.md` (NEW) | ~130 | Narrative journal of every parameter change (3 seed entries) |
+| `config/calibration_registry.yaml` (NEW) | ~120 | Validation status per tunable (11 entries, all hypothesis) |
+| `tools/calibration_debt.py` (NEW) | ~110 | Counter tool (`--json`, `--exit-nonzero` flags) |
+| `docs/CAS_SPEC.md` (NEW) | ~230 | §0 Engineering Motto + §1.0 Three-Layer Architecture + §1.1 Lifecycle |
+| `config/capital_allocation.yaml` (MODIFIED) | +40 | decision_layer + regression_tolerance blocks |
+| `engine_core/test_capital_allocation.py` (MODIFIED) | +10 | Golden case runner supports cas_target/cas_tolerance |
+
+**Test results:**
+
+| File | Tests | Pass | Time |
+|------|-------|------|------|
+| `test_cas_decision_layer.py` (NEW) | 39 | ✅ | 0.2s |
+| All other test files | 220 | ✅ | unchanged |
+| **Total** | **259** | **✅** | **~7 min** |
+
+Test growth: V1.1a 174 → V1.1b 220 → V1.1c 259.
+
+**Calibration Debt:**
+
+```
+$ venv/bin/python tools/calibration_debt.py
+
+Calibration Debt Report
+==================================================
+Total assumptions: 11
+  Validated:       0
+  Deprecated:      0
+  Hypothesis:      11
+
+DEBT: 11
+```
+
+All 11 assumptions are hypothesis. Validation begins once outcomes
+accumulate (V1.1d+).
+
+**Engineering Motto (now in CAS_SPEC.md §0 and Calibration.md header):**
+
+> **"A recommendation is a scientific hypothesis.
+> Calibration is the process of proving or disproving that hypothesis using observed outcomes."**
+
+**Commits on this branch** (`feature/capital-allocation-v1`):
+```
+967b64c feat(cas): V1.1c — Decision Layer + Calibration Journal
+8392823 docs(cas): Session V1.1b entry — outcome tracking + persistence
+83750f0 feat(cas): V1.1b — outcome tracking + persistence
+a0a56da docs(cas): Progress.md entry for V1.1a
+250a748 docs(cas): Session V1.1a entry — engine correctness
+50d1638 feat(cas): V1.1a — engine correctness
+```
+
+**Key insights from V1.1c:**
+
+- The Decision Layer is intentionally PURE LOGIC (no DB). The API layer
+  calls `stabilize_action()` and `should_return_no_action()` and renders
+  results — the DB never sees hysteresis state.
+- Lifecycle states are DERIVED from dates, not stored. This is the
+  single source of truth approach — no risk of drift.
+- Calibration.md is narrative. calibration_registry.yaml is structured
+  status. tools/calibration_debt.py computes debt. Three-file split
+  matches expert guidance: separation of concerns.
+
+**Ready for V1.1d:** Validation + PR — backfill re-run for overhead buckets,
+golden case regression, all tests green, ready to merge.
