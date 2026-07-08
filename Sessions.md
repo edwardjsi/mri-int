@@ -1932,3 +1932,93 @@ f4dc161 feat(cas): N+1 — migration + engine + tests
 ```
 
 **Ready for V1.1b**: Outcome Tracking + UUIDs + Daily EOD worker. The engine now has all the required primitives (engine_signature, normalize_row, derive_metadata) that V1.1b will consume.
+
+### **V1.1b Session — Outcome Tracking & Persistence (2026-07-08 evening, completed)**
+
+**Status:** COMPLETE.
+
+**Scope:** Decision 101 Outcome Tracking + UUIDs + Daily EOD worker.
+
+**Deliverables:**
+
+1. **Migration 009** — Two new tables:
+   - `cas_recommendations` (immutable, Event A) — 14 cols + 4 indexes
+   - `cas_recommendation_outcomes` (mutable, Event B) — 18 cols + 2 indexes
+   - Idempotent ALTER — safe to re-run
+
+2. **Pure helpers (42 unit tests):**
+   - `make_recommendation_id(date, symbol)` → `CAS-YYYY-MM-DD-SYMBOL`
+   - `compute_action(cas, stars, position, config)` → BUY/ADD/WATCH
+   - `compute_milestones_to_fill(elapsed, filled)` → list of milestone names
+   - `compute_factor_snapshot(row, sub_scores, regime, action)` → JSONB dict
+   - `compute_outcome_returns(price_at_rec, milestone_prices)` → dict
+   - `compute_outcome_status(milestones_reached, elapsed)` → status string
+   - `MILESTONE_DAYS` constant + `REQUIRED_FACTOR_KEYS` tuple
+
+3. **DB-touching functions (4 integration tests):**
+   - `record_cas_recommendation(...)` — idempotent UPSERT per (symbol, date)
+   - `update_cas_outcomes(today)` — milestone fills + max excursion
+   - `scan_and_record_eligible_recommendations(as_of, config, limit)` —
+     full-universe scanner (per expert: outcomes for EVERY eligible stock)
+   - `_latest_row_per_symbol()` + `_enrich_row_with_extras()` — internal helpers
+
+4. **Two cron scripts:**
+   - `scripts/daily_cas_scanner.py` — Event A (16:05 IST daily)
+   - `scripts/daily_outcome_updater.py` — Event B (16:00 IST daily)
+
+5. **YAML config:** Added `action:` block (buy_cas_min=80, add_cas_min=85,
+   watch_cas_min=60, min_confidence_stars_for_buy=4). All thresholds
+   configurable per calibration journal requirement.
+
+6. **QIF proxy handling:** When qif_score is missing (joins deferred to
+   V1.1c), scanner sets proxy=75 (market_subgates.quality threshold) and
+   flags in `proxies_used['qif']`. Lets us capture outcomes TODAY.
+
+**Test results:**
+
+| File | Tests | Pass | Time |
+|------|-------|------|------|
+| `test_capital_allocation.py` | 104 | ✅ | unchanged |
+| `test_cas_indicators.py` | 25 | ✅ | unchanged |
+| `test_cas_helpers.py` | 37 | ✅ | unchanged |
+| `test_cas_recommendations.py` (NEW) | 46 | ✅ | 11s (incl. integration) |
+| **Total fast** | **212** | **✅** | |
+| **Including integration** | **220** | **✅** | **171s** |
+
+**End-to-end smoke verified:**
+
+```
+Scanner (full Nifty 500, 961 symbols):
+  scanned=961, recorded=9 (UPSERT: 8 distinct), watch=9, ineligible=952
+
+Recommendation table snapshot (2026-07-07):
+  TITAN       CAS=77.75  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  JBCHEPHARM  CAS=72.15  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  PNBHOUSING  CAS=71.55  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  INDUSINDBK  CAS=70.42  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  ADANIENSOL  CAS=66.77  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  GLAND       CAS=65.63  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  ALKEM       CAS=62.67  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+  PAYTM       CAS=56.32  stars=3  WATCH  sig=v1.1.0-a0a56da-d02a6657
+
+Outcome updater (today):
+  processed=0, milestones=0 (all recs are <7d old, correct behavior)
+```
+
+**Commits on this branch** (`feature/capital-allocation-v1`):
+```
+83750f0 feat(cas): V1.1b — outcome tracking + persistence (Decision 101)
+a0a56da docs(cas): Progress.md entry for V1.1a completion
+250a748 docs(cas): Session V1.1a entry — engine correctness complete
+50d1638 feat(cas): V1.1a — engine correctness (Decision 101)
+4361ae1 docs(cas): Decision 101 updated with expert refinements + status APPROVED
+ca0f4fa docs(cas): Decision 101 — expert architectural review + V1.1 scope
+```
+
+**Known carry-overs to V1.1c:**
+- QIF score is proxied (75); V1.1c will wire proper QIF joins
+- Regime is hardcoded 'BULLISH' in scanner; V1.1c will read from regime detector
+- API endpoint to expose recommendations to users (deferred to V1.1c — Decision Layer)
+
+**Ready for V1.1c:** Decision layer — `stabilize_action()` + No Action path +
+Calibration.md seeded + Calibration Debt counter + spec §0/§1.0/§1.1.
