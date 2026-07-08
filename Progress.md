@@ -99,6 +99,45 @@ Should `overhead_supply` be inverted before passing to `compute_confidence_stars
 - Run `compute_indicators_all()` for Nifty 500 (~1.6M rows, ~5–10 min).
 - Smoke-test against the 5 golden-case symbols.
 
+### **📅 Session: July 8, 2026 afternoon — N+2b (DB Migration + Backfill) — COMPLETE**
+
+**Session Start:** ~10:15 IST
+**Session End:** ~11:55 IST (~1.5 hrs wall time, mostly backfill)
+
+#### Completed
+- Migration 008 executed (via psycopg2; psql not installed). 4 columns + 3 indexes created.
+- Smoke test on 5 golden-case symbols revealed **silent NaN bug** in `indicator_engine.py` per-symbol filter (non-contiguous index from multi-symbol `df`).
+- Fix committed (`75f32b3`): `.copy().reset_index(drop=True)` before per-symbol computation.
+- Full backfill: 961 symbols, 2.15M rows, 114,600 indicator updates, ~32 min runtime.
+- Validation: NULL EMA-50 rate 0.0% (pass).
+- Coverage: 498 symbols with all 4 new columns populated on latest date.
+
+#### Coverage stats (latest date 2026-07-07)
+| Metric | Value |
+|--------|-------|
+| Total symbols with non-null CAS cols | 498 |
+| Weekly trend score: min/avg/max | 0 / 44.4 / 100 |
+| Weekly trend ≥ 75 (high quality) | 138 symbols |
+| Weekly trend 50–74 (medium) | 87 symbols |
+| Weekly trend < 50 (low) | 273 symbols |
+
+#### Known gaps surfaced (carry to N+3)
+- `ema_100_slope_5d` not yet computed — CAS `ema100_rising` gate needs it
+- `regime`, `qif_score`, `data_completeness_pct`, `data_age_days` need API-layer joins
+- `Decimal → float` conversion before passing DB rows to CAS engine (engine throws on `Decimal * float`)
+
+#### Branch state (5 commits, all pushed)
+```
+75f32b3 fix(indicator): reset_index in per-symbol filter
+b2c4a4a feat(cas): N+2a — 4 new indicator columns
+287f27c refactor(cas): N+1 rev 3 refinements
+f4dc161 feat(cas): N+1 — migration + engine + tests
+63f5fca docs(cas): freeze V1.0 design (rev 2)
+```
+
+#### Ready for V1.1
+N+2b complete and verified. Per expert sequencing directive (N+2b → Verify → V1.1), the historical dataset is now clean. Ready to start V1.1: Outcome Tracking, Decision Stability, No Action, Design Principles, Regression Tolerance, plus Calibration.md journal.
+
 #### Files changed
 - `engine_core/cas_indicators.py` (NEW, ~340 lines)
 - `engine_core/test_cas_indicators.py` (NEW, ~310 lines)

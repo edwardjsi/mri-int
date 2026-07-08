@@ -114,6 +114,67 @@ Pure code work (N+2a, no DB) done. The 4 new indicator columns are wired through
 - Run `compute_indicators_all()` to backfill Nifty 500 (~1.6M rows, ~5–10 min on Railway).
 - Smoke-test against the 5 golden-case symbols (WELCORP, CHOLAFIN, PHOENIXLTD, NAVINFLUOR, POONAWALLA).
 
+### **N+2b Session — DB Migration + Backfill (2026-07-08 morning, completed)**
+
+**Status:** COMPLETE.
+
+**1. Migration 008** — executed against prod DB via psycopg2 (`psql` not installed locally). Result:
+```
+✅ Migration 008 executed successfully
+   ✓ ema_100                   numeric
+   ✓ overhead_supply_score     numeric
+   ✓ rolling_high_52w          numeric
+   ✓ weekly_trend_score        numeric
+   Indexes created: ['idx_daily_prices_overhead_supply_score', 'idx_daily_prices_weekly_trend_score', 'idx_daily_prices_cas_eligible']
+```
+
+**2. Smoke test on 5 golden-case symbols** — initially FAILED with a real bug:
+- 4 of 5 symbols had `weekly_trend_score = NULL` after the indicator pipeline ran
+- Only CHOLAFIN (the first alphabetically) got correct values
+- Root cause: `s_df = df[df["symbol"] == symbol].copy().sort_values("date")` preserved non-contiguous indices from the multi-symbol `df`, breaking `compute_weekly_trend_score`'s `pd.date_range.reindex` call
+- Fix: `.copy().reset_index(drop=True)` before any per-symbol computation
+- Verified after fix: 5/5 symbols got 60/60 valid indicator values per column
+
+**3. Full backfill** — `compute_indicators_all()` ran against the full prod DB (961 symbols, 2.15M rows):
+- 39 batches of 25 symbols each
+- 114,600 indicator updates written (each symbol: 60 days × 27 indicators × ~2 loops)
+- Validation: NULL EMA-50 rate 0.0% — pass
+- Total runtime: ~32 minutes (started 11:21:34, finished 11:52:57)
+
+**4. Coverage verification**:
+```
+Latest date (2026-07-07):
+  total_symbols  ema100_non_null  rh52_non_null  wts_non_null  ovr_non_null
+             498              498            498           498           498
+
+Weekly trend score distribution (latest date):
+  min=0, avg=44.4, max=100
+  high_quality (≥75): 138 symbols
+  medium (50–74):     87 symbols
+  low (<50):          273 symbols
+```
+
+**5. CAS engine integration sanity check** — ran an INDUSINDBK row through the full CAS pipeline. Eligibility failed on `ema_stack` because `ema_100_slope_5d` is not yet computed by the indicator pipeline (CAS engine needs this for the `ema100_rising` gate). This is a separate known gap, not part of N+2b — it's N+3 work to add `ema_100_slope_5d` to the indicator pipeline and API.
+
+**Known gaps surfaced by N+2b** (carry to N+3):
+- `ema_100_slope_5d` not yet computed — needed for `ema100_rising` eligibility gate. Add to indicator_engine.py.
+- `regime` (BULLISH/SIDEWAYS/BEARISH) comes from `market_regime` table, not `daily_prices` — API layer must join.
+- `qif_score` (quality) comes from a quality table — API layer must join.
+- `data_completeness_pct` and `data_age_days` are derived — compute at API layer or in the CAS engine wrapper.
+- Decimal → float conversion needed before passing DB rows to the CAS engine (currently throws on `decimal.Decimal * float`).
+
+**Commits on this branch** (`feature/capital-allocation-v1`):
+```
+75f32b3 fix(indicator): reset_index in per-symbol filter to fix silent NaN on multi-symbol pipeline
+b2c4a4a feat(cas): Session N+2a — wire 4 new indicator columns
+287f27c refactor(cas): N+1 rev 3 refinements — model-certainty confidence, YAML calibration, golden basket
+f4dc161 feat(cas): Session N+1 — migration + pure engine + unit tests (Decision 100)
+```
+
+**Ready for V1.1**: N+2b is complete. The 4 new indicator columns are populated for all 498 active symbols on the latest date. The CAS engine can now receive correct weekly_trend_score, overhead_supply_score, ema_100, and rolling_high_52w from the DB.
+
+Per your sequencing directive (N+2b → Verify → V1.1), I'm now ready to start V1.1 (A: Outcome Tracking, B: Decision Stability, C: No Action, D: Design Principles, F: Regression Tolerance, plus Calibration.md journal). Awaiting green light.
+
 
 
 ---
