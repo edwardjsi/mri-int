@@ -12,6 +12,12 @@ except Exception:  # pragma: no cover
     def send_alert_email(subject, body):
         # No‑op placeholder when email services are unavailable (e.g., during unit tests)
         pass
+from engine_core.cas_indicators import (
+    compute_ema_100,
+    compute_overhead_supply_score,
+    compute_rolling_high_52w,
+    compute_weekly_trend_score,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,10 +32,14 @@ INDICATOR_COLUMNS = (
     ("ema_20", "NUMERIC"),
     ("ema_50", "NUMERIC"),
     ("ema_200", "NUMERIC"),
+    ("ema_100", "NUMERIC"),  # CAS V1.0 (Decision 100)
     ("rsi_14", "NUMERIC"),
     ("below_200ema", "BOOLEAN"),
     ("ema_200_slope_20", "NUMERIC"),
     ("rolling_high_6m", "NUMERIC"),
+    ("rolling_high_52w", "NUMERIC"),  # CAS V1.0 (Decision 100)
+    ("weekly_trend_score", "NUMERIC"),  # CAS V1.0 (Decision 100)
+    ("overhead_supply_score", "NUMERIC"),  # CAS V1.0 (Decision 100)
     ("avg_volume_20d", "NUMERIC"),
     ("rs_90d", "NUMERIC"),
     ("high_10d", "NUMERIC"),
@@ -90,10 +100,14 @@ def fetch_symbols_needing_repair():
                 WHERE (
                     ema_50 IS NULL
                     OR ema_200 IS NULL
+                    OR ema_100 IS NULL         -- CAS V1.0 (Decision 100)
                     OR rs_90d IS NULL
                     OR rs_90d = 0
                     OR avg_volume_20d IS NULL
                     OR rolling_high_6m IS NULL
+                    OR rolling_high_52w IS NULL    -- CAS V1.0 (Decision 100)
+                    OR weekly_trend_score IS NULL  -- CAS V1.0 (Decision 100)
+                    OR overhead_supply_score IS NULL  -- CAS V1.0 (Decision 100)
                 )
                 OR (
                     date = (SELECT * FROM latest_date)
@@ -136,7 +150,8 @@ def fetch_data(symbols=None):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT symbol, date, open, high, low, close, volume, ema_10, ema_20, ema_50, ema_200
+                SELECT symbol, date, open, high, low, close, volume,
+                       ema_10, ema_20, ema_50, ema_200, ema_100
                 FROM daily_prices
                 WHERE symbol = ANY(%s)
                 ORDER BY symbol, date
@@ -164,7 +179,8 @@ def fetch_data(symbols=None):
         df["high"] = pd.to_numeric(df["high"])
         df["volume"] = pd.to_numeric(df["volume"])
 
-        for column in ("open", "high", "low", "close", "volume", "ema_10", "ema_20", "ema_50", "ema_200"):
+        for column in ("open", "high", "low", "close", "volume",
+                       "ema_10", "ema_20", "ema_50", "ema_200", "ema_100"):
             if column in df.columns:
                 df[column] = pd.to_numeric(df[column], errors="coerce")
 
@@ -200,6 +216,16 @@ def compute_indicators(df, idx_df):
         )
 
         s_df["ema_200_slope_20"] = s_df["ema_200"].diff(20)
+
+        # CAS V1.0 (Decision 100) — four new indicator columns.
+        # These are computed via pure functions in engine_core/cas_indicators.py
+        # (testable in isolation, no DB access).
+        s_df["ema_100"] = compute_ema_100(s_df["close"])
+        s_df["rolling_high_52w"] = compute_rolling_high_52w(s_df["high"])
+        s_df["weekly_trend_score"] = compute_weekly_trend_score(s_df, s_df["rolling_high_52w"])
+        s_df["overhead_supply_score"] = compute_overhead_supply_score(
+            s_df["high"], s_df["close"]
+        )
 
         delta = s_df["close"].diff()
         gain = delta.where(delta > 0, 0).rolling(window=14).mean()
@@ -304,10 +330,14 @@ def compute_indicators(df, idx_df):
                     "ema_20": row.get("ema_20"),
                     "ema_50": row.get("ema_50"),
                     "ema_200": row.get("ema_200"),
+                    "ema_100": row.get("ema_100"),
                     "rsi_14": row.get("rsi_14") if row.get("rsi_14") is not None else 50,
                     "below_200ema": bool(row.get("below_200ema", False)),
                     "ema_200_slope_20": row.get("ema_200_slope_20"),
                     "rolling_high_6m": row.get("rolling_high_6m"),
+                    "rolling_high_52w": row.get("rolling_high_52w"),
+                    "weekly_trend_score": row.get("weekly_trend_score"),
+                    "overhead_supply_score": row.get("overhead_supply_score"),
                     "avg_volume_20d": row.get("avg_volume_20d"),
                     "rs_90d": row.get("rs_90d"),
                     "rs_21d": row.get("rs_21d"),
@@ -357,10 +387,14 @@ def compute_indicators(df, idx_df):
                     "ema_20": row.get("ema_20"),
                     "ema_50": row.get("ema_50"),
                     "ema_200": row.get("ema_200"),
+                    "ema_100": row.get("ema_100"),
                     "rsi_14": row.get("rsi_14") if row.get("rsi_14") is not None else 50,
                     "below_200ema": bool(row.get("below_200ema", False)),
                     "ema_200_slope_20": row.get("ema_200_slope_20"),
                     "rolling_high_6m": row.get("rolling_high_6m"),
+                    "rolling_high_52w": row.get("rolling_high_52w"),
+                    "weekly_trend_score": row.get("weekly_trend_score"),
+                    "overhead_supply_score": row.get("overhead_supply_score"),
                     "avg_volume_20d": row.get("avg_volume_20d"),
                     "rs_90d": row.get("rs_90d"),
                     "rs_21d": row.get("rs_21d"),
@@ -449,10 +483,14 @@ def update_db_with_indicators(updates, max_retries=3):
                         ema_20 = %(ema_20)s,
                         ema_50 = %(ema_50)s,
                         ema_200 = %(ema_200)s,
+                        ema_100 = %(ema_100)s,
                         rsi_14 = %(rsi_14)s,
                         below_200ema = %(below_200ema)s,
                         ema_200_slope_20 = %(ema_200_slope_20)s,
                         rolling_high_6m = %(rolling_high_6m)s,
+                        rolling_high_52w = %(rolling_high_52w)s,
+                        weekly_trend_score = %(weekly_trend_score)s,
+                        overhead_supply_score = %(overhead_supply_score)s,
                         avg_volume_20d = %(avg_volume_20d)s,
                         rs_90d = %(rs_90d)s,
                         rs_21d = %(rs_21d)s,

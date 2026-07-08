@@ -58,6 +58,54 @@ Should `overhead_supply` be inverted before passing to `compute_confidence_stars
 - Backfill 4 columns for Nifty 500 universe (~1.6M rows, ~5–10 min).
 - Smoke-test eligibility/sub-gate logic against real symbols using the 5 stocks from `tests/golden_cases.yaml`.
 
+- Wire 4 new indicator column computations into `engine_core/indicator_engine.py`: `ema_100`, `rolling_high_52w`, `weekly_trend_score` (multi-component), `overhead_supply_score` (distinct swing highs).
+- Extend `INDICATOR_COLUMNS` tuple + `add_indicator_columns_if_missing()` (mirrors Decision 099 breakout_age pattern).
+- Extend `api/schema.py` auto-heal block (defense in depth).
+- Execute `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal).
+- Backfill 4 columns for Nifty 500 universe (~1.6M rows, ~5–10 min).
+- Smoke-test eligibility/sub-gate logic against real symbols using the 5 stocks from `tests/golden_cases.yaml`.
+
+### **📅 Session: July 8, 2026 morning — Capital Allocation Score V1.0 Session N+2a (Pure indicator code, no DB)**
+
+**Session Start:** ~08:40 IST
+**Status:** N+2a (pure code, no DB) COMPLETE. N+2b (DB-touching) deferred to next DB session.
+
+#### Completed (N+2a)
+- Created `engine_core/cas_indicators.py` (4 pure functions + helper):
+  - `compute_ema_100(close)` — EMA over 100 days, masks first 99 rows as NaN warm-up.
+  - `compute_rolling_high_52w(high)` — rolling max over 252 days, min_periods=50. Uses `high` (intraday peaks matter for resistance).
+  - `compute_weekly_trend_score(df, rolling_high_52w)` — 5-component composite (HH +25, HL +25, above weekly EMA-13 +20, above weekly EMA-20 +15, within 5% of 52w high +15).
+  - `compute_overhead_supply_score(high, close)` — distinct highs above current close in 126-day window, normalized 0–100.
+- Created `engine_core/test_cas_indicators.py` — **25 tests pass in 0.67s**.
+- Wired into `engine_core/indicator_engine.py`:
+  - `INDICATOR_COLUMNS` tuple extended (17 → 21 columns).
+  - `compute_indicators()` calls the 4 pure functions inline.
+  - Updates dict + UPDATE SQL include the 4 new fields.
+  - `fetch_symbols_needing_repair` includes the 4 new `IS NULL` checks.
+  - `fetch_data` SELECT includes `ema_100`.
+- Wired into `api/schema.py` auto-heal: section "12d. CAS V1.0 (Decision 100)" — 4 ALTER TABLE statements + 2 partial indexes.
+
+#### Test counts
+| File | Tests | Pass | Time |
+|------|-------|------|------|
+| `test_capital_allocation.py` | 104 | ✅ | 0.47s |
+| `test_cas_indicators.py` | 25 | ✅ | 0.67s |
+| `test_guidance_email_sections.py` | 7 | ✅ | (slow) |
+| `test_survivorship_bias.py` | 1 | ✅ | (slow) |
+| **Total engine_core tests** | **137** | **✅** | **14.31s** |
+
+#### Remaining (N+2b — needs DB)
+- Run `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal on next API startup).
+- Run `compute_indicators_all()` for Nifty 500 (~1.6M rows, ~5–10 min).
+- Smoke-test against the 5 golden-case symbols.
+
+#### Files changed
+- `engine_core/cas_indicators.py` (NEW, ~340 lines)
+- `engine_core/test_cas_indicators.py` (NEW, ~310 lines)
+- `engine_core/indicator_engine.py` (modified: +4 INDICATOR_COLUMNS, +4 computations, +4 fields in updates/SQL, +4 NULL checks)
+- `api/schema.py` (modified: +4 ALTER + 2 INDEX in auto-heal section 12d)
+- `Sessions.md`, `Progress.md` (this entry)
+
 ### N+1 Rev 3 Refinements (applied 2026-07-07, same day)
 
 After owner reviewed N+1 original, 8 design refinements + 1 recommendation applied on `feature/capital-allocation-v1`:

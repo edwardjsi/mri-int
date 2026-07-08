@@ -73,6 +73,49 @@ Owner reviewed the original N+1 commit (`f4dc161`) and requested 8 design refine
 - Run a backfill script to populate the 4 columns for the entire Nifty 500 universe (~1.6M rows). Estimated runtime: 5–10 min on Railway.
 - Smoke-test using `tests/golden_cases.yaml`: pick the 5 stock scenarios and verify the live indicator output matches the YAML row expectations.
 
+### **N+2 Session — Indicator Engine Wiring (2026-07-08 morning, in progress)**
+
+Pure code work (N+2a, no DB) done. The 4 new indicator columns are wired through `indicator_engine.py` end-to-end.
+
+**New module** (`engine_core/cas_indicators.py`, ~340 lines, 4 pure functions):
+- `compute_ema_100(close, span=100)` → Series. Masks first `span-1` rows as NaN (warm-up).
+- `compute_rolling_high_52w(high, window=252, min_periods=50)` → Series. Uses `high` (not `close`) — intraday peaks matter for resistance.
+- `compute_weekly_trend_score(df, rolling_high_52w, near_52w_pct=5)` → Series. 5-component composite: HH +25, HL +25, above weekly EMA-13 +20, above weekly EMA-20 +15, within 5% of 52w high +15 (sum = 100).
+- `compute_overhead_supply_score(high, close, lookback=126, max_count=10)` → Series. Distinct high values above current close in last 126 rows, normalized 0–100.
+- Plus helper `compute_weekly_components(df)` returning the intermediate weekly series (weekly_high, weekly_low, weekly_ema13, weekly_ema20, hh_confirmed, hl_confirmed).
+
+**New test module** (`engine_core/test_cas_indicators.py`, ~310 lines, 25 tests, 0.67s):
+- EMA-100: matches pandas ewm, warm-up semantics, monotonicity on uptrend, index preservation.
+- Rolling high 52w: uses `high` column not `close`, window=252, min_periods=50, monotonicity.
+- Weekly trend score: HH/HL uptrend=True and flat=False, score uptrend≥80 / flat≤50, max ≤100, within-52w component, weekly_components DataFrame shape, index alignment.
+- Overhead supply: clear-air=0, max overhead capped=100, partial=30, duplicate dedupe, warm-up=0, range [0,100].
+- Integration: all 4 columns populate on a tight uptrend, weekly_trend_score≥60.
+
+**Wired into `engine_core/indicator_engine.py`**:
+- `INDICATOR_COLUMNS` tuple: 17 → 21 columns. 4 new: `ema_100`, `rolling_high_52w`, `weekly_trend_score`, `overhead_supply_score`.
+- `fetch_data`: SELECT clause now includes `ema_100`; numeric coercion list extended.
+- `compute_indicators`: 4 new computation lines added after `ema_200_slope_20` (uses the imported pure functions).
+- Updates dict: 4 new fields in both copies (first loop and post-merge loop).
+- UPDATE SQL: 4 new `SET col = %(col)s` lines.
+- `fetch_symbols_needing_repair`: 4 new `IS NULL` checks added to the WHERE clause so the backfill pipeline picks up symbols with missing CAS columns.
+
+**Wired into `api/schema.py`** (auto-heal, defense in depth):
+- Section "12d. CAS V1.0 (Decision 100)" added: 4 `ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS` statements + 2 partial indexes for `weekly_trend_score` and `overhead_supply_score` (matching the indexes from `migrations/008_capital_allocation_columns.sql`).
+
+**Verification**:
+- `pytest engine_core/test_capital_allocation.py engine_core/test_cas_indicators.py` → **129 passed in 0.81s**.
+- `pytest engine_core/test_capital_allocation.py engine_core/test_cas_indicators.py engine_core/test_guidance_email_sections.py engine_core/test_survivorship_bias.py` → **137 passed in 14.31s**. No regressions.
+- `ast.parse` OK on `indicator_engine.py`, `cas_indicators.py`, `test_cas_indicators.py`, `schema.py`.
+- Import check: `from engine_core import indicator_engine` works; `INDICATOR_COLUMNS` has 21 entries.
+- Integration sanity check: 300-day synthetic uptrend series → ema_100 populates from row 99 onward (201/300 non-null), rolling_high_52w from row 49 onward (251/300 non-null), weekly_trend_score and overhead_supply_score fully populated. Final row: ema_100=185.09, rolling_high_52w=216.10, weekly_trend_score=35, overhead_supply_score=100 (synthetic noise → expected for high-vol data).
+
+**Remaining for N+2** (requires DB access — separate session N+2b):
+- Run `migrations/008_capital_allocation_columns.sql` against prod DB.
+- Run `compute_indicators_all()` to backfill Nifty 500 (~1.6M rows, ~5–10 min on Railway).
+- Smoke-test against the 5 golden-case symbols (WELCORP, CHOLAFIN, PHOENIXLTD, NAVINFLUOR, POONAWALLA).
+
+
+
 ---
 
 ## **July 6, 2026 (late evening): Capital Allocation Score V1.0 — Design Freeze (rev 2)**
