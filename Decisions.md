@@ -2483,3 +2483,46 @@ The expert's specific disagreement (capture outcomes for every eligible stock vs
 - All tests pass.
 - Branch pushed, PR created.
 - Decisions.md, Sessions.md, Progress.md updated.
+
+---
+
+## Decision 102 — V1.1d Release Candidate Scope + V1.2 Priority Order
+Date: 2026-07-08
+Decision-maker: Project Expert (third-party reviewer)
+Trigger: Post-V1.1c expert review of 4 design questions + golden case tolerance + V1.2 ordering
+
+**V1.1d is now treated as a RELEASE CANDIDATE**, not a routine validation session. V1.1 has become foundational infrastructure — expert prefers 30 extra minutes of review over rushed merge that lives for years.
+
+**Four mandatory gates before merging V1.1 to `main`:**
+
+1. **All tests green** — full pytest suite (259 tests expected) passes.
+2. **Golden cases within tolerance** — all `tests/golden_cases.yaml` cases pass within ±2.0 CAS points.
+3. **Distribution sanity check across full universe** — compute and review aggregate stats (mean/median/95th percentile) for:
+   - weekly_trend_score
+   - cas (capital allocation score)
+   - confidence_stars (full ★★★★★→★ distribution)
+   - overhead_supply_score
+   Look for anomalies: 90% above 80, everyone getting 5 stars, overhead collapsing toward zero. These won't be caught by 7 golden cases.
+4. **Manual Top-20 review** — print top 20 CAS-ranked recommendations with reason text, ask "Would I actually want to allocate capital to these?" If top 20 looks wrong, something is wrong even if all tests pass. **Highest-value manual check.**
+
+**V1.1d scope answers (expert pivots):**
+
+- **Q1 (backfill universe):** Full Nifty universe (~961 symbols) — NOT just active. Expert: "You're recalculating a core indicator, not just validating recommendations. If tomorrow a stock moves from inactive to active, you don't want stale indicator values. Storage and compute are cheap compared to rebuilding confidence in your data." **Pattern: one clean historical baseline, then daily incremental maintenance.**
+- **Q2 (tolerance):** ±2.0 universally — agreed with coder recommendation. Do NOT introduce tiered tolerances yet. "Otherwise you'll spend time debating whether something is a 'clean' case versus an 'edge' case."
+- **Q3 (PR review):** Wait for review before merge. Auto-merge is NOT acceptable for this size of change (8 commits, 6 new files spanning indicators/persistence/calibration/recommendation logic).
+
+**V1.2 priority order (overrides coder proposal):**
+
+1. **Regime-aware API** — without regime, CAS can recommend buys where philosophy says don't deploy fresh capital. Affects every recommendation. Highest impact.
+2. **QIF joins** — replace proxy=75 placeholder. Mechanical, low risk. Unblocks calibration debt.
+3. **EMA50 fallback** — coverage improvement for thin-history stocks. Low risk.
+4. **ATR-aware overhead buckets** — refinement, not blocker.
+5. **5-bar fractals** — V2+ only. Current week-over-week logic is "explainable, deterministic, easy to test. Keep it."
+
+**Strategic shift (most important expert note):**
+
+> "You're getting very close to the point where the engine should stop being judged by code quality and start being judged by decision quality. After V1.1, I would spend more effort measuring recommendation outcomes than adding new scoring factors. That's where the next major improvements are likely to come from."
+
+This marks a transition: V1.x focused on **scoring infrastructure**; V2.x should focus on **outcomes-driven calibration** (validation of assumptions, regime-aware decision making, ML only after outcome data is mature).
+
+**Status:** APPROVED — V1.1d execution authorized with 4-gate scope.
