@@ -248,24 +248,27 @@ class TestOverheadSupplyScore:
         )
 
     def test_max_overhead_when_lots_of_distinct_highs_above(self):
-        """Inject 15 distinct highs above close — should score 100 (capped at max_count=10)."""
+        """Inject 25 distinct highs above close — should score 100 (capped at max_count=20).
+
+        Decision 102 (2026-07-08): raised max_count_for_100 from 10 to 20 for
+        better discriminatory power. Saturation dropped from 83% → 35.5%.
+        """
         df = _make_uptrend_series(n_days=300)
-        # Force close = 100, then make last 126 days have 15 highs at 105, 110, 115, ..., 175
+        # Force close = 100, then make last 126 days have 25 highs at 105, 110, ..., 225
         df["close"] = 100.0
-        inject_highs = np.linspace(105, 175, 15)
+        inject_highs = np.linspace(105, 225, 25)
         # Place them at distinct rows in the last 126 days
         for i, h in enumerate(inject_highs):
-            df.iloc[-(126 - i * 8), df.columns.get_loc("high")] = h
+            df.iloc[-(126 - i * 5), df.columns.get_loc("high")] = h
         score = compute_overhead_supply_score(df["high"], df["close"])
         assert score.iloc[-1] == 100.0, (
-            f"15 distinct overheads should cap at 100; got {score.iloc[-1]}"
+            f"25 distinct overheads should cap at 100; got {score.iloc[-1]}"
         )
 
     def test_partial_overhead_score(self):
-        """3 distinct highs above close with max_count=10 → 30.
+        """3 distinct highs above close with max_count=20 → 15.
 
-        To get a clean count, we force ALL highs in the lookback window to
-        be below close, then inject 3 distinct overheads at known positions.
+        Decision 102 (2026-07-08): max_count_for_100 raised from 10 to 20.
         """
         df = _make_uptrend_series(n_days=300)
         df["close"] = 100.0
@@ -278,7 +281,7 @@ class TestOverheadSupplyScore:
         df.iloc[210, df.columns.get_loc("high")] = 120.0
         df.iloc[220, df.columns.get_loc("high")] = 130.0
         score = compute_overhead_supply_score(df["high"], df["close"])
-        assert score.iloc[-1] == pytest.approx(30.0, rel=1e-6)
+        assert score.iloc[-1] == pytest.approx(15.0, rel=1e-6)
 
     def test_duplicate_highs_counted_once(self):
         """Two days with the same high value should count as 1 distinct overhead."""
@@ -289,8 +292,8 @@ class TestOverheadSupplyScore:
         df.iloc[210, df.columns.get_loc("high")] = 110.0  # duplicate
         df.iloc[220, df.columns.get_loc("high")] = 120.0
         score = compute_overhead_supply_score(df["high"], df["close"])
-        # 2 distinct overheads (110, 120) → 20
-        assert score.iloc[-1] == pytest.approx(20.0, rel=1e-6)
+        # 2 distinct overheads (110, 120) → 10 (was 20 with max_count=10)
+        assert score.iloc[-1] == pytest.approx(10.0, rel=1e-6)
 
     def test_warmup_first_125_rows_are_zero(self):
         """Before lookback=126 rows are available, return 0 (not enough data)."""

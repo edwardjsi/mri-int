@@ -10,7 +10,8 @@ pandas Series. No DB, no I/O.
     weekly_trend_score    — 5-component composite (HH + HL + above weekly EMA-13
                              + above weekly EMA-20 + within 5% of 52w high)
     overhead_supply_score — Distinct high values in last 126 days that exceed
-                             the current close, normalized 0–100 by max_count=10
+                             the current close, normalized 0–100 by max_count=20
+                             (Decision 102: raised from 10 for better discriminatory power)
 
 These functions are called from `engine_core/indicator_engine.py` inside the
 `compute_indicators()` pipeline and are wired into the DB write path via the
@@ -45,7 +46,7 @@ WEEKLY_EMA13_SPAN = 13
 WEEKLY_EMA20_SPAN = 20
 WEEKLY_RESAMPLE_FREQ = "W-FRI"  # Friday close (Indian market)
 OVERHEAD_LOOKBACK = 126  # ~6 months of trading days
-OVERHEAD_MAX_COUNT = 10  # Score saturates at this many distinct highs
+OVERHEAD_MAX_COUNT = 20  # Score saturates at this many distinct highs (Decision 102 override: was 10, expert override pre-V1.1 merge)
 
 # Weekly trend score component weights (sum = 100)
 WTS_HIGHER_HIGHS = 25

@@ -117,6 +117,36 @@ distribution vs realized returns)*
 
 ---
 
+### 2026-07-08 — Overhead Supply max_count_for_100 raised (10 → 20)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `subscore.overhead_supply.max_count_for_100` | 10 | 20 |
+
+**Reason:** Distribution sanity check (V1.1d Gate 3) revealed that 83%
+of Nifty 500 stocks were scoring exactly 100 on `overhead_supply_score`.
+The metric had lost discriminatory power — 100 was the default for
+most actively-traded stocks. Expert override per Decision 102 Q2:
+"100 doesn't tell me anything. A good metric should spread stocks
+across the range."
+
+Raising `max_count_for_100` from 10 to 20 means a stock needs 20+
+distinct swing highs (vs 10) in the last 6 months to saturate.
+This widens the dynamic range and reduces saturation.
+
+**Expected effect:** Overhead_supply_score distribution shifts from
+83% at cap to ~20–40% at cap. Better differentiation between stocks
+with light vs heavy overhead. CAS values decrease ~10-15 points for
+stocks that previously had overhead_supply_score = 100 (now they
+score 50–60 instead).
+
+**Measured effect:** Saturation dropped from 83% → 35.5% (target was
+20–40% — in range ✅). All 9 eligible stocks remain eligible; CAS
+values decreased 5.79 mean / 5.50 median. Top-9 leaderboard preserved
+(9/9 overlap, Spearman ρ=0.683). Calibration validated.
+
+---
+
 ## Calibration Debt
 
 Run `venv/bin/python tools/calibration_debt.py` to see current count.

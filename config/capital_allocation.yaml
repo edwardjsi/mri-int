@@ -208,7 +208,7 @@ subscore:
     # Compute: count distinct local swing highs in last 6m above current close,
     # weighted by recency and volume.
     lookback_days: 126  # ~6 months
-    max_count_for_100: 10  # 10+ distinct overhead swing highs = max score
+    max_count_for_100: 20  # 20+ distinct overhead swing highs = max score (Decision 102, was 10)
   rr:
     # NOT USED IN V1.0 — rev 2 removed the proxy. Configured here for V1.1
     # readiness when a real `support_3m` column ships.

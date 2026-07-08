@@ -71,6 +71,17 @@ max_breakout_age_days:
   rationale: "Structure sub-gate requires breakout_age <= 3 (fresh continuations only)."
   journal_entry: null
 
+# === V1.1d calibration override (Decision 102 Q2) ===
+
+subscore.overhead_supply.max_count_for_100:
+  value: 20
+  status: validated
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null  # No outcomes yet — validated via distribution check
+  rationale: "Raised from 10 to 20 to fix 83% saturation (V1.1d Gate 3). New saturation: 35.5% (target 20-40%)."
+  journal_entry: "Calibration.md#2026-07-08-overhead-supply-max_count_for_100-raised-10-20"
+
 # === V1.1c decision layer (Decision 101 expert feedback) ===
 
 decision_layer.hysteresis_cas:

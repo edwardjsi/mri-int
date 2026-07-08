@@ -23,6 +23,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# Calibration wiring (Decision 102 — no Magic Numbers; YAML is source of truth).
+# Reading these at module import means changes to capital_allocation.yaml
+# require a process restart. That's intentional: indicator recomputation is
+# a batch operation, not a hot path.
+def _get_overhead_max_count() -> int:
+    """Read overhead_supply_score max_count_for_100 from capital_allocation.yaml.
+
+    Falls back to cas_indicators.OVERHEAD_MAX_COUNT if YAML is unavailable
+    (e.g., during unit tests that don't have the config on disk).
+    """
+    try:
+        from engine_core.capital_allocation import load_config
+        cfg = load_config("config/capital_allocation.yaml")
+        return int(cfg.get("subscore", {}).get("overhead_supply", {}).get(
+            "max_count_for_100", 20))
+    except Exception:
+        # Config not loadable (test env, missing file, etc.) — use default.
+        from engine_core.cas_indicators import OVERHEAD_MAX_COUNT
+        return OVERHEAD_MAX_COUNT
+
+
 class IndicatorComputationError(Exception):
     """Raised when indicator computation or validation fails."""
 
@@ -239,7 +260,8 @@ def compute_indicators(df, idx_df):
         s_df["rolling_high_52w"] = compute_rolling_high_52w(s_df["high"])
         s_df["weekly_trend_score"] = compute_weekly_trend_score(s_df, s_df["rolling_high_52w"])
         s_df["overhead_supply_score"] = compute_overhead_supply_score(
-            s_df["high"], s_df["close"]
+            s_df["high"], s_df["close"],
+            max_count=_get_overhead_max_count(),
         )
 
         delta = s_df["close"].diff()
