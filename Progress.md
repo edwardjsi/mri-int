@@ -2738,3 +2738,58 @@ V1.1b (Outcome Tracking + UUIDs + Daily EOD worker) can begin.
 
 **Ready for V1.1d:** Validation + PR — overhead buckets backfill re-run,
 golden case regression, all tests green, ready to merge.
+
+---
+
+### **📅 Session: July 8, 2026 evening — V1.1d (Release Candidate 4-Gate Validation) — COMPLETE**
+
+**Decision 102:** V1.1d is a RELEASE CANDIDATE. Expert prefers 30 minutes of deliberate review over rushed merge that lives for years.
+
+**Four mandatory gates — ALL PASS:**
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| 1. Tests green | ✅ | 259/259 pass in 28.51s |
+| 2. Golden cases | ✅ | 7/7 within ±2.0 CAS tolerance |
+| 3. Distribution sanity | ✅ | 2 WARN (informational); no FAIL |
+| 4. Top-20 eyeball | ✅ | 9 candidates all pass manual review |
+
+**Two new tools (gates 3 & 4):**
+
+- `tools/distribution_sanity_check.py` — distribution stats over all 961 symbols
+- `tools/top20_report.py` — top-N ranked table with eyeball test prompt
+
+**Full Nifty universe backfill (Q1):**
+
+- 961 total symbols, 955 with full indicators (99.4%)
+- 6 thin-history symbols (<20 rows) — known engine limitation, not bug
+
+**Distribution findings:**
+
+- Eligible universe: 0.9% (9 stocks) — sparse-breakout market
+- No CAS >= 80 — engine correctly returns WATCH, not BUY
+- Overhead supply saturating at 100 (83% of stocks) — V1.2 follow-up
+
+**Top-9 candidates (Buffett sniff test):**
+
+TITAN, GLAND, INDUSINDBK, JBCHEPHARM, PNBHOUSING, INOXINDIA, ALKEM, ADANIENSOL, PAYTM
+
+**Strategic transition (Decision 102):**
+
+> V1.x = scoring infrastructure → V2.x = outcomes-driven calibration
+
+**V1.2 priorities (Decision 102 Q4):**
+1. Regime-aware API
+2. QIF joins
+3. EMA50 fallback
+4. ATR-aware overhead buckets
+5. 5-bar fractals (V2+)
+
+**Commits on this session:**
+```
+b777156 docs(cas): Session V1.1d entry
+e5c2171 docs(cas): V1.1d validation report
+6bc173b feat(tools): distribution + top20 tools
+```
+
+**Ready for:** Expert review → open PR → merge to `main`.
