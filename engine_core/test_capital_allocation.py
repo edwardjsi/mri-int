@@ -844,6 +844,15 @@ def test_golden_cases(config, scenario):
         assert result["cas"] <= exp["cas_lte"], (
             f"{scenario['name']}: CAS {result['cas']:.2f} > expected {exp['cas_lte']}"
         )
+    # Tolerance-based assertion (V1.1d — Decision 101 expert feedback F).
+    # Use this for tuning scenarios where exact CAS drift is acceptable.
+    if "cas_target" in exp:
+        from engine_core.cas_decision_layer import assert_cas_within_tolerance
+        tolerance = exp.get("cas_tolerance", 2.0)
+        assert_cas_within_tolerance(
+            result["cas"], exp["cas_target"], tolerance=tolerance,
+            message=f"scenario={scenario['name']}",
+        )
     if "confidence_gte" in exp:
         assert result["confidence"] >= exp["confidence_gte"], (
             f"{scenario['name']}: confidence {result['confidence']} < expected {exp['confidence_gte']}"

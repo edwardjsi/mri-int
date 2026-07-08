@@ -281,3 +281,62 @@ action:
   watch_cas_min: 60                # CAS >= this → WATCH (eligible but no action)
   min_confidence_stars_for_buy: 4  # Even high CAS with low stars → WATCH
 
+
+# ----------------------------------------------------------------------------
+# CAS V1.1c (Decision 101) — Decision Layer (Action Lifecycle)
+# ----------------------------------------------------------------------------
+# The Decision Layer wraps the CAS engine with three concerns:
+#   1. Tier-based action hysteresis (prevents flip-flopping around tier boundaries)
+#   2. NO_ACTION triggers (when to recommend NOT deploying capital)
+#   3. Recommendation lifecycle (NEW → ACTIVE → MATURED → ARCHIVED)
+#
+# Design philosophy: "A recommendation is a scientific hypothesis.
+# Calibration is the process of proving or disproving it using observed outcomes."
+#
+# See config/calibration_registry.yaml for the validation status of each
+# assumption. Calibration Debt = number of unvalidated entries.
+decision_layer:
+  # Hysteresis: dampen both upgrades and downgrades near tier boundaries.
+  # An upgrade to tier T is only applied if current_cas >= T_threshold + hysteresis.
+  # A downgrade to tier T is only applied if current_cas < T_threshold - hysteresis.
+  hysteresis_cas: 3.0
+
+  # Tier CAS thresholds (lower bound of each tier). Tiers are inclusive at
+  # the lower bound, exclusive at the upper bound (except the top tier).
+  tier_thresholds:
+    WATCH: 60.0
+    FIRST_TRANCHE: 80.0
+    ADD_SECOND_TRANCHE: 85.0
+
+  # Minimum Deployable Score: if the BEST eligible stock's CAS is below this,
+  # the engine returns NO_ACTION with reason "BELOW_DEPLOYMENT_THRESHOLD".
+  # Different from "no eligible stocks" — that means no opportunities passed
+  # the gates at all. This means opportunities exist but none are good enough
+  # to deploy capital against. The market condition is fundamentally different.
+  min_deployable_cas: 70.0
+
+  # Recommendation Lifecycle: when does a recommendation transition states?
+  #   NEW      → created today (age == 0 days)
+  #   ACTIVE   → past creation, milestones still being filled
+  #   MATURED  → all 5 milestones filled (w1, w2, w4, m3, m6)
+  #   ARCHIVED → MATURED + age > archive_age_days (kept for historical analysis)
+  lifecycle:
+    archive_age_days: 180
+    required_milestones:  # all must be filled for MATURED
+      - w1
+      - w2
+      - w4
+      - m3
+      - m6
+
+# ----------------------------------------------------------------------------
+# CAS V1.1d (Decision 101) — Regression Tolerance
+# ----------------------------------------------------------------------------
+# When tuning weights/thresholds (not refactoring logic), allow ±2 points
+# of CAS drift in regression tests via assert_cas_within_tolerance().
+# This prevents test fatigue from chasing ±0.5 point changes that don't
+# change real behavior. If a tuning change moves CAS by >2 points, that
+# is a SIGNAL — review the calibration journal.
+regression_tolerance:
+  cas_points: 2.0   # ±2 points CAS drift acceptable when tuning
+  stars: 0          # stars must be exact (no drift allowed)
