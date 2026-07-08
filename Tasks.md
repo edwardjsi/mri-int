@@ -114,3 +114,52 @@
   - [x] Step 2: Collector & Automation (yfinance index fetcher).
   - [x] Step 3: Analytical Engine (Sector Tailwind, Relative Momentum, Peer Spread).
   - [x] Step 4: UI / Frontend (Sector Heatmap API and React Lens integration).
+
+---
+
+## ✅ Day 74: Capital Allocation Score V1.1 — Release Candidate Ready (Completed 2026-07-08)
+
+Implements Decision 100/101/102 — transforms MRI from a breakout screener into a portfolio decision engine.
+
+- [x] **V1.1a — Engine correctness:** 174 tests, EMA100 slope, overhead_supply_score, weekly_trend_score
+- [x] **V1.1b — Outcome tracking + persistence:** `cas_recommendations` + `cas_recommendation_outcomes` tables, daily_outcome_updater cron, milestones at w1/w2/w4/m3/m6
+- [x] **V1.1c — Decision layer + calibration journal:** `cas_decision_layer.py` (tiers, hysteresis, NO_ACTION, lifecycle), `Calibration.md`, `config/calibration_registry.yaml`, `tools/calibration_debt.py`, 39 tests
+- [x] **V1.1d — Release candidate validation:** `tools/distribution_sanity_check.py`, `tools/top20_report.py`, 4-gate framework
+- [x] **Calibration override (Decision 102 Q2):** `overhead_supply.max_count_for_100` 10→20. Saturation 83%→35.5%. YAML-wired via `_get_overhead_max_count()` helper. Calibration registry entry marked `validated`.
+- [x] **5-gate validation PASS:** tests (259/259), golden cases (7/7 ±2.0 CAS), distribution (PASS, 2 informational WARN), Top-20 eyeball (9/9 pass), rank correlation (9/9 overlap, Spearman ρ=0.683)
+- [x] **Historical distribution (Q1 follow-up):** 6 weekly samples, mean eligible=0.67%, range 0.2–1.4% — consistent sparse-breakout environment
+- [x] **Documentation synced:** `docs/CAS_SPEC.md`, `docs/CAS_V11D_VALIDATION.md`, `docs/CAS_TOP20_V11D.md`, `docs/PR_BODY.md`, `Calibration.md`, Decisions 101/102
+- [x] **Branch:** `feature/capital-allocation-v1`, 24 commits ahead of `main`, all pushed, working tree clean
+- [x] **Calibration freeze:** no weight tweaks for 100 recommendations post-merge; re-validate at 100/250/500
+
+### 📦 Deliverable
+
+- 259 tests pass (+155 over V1.0)
+- 5 gates: tests, golden cases, distribution, eyeball, rank correlation
+- Top-9 candidates pass Buffett sniff test: TITAN, ALKEM, GLAND, INDUSINDBK, JBCHEPHARM, PNBHOUSING, INOXINDIA, ADANIENSOL, PAYTM
+
+### ⏭️ Tomorrow's First Action (BLOCKED on tooling)
+
+`gh` CLI is not installed. Install + authenticate, then:
+
+```bash
+gh auth login                    # one-time
+gh pr create \
+  --base main \
+  --head feature/capital-allocation-v1 \
+  --title "Capital Allocation Score V1.1 — Release Candidate" \
+  --body-file docs/PR_BODY.md
+```
+
+### 🚧 V1.2 Backlog (Decision 102 Q4)
+
+1. Regime-aware API (read from detector, not hardcoded BULLISH) — highest impact
+2. QIF joins (replace `proxy_score_v1` placeholder)
+3. EMA50 fallback for thin-history stocks
+4. ATR-aware overhead buckets
+5. Weekly fractals (V2+) — replace week-over-week HH/HL
+
+### 🎯 Project Phase Transition
+
+> **V1.x = scoring infrastructure.** From here, the project's biggest improvements come from **measuring how well the engine predicts successful capital allocation**, not from making the scoring engine more elaborate. **V2.x = outcome-driven calibration.**
+

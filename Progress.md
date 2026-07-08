@@ -2793,3 +2793,75 @@ e5c2171 docs(cas): V1.1d validation report
 ```
 
 **Ready for:** Expert review → open PR → merge to `main`.
+
+---
+
+## 📅 Session: July 8, 2026 — Capital Allocation Score V1.1 Release Candidate (READY, BLOCKED ON gh INSTALL)
+
+**Status:** ✅ Code complete, docs synced, branch pushed. ⏸️ Awaiting `gh` install + `gh pr create`.
+
+### Work completed
+
+- **V1.1a Engine correctness** — 174 tests, EMA100 slope, overhead_supply, weekly_trend
+- **V1.1b Outcome tracking + persistence** — 220 tests, `cas_recommendations` table, milestone cron
+- **V1.1c Decision layer + calibration journal** — 259 tests, tiers/hysteresis/NO_ACTION, Calibration.md
+- **V1.1d Release candidate validation** — 5 gates (tests, golden cases, distribution, eyeball, rank correlation)
+- **Calibration override** — `overhead_supply.max_count_for_100` 10→20, saturation 83%→35.5%
+
+### Key metrics
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| Tests passing | **259/259** | ✅ |
+| Saturation at overhead=100 | **35.5%** (was 83%) | ✅ in target 20–40% |
+| Top-9 leaderboard overlap | **9/9 (100%)** | ✅ no stocks dropped |
+| Spearman rank correlation | **0.683** | ✅ significant positive |
+| Calibration debt | **11** | 1 validated, 11 hypothesis |
+| Historical eligible range (6 weeks) | **0.2–1.4%** | ✅ consistent |
+
+### Branch state
+
+- `feature/capital-allocation-v1` — **24 commits** ahead of `main`, all pushed
+- Working tree: clean
+- PR body: `docs/PR_BODY.md` (concise executive summary)
+- Full validation: `docs/CAS_V11D_VALIDATION.md`
+
+### Tomorrow's first action (BLOCKED on tooling)
+
+```bash
+sudo snap install gh          # or: sudo apt install gh
+gh auth login                 # one-time
+gh pr create \
+  --base main \
+  --head feature/capital-allocation-v1 \
+  --title "Capital Allocation Score V1.1 — Release Candidate" \
+  --body-file docs/PR_BODY.md
+```
+
+### V1.2 Backlog (post-merge)
+
+1. Regime-aware API (read from detector, not hardcoded BULLISH)
+2. QIF joins (replace `proxy_score_v1`)
+3. EMA50 fallback for thin-history stocks
+4. ATR-aware overhead buckets
+5. Weekly fractals (V2+)
+
+### Project phase transition
+
+> **V1.x = scoring infrastructure.** From here, the project's biggest improvements
+> come from **measuring** how well the engine predicts successful capital
+> allocation. **V2.x = outcome-driven calibration.** Merge V1.1, let it run,
+> start collecting recommendation outcomes.
+
+### Commits added today
+
+```
+c521b44 docs(cas): PR body for V1.1 release candidate
+b47cd97 docs(cas): Decision 102 entry
+68f9907 docs(cas): Session V1.1d post-review calibration entry
+2059d08 feat(cas): V1.1d calibration override (max_count 10→20) + 5-gate validation
+fde49bf docs(cas): Progress.md entry for V1.1d release candidate validation
+b777156 docs(cas): Session V1.1d entry
+e5c2171 docs(cas): V1.1d validation report
+6bc173b feat(tools): distribution + top20 tools
+```

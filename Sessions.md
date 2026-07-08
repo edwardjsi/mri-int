@@ -2325,3 +2325,75 @@ Consistently sparse-breakout market. Engine correctly defensive.
 - Re-validate at 100/250/500 recommendations (not 30 days)
 - V1.2 starts with Regime-aware API (Decision 102 Q4)
 - Known limitations deferred: fractal HH/HL, ATR buckets, sector proxy, regime/QIF joins
+
+### **V1.1d PR-Open Session (2026-07-08 evening, BLOCKED — resume tomorrow)**
+
+**Goal:** Open PR from `feature/capital-allocation-v1` → `main`.
+
+**Work done this session:**
+
+1. Finalized validation report (`docs/CAS_V11D_VALIDATION.md`):
+   - Gate 5 (Rank Correlation): 9/9 top overlap, Spearman ρ=0.683
+   - Historical Distribution: 6 weekly samples, mean eligible=0.67%
+   - Known Limitations section (verbatim from expert)
+2. Regenerated `docs/CAS_TOP20_V11D.md` for post-calibration values
+3. Committed Decisions.md Decision 102 entry
+4. Created `docs/PR_BODY.md` (concise executive summary per expert Q5)
+5. Pushed all 24 commits to `feature/capital-allocation-v1`
+6. Working tree clean
+
+**Blocker:** `gh` CLI is not installed in this environment.
+
+```
+$ gh pr create --base main --head feature/capital-allocation-v1 \
+    --title "Capital Allocation Score V1.1 — Release Candidate" \
+    --body-file docs/PR_BODY.md
+command not found: gh
+```
+
+The user needs to run this command themselves (after installing gh).
+
+**Resume tomorrow — 3 steps:**
+
+```bash
+# 1. Install gh (one-time)
+sudo snap install gh          # or: sudo apt update && sudo apt install gh
+
+# 2. Authenticate (one-time)
+gh auth login                 # pick: GitHub.com → HTTPS → web browser
+
+# 3. Open the PR
+cd ~/Desktop/mri-int
+gh pr create \
+  --base main \
+  --head feature/capital-allocation-v1 \
+  --title "Capital Allocation Score V1.1 — Release Candidate" \
+  --body-file docs/PR_BODY.md
+```
+
+**After PR opens:**
+- Share PR URL with assistant
+- Watch CI: `gh pr checks <N>`
+- Assistant can draft replies to review comments if any come back
+
+**Strategic transition reminder (Decision 102 closing):**
+
+> V1.x = scoring infrastructure. From here, improvements come from
+> **measuring** how well the engine predicts successful capital allocation,
+> not from making the scoring engine more elaborate. V2.x = outcomes-driven
+> calibration.
+
+**Commits added this session:**
+```
+c521b44 docs(cas): PR body for V1.1 release candidate
+b47cd97 docs(cas): Decision 102 — V1.1d release candidate scope + V1.2 priority order
+68f9907 docs(cas): Session V1.1d post-review calibration entry
+2059d08 feat(cas): V1.1d calibration override (max_count 10→20) + 5-gate validation
+```
+
+**Final state:**
+- Branch: `feature/capital-allocation-v1` — 24 commits ahead of `main`, all pushed
+- Tests: 259/259 pass
+- Saturation: 35.5% (was 83%)
+- Calibration debt: 11 (1 validated, 11 hypothesis)
+- Files: 0 modified, ready to merge
