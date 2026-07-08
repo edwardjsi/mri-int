@@ -2693,3 +2693,48 @@ All mandatory + recommended fixes from Decision 101 are in. The engine now has:
 - `ema_100_slope_5d` populated for 498/498 symbols
 
 V1.1b (Outcome Tracking + UUIDs + Daily EOD worker) can begin.
+
+---
+
+### **📅 Session: July 8, 2026 evening — V1.1c (Decision Layer + Calibration Journal) — COMPLETE**
+
+**Decision 101 expert feedback addressed (5 design pivots):**
+1. Tier-based hysteresis (not CAS delta) — `stabilize_action()` with ±3pt bands
+2. Hysteresis on ACTION only, never on Confidence/Stars
+3. NO_ACTION now has 3 triggers (added "Best CAS < min_deployable_cas" trigger)
+4. Calibration status moved to `config/calibration_registry.yaml` (separate from runtime config)
+5. Recommendation Lifecycle: NEW → ACTIVE → MATURED → ARCHIVED (derived from dates)
+
+**Deliverables:**
+
+| Component | Purpose | Tests |
+|-----------|---------|-------|
+| `engine_core/cas_decision_layer.py` | stabilize_action, NO_ACTION, lifecycle, regression tolerance | 39 |
+| `Calibration.md` | Narrative journal of every parameter change (3 seed entries) | — |
+| `config/calibration_registry.yaml` | Validation status for 11 tunables | — |
+| `tools/calibration_debt.py` | Debt counter (`--json`, `--exit-nonzero` flags) | — |
+| `docs/CAS_SPEC.md` | §0 Motto, §1.0 Architecture, §1.1 Lifecycle | — |
+| YAML config | decision_layer + regression_tolerance blocks | — |
+| Golden case runner | Supports `cas_target` + `cas_tolerance` | +0 |
+
+**Test totals (cumulative):**
+
+| Version | Tests | Pass | Notes |
+|---------|-------|------|-------|
+| V1.1a | 174 | ✅ | Engine correctness |
+| V1.1b | 220 | ✅ | Outcome tracking + persistence |
+| **V1.1c** | **259** | **✅** | **Decision Layer + Calibration** |
+
+**Calibration Debt:** 11 hypothesis / 0 validated / 0 deprecated → debt = 11
+
+**Engineering Motto (now in CAS_SPEC.md §0 and Calibration.md):**
+> "A recommendation is a scientific hypothesis. Calibration is the process of proving or disproving that hypothesis using observed outcomes."
+
+**Commits on this session:**
+```
+020960c docs(cas): Session V1.1c entry
+967b64c feat(cas): V1.1c — Decision Layer + Calibration Journal
+```
+
+**Ready for V1.1d:** Validation + PR — overhead buckets backfill re-run,
+golden case regression, all tests green, ready to merge.
