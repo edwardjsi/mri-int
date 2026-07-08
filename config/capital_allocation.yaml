@@ -40,12 +40,17 @@ calibration:
   confidence:
     complete_data_threshold_pct: 90     # data_completeness_pct >= this → star
     factor_agreement_max_std_dev: 20    # sub-score std-dev <= this → star
-    # Stable calculations: the only "noisy edge case" in our formulas is the
-    # AGE_DECAY cliff at breakout_age=4 (85→70). A stock sitting right at
-    # that boundary produces wildly different scores for age 3 vs age 4,
-    # making the calculation unstable. We do NOT bound sub-scores themselves
-    # — a stock with all sub-scores at 100 is the IDEAL case, not unstable.
-    stable_breakout_age_cliff: 4        # breakout_age == this → star fires
+    # Stable calculations (Decision 101, expert Q5): replaced single cliff
+    # at breakout_age=4 with transition zones. The current discontinuity is
+    # "mathematically convenient but not how markets behave." A stock sitting
+    # in the 'transition' or 'stale' zone produces scores at the noisy edge
+    # of the AGE_DECAY table. The stable_calculations star fires ONLY for
+    # ages in the 'excellent' or 'good' zones.
+    breakout_age_zones:
+      excellent: [0, 2]    # star fires
+      good: [3, 3]         # star fires
+      transition: [4, 5]   # star does NOT fire
+      stale: [6, 999]      # star does NOT fire
     low_proxy_usage_max_proxies: 0      # proxies_used count <= this → star
     indicator_freshness_max_age_days: 5 # data_age_days <= this → star
 

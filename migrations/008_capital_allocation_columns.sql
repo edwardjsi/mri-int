@@ -1,5 +1,6 @@
 -- migrations/008_capital_allocation_columns.sql
 -- Decision 100 — Capital Allocation Score V1.0: 4 new columns on daily_prices.
+-- Decision 101 (V1.1a) — added ema_100_slope_5d.
 --
 -- Why this exists:
 -- The Capital Allocation Score (CAS) introduced in Decision 100 / rev 2 needs
@@ -7,6 +8,9 @@
 --
 --   * ema_100              — for the `ema100_rising` eligibility condition
 --                            (slope(EMA100, 5d) > 0)
+--   * ema_100_slope_5d     — V1.1a (Decision 101, Gap 1): the slope value
+--                            itself, so the ema100_rising gate can read it.
+--                            Without this, the gate always fails.
 --   * rolling_high_52w     — for the 52w-position eligibility gate (within 10%
 --                            of 52w high) and the Weekly Structure sub-score
 --                            "within 5% of 52w high" component (+15)
@@ -17,9 +21,10 @@
 --                            (0 = clear air, 100 = massive overhead resistance;
 --                            counts distinct swing highs in last 6m above close)
 --
--- All four are computed by engine_core/indicator_engine.py in Session N+2.
--- This migration only creates the columns; rows stay NULL until N+2 wires the
--- computation. Migration is idempotent — safe to re-run against any DB state.
+-- All five are computed by engine_core/indicator_engine.py in Session N+2 /
+-- V1.1a. This migration only creates the columns; rows stay NULL until the
+-- indicator_engine.py pipeline runs. Migration is idempotent — safe to
+-- re-run against any DB state.
 --
 -- Run manually:
 --   psql "$DATABASE_URL" -f migrations/008_capital_allocation_columns.sql
@@ -30,6 +35,7 @@
 
 ALTER TABLE daily_prices
   ADD COLUMN IF NOT EXISTS ema_100               NUMERIC DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS ema_100_slope_5d      NUMERIC DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS rolling_high_52w      NUMERIC DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS weekly_trend_score    NUMERIC DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS overhead_supply_score NUMERIC DEFAULT NULL;

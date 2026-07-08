@@ -126,12 +126,18 @@ def test_load_config_parses_and_weights_sum_to_100(config):
     )
     for key in required_cal:
         assert key in cal, f"Missing calibration key: {key}"
-    # Confidence calibration sub-keys (rev 3)
+    # Confidence calibration sub-keys (rev 3, refined in V1.1a)
     conf_cal = cal["confidence"]
     for key in ("complete_data_threshold_pct", "factor_agreement_max_std_dev",
-                "stable_breakout_age_cliff", "low_proxy_usage_max_proxies",
+                "breakout_age_zones", "low_proxy_usage_max_proxies",
                 "indicator_freshness_max_age_days"):
         assert key in conf_cal, f"Missing calibration.confidence key: {key}"
+    # breakout_age_zones must contain all 4 zones (Decision 101, Q5)
+    zones = conf_cal["breakout_age_zones"]
+    for zone in ("excellent", "good", "transition", "stale"):
+        assert zone in zones, f"Missing age zone: {zone}"
+        lo, hi = zones[zone]
+        assert isinstance(lo, int) and isinstance(hi, int)
 
 
 # ── 1. Sub-score: Regime (5 sub-score tests) ──────────────────────────────
@@ -491,10 +497,14 @@ def test_subgates_all_pass_required(config, passing_row):
     ("factor_agreement_wide", {}, {"a": 0, "b": 100}, {"any": True}, 0),
     # factor_agreement with overhead_supply inverted: raw=50 → aligned=50, {50,50} std-dev=0
     ("factor_agreement_overhead_inverted", {}, {"a": 50, "overhead_supply": 50}, {"any": True}, 1),
-    # stable_calculations: breakout_age NOT at AGE_DECAY cliff (age 4)
-    # rev 3 simplification: stable ONLY checks breakout_age cliff (not sub-score extremes)
-    ("stable_not_at_cliff", {"breakout_age": 5}, {"a": 0, "b": 100}, {"any": True}, 1),
-    ("stable_at_cliff_age_4", {"breakout_age": 4}, {"a": 0, "b": 100}, {"any": True}, 0),
+    # stable_calculations (V1.1a, Decision 101 Q5): breakout_age in
+    # 'excellent' (0-2) or 'good' (3) zone → +1; 'transition' (4-5) or
+    # 'stale' (6+) → 0. The single cliff at age=4 was replaced with zones.
+    ("stable_excellent_zone_age_2", {"breakout_age": 2}, {"a": 0, "b": 100}, {"any": True}, 1),
+    ("stable_good_zone_age_3", {"breakout_age": 3}, {"a": 0, "b": 100}, {"any": True}, 1),
+    ("stable_transition_zone_age_4", {"breakout_age": 4}, {"a": 0, "b": 100}, {"any": True}, 0),
+    ("stable_transition_zone_age_5", {"breakout_age": 5}, {"a": 0, "b": 100}, {"any": True}, 0),
+    ("stable_stale_zone_age_6", {"breakout_age": 6}, {"a": 0, "b": 100}, {"any": True}, 0),
     # low_proxy_usage: 0 proxies → +1; >=1 proxy → 0
     ("low_proxy_zero", {}, {"a": 0, "b": 100}, {"any": False}, 1),
     ("low_proxy_one", {}, {"a": 0, "b": 100}, {"sector": True}, 0),

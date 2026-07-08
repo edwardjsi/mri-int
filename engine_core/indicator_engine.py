@@ -33,6 +33,7 @@ INDICATOR_COLUMNS = (
     ("ema_50", "NUMERIC"),
     ("ema_200", "NUMERIC"),
     ("ema_100", "NUMERIC"),  # CAS V1.0 (Decision 100)
+    ("ema_100_slope_5d", "NUMERIC"),  # CAS V1.1a (Decision 101, Gap 1)
     ("rsi_14", "NUMERIC"),
     ("below_200ema", "BOOLEAN"),
     ("ema_200_slope_20", "NUMERIC"),
@@ -101,6 +102,7 @@ def fetch_symbols_needing_repair():
                     ema_50 IS NULL
                     OR ema_200 IS NULL
                     OR ema_100 IS NULL         -- CAS V1.0 (Decision 100)
+                    OR ema_100_slope_5d IS NULL -- CAS V1.1a (Decision 101, Gap 1)
                     OR rs_90d IS NULL
                     OR rs_90d = 0
                     OR avg_volume_20d IS NULL
@@ -151,7 +153,8 @@ def fetch_data(symbols=None):
             cur.execute(
                 """
                 SELECT symbol, date, open, high, low, close, volume,
-                       ema_10, ema_20, ema_50, ema_200, ema_100
+                       ema_10, ema_20, ema_50, ema_200, ema_100,
+                       ema_100_slope_5d
                 FROM daily_prices
                 WHERE symbol = ANY(%s)
                 ORDER BY symbol, date
@@ -180,7 +183,8 @@ def fetch_data(symbols=None):
         df["volume"] = pd.to_numeric(df["volume"])
 
         for column in ("open", "high", "low", "close", "volume",
-                       "ema_10", "ema_20", "ema_50", "ema_200", "ema_100"):
+                       "ema_10", "ema_20", "ema_50", "ema_200", "ema_100",
+                       "ema_100_slope_5d"):
             if column in df.columns:
                 df[column] = pd.to_numeric(df[column], errors="coerce")
 
@@ -227,25 +231,16 @@ def compute_indicators(df, idx_df):
         # These are computed via pure functions in engine_core/cas_indicators.py
         # (testable in isolation, no DB access).
         s_df["ema_100"] = compute_ema_100(s_df["close"])
+        # ema_100_slope_5d (V1.1a, Decision 101 Gap 1): the ema100_rising
+        # eligibility gate reads this. Without it, the gate always fails.
+        # diff(5) = EMA-100 today minus EMA-100 five trading days ago.
+        # Positive → "rising"; gate passes.
+        s_df["ema_100_slope_5d"] = s_df["ema_100"].diff(5)
         s_df["rolling_high_52w"] = compute_rolling_high_52w(s_df["high"])
         s_df["weekly_trend_score"] = compute_weekly_trend_score(s_df, s_df["rolling_high_52w"])
         s_df["overhead_supply_score"] = compute_overhead_supply_score(
             s_df["high"], s_df["close"]
         )
-
-
-        s_df["ema_10"] = s_df["close"].ewm(span=10, adjust=False).mean()
-        s_df["ema_20"] = s_df["close"].ewm(span=20, adjust=False).mean()
-        s_df["ema_50"] = s_df["close"].ewm(span=50, adjust=False).mean()
-        s_df["ema_200"] = (
-            s_df["close"].ewm(span=200, adjust=False).mean()
-            if len(s_df) >= 200
-            else s_df["ema_50"]
-        )
-
-        s_df["ema_200_slope_20"] = s_df["ema_200"].diff(20)
-
-        # CAS V1.0 (Decision 100) — REMOVED duplicate. Already computed above.
 
         delta = s_df["close"].diff()
         gain = delta.where(delta > 0, 0).rolling(window=14).mean()
@@ -351,6 +346,7 @@ def compute_indicators(df, idx_df):
                     "ema_50": row.get("ema_50"),
                     "ema_200": row.get("ema_200"),
                     "ema_100": row.get("ema_100"),
+                    "ema_100_slope_5d": row.get("ema_100_slope_5d"),
                     "rsi_14": row.get("rsi_14") if row.get("rsi_14") is not None else 50,
                     "below_200ema": bool(row.get("below_200ema", False)),
                     "ema_200_slope_20": row.get("ema_200_slope_20"),
@@ -408,6 +404,7 @@ def compute_indicators(df, idx_df):
                     "ema_50": row.get("ema_50"),
                     "ema_200": row.get("ema_200"),
                     "ema_100": row.get("ema_100"),
+                    "ema_100_slope_5d": row.get("ema_100_slope_5d"),
                     "rsi_14": row.get("rsi_14") if row.get("rsi_14") is not None else 50,
                     "below_200ema": bool(row.get("below_200ema", False)),
                     "ema_200_slope_20": row.get("ema_200_slope_20"),
@@ -504,6 +501,7 @@ def update_db_with_indicators(updates, max_retries=3):
                         ema_50 = %(ema_50)s,
                         ema_200 = %(ema_200)s,
                         ema_100 = %(ema_100)s,
+                        ema_100_slope_5d = %(ema_100_slope_5d)s,
                         rsi_14 = %(rsi_14)s,
                         below_200ema = %(below_200ema)s,
                         ema_200_slope_20 = %(ema_200_slope_20)s,

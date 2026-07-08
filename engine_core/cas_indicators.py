@@ -229,6 +229,7 @@ def compute_overhead_supply_score(
     close: pd.Series,
     lookback: int = OVERHEAD_LOOKBACK,
     max_count: int = OVERHEAD_MAX_COUNT,
+    bucket_pct: float | None = 0.5,
 ) -> pd.Series:
     """Per-row distinct `high` values above current close in last `lookback` rows.
 
@@ -242,14 +243,22 @@ def compute_overhead_supply_score(
     resistance. The CAS engine (`compute_market_score`) inverts internally so
     higher is better in the final score.
 
+    Bucket rounding (Decision 101, expert Q1): by default, highs are rounded
+    to nearest `bucket_pct`% before deduplication. This avoids the float
+    granularity artifact where 110.01 / 110.03 / 110.04 (all within 0.04%)
+    count as 3 distinct resistances instead of 1. Pass `bucket_pct=None` to
+    disable bucketing.
+
     Convention: rows before `lookback` rows are available return 0
     (not enough data).
 
     Args:
-        high:      pd.Series of high prices.
-        close:     pd.Series of close prices.
-        lookback:  Window size in trading days (default 126 ≈ 6 months).
-        max_count: Score saturates at this many distinct highs (default 10).
+        high:       pd.Series of high prices.
+        close:      pd.Series of close prices.
+        lookback:   Window size in trading days (default 126 ≈ 6 months).
+        max_count:  Score saturates at this many distinct highs (default 10).
+        bucket_pct: Round highs to nearest `bucket_pct`% before dedup.
+                    Default 0.5. Pass None to disable (legacy behavior).
 
     Returns:
         pd.Series of overhead supply scores, same index as `high`.
@@ -260,9 +269,6 @@ def compute_overhead_supply_score(
     high_arr = high.values
     close_arr = close.values
 
-    # Per-row loop — O(n × lookback). For 1.6M rows × 126 lookback = ~200M ops.
-    # Numpy inside is fast enough; vectorization is hard due to per-row dedup.
-    # For Nifty 500 (~1.6M rows), expect ~30–60s on Railway.
     for i in range(lookback, n):
         window_highs = high_arr[i - lookback: i]
         current_close = close_arr[i]
@@ -270,6 +276,16 @@ def compute_overhead_supply_score(
         if len(above) == 0:
             scores[i] = 0.0
             continue
+        if bucket_pct is not None and bucket_pct > 0:
+            # Round to nearest bucket_pct% bucket. Example with bucket_pct=0.5:
+            # 110.01 / 110.03 / 110.04 → all round to 110.0 → 1 distinct.
+            # Anchor step size on the mean of `above` so the bucket is
+            # proportional to the price level (a 0.5% bucket at 110 ≈ 0.55
+            # is the same precision as a 0.5% bucket at 5000 ≈ 25.0).
+            anchor = float(np.mean(above))
+            step = anchor * (bucket_pct / 100.0)
+            if step > 0:
+                above = np.round(above / step) * step
         distinct = np.unique(above)
         scores[i] = min(len(distinct) / max_count * 100.0, 100.0)
 

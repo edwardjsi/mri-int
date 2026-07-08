@@ -56,7 +56,11 @@ Session: N+1 (2026-07-07). See Sessions.md for multi-session handoff notes.
 
 from __future__ import annotations
 
+import hashlib
 import logging
+import subprocess
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -65,6 +69,176 @@ import yaml
 
 
 logger = logging.getLogger(__name__)
+
+
+# ── Versioning & Engine Signature ─────────────────────────────────────────────────
+
+CAS_VERSION = "1.1.0"
+"""CAS engine version. Bumped on every behavior-affecting change.
+Captured with every recommendation via compute_engine_signature()."""
+
+
+def _get_commit_sha() -> str:
+    """Read current git commit short SHA. Cached at module import.
+
+    Falls back to 'unknown' if git is unavailable (e.g., Docker build without
+    .git directory). The engine signature is still valid; only provenance
+    traceability is degraded.
+    """
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            cwd=Path(__file__).resolve().parent.parent,
+        )
+        return out.decode("ascii").strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return "unknown"
+
+
+COMMIT_SHA = _get_commit_sha()
+"""Git commit SHA at module import time. Stored in engine signature."""
+
+
+# ── Row normalization (Decimal → float coercion) ────────────────────────────────
+
+
+def normalize_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Convert all Decimal values in `row` to float. Returns a NEW dict.
+
+    Per Decision 101 (Gap 5): "Engine must not know or care whether Postgres
+    returned Decimal." All callers go through this helper before the engine
+    sees the row. One place to audit, one place to fix.
+
+    Handles:
+      - Decimal       → float  (primary case from psycopg2)
+      - float         → unchanged
+      - int           → unchanged
+      - str           → unchanged (symbols, regime, etc.)
+      - None          → unchanged (missing optional fields)
+      - date/datetime → unchanged (date objects stay as date objects)
+      - nested lists/dicts → NOT recursed (rows are flat in this codebase)
+
+    Args:
+        row: dict-like row from any source (psycopg2, fixture, CSV).
+
+    Returns:
+        New dict with all Decimal values converted to float. Input unchanged.
+    """
+    out: dict[str, Any] = {}
+    for k, v in row.items():
+        if isinstance(v, Decimal):
+            out[k] = float(v)
+        else:
+            out[k] = v
+    return out
+
+
+# ── Metadata derivation (single source for completeness, age, proxies) ─────────
+
+
+# Required fields for data_completeness_pct. Used by derive_metadata() and any
+# caller that wants to know what the engine considers "complete" data.
+REQUIRED_FIELDS_FOR_COMPLETENESS: tuple[str, ...] = (
+    "close",
+    "ema_20", "ema_50", "ema_100", "ema_200",
+    "ema_100_slope_5d",
+    "breakout_state", "breakout_age",
+    "weekly_trend_score",
+    "overhead_supply_score",
+    "rolling_high_52w",
+    "rs_90d",
+    "qif_score",
+    "avg_volume_20d",
+    "regime",
+)
+
+
+def derive_metadata(
+    row: dict[str, Any],
+    required_fields: list[str] | tuple[str, ...] | None,
+    last_indicator_run: datetime | None,
+    today: date,
+    proxies_used: dict[str, bool] | None = None,
+) -> dict[str, Any]:
+    """Compute data_completeness_pct, data_age_days, proxy_count in one place.
+
+    Per Decision 101 (Gap 4): "I'd compute them at the API layer for now.
+    However, I would NOT leave them undefined. Create one helper.
+    `derive_metadata(row)` returns data_age, completeness, proxy_count.
+    Then every caller behaves identically."
+
+    Args:
+        row: The normalized row (post-normalize_row).
+        required_fields: Fields considered "complete data". Defaults to
+            REQUIRED_FIELDS_FOR_COMPLETENESS if not provided.
+        last_indicator_run: When the indicator pipeline last ran successfully
+            for this symbol. Per Decision 101 (Q6): source of data_age_days,
+            NOT the last candle.
+        today: Current date for data_age_days computation.
+        proxies_used: Optional dict of {factor: bool} indicating which factors
+            used proxies instead of real data. proxy_count = count of True.
+
+    Returns:
+        dict with:
+          - data_completeness_pct: float 0-100
+          - data_age_days: int (None if last_indicator_run is None)
+          - proxy_count: int
+    """
+    if required_fields is None:
+        required_fields = REQUIRED_FIELDS_FOR_COMPLETENESS
+    populated = sum(1 for f in required_fields if row.get(f) is not None)
+    total = len(required_fields)
+    completeness = (populated / total * 100.0) if total > 0 else 0.0
+
+    if last_indicator_run is None:
+        age_days = None
+    else:
+        last_d = last_indicator_run.date() if isinstance(last_indicator_run, datetime) else last_indicator_run
+        age_days = (today - last_d).days
+
+    proxy_count = sum(1 for v in (proxies_used or {}).values() if v)
+
+    return {
+        "data_completeness_pct": completeness,
+        "data_age_days": age_days,
+        "proxy_count": proxy_count,
+    }
+
+
+# ── Engine signature (provenance for every recommendation) ─────────────────────
+
+
+def compute_engine_signature(config: dict[str, Any]) -> dict[str, str]:
+    """Return {cas_version, config_hash, commit_sha, signature}.
+
+    Per Decision 101 (expert recommendation, V1.1b requirement): every
+    recommendation must know its engine signature so future calibration can
+    answer 'why did CAS 1.1 outperform CAS 1.3?' The signature is composed of:
+
+      - cas_version: this Python module's CAS_VERSION constant
+      - commit_sha:  git commit short SHA at module import time
+      - config_hash: 8-char SHA256 prefix of yaml.safe_dump(config) — same
+                     config always produces the same hash; any weight or
+                     threshold change produces a different hash
+      - signature:   composite string 'v{version}-{commit_sha}-{config_hash}'
+                     stored in the recommendation row for one-shot traceability
+
+    Args:
+        config: The full CAS config dict (loaded via load_config()).
+
+    Returns:
+        dict with keys: cas_version, config_hash, commit_sha, signature.
+    """
+    config_str = yaml.safe_dump(config, sort_keys=True)
+    config_hash = hashlib.sha256(config_str.encode("utf-8")).hexdigest()[:8]
+    signature = f"v{CAS_VERSION}-{COMMIT_SHA}-{config_hash}"
+    return {
+        "cas_version": CAS_VERSION,
+        "config_hash": config_hash,
+        "commit_sha": COMMIT_SHA,
+        "signature": signature,
+    }
 
 
 # ── Public API ──────────────────────────────────────────────────────────────
@@ -398,16 +572,18 @@ def compute_confidence_stars(
         if std <= cal["factor_agreement_max_std_dev"]:
             stars += int(conf["factor_agreement"]["weight"])
 
-    # 3. Stable calculations (no AGE_DECAY cliff)
-    # The only "noisy edge case" in our formulas is the AGE_DECAY table
-    # transition at breakout_age=4 (score jumps 85 → 70). A stock at this
-    # boundary produces a wildly different score for age 3 vs age 4. We
-    # intentionally do NOT bound sub-score values themselves — all-100s is
-    # the ideal case, not unstable.
-    cliff_age = cal["stable_breakout_age_cliff"]
+    # 3. Stable calculations (transition zones per Decision 101, expert Q5).
+    # The AGE_DECAY table transitions at age 3→4 (85→70) and 5→6 (65→40).
+    # A stock in the 'transition' or 'stale' zone produces scores at the
+    # noisy edge of the table. The stable_calculations star fires ONLY when
+    # the age is in the 'excellent' or 'good' zone.
     age = row.get("breakout_age")
-    if age != cliff_age:
-        stars += int(conf["stable_calculations"]["weight"])
+    if age is not None:
+        zones = cal["breakout_age_zones"]
+        in_excellent = zones["excellent"][0] <= age <= zones["excellent"][1]
+        in_good = zones["good"][0] <= age <= zones["good"][1]
+        if in_excellent or in_good:
+            stars += int(conf["stable_calculations"]["weight"])
 
     # 4. Low proxy usage (real indicators preferred over placeholders)
     proxy_count = sum(1 for v in proxies_used.values() if v)
