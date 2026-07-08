@@ -201,7 +201,13 @@ def compute_indicators(df, idx_df):
 
     updates = []
     for symbol in df["symbol"].unique():
-        s_df = df[df["symbol"] == symbol].copy().sort_values("date")
+        # reset_index(drop=True) is critical: when df contains multiple symbols,
+        # the filtered subset has non-contiguous indices from the original df.
+        # Leaving them intact causes downstream functions (notably
+        # compute_weekly_trend_score, which does pd.date_range reindex) to
+        # silently return NaN for non-first symbols. The fix: reset to a clean
+        # 0..N-1 index before any per-symbol computation.
+        s_df = df[df["symbol"] == symbol].copy().reset_index(drop=True)
         if len(s_df) < 20:
             logger.warning("Symbol %s has insufficient data: %d rows", symbol, len(s_df))
             continue
@@ -226,6 +232,20 @@ def compute_indicators(df, idx_df):
         s_df["overhead_supply_score"] = compute_overhead_supply_score(
             s_df["high"], s_df["close"]
         )
+
+
+        s_df["ema_10"] = s_df["close"].ewm(span=10, adjust=False).mean()
+        s_df["ema_20"] = s_df["close"].ewm(span=20, adjust=False).mean()
+        s_df["ema_50"] = s_df["close"].ewm(span=50, adjust=False).mean()
+        s_df["ema_200"] = (
+            s_df["close"].ewm(span=200, adjust=False).mean()
+            if len(s_df) >= 200
+            else s_df["ema_50"]
+        )
+
+        s_df["ema_200_slope_20"] = s_df["ema_200"].diff(20)
+
+        # CAS V1.0 (Decision 100) — REMOVED duplicate. Already computed above.
 
         delta = s_df["close"].diff()
         gain = delta.where(delta > 0, 0).rolling(window=14).mean()
