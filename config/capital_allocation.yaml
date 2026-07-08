@@ -5,7 +5,50 @@
 #   relaxed EMA stack; QIF >= 70; R/R removed (deferred to V1.1); Overhead Supply
 #   added; Weekly Trend multi-component; Winner cap 1.10; Confidence stars added.
 
-version: "1.0.0-rev2"
+version: "1.0.0-rev3"
+
+# ── Calibration Constants (rev 3) ────────────────────────────────────────────
+# These are NOT architecture — they are tuning knobs. Move freely when backtests
+# say so. Do NOT move the same constant into Python. Single source of truth:
+# the YAML. Engine reads them via `load_config()['calibration']`.
+#
+# Hierarchy: Design Doc → YAML → Code → Sessions.md
+# If a constant lives in Python, it's a bug. File an issue.
+calibration:
+  # Numeric thresholds used by the why-checklist and sub-score helpers.
+  rs_strong: 0.05              # rs_90d >= this → "Strong RS" in why-checklist
+  volume_confirmed: 1.5        # vol_ratio >= this → "Volume confirmed" line
+  overhead_clear_air: 30       # overhead_supply_score <= this → "Clear overhead"
+  qif_high: 70                 # qif_score >= this → "High QIF" line
+  weekly_strong: 75            # weekly_trend_score >= this → "Weekly trend strengthening"
+  near_52wh_pct: 5             # close >= (1 - pct/100) * 52w_high → "Near 52w high"
+  breakout_early_max_age: 5    # breakout_age in [1, max] → "Early continuation"
+
+  # Breakout AGE_DECAY table (Decision 099). Maps breakout_age → base sub-score.
+  # A cliff exists at age 3→4 (85→70); indicator_freshness handles stability.
+  age_decay:
+    0: 100
+    1: 95
+    2: 90
+    3: 85
+    4: 70
+    5: 65
+    beyond: 40
+
+  # Confidence star criteria (rev 3: 5 model-certainty dimensions).
+  # All threshold tunables live here, NOT in the engine.
+  confidence:
+    complete_data_threshold_pct: 90     # data_completeness_pct >= this → star
+    factor_agreement_max_std_dev: 20    # sub-score std-dev <= this → star
+    # Stable calculations: the only "noisy edge case" in our formulas is the
+    # AGE_DECAY cliff at breakout_age=4 (85→70). A stock sitting right at
+    # that boundary produces wildly different scores for age 3 vs age 4,
+    # making the calculation unstable. We do NOT bound sub-scores themselves
+    # — a stock with all sub-scores at 100 is the IDEAL case, not unstable.
+    stable_breakout_age_cliff: 4        # breakout_age == this → star fires
+    low_proxy_usage_max_proxies: 0      # proxies_used count <= this → star
+    indicator_freshness_max_age_days: 5 # data_age_days <= this → star
+
 
 # ── Stage 1: Eligibility Filter (pass/fail) ──────────────────────────────────
 # If a stock fails ANY of these gates, it does NOT receive a Capital Allocation
@@ -102,27 +145,34 @@ multiplier:
     max_penalty: 0.10    # at 15% weight → 0.90x (max -10% penalty)
 
 # ── Stage 5: Confidence (star rating, NOT a numeric) ─────────────────────────
-# NEW in rev 2: Confidence is a 0-5 star rating shown next to the CAS number.
-# Stars depend on 5 binary criteria. Each contributes 1 star if met. Max = 5.
+# REV 3 (2026-07-07): Confidence is now a measure of MODEL CERTAINTY, not
+# stock quality. The 5 stars depend on 5 binary model-certainty dimensions:
+#   1. Complete data        — enough fields populated to compute reliably
+#   2. Factor agreement     — sub-scores point the same direction
+#   3. Stable calculations  — inputs aren't on cliffs or threshold boundaries
+#   4. Low proxy usage      — real indicators preferred over placeholders
+#   5. Indicator freshness  — inputs aren't stale
+#
+# Stock-quality signals (trend maturity, breakout maturity) intentionally
+# removed — those belong in CAS itself, not in the model's certainty about
+# its own score. They still appear in the why-checklist and breakout_age_emoji.
 #
 # Why stars (not numbers): users grasp "5 of 5 stars" faster than "92% confidence".
+#
+# Tunables (thresholds, ranges) live in `calibration.confidence` above.
+# This section only declares WHICH criteria exist and their weights.
 confidence:
   factors:
-    no_proxy_used:        # 1 star if all sub-scores use real data (no V1 proxies)
+    complete_data:
       weight: 1
-    data_completeness:    # 1 star if >= 90% of expected columns are populated
+    factor_agreement:
       weight: 1
-      threshold_pct: 90
-    factor_agreement:     # 1 star if sub-scores are within 20 points of each other
+    stable_calculations:
       weight: 1
-      max_std_dev: 20
-    trend_maturity:       # 1 star if weekly_trend_score >= 75 (established, not nascent)
+    low_proxy_usage:
       weight: 1
-      min_weekly_trend: 75
-    breakout_maturity:    # 1 star if breakout_age in 1..3 (not too fresh, not too stale)
+    indicator_freshness:
       weight: 1
-      age_min: 1
-      age_max: 3
 
 # ── Sub-Score Normalization ──────────────────────────────────────────────────
 subscore:

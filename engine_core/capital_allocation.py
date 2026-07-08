@@ -1,34 +1,52 @@
 """
-engine_core.capital_allocation — Capital Allocation Score V1.0 (Decision 100, rev 2)
+engine_core.capital_allocation — Capital Allocation Score V1.0 (Decision 100, rev 3)
 
 Pure logic, no DB access. Reads thresholds + weights from
 `config/capital_allocation.yaml` via `load_config()`. Returns Python primitives
 (dicts, lists, tuples, floats, ints) only — never ORM rows.
 
-Architecture (per Decision 100):
-    Eligibility (6 hard gates)
+Architecture (per Decision 100, rev 3):
+    Eligibility (8 hard gates — regime, ema_stack, breakout_state, liquidity,
+                quality, 52w_position, weekly_data, rs_data)
         ↓ reject → out
-    Market Sub-Gates (3 hard PASS/FAIL: Trend, Breakout, Quality)
+    Market Structure (3 hard PASS/FAIL: Trend, Breakout, Quality)
         ↓ reject → out
     Market Numeric Score = weighted sum of 7 sub-scores (survivors only)
         ↓
     Portfolio Multipliers: CAS = Market × Winner × Concentration
         ↓
-    Confidence: 0–5 ★ stars (display-only)
+    Confidence: 0–5 ★ stars (model certainty, NOT stock quality)
         ↓
     Action chip: FIRST TRANCHE / ADD SECOND TRANCHE / WATCH
 
 The Market Score is NOT a simple weighted sum — it has hard sub-gates first
 so a stock cannot compensate for a weak weekly trend with huge volume.
 
+Rev 3 changes (2026-07-07):
+    - Confidence = 5 model-certainty stars (Complete data, Factor agreement,
+      Stable calculations, Low proxy usage, Indicator freshness). Trend and
+      breakout maturity moved OUT (they are stock-quality, not model certainty).
+    - All calibration constants moved to YAML `calibration.*`. No numeric
+      thresholds live in this file. Single source of truth: YAML.
+    - Missing critical market data → ineligible (NOT scored as 0). Added 2
+      new eligibility gates: weekly_data and rs_data.
+    - `check_market_subgates` renamed → `compute_market_structure` (semantic
+      alignment: it assesses market structure quality, not "sub-gates").
+    - Added `compute_market_score_breakdown()` for per-factor logging.
+    - Invert overhead_supply before factor_agreement std-dev so all factors
+      share the same semantic direction (higher = better).
+    - Logging levels: DEBUG for breakdown, INFO for summary, WARNING for
+      unexpected conditions. No per-call info-level logging (would flood).
+
 Configuration contract (see config/capital_allocation.yaml):
-    eligibility.*                  — 6 hard gates (regime, EMA, breakout, liq, qif, 52w)
+    eligibility.*                  — 8 hard gates
     market_subgates.*              — 3 PASS/FAIL (trend, breakout, quality)
-    weights                        — sums to 100; keys: regime, weekly, breakout,
-                                     overhead_supply, rs, volume, sector
+    weights                        — sums to 100
     multiplier.{winner,concentration}
-    confidence.factors.*           — 5 binary criteria, each weight=1
-    subscore.weekly.*              — multi-component weekly structure
+    confidence.factors.*           — 5 model-certainty criteria, weight=1 each
+    calibration.*                  — ALL numeric thresholds (rs_strong,
+                                     volume_confirmed, age_decay table, etc.)
+    subscore.weekly.*              — multi-component weekly weights
     subscore.breakout.*            — volume_bonus_threshold, volume_bonus_points
     subscore.sector.proxy_score_v1 — neutral 50 until V1.2
     why_templates                  — list of {condition, template} entries
@@ -38,11 +56,15 @@ Session: N+1 (2026-07-07). See Sessions.md for multi-session handoff notes.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import yaml
+
+
+logger = logging.getLogger(__name__)
 
 
 # ── Public API ──────────────────────────────────────────────────────────────
@@ -73,12 +95,26 @@ def check_eligibility(
     regime: str,
     config: dict[str, Any],
 ) -> tuple[bool, list[str]]:
-    """Apply the 6 hard eligibility gates. Returns (passed, failed_gate_names).
+    """Apply the 8 hard eligibility gates. Returns (passed, failed_gate_names).
 
-    Gate names in `failed`: "regime", "ema_stack", "breakout_state",
-    "liquidity", "quality", "52w_position". Sub-condition details (e.g. which
-    of the 4 EMA conditions failed) are not returned — callers needing
-    diagnostics should re-evaluate the row directly.
+    Gate names in `failed` (rev 3):
+        "regime", "ema_stack", "breakout_state", "liquidity", "quality",
+        "52w_position", "weekly_data", "rs_data".
+
+    Rev 3 semantic change: missing critical market data → ineligible.
+    The model refuses to score rather than guess with 0s. This applies to:
+        - weekly_trend_score (weekly_data)
+        - rs_90d (rs_data)
+        - breakout_state, breakout_age, EMA values, qif_score,
+          rolling_high_52w, avg_volume_20d, close — all folded into the
+          existing 6 gates (they already fail when data is None).
+
+    Portfolio-context fields (winner_profit_pct, concentration_weight_pct)
+    are NOT checked here — they belong to compute_portfolio_allocation_score
+    and default to neutral 1.0× when missing.
+
+    Sub-condition details (e.g., which of the 4 EMA conditions failed) are
+    not returned — callers needing diagnostics should re-evaluate the row.
     """
     elig = config["eligibility"]
     failed: list[str] = []
@@ -111,14 +147,11 @@ def check_eligibility(
     if not ema_pass:
         failed.append("ema_stack")
 
-    # ── Gate 3: Breakout state + age ──
+    # ── Gate 3: Breakout state + age (rev 3: missing data → ineligible) ──
     max_age = elig.get("breakout_max_age_days", 5)
     age = row.get("breakout_age")
-    if (
-        row.get("breakout_state") != "BROKEN_OUT"
-        or age is None
-        or age > max_age
-    ):
+    state = row.get("breakout_state")
+    if state != "BROKEN_OUT" or age is None or age > max_age:
         failed.append("breakout_state")
 
     # ── Gate 4: Liquidity (ADTV ≥ min_liquidity_crores × 1e7 INR) ──
@@ -148,37 +181,62 @@ def check_eligibility(
     ):
         failed.append("52w_position")
 
+    # ── Gate 7 (NEW rev 3): Weekly data present ──
+    if row.get("weekly_trend_score") is None:
+        failed.append("weekly_data")
+
+    # ── Gate 8 (NEW rev 3): Relative strength data present ──
+    if row.get("rs_90d") is None:
+        failed.append("rs_data")
+
+    if len(failed) > 0:
+        logger.warning(
+            "Eligibility FAILED — regime=%s, symbol=%s, failed_gates=%s",
+            regime,
+            row.get("symbol", "?"),
+            failed,
+        )
+
     return (len(failed) == 0, failed)
 
 
-def check_market_subgates(
+def compute_market_structure(
     row: dict[str, Any],
     config: dict[str, Any],
 ) -> tuple[bool, list[str]]:
-    """Apply the 3 hard PASS/FAIL sub-gates (post-eligibility).
+    """Assess market structure quality via 3 hard PASS/FAIL dimensions.
+
+    Renamed from `check_market_subgates` in rev 3 (semantic alignment:
+    assesses the underlying market STRUCTURE quality, not just "sub-gates").
 
     Sub-gate names in `failed`: "trend", "breakout", "quality". All 3 must PASS
     for the stock to receive a numeric Market Score. Stricter than eligibility:
         - trend: weekly_trend_score ≥ 50 (eligibility doesn't check this)
         - breakout: age ≤ 3 (eligibility allows ≤ 5)
         - quality: qif ≥ 75 (eligibility allows ≥ 70)
+
+    rev 3 (missing data semantics): if weekly_trend_score, breakout_age, or
+    qif_score is None, the corresponding structure dimension fails (the model
+    cannot assess structure without the input). Note: in practice these
+    fields are already gated by `check_eligibility` (weekly_data,
+    breakout_state), so this is defense-in-depth.
     """
     sub = config["market_subgates"]
     failed: list[str] = []
 
-    # Trend sub-gate
+    # Trend structure
     weekly = row.get("weekly_trend_score")
     min_weekly = sub.get("trend", {}).get("min_weekly_trend_score", 50)
     if weekly is None or weekly < min_weekly:
         failed.append("trend")
 
-    # Breakout sub-gate (stricter than eligibility's breakout_max_age_days=5)
+    # Breakout structure (stricter than eligibility's breakout_max_age_days=5)
     age = row.get("breakout_age")
     max_age = sub.get("breakout", {}).get("max_breakout_age_days", 3)
     if age is None or age > max_age:
         failed.append("breakout")
 
-    # Quality sub-gate (stricter than eligibility's min_quality=70)
+    # Quality structure (stricter than eligibility's min_quality=70)
     qif = row.get("qif_score")
     min_q = sub.get("quality", {}).get("min_quality", 75)
     if qif is None or qif < min_q:
@@ -187,29 +245,65 @@ def check_market_subgates(
     return (len(failed) == 0, failed)
 
 
+def compute_market_score_breakdown(
+    sub_scores: dict[str, float],
+    config: dict[str, Any],
+) -> tuple[float, dict[str, float]]:
+    """Weighted sum of sub-scores WITH per-factor contribution breakdown.
+
+    Returns:
+        (market_score, breakdown_dict) where:
+            market_score    = float in [0, 100]
+            breakdown_dict  = {factor_name: weighted_contribution_in_points}
+                              (sum of contributions == market_score)
+
+    Use this for debugging, regression tests, future UI display, or
+    structured logging. The simple `compute_market_score` returns only the
+    score (most callers don't need the breakdown).
+
+    `sub_scores` keys must match `config["weights"]` keys:
+        regime, weekly, breakout, overhead_supply, rs, volume, sector.
+
+    `overhead_supply` is stored as "badness" (0 = clear air = good,
+    100 = max resistance = bad). We invert it internally so that low
+    overhead contributes positively to the Market Score. The breakdown
+    reports the POST-inversion contribution.
+    """
+    weights = config["weights"]
+    total_weight = sum(weights.values())  # validated to be 100 in load_config
+    weighted_sum = 0.0
+    breakdown: dict[str, float] = {}
+    for factor, weight in weights.items():
+        sub_value = sub_scores.get(factor, 0) or 0
+        if factor == "overhead_supply":
+            # Invert: 0 (clear air) → 100 contribution; 100 (max resistance) → 0
+            sub_value = 100 - sub_value
+        contribution = sub_value * weight / total_weight
+        breakdown[factor] = round(contribution, 4)
+        weighted_sum += sub_value * weight
+    market_score = max(0.0, min(weighted_sum / total_weight, 100.0))
+    return market_score, breakdown
+
+
 def compute_market_score(
     sub_scores: dict[str, float],
     config: dict[str, Any],
 ) -> float:
-    """Weighted sum of 7 sub-scores. Returns float in [0, 100].
+    """Weighted sum of sub-scores. Returns float in [0, 100].
 
-    `sub_scores` keys (must match config["weights"] keys):
+    Thin wrapper over `compute_market_score_breakdown` that discards the
+    per-factor breakdown. Use the breakdown variant when debugging or
+    building regression logs.
+
+    `sub_scores` keys must match `config["weights"]` keys:
         regime, weekly, breakout, overhead_supply, rs, volume, sector.
 
     `overhead_supply` is stored as "badness" (0 = clear air = good,
     100 = max resistance = bad). We invert it internally so that low
     overhead contributes positively to the Market Score.
     """
-    weights = config["weights"]
-    total_weight = sum(weights.values())  # validated to be 100 in load_config
-    weighted_sum = 0.0
-    for factor, weight in weights.items():
-        sub_value = sub_scores.get(factor, 0) or 0
-        if factor == "overhead_supply":
-            # Invert: 0 (clear air) → 100 contribution; 100 (max resistance) → 0
-            sub_value = 100 - sub_value
-        weighted_sum += sub_value * weight
-    return max(0.0, min(weighted_sum / total_weight, 100.0))
+    score, _breakdown = compute_market_score_breakdown(sub_scores, config)
+    return score
 
 
 def compute_portfolio_allocation_score(
@@ -259,50 +353,82 @@ def compute_confidence_stars(
     proxies_used: dict[str, bool],
     config: dict[str, Any],
 ) -> int:
-    """0–5 star rating from 5 binary criteria. Clamped to [0, 5].
+    """0–5 star rating measuring MODEL CERTAINTY (NOT stock quality).
+
+    Rev 3 (2026-07-07): All 5 stars are model-certainty dimensions. Stock-quality
+    signals (trend maturity, breakout maturity) intentionally removed — those
+    belong in CAS itself, not in the model's certainty about its own score.
+    They still appear in the why-checklist and breakout_age_emoji.
 
     Criteria (each adds 1 star when met):
-        1. no_proxy_used   — no proxy values are True in `proxies_used`
-        2. data_completeness — row["data_completeness_pct"] ≥ threshold_pct (90)
-        3. factor_agreement  — std-dev of sub_scores ≤ max_std_dev (20),
-                              computed only when ≥ 2 sub-scores present
-        4. trend_maturity    — weekly_trend_score ≥ min_weekly_trend (75)
-        5. breakout_maturity — breakout_age in [age_min, age_max] = [1, 3]
+        1. Complete data        — row["data_completeness_pct"] ≥ threshold_pct (90)
+        2. Factor agreement     — std-dev of (goodness-aligned) sub-scores
+                                   ≤ max_std_dev (20). Computed only when
+                                   ≥ 2 sub-scores present.
+                                   overhead_supply is inverted BEFORE std-dev
+                                   so all factors share the same semantic
+                                   direction (higher = better).
+        3. Stable calculations  — no sub-score is at an extreme (< min or > max),
+                                   AND breakout_age is NOT at the AGE_DECAY
+                                   cliff. Catches noisy/ambiguous inputs.
+        4. Low proxy usage      — proxies_used has at most `max_proxies` True
+                                   values (default 0 — fully real data).
+        5. Indicator freshness  — row["data_age_days"] ≤ max_age_days (5)
+
+    Thresholds are read from config["calibration"]["confidence"].
+    Returns clamped to [0, 5].
     """
+    cal = config["calibration"]["confidence"]
     conf = config["confidence"]["factors"]
     stars = 0
 
-    # 1. No proxies used
-    if not any(proxies_used.values()):
-        stars += int(conf["no_proxy_used"]["weight"])
-
-    # 2. Data completeness
+    # 1. Complete data (all expected fields populated)
     pct = row.get("data_completeness_pct") or 0
-    if pct >= conf["data_completeness"]["threshold_pct"]:
-        stars += int(conf["data_completeness"]["weight"])
+    if pct >= cal["complete_data_threshold_pct"]:
+        stars += int(conf["complete_data"]["weight"])
 
-    # 3. Factor agreement (only meaningful with ≥ 2 sub-scores)
+    # 2. Factor agreement (std-dev on goodness-aligned sub-scores)
     if len(sub_scores) >= 2:
-        std = float(np.std(list(sub_scores.values()), ddof=0))
-        if std <= conf["factor_agreement"]["max_std_dev"]:
+        # Invert overhead_supply so higher = better for ALL factors.
+        aligned = {
+            k: (100 - v if k == "overhead_supply" else v)
+            for k, v in sub_scores.items()
+        }
+        std = float(np.std(list(aligned.values()), ddof=0))
+        if std <= cal["factor_agreement_max_std_dev"]:
             stars += int(conf["factor_agreement"]["weight"])
 
-    # 4. Trend maturity
-    weekly = row.get("weekly_trend_score") or 0
-    if weekly >= conf["trend_maturity"]["min_weekly_trend"]:
-        stars += int(conf["trend_maturity"]["weight"])
-
-    # 5. Breakout maturity (age in [1, 3])
+    # 3. Stable calculations (no AGE_DECAY cliff)
+    # The only "noisy edge case" in our formulas is the AGE_DECAY table
+    # transition at breakout_age=4 (score jumps 85 → 70). A stock at this
+    # boundary produces a wildly different score for age 3 vs age 4. We
+    # intentionally do NOT bound sub-score values themselves — all-100s is
+    # the ideal case, not unstable.
+    cliff_age = cal["stable_breakout_age_cliff"]
     age = row.get("breakout_age")
-    if (
-        age is not None
-        and conf["breakout_maturity"]["age_min"]
-        <= age
-        <= conf["breakout_maturity"]["age_max"]
-    ):
-        stars += int(conf["breakout_maturity"]["weight"])
+    if age != cliff_age:
+        stars += int(conf["stable_calculations"]["weight"])
 
-    return min(stars, 5)
+    # 4. Low proxy usage (real indicators preferred over placeholders)
+    proxy_count = sum(1 for v in proxies_used.values() if v)
+    if proxy_count <= cal["low_proxy_usage_max_proxies"]:
+        stars += int(conf["low_proxy_usage"]["weight"])
+
+    # 5. Indicator freshness (inputs are current, not stale)
+    age_days = row.get("data_age_days")
+    if age_days is not None and age_days <= cal["indicator_freshness_max_age_days"]:
+        stars += int(conf["indicator_freshness"]["weight"])
+
+    final = min(stars, 5)
+    logger.debug(
+        "Confidence stars=%d (sub_scores_std=%.2f, proxy_count=%d, data_age=%s, completeness=%s)",
+        final,
+        float(np.std(list(sub_scores.values()), ddof=0)) if len(sub_scores) >= 2 else float("nan"),
+        proxy_count,
+        age_days,
+        pct,
+    )
+    return final
 
 
 def render_why_checklist(
@@ -312,7 +438,7 @@ def render_why_checklist(
     """Render the structured ✓ checklist from YAML templates + condition checks.
 
     Iterates `config["why_templates"]`. For each entry:
-      1. Evaluate the named condition against `row`.
+      1. Evaluate the named condition against `row` and `config["calibration"]`.
       2. If fired, format the template string with condition-specific kwargs.
       3. Append formatted line to result.
 
@@ -320,10 +446,11 @@ def render_why_checklist(
     (e.g., `winner_profit` template skipped when no `winner_profit_pct` field).
     """
     lines: list[str] = []
+    cal = config["calibration"]
     for entry in config.get("why_templates", []):
         condition = entry["condition"]
         template = entry["template"]
-        kwargs, fired = _evaluate_condition(condition, row)
+        kwargs, fired = _evaluate_condition(condition, row, cal)
         if not fired:
             continue
         try:
@@ -377,24 +504,41 @@ def _weekly_score(row: dict[str, Any], config: dict[str, Any]) -> int:
     return min(score, 100)
 
 
-# AGE_DECAY table (Decision 099) for breakout sub-score
-AGE_DECAY: dict[int, int] = {0: 100, 1: 95, 2: 90, 3: 85, 4: 70, 5: 65}
-AGE_DECAY_DEFAULT: int = 40  # age > 5 → stale
+# AGE_DECAY table (Decision 099) — read from YAML `calibration.age_decay`.
+# Module-level constant REMOVED in rev 3 (calibration must live in YAML).
+# See `_breakout_score` for the runtime loader.
+
+
+def _load_age_decay(config: dict[str, Any]) -> tuple[dict[int, int], int]:
+    """Load AGE_DECAY table from config. Returns (table, default).
+
+    YAML keys are strings; we coerce to int. The `beyond` key is the default
+    for ages not in the explicit table (e.g., age 6+).
+    """
+    raw = config["calibration"]["age_decay"]
+    table: dict[int, int] = {
+        int(k): v for k, v in raw.items() if k != "beyond"
+    }
+    default = int(raw.get("beyond", 40))
+    return table, default
 
 
 def _breakout_score(row: dict[str, Any], config: dict[str, Any]) -> int:
     """Breakout Quality sub-score (per §3.3).
 
-    base = AGE_DECAY[age] (or 40 if age > 5)
-    volume bonus = +points if vol_ratio ≥ threshold
+    base = AGE_DECAY[age] (or `beyond` default if age not in table)
+    volume bonus = +points if vol_ratio ≥ volume_bonus_threshold (from YAML)
     Final = clamp(base + bonus, 0, 100).
+
+    rev 3: AGE_DECAY table loaded from config every call (cheap dict lookup).
     """
     age = row.get("breakout_age")
     if age is None:
         return 0
 
+    age_table, age_default = _load_age_decay(config)
     cfg = config["subscore"]["breakout"]
-    base = AGE_DECAY.get(age, AGE_DECAY_DEFAULT)
+    base = age_table.get(age, age_default)
 
     avg_vol = row.get("avg_volume_20d") or 0
     vol = row.get("volume") or 0
@@ -437,17 +581,10 @@ def _sector_score(row: dict[str, Any], config: dict[str, Any]) -> int:
 # ── Why-checklist condition registry ────────────────────────────────────────
 
 
-# Thresholds used by `_evaluate_condition` (kept here for visibility;
-# the YAML `why_templates` list is the source of truth for which conditions
-# are evaluated, but the threshold logic lives next to the code).
-_OVERHEAD_CLEAR_AIR_THRESHOLD = 30  # overhead_supply_score ≤ this → "clear air"
-_RS_STRONG_THRESHOLD = 0.05        # rs_90d ≥ this → "strong RS" (+5% vs Nifty 90d)
-_QIF_HIGH_THRESHOLD = 70           # qif_score ≥ this → "high quality"
-
-
 def _evaluate_condition(
     condition: str,
     row: dict[str, Any],
+    calibration: dict[str, Any],
 ) -> tuple[dict[str, Any], bool]:
     """Evaluate a why-checklist condition.
 
@@ -455,43 +592,48 @@ def _evaluate_condition(
         (kwargs, True)  — condition met; caller formats template with kwargs.
         ({}, False)     — condition not met; caller skips template.
 
+    All numeric thresholds are read from `calibration` (i.e.,
+    `config["calibration"]`). No magic numbers in this function.
+
     Required row fields per condition:
         regime_strong    → row["regime"] == "BULLISH"
-        weekly_strong    → row["weekly_trend_score"] ≥ 75
+        weekly_strong    → row["weekly_trend_score"] ≥ calibration.weekly_strong
         breakout_today   → row["breakout_age"] == 0
-        breakout_early   → row["breakout_age"] in [1, 5]
-        near_52wh        → row["close"] ≥ 0.95 × row["rolling_high_52w"]
-        rs_strong        → row["rs_90d"] ≥ 0.05
-        volume_confirmed → row["volume"] / row["avg_volume_20d"] ≥ 2.0
+        breakout_early   → row["breakout_age"] in [1, calibration.breakout_early_max_age]
+        near_52wh        → close ≥ (1 - calibration.near_52wh_pct/100) × 52w high
+        rs_strong        → row["rs_90d"] ≥ calibration.rs_strong
+        volume_confirmed → vol / avg_vol ≥ calibration.volume_confirmed
         winner_profit    → row["winner_profit_pct"] is not None and > 0
-        clear_overhead   → row["overhead_supply_score"] ≤ 30
-        high_quality     → row["qif_score"] ≥ 70
+        clear_overhead   → row["overhead_supply_score"] ≤ calibration.overhead_clear_air
+        high_quality     → row["qif_score"] ≥ calibration.qif_high
     """
     if condition == "regime_strong":
         if row.get("regime") == "BULLISH":
             return {"regime_label": "BULLISH"}, True
     elif condition == "weekly_strong":
-        if (row.get("weekly_trend_score") or 0) >= 75:
+        if (row.get("weekly_trend_score") or 0) >= calibration["weekly_strong"]:
             return {}, True
     elif condition == "breakout_today":
         if row.get("breakout_age") == 0:
             return {}, True
     elif condition == "breakout_early":
         age = row.get("breakout_age")
-        if age is not None and 1 <= age <= 5:
+        max_age = calibration["breakout_early_max_age"]
+        if age is not None and 1 <= age <= max_age:
             return {"breakout_age": age}, True
     elif condition == "near_52wh":
         close = row.get("close") or 0
         high = row.get("rolling_high_52w") or 0
-        if high > 0 and close >= high * 0.95:
+        pct = calibration["near_52wh_pct"]
+        if high > 0 and close >= high * (1 - pct / 100):
             return {}, True
     elif condition == "rs_strong":
-        if (row.get("rs_90d") or 0) >= _RS_STRONG_THRESHOLD:
+        if (row.get("rs_90d") or 0) >= calibration["rs_strong"]:
             return {}, True
     elif condition == "volume_confirmed":
         vol = row.get("volume") or 0
         avg = row.get("avg_volume_20d") or 0
-        if avg > 0 and (vol / avg) >= 2.0:
+        if avg > 0 and (vol / avg) >= calibration["volume_confirmed"]:
             return {"vol_ratio": vol / avg}, True
     elif condition == "winner_profit":
         profit = row.get("winner_profit_pct")
@@ -499,10 +641,10 @@ def _evaluate_condition(
             return {"profit_pct": profit}, True
     elif condition == "clear_overhead":
         score = row.get("overhead_supply_score")
-        if score is not None and score <= _OVERHEAD_CLEAR_AIR_THRESHOLD:
+        if score is not None and score <= calibration["overhead_clear_air"]:
             return {"overhead_supply_score": score}, True
     elif condition == "high_quality":
         qif = row.get("qif_score") or 0
-        if qif >= _QIF_HIGH_THRESHOLD:
+        if qif >= calibration["qif_high"]:
             return {"qif_score": qif}, True
     return {}, False

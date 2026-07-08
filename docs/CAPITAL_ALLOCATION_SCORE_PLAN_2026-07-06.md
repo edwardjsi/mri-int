@@ -223,29 +223,64 @@ else:           # not on banner
 
 ---
 
-## 5. Confidence Stars → Display
+## 5. Confidence Stars → Display (rev 3: model certainty, not stock quality)
 
 ```python
-def compute_confidence(row, sub_scores, proxies_used):
+def compute_confidence_stars(row, sub_scores, proxies_used, config):
+    cal = config["calibration"]["confidence"]
+    conf = config["confidence"]["factors"]
     stars = 0
-    if not any(proxies_used.values()):
-        stars += 1
-    if row.get('data_completeness_pct', 0) >= 90:
-        stars += 1
-    if pd.Series(sub_scores).std() <= 20:
-        stars += 1
-    if sub_scores.get('weekly', 0) >= 75:
-        stars += 1
-    if 1 <= row.get('breakout_age', 99) <= 3:
-        stars += 1
+
+    # 1. Complete data (≥ 90% of fields populated)
+    if (row.get("data_completeness_pct") or 0) >= cal["complete_data_threshold_pct"]:
+        stars += int(conf["complete_data"]["weight"])
+
+    # 2. Factor agreement (sub-scores within 20 std-dev, ALL on goodness scale)
+    # overhead_supply inverted BEFORE std-dev so all factors share direction
+    if len(sub_scores) >= 2:
+        aligned = {k: (100 - v if k == "overhead_supply" else v)
+                   for k, v in sub_scores.items()}
+        if float(np.std(list(aligned.values()), ddof=0)) <= cal["factor_agreement_max_std_dev"]:
+            stars += int(conf["factor_agreement"]["weight"])
+
+    # 3. Stable calculations (not at AGE_DECAY cliff, breakout_age=4)
+    if row.get("breakout_age") != cal["stable_breakout_age_cliff"]:
+        stars += int(conf["stable_calculations"]["weight"])
+
+    # 4. Low proxy usage (real indicators preferred over placeholders)
+    if sum(1 for v in proxies_used.values() if v) <= cal["low_proxy_usage_max_proxies"]:
+        stars += int(conf["low_proxy_usage"]["weight"])
+
+    # 5. Indicator freshness (data_age_days ≤ max_age_days)
+    age_days = row.get("data_age_days")
+    if age_days is not None and age_days <= cal["indicator_freshness_max_age_days"]:
+        stars += int(conf["indicator_freshness"]["weight"])
+
     return min(stars, 5)
 ```
 
-UI renders as `★★★★★` (filled), `☆☆☆☆☆` (empty), with hover tooltip explaining each star's state.
+### Star Semantics (rev 3)
+
+| Star | Question it answers | Source |
+|------|---------------------|--------|
+| Complete data       | Are enough fields populated to compute reliably?        | `data_completeness_pct ≥ 90%` |
+| Factor agreement    | Are the sub-scores pointing the same direction?         | `std-dev(aligned sub-scores) ≤ 20` |
+| Stable calculations | Are we sitting on a noisy edge case (AGE_DECAY cliff)?  | `breakout_age ≠ 4` |
+| Low proxy usage     | Are real indicators used instead of placeholders?       | `proxies_used count ≤ 0` |
+| Indicator freshness | Are the inputs current, not stale?                      | `data_age_days ≤ 5` |
+
+### Why these (and not the rev 2 list)
+
+**rev 2 had `trend_maturity` + `breakout_maturity`** as stars. Both are STOCK-QUALITY signals, not model-certainty signals. A stock can be high-quality but the model can be uncertain about its score (e.g., missing data, low agreement). Confidence should measure the latter, not the former.
+
+- Trend strength and breakout freshness still appear in the CAS number, the Why-checklist, and the `breakout_age_emoji`. They are not lost — they are just in the right place.
+- The `overhead_supply` sub-score uses "badness" semantics (0 = clear air = good). For factor_agreement std-dev, it is inverted (100 − raw) so all factors share the same "higher = better" direction. This is essential — otherwise an obvious good stock would always lose a star.
+
+UI renders as `★★★★★` (filled), `☆☆☆☆☆` (empty), with hover tooltip explaining each star's state. Tunable thresholds live in `config/capital_allocation.yaml` → `calibration.confidence`.
 
 ---
 
-## 6. V1.0 / V1.1 / V1.2 Scope (rev 2)
+## 6. V1.0 / V1.1 / V1.2 Scope (rev 3)
 
 ### V1.0 — THIS RELEASE (4 new columns)
 
@@ -280,14 +315,16 @@ Intermediate columns computed in memory (not persisted): `weekly_ema13`, `weekly
 
 ---
 
-## 7. File Changes — V1.0 (rev 2)
+## 7. File Changes — V1.0 (rev 3)
 
 | File | Change |
 |---|---|
-| `config/capital_allocation.yaml` (NEW) | Threshold + weight config (this doc is the spec) |
+| `config/capital_allocation.yaml` (NEW) | Threshold + weight config (this doc is the spec). Rev 3 added `calibration` section — all numeric thresholds live here, NOT in Python. |
 | `migrations/008_capital_allocation_columns.sql` (NEW) | `ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS ...` for 4 new columns |
 | `engine_core/indicator_engine.py` | Add 4 new column computations; multi-component weekly trend; overhead supply |
-| `engine_core/capital_allocation.py` (NEW) | `load_config(path)`, `check_eligibility`, `check_market_subgates`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist` |
+| `engine_core/capital_allocation.py` (NEW) | `load_config(path)`, `check_eligibility` (8 gates incl. `weekly_data`, `rs_data`), `compute_market_structure` (rev 3 rename from `check_market_subgates`), `compute_market_score`, `compute_market_score_breakdown` (rev 3, for per-factor logging), `compute_portfolio_allocation_score`, `compute_confidence_stars` (rev 3: 5 model-certainty stars), `render_why_checklist` |
+| `engine_core/test_capital_allocation.py` (NEW) | 24 scenarios / 92 unit tests + 7 golden-case scenarios / 7 regression tests = **104 tests** |
+| `tests/golden_cases.yaml` (NEW) | Regression basket: WELCORP / CHOLAFIN / PHOENIXLTD / NAVINFLUOR / POONAWALLA + bearish + missing-data scenarios |
 | `engine_core/email_service.py` (no change in V1.0) | V2: add CAS section to daily email |
 | `api/breakout_status.py` | Wire CAS into existing `/radar`; new endpoint `GET /api/breakout/top-by-cas?limit=5&client_id=...`; include `market_score`, `cas`, `confidence_stars`, `breakout_age_emoji`, `why_checklist` in response |
 | `api/schema.py` | Add 4 new indicator columns to auto-heal block (defense in depth) |
@@ -296,29 +333,47 @@ Intermediate columns computed in memory (not persisted): `weekly_ema13`, `weekly
 | `frontend/src/Dashboard.tsx` | Top banner; same endpoint; same card design |
 | `frontend/src/api.ts` | New `getTopByCAS(limit, clientId?)` method |
 | `frontend/src/CapitalAllocationCard.tsx` (NEW) | Card component: symbol, CAS, ★ confidence, action chip (color-coded), breakout age emoji, multi-line Why checklist |
-| `docs/Sessions.md` + `docs/Progress.md` | Session entry |
-| `Decisions.md` | Decision 100 — Capital Allocation Score V1.0 (rev 2) |
+| `docs/Sessions.md` + `docs/Progress.md` | Session entry (N+1: pure engine + tests; N+2: indicators; N+3: API + UI) |
+| `Decisions.md` | Decision 100 — Capital Allocation Score V1.0 (rev 3) |
 
 ---
 
-## 8. Verification Plan — V1.0 (rev 2)
+## 7a. Branch Strategy
 
-1. **Indicator engine** (`engine_core/indicator_engine.py`):
+Three PRs, one per implementation session. Makes review and revert clean.
+
+| PR | Branch | Scope |
+|----|--------|-------|
+| PR1 | `feature/capital-allocation-v1` | Migration + pure engine + tests (this session, N+1) |
+| PR2 | `feature/capital-allocation-v1-indicators` | Indicator engine wiring + schema auto-heal + backfill (N+2) |
+| PR3 | `feature/capital-allocation-v1-api-ui` | API endpoints + frontend components (N+3) |
+
+---
+
+## 8. Verification Plan — V1.0 (rev 3)
+
+1. **Indicator engine** (`engine_core/indicator_engine.py`) — N+2:
    - `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"` → clean.
-   - Run on 5 hand-picked symbols (INDUSINDBK, RADICO, ZYDUSLIFE, CHOLAFIN, ABDL); verify all 4 new columns populate with non-null values for the last 60 trading days.
+   - Run on 5 hand-picked symbols from `tests/golden_cases.yaml` regression basket
+     (CHOLAFIN, WELCORP, PHOENIXLTD, NAVINFLUOR, POONAWALLA); verify all 4 new columns
+     populate with non-null values for the last 60 trading days.
    - Manual cross-check of `weekly_trend_score` for 1 stock: should sum the 5 components correctly per the plan doc §3.2.
    - Manual cross-check of `overhead_supply_score` for Poonawalla (should be HIGH, lots of overhead) vs NAVINFLUOR (should be LOW, clear air).
-2. **CAS unit tests** (`engine_core/test_capital_allocation.py`, NEW):
-   - 5 hand-built rows → expected sub-scores → expected Market Score (rounded to 0.1).
-   - 3 portfolio scenarios: +10% winner, 0% (no holding), -10% loser → expected multipliers → expected CAS (rev 2 cap is 1.10, not 1.15).
-   - 8 eligibility/sub-gate scenarios: 4 pass / 4 fail (relaxed EMA stack, QIF 70, breakout age 3, weekly trend 50).
-   - 5 confidence scenarios: 5 stars (everything passes) down to 0 stars (everything fails).
-   - 3 why-checklist scenarios: full checklist, partial, empty (no qualifying conditions).
-3. **API** (`api/breakout_status.py`):
+2. **CAS unit tests** (`engine_core/test_capital_allocation.py`, NEW) — N+1:
+   - **104 tests** total, all passing as of rev 3:
+     - 5 sub-score (regime, weekly 6 cases, breakout 11 cases, overhead_supply, rs+volume+sector).
+     - 3 portfolio multiplier (winner 8 cases, concentration 5 cases, combined).
+     - 9 eligibility / structure (combined pass, multi-fail, regime 4 cases, EMA stack 4 cases, trend/breakout/quality structure, all-required, weekly_data, rs_data).
+     - 5 confidence (per-star 12 cases, full 5 stars, zero, partial 3, max-clamped).
+     - 3 why-checklist (matching lines, missing fields, value interpolation).
+     - 2 breakdown (score + contributions sum; matches simple).
+     - **7 golden-case regression scenarios** from `tests/golden_cases.yaml`.
+   - Run: `pytest engine_core/test_capital_allocation.py -v`.
+3. **API** (`api/breakout_status.py`) — N+3:
    - `python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"` → clean.
    - Curl `/api/breakout/top-by-cas?limit=5` against Railway → 5 cards with non-null `cas`, `confidence_stars`, `action`, `breakout_age_emoji`, `why_checklist[]`.
-   - Curl `/api/breakout/radar` → each row now includes `market_score`, `cas`, `confidence_stars`, `eligibility_passed`, `subgates_passed` (e.g. `{"trend": true, "breakout": true, "quality": true}`).
-4. **Frontend**:
+   - Curl `/api/breakout/radar` → each row now includes `market_score`, `cas`, `confidence_stars`, `eligibility_passed`, `structure_passed`.
+4. **Frontend** — N+3:
    - `npx tsc --noEmit` → 0 errors.
    - `npm run build` → 0 errors, no chunk-size regression.
    - Visual spot-check on Railway: banner renders, action chips color-coded (green/amber/blue), Why text shows as multi-line checklist, confidence stars render correctly, breakout age emoji visible.
@@ -377,3 +432,39 @@ This is the user's rev 2 critique distilled:
 ## 12. Open Questions for Owner (before code)
 
 None. All 13 design points locked 2026-07-06 (rev 2).
+
+---
+
+## 13. Revision Log
+
+### rev 3 — 2026-07-07 (Implementation Refinements)
+
+Owner reviewed rev 2 implementation and requested 8 design refinements + 1 recommendation. All applied:
+
+| # | Change | Why |
+|---|--------|-----|
+| 1 | Confidence = **5 model-certainty stars**, not stock quality | Stock-quality signals (trend/breakout maturity) belong in CAS, not in confidence about the score itself |
+| 2 | Confidence criteria: Complete data, Factor agreement, Stable calculations, Low proxy usage, Indicator freshness | All 5 dimensions measure "how much can we trust THIS score" |
+| 3 | **All calibration constants moved to YAML `calibration.*`** | Backtesting should tune YAML, never touch Python |
+| 4 | Invert `overhead_supply` BEFORE factor_agreement std-dev | All factors share the same semantic direction (higher = better) |
+| 5 | Missing critical market data → **Ineligible, not score of 0** | The model REFUSES to score rather than guess with 0s |
+| 6 | Added 2 eligibility gates: `weekly_data`, `rs_data` | Explicit missing-data failure modes (defense in depth) |
+| 7 | Renamed `check_market_subgates` → `compute_market_structure` | Investment-concept-aligned naming (assesses structure, not just "sub-gates") |
+| 8 | Added `compute_market_score_breakdown()` for per-factor logging | Log/return contributions from day one, even before UI displays them |
+| +1 | Created `tests/golden_cases.yaml` regression basket | Curated scenarios (WELCORP, CHOLAFIN, etc.) protect against tuning regressions |
+
+Branch strategy: 3 PRs (engine → indicators → API/UI). PR1 is `feature/capital-allocation-v1`.
+
+**Documentation invariant (per owner):** Design Doc → YAML → Code → Sessions.md. Never let code intentionally diverge from spec. When the design changes, update all artifacts.
+
+### rev 2 — 2026-07-06 (Initial Design Freeze)
+
+13 design points from user feedback. See §11 for the rationale. Key decisions:
+- R/R removed from V1.0 (deferred to V1.1)
+- Overhead Supply added as new sub-score
+- Market Score has 3 hard sub-gates (not just weighted sum)
+- EMA stack relaxed (4 conditions, not strict 20>50>100>200)
+- Winner cap reduced 1.15 → 1.10
+- Confidence stars added
+- Why-checklist restructured (multi-line, not single sentence)
+

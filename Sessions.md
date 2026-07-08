@@ -41,7 +41,25 @@ pytest engine_core/test_capital_allocation.py -v
 
 **Result**: Session N+1 ships. Decision 100 is APPROVED. 4 columns reserved on `daily_prices`. Pure-logic CAS engine module + 92 passing unit tests on disk. Zero changes to `api/`, `frontend/`, or `engine_core/indicator_engine.py`. End-to-end wiring waits for N+2 (indicator column computations) and N+3 (API + UI).
 
-**Known design question (carry to N+2 review)**: Should `overhead_supply` be inverted before passing to `compute_confidence_stars` so `factor_agreement` std-dev is apples-to-apples? Currently the literal spec is implemented (raw sub_scores in, std-dev compared directly). For a stock with overhead=18 (clear air) and other factors at 50–100, the std-dev will exceed 20, losing 1 confidence star. Either (a) caller pre-inverts before calling `compute_confidence_stars`, or (b) the engine does the inversion internally. Decision needed before N+3 wires the real `/top-by-cas` endpoint.
+### **N+1 Rev 3 Refinements (applied 2026-07-07, same day, after owner review)**
+
+Owner reviewed the original N+1 commit (`f4dc161`) and requested 8 design refinements + 1 recommendation. All applied on `feature/capital-allocation-v1` as a follow-up commit. **104 tests pass in 0.47s** (92 base + 12 golden-case assertions).
+
+**Changes**:
+
+1. **Confidence = 5 model-certainty stars, not stock quality.** Original rev 2 had `trend_maturity` + `breakout_maturity` — both REMOVED. New 5: Complete data (≥ 90% fields populated), Factor agreement (std-dev of goodness-aligned sub-scores ≤ 20), Stable calculations (not at breakout_age cliff), Low proxy usage (proxies_used count ≤ 0), Indicator freshness (data_age_days ≤ 5).
+2. **Invert `overhead_supply` BEFORE factor_agreement std-dev.** All factors now share "higher = better" direction. Previously a clear-air stock (overhead=18) would lose 1 star due to high std-dev against other goodness-scale sub-scores.
+3. **All calibration constants moved to YAML `calibration.*`.** Engine has zero magic numbers. `rs_strong`, `volume_confirmed`, `overhead_clear_air`, `qif_high`, `weekly_strong`, `near_52wh_pct`, `breakout_early_max_age`, `age_decay` table, and all confidence.* thresholds now live in YAML. Backtesters tune YAML, not Python.
+4. **Missing critical market data → ineligible, not score of 0.** Added 2 eligibility gates: `weekly_data` (weekly_trend_score must be present) and `rs_data` (rs_90d must be present). The model REFUSES to score rather than guess. Portfolio-context fields (winner_profit_pct, concentration_weight_pct) still default to neutral 1.0× when missing.
+5. **Renamed `check_market_subgates` → `compute_market_structure`.** Investment-concept-aligned naming: assesses the underlying market STRUCTURE quality, not just "sub-gates".
+6. **Added `compute_market_score_breakdown(score, {factor: contribution})`.** Per-factor contribution logging is available from day one even before the UI displays it. Logging levels: DEBUG for breakdown, INFO for summary, WARNING for unexpected eligibility failures.
+7. **Documentation invariant applied.** Per owner: Design Doc → YAML → Code → Sessions.md. Updated the design doc (§5 Confidence, §7 File Changes, §8 Verification, new §13 Revision Log), Decisions.md (rev 2 → rev 3, refined point #9), this Sessions.md entry, and Progress.md. Code never intentionally diverges from spec.
+8. **+1 recommendation: `tests/golden_cases.yaml` regression basket.** 7 curated scenarios (WELCORP / CHOLAFIN / PHOENIXLTD / NAVINFLUOR / POONAWALLA / BEARISH / MISSING_DATA). Every future tuning of weights or thresholds must pass this basket.
+9. **Branch strategy: 3 PRs** (engine → indicators → API/UI). PR1 is `feature/capital-allocation-v1`. Future PRs: `feature/capital-allocation-v1-indicators`, `feature/capital-allocation-v1-api-ui`.
+
+**Verification**:
+- `pytest engine_core/test_capital_allocation.py -v` → **104 passed in 0.47s**.
+- Gold-platter row integration check: eligibility PASS (8 gates), structure PASS (3 dimensions), Market Score 84.98, CAS 88.72 (with 8% winner + 5% concentration), 4 ★ confidence (Complete data + Stable + Low proxy + Freshness; Factor agreement fails due to sub-score spread).
 
 **Next Step (Session N+2, 1.5–2 hrs)**:
 - Wire the 4 new indicator column computations into `engine_core/indicator_engine.py`:
@@ -53,7 +71,7 @@ pytest engine_core/test_capital_allocation.py -v
 - Extend the `api/schema.py` auto-heal block (defense in depth — the migration 008 already covers this but the auto-heal pattern is what protects against legacy DBs).
 - Run `migrations/008_capital_allocation_columns.sql` against the DB to create the columns (or rely on the auto-heal on next API startup).
 - Run a backfill script to populate the 4 columns for the entire Nifty 500 universe (~1.6M rows). Estimated runtime: 5–10 min on Railway.
-- Smoke-test: query a few symbols to confirm columns are populated and the eligibility/sub-gate logic produces sensible results.
+- Smoke-test using `tests/golden_cases.yaml`: pick the 5 stock scenarios and verify the live indicator output matches the YAML row expectations.
 
 ---
 

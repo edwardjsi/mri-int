@@ -1,19 +1,29 @@
 """
-Tests for engine_core.capital_allocation — Decision 100 V1.0 (rev 2).
+Tests for engine_core.capital_allocation — Decision 100 V1.0 (rev 3).
 
 Per Decision 100 / §7 of docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md:
   Session N+1 ships the pure logic module + this 24-scenario test suite.
   No DB, no API — pure synthetic row dicts. Same pattern as
   test_guidance_email_sections.py.
 
+Rev 3 (2026-07-07) test additions:
+  - Confidence tests restructured from 5 stock-quality stars → 5 model-certainty
+    stars (complete_data, factor_agreement, stable_calculations, low_proxy_usage,
+    indicator_freshness).
+  - New tests for missing-data eligibility gates (weekly_data, rs_data).
+  - New test for compute_market_score_breakdown.
+  - Renamed `check_market_subgates` → `compute_market_structure`.
+
 Scenarios per Sessions.md (July 6, 2026 late evening handoff):
   - 5 sub-score:    regime / weekly / breakout / overhead_supply / rs+volume+sector
   - 3 multiplier:   winner / concentration / combined
-  - 8 eligibility + sub-gate: pass / multi-fail / regime / ema-stack /
-                                trend / breakout / quality / all-required
+  - 9 eligibility + structure: pass / multi-fail / regime / ema-stack /
+                                trend / breakout / quality / all-required /
+                                weekly_data / rs_data
   - 5 confidence:   per-star / full / zero / partial / max-clamp
   - 3 why-checklist: matching lines / missing fields / value interpolation
   + 1 sanity:       load_config + weights sum to 100
+  + 1 breakdown:    compute_market_score_breakdown returns score + per-factor dict
 """
 
 import os
@@ -28,8 +38,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from engine_core.capital_allocation import (  # noqa: E402
     load_config,
     check_eligibility,
-    check_market_subgates,
+    compute_market_structure,
     compute_market_score,
+    compute_market_score_breakdown,
     compute_portfolio_allocation_score,
     compute_confidence_stars,
     render_why_checklist,
@@ -52,14 +63,14 @@ CONFIG_PATH = os.path.abspath(
 
 @pytest.fixture(scope="module")
 def config():
-    """Load the frozen V1.0 (rev 2) config — single source of truth."""
+    """Load the frozen V1.0 (rev 3) config — single source of truth."""
     return load_config(CONFIG_PATH)
 
 
 @pytest.fixture
 def passing_row():
-    """A row that should pass ALL 6 eligibility gates AND all 3 sub-gates
-    AND score in the top band. Used as the baseline for most tests."""
+    """A row that should pass ALL 8 eligibility gates AND all 3 structure
+    dimensions AND score in the top band. Used as the baseline for most tests."""
     return {
         # EMA stack (4 conditions, rev 2 relaxed)
         "close": 100.0,
@@ -84,9 +95,10 @@ def passing_row():
         "rs_90d": 0.05,             # +5% vs Nifty
         "overhead_supply_score": 18,  # low = clear air (good)
         "qif_score": 80,
-        "weekly_trend_score": 80,  # ≥ 50 (Trend sub-gate) and ≥ 75 (trend_maturity star)
+        "weekly_trend_score": 80,  # ≥ 50 (Trend structure) — pure stock-quality signal
         # Confidence support
         "data_completeness_pct": 95,
+        "data_age_days": 2,         # 2 days old → fresh (indicator_freshness star)
         # Why-checklist support
         "winner_profit_pct": 8.0,
     }
@@ -97,7 +109,7 @@ def passing_row():
 
 def test_load_config_parses_and_weights_sum_to_100(config):
     """Sanity: YAML parses cleanly and weighted factors sum to 100."""
-    assert config["version"] == "1.0.0-rev2"
+    assert config["version"] == "1.0.0-rev3"
     weights = config["weights"]
     assert sum(weights.values()) == pytest.approx(100, abs=0.01), (
         f"Weights must sum to 100, got {sum(weights.values())}: {weights}"
@@ -105,6 +117,21 @@ def test_load_config_parses_and_weights_sum_to_100(config):
     assert set(weights.keys()) == {
         "regime", "weekly", "breakout", "overhead_supply", "rs", "volume", "sector"
     }
+    # Rev 3: calibration section must exist with all required keys
+    cal = config["calibration"]
+    required_cal = (
+        "rs_strong", "volume_confirmed", "overhead_clear_air", "qif_high",
+        "weekly_strong", "near_52wh_pct", "breakout_early_max_age", "age_decay",
+        "confidence",
+    )
+    for key in required_cal:
+        assert key in cal, f"Missing calibration key: {key}"
+    # Confidence calibration sub-keys (rev 3)
+    conf_cal = cal["confidence"]
+    for key in ("complete_data_threshold_pct", "factor_agreement_max_std_dev",
+                "stable_breakout_age_cliff", "low_proxy_usage_max_proxies",
+                "indicator_freshness_max_age_days"):
+        assert key in conf_cal, f"Missing calibration.confidence key: {key}"
 
 
 # ── 1. Sub-score: Regime (5 sub-score tests) ──────────────────────────────
@@ -386,10 +413,10 @@ def test_eligibility_ema_stack(config, passing_row, field_to_break, expected_fai
     (0.0, False),
 ])
 def test_subgate_trend(config, passing_row, weekly_trend_score, expected_pass):
-    """Trend sub-gate: weekly_trend_score must be ≥ 50."""
+    """Trend structure dimension: weekly_trend_score must be ≥ 50."""
     row = dict(passing_row)
     row["weekly_trend_score"] = weekly_trend_score
-    passed, failed = check_market_subgates(row, config=config)
+    passed, failed = compute_market_structure(row, config=config)
     assert passed is expected_pass
     if not expected_pass:
         assert "trend" in failed
@@ -405,10 +432,10 @@ def test_subgate_trend(config, passing_row, weekly_trend_score, expected_pass):
     (0, True),
 ])
 def test_subgate_breakout(config, passing_row, breakout_age, expected_pass):
-    """Breakout sub-gate: age ≤ 3. Stricter than eligibility's age ≤ 5."""
+    """Breakout structure dimension: age ≤ 3. Stricter than eligibility's age ≤ 5."""
     row = dict(passing_row)
     row["breakout_age"] = breakout_age
-    passed, failed = check_market_subgates(row, config=config)
+    passed, failed = compute_market_structure(row, config=config)
     assert passed is expected_pass
     if not expected_pass:
         assert "breakout" in failed
@@ -424,10 +451,10 @@ def test_subgate_breakout(config, passing_row, breakout_age, expected_pass):
     (70, False),  # sub-gate stricter: eligibility allows 70, sub-gate doesn't
 ])
 def test_subgate_quality(config, passing_row, qif_score, expected_pass):
-    """Quality sub-gate: QIF ≥ 75. Stricter than eligibility's QIF ≥ 70."""
+    """Quality structure dimension: QIF ≥ 75. Stricter than eligibility's QIF ≥ 70."""
     row = dict(passing_row)
     row["qif_score"] = qif_score
-    passed, failed = check_market_subgates(row, config=config)
+    passed, failed = compute_market_structure(row, config=config)
     assert passed is expected_pass
     if not expected_pass:
         assert "quality" in failed
@@ -437,16 +464,16 @@ def test_subgate_quality(config, passing_row, qif_score, expected_pass):
 
 
 def test_subgates_all_pass_required(config, passing_row):
-    """All 3 sub-gates must PASS. Failing any one rejects the stock."""
+    """All 3 structure dimensions must PASS. Failing any one rejects the stock."""
     # First verify baseline passes
-    passed, failed = check_market_subgates(passing_row, config=config)
+    passed, failed = compute_market_structure(passing_row, config=config)
     assert passed is True
     assert failed == []
 
-    # Now fail ONE sub-gate and verify it's named in `failed`
+    # Now fail ONE structure dimension and verify it's named in `failed`
     bad = dict(passing_row)
-    bad["weekly_trend_score"] = 30  # trend sub-gate fails
-    passed, failed = check_market_subgates(bad, config=config)
+    bad["weekly_trend_score"] = 30  # trend dimension fails
+    passed, failed = compute_market_structure(bad, config=config)
     assert passed is False
     assert failed == ["trend"]
 
@@ -455,26 +482,39 @@ def test_subgates_all_pass_required(config, passing_row):
 
 
 @pytest.mark.parametrize("star_name,row_delta,sub_scores,proxies,expected_stars", [
-    # no_proxy_used: all proxies False → +1 (sub_scores wide so factor_agreement doesn't fire)
-    ("no_proxy_used", {}, {"a": 10, "b": 90}, {"any": False}, 1),
-    # data_completeness >= 90 → +1 (sub_scores wide so factor_agreement doesn't fire)
-    ("data_completeness_90", {"data_completeness_pct": 90}, {"a": 10, "b": 90}, {"any": True}, 1),
-    ("data_completeness_89", {"data_completeness_pct": 89}, {"a": 10, "b": 90}, {"any": True}, 0),
-    # factor_agreement: std-dev <= 20 → +1
+    # complete_data: data_completeness_pct >= 90 → +1
+    # sub_scores {0,100}: factor_agreement (std=70) fails; base breakout_age=4 → stable fails
+    ("complete_data_met", {"data_completeness_pct": 95}, {"a": 0, "b": 100}, {"any": True}, 1),
+    ("complete_data_below", {"data_completeness_pct": 89}, {"a": 0, "b": 100}, {"any": True}, 0),
+    # factor_agreement: std-dev of (goodness-aligned) sub-scores <= 20 → +1
     ("factor_agreement_tight", {}, {"a": 60, "b": 70, "c": 65}, {"any": True}, 1),
-    ("factor_agreement_wide", {}, {"a": 10, "b": 90, "c": 50}, {"any": True}, 0),
-    # trend_maturity: weekly >= 75 → +1 (sub_scores wide so factor_agreement doesn't fire)
-    ("trend_maturity_met", {"weekly_trend_score": 80}, {"a": 10, "b": 90}, {"any": True}, 1),
-    ("trend_maturity_below", {"weekly_trend_score": 60}, {"a": 10, "b": 90}, {"any": True}, 0),
-    # breakout_maturity: age in [1,3] → +1 (sub_scores wide so factor_agreement doesn't fire)
-    ("breakout_age_1", {"breakout_age": 1}, {"a": 10, "b": 90}, {"any": True}, 1),
-    ("breakout_age_3", {"breakout_age": 3}, {"a": 10, "b": 90}, {"any": True}, 1),
-    ("breakout_age_0_too_fresh", {"breakout_age": 0}, {"a": 10, "b": 90}, {"any": True}, 0),
-    ("breakout_age_5_too_stale", {"breakout_age": 5}, {"a": 10, "b": 90}, {"any": True}, 0),
+    ("factor_agreement_wide", {}, {"a": 0, "b": 100}, {"any": True}, 0),
+    # factor_agreement with overhead_supply inverted: raw=50 → aligned=50, {50,50} std-dev=0
+    ("factor_agreement_overhead_inverted", {}, {"a": 50, "overhead_supply": 50}, {"any": True}, 1),
+    # stable_calculations: breakout_age NOT at AGE_DECAY cliff (age 4)
+    # rev 3 simplification: stable ONLY checks breakout_age cliff (not sub-score extremes)
+    ("stable_not_at_cliff", {"breakout_age": 5}, {"a": 0, "b": 100}, {"any": True}, 1),
+    ("stable_at_cliff_age_4", {"breakout_age": 4}, {"a": 0, "b": 100}, {"any": True}, 0),
+    # low_proxy_usage: 0 proxies → +1; >=1 proxy → 0
+    ("low_proxy_zero", {}, {"a": 0, "b": 100}, {"any": False}, 1),
+    ("low_proxy_one", {}, {"a": 0, "b": 100}, {"sector": True}, 0),
+    # indicator_freshness: data_age_days <= 5 → +1
+    ("fresh_data", {"data_age_days": 5}, {"a": 0, "b": 100}, {"any": True}, 1),
+    ("stale_data", {"data_age_days": 10}, {"a": 0, "b": 100}, {"any": True}, 0),
 ])
 def test_confidence_each_star_criterion(config, star_name, row_delta, sub_scores, proxies, expected_stars):
-    """Each of the 5 confidence criteria contributes exactly 1 star when met."""
-    base_row = {"data_completeness_pct": 50, "weekly_trend_score": 50, "breakout_age": 5}
+    """Each of the 5 MODEL-CERTAINTY criteria contributes exactly 1 star when met.
+
+    Base row uses breakout_age=4 (AT cliff → stable fails by default),
+    data_completeness=50 (below 90), data_age=100 (stale). Each test isolates
+    one criterion by carefully choosing row_delta / sub_scores / proxies that
+    don't accidentally trigger other criteria.
+    """
+    base_row = {
+        "data_completeness_pct": 50,
+        "breakout_age": 4,   # at AGE_DECAY cliff → stable fails by default
+        "data_age_days": 100,
+    }
     row = {**base_row, **row_delta}
     stars = compute_confidence_stars(row, sub_scores, proxies, config)
     assert stars == expected_stars, f"{star_name}: expected {expected_stars} stars, got {stars}"
@@ -484,13 +524,17 @@ def test_confidence_each_star_criterion(config, star_name, row_delta, sub_scores
 
 
 def test_confidence_full_5_stars(config, passing_row):
-    """When all 5 criteria are met, confidence = 5 stars."""
+    """When all 5 model-certainty criteria are met, confidence = 5 stars.
+
+    Note: trend_maturity + breakout_maturity (stock-quality stars from rev 2)
+    are GONE in rev 3. Stock quality now lives in CAS itself, not in confidence.
+    """
     row = dict(passing_row)
-    row["data_completeness_pct"] = 95
-    row["weekly_trend_score"] = 80  # trend_maturity met
-    row["breakout_age"] = 2         # breakout_maturity met (1..3)
-    sub_scores = {"a": 70, "b": 75, "c": 72}  # std-dev < 20 → agreement met
-    proxies = {"sector": False, "rr": False}  # no_proxy_used met
+    row["data_completeness_pct"] = 95        # ★ complete_data
+    row["data_age_days"] = 2                  # ★ indicator_freshness
+    row["breakout_age"] = 2                   # not at cliff (4) → ★ stable_calculations
+    sub_scores = {"a": 70, "b": 75, "c": 72}  # std-dev ~2.1 → ★ factor_agreement
+    proxies = {"sector": False, "rr": False}  # ★ low_proxy_usage
     assert compute_confidence_stars(row, sub_scores, proxies, config) == 5
 
 
@@ -498,13 +542,13 @@ def test_confidence_full_5_stars(config, passing_row):
 
 
 def test_confidence_zero_stars(config, passing_row):
-    """When NO criteria are met, confidence = 0 stars."""
+    """When NO model-certainty criteria are met, confidence = 0 stars."""
     row = dict(passing_row)
-    row["data_completeness_pct"] = 50       # below 90
-    row["weekly_trend_score"] = 30          # below 75
-    row["breakout_age"] = 10                # outside [1,3]
-    sub_scores = {"a": 10, "b": 90, "c": 50}  # std-dev way above 20
-    proxies = {"sector": True, "rr": True}  # proxies used
+    row["data_completeness_pct"] = 50        # below 90
+    row["data_age_days"] = 30                 # stale
+    row["breakout_age"] = 4                   # at the AGE_DECAY cliff
+    sub_scores = {"a": 10, "b": 90, "c": 50}  # wide std-dev
+    proxies = {"sector": True, "rr": True}    # proxies used
     assert compute_confidence_stars(row, sub_scores, proxies, config) == 0
 
 
@@ -512,13 +556,13 @@ def test_confidence_zero_stars(config, passing_row):
 
 
 def test_confidence_partial_3_stars(config, passing_row):
-    """When 3 of 5 criteria are met, confidence = 3 stars."""
+    """When 3 of 5 model-certainty criteria are met, confidence = 3 stars."""
     row = dict(passing_row)
-    row["data_completeness_pct"] = 95       # ★ data_completeness
-    row["weekly_trend_score"] = 80          # ★ trend_maturity
-    row["breakout_age"] = 2                 # ★ breakout_maturity
-    sub_scores = {"a": 10, "b": 90}         # std-dev wide → agreement NOT met
-    proxies = {"sector": True, "rr": True}  # proxies used → no_proxy NOT met
+    row["data_completeness_pct"] = 95        # ★ complete_data
+    row["data_age_days"] = 2                  # ★ indicator_freshness
+    row["breakout_age"] = 4                   # AT cliff → stable fails
+    sub_scores = {"a": 0, "b": 100}           # std-dev wide → agreement fails
+    proxies = {"sector": False, "rr": False}  # ★ low_proxy_usage
     assert compute_confidence_stars(row, sub_scores, proxies, config) == 3
 
 
@@ -526,10 +570,10 @@ def test_confidence_partial_3_stars(config, passing_row):
 
 
 def test_confidence_max_clamped_at_5(config, passing_row):
-    """Even if all criteria are met, confidence is clamped at 5 (not 6 or 7)."""
+    """Even if all model-certainty criteria are met, confidence is clamped at 5 (not 6+)."""
     row = dict(passing_row)
     row["data_completeness_pct"] = 100
-    row["weekly_trend_score"] = 100
+    row["data_age_days"] = 0
     row["breakout_age"] = 2
     sub_scores = {"a": 80, "b": 80}
     proxies = {"any": False}
@@ -592,3 +636,220 @@ def test_why_checklist_interpolates_values(config, passing_row):
     assert any("82/100" in line for line in lines), (
         f"Expected '82/100' in some line, got: {lines}"
     )
+
+
+# ── 25. Eligibility (rev 3): Missing weekly_trend_score → weekly_data gate ─
+
+
+def test_eligibility_missing_weekly_data_returns_weekly_data(config, passing_row):
+    """Missing weekly_trend_score → eligibility FAIL with 'weekly_data' gate.
+
+    Rev 3 semantic: the model REFUSES to score rather than guessing with 0.
+    weekly_trend_score is critical for both the trend sub-gate AND the
+    weekly sub-score — missing it means no meaningful trend assessment.
+    """
+    row = dict(passing_row)
+    row["weekly_trend_score"] = None
+    passed, failed = check_eligibility(row, regime="BULLISH", config=config)
+    assert passed is False
+    assert "weekly_data" in failed
+
+
+def test_eligibility_missing_rs_data_returns_rs_data(config, passing_row):
+    """Missing rs_90d → eligibility FAIL with 'rs_data' gate.
+
+    Rev 3 semantic: same as weekly_data. RS is critical for the rs sub-score
+    and the 'Strong RS' why-checklist line. Missing it = ineligible.
+    """
+    row = dict(passing_row)
+    row["rs_90d"] = None
+    passed, failed = check_eligibility(row, regime="BULLISH", config=config)
+    assert passed is False
+    assert "rs_data" in failed
+
+
+def test_eligibility_missing_both_data_gates(config, passing_row):
+    """Missing both weekly_trend_score and rs_90d → both gates fail."""
+    row = dict(passing_row)
+    row["weekly_trend_score"] = None
+    row["rs_90d"] = None
+    passed, failed = check_eligibility(row, regime="BULLISH", config=config)
+    assert passed is False
+    assert "weekly_data" in failed
+    assert "rs_data" in failed
+
+
+# ── 26. compute_market_score_breakdown (rev 3) ──────────────────────────────────
+
+
+def test_compute_market_score_breakdown_returns_score_and_contributions(config):
+    """Breakdown returns (score, {factor: contribution}) where contributions sum to score."""
+    sub_scores = {
+        "regime": 100, "weekly": 80, "breakout": 90, "overhead_supply": 20,
+        "rs": 50, "volume": 100, "sector": 50,
+    }
+    score, breakdown = compute_market_score_breakdown(sub_scores, config)
+
+    # Score is a float in [0, 100]
+    assert isinstance(score, float)
+    assert 0 <= score <= 100
+
+    # Breakdown has all 7 factor keys
+    assert set(breakdown.keys()) == {
+        "regime", "weekly", "breakout", "overhead_supply", "rs", "volume", "sector"
+    }
+
+    # Sum of contributions == score (within rounding)
+    assert sum(breakdown.values()) == pytest.approx(score, abs=0.01), (
+        f"Breakdown sum {sum(breakdown.values()):.4f} != score {score:.4f}"
+    )
+
+    # overhead_supply contribution uses the INVERTED value (100 - raw=20 = 80)
+    # weight 14 / total 100 → contribution = 80 * 14 / 100 = 11.2
+    assert breakdown["overhead_supply"] == pytest.approx(11.2, abs=0.01)
+
+
+def test_compute_market_score_breakdown_matches_simple(config):
+    """compute_market_score_breakdown score matches compute_market_score."""
+    sub_scores = {
+        "regime": 80, "weekly": 60, "breakout": 70, "overhead_supply": 40,
+        "rs": 50, "volume": 50, "sector": 50,
+    }
+    simple = compute_market_score(sub_scores, config)
+    detailed, _ = compute_market_score_breakdown(sub_scores, config)
+    assert simple == pytest.approx(detailed, abs=0.0001)
+
+
+# ── 27. Golden Cases Regression Suite (tests/golden_cases.yaml) ─────────────────
+
+
+GOLDEN_CASES_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "tests", "golden_cases.yaml")
+)
+
+
+def _load_golden_cases():
+    """Load regression scenarios from tests/golden_cases.yaml."""
+    import yaml  # imported lazily to keep this test isolated
+    with open(GOLDEN_CASES_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def _run_golden_case(scenario, config):
+    """Run a single golden case scenario through the full CAS pipeline.
+
+    Returns: dict with keys: eligible_passed, structure_passed, eligible_failed,
+             structure_failed, market_score, cas, confidence, why_lines.
+    """
+    row = scenario["row"]
+    regime = scenario["regime"]
+    proxies = scenario.get("proxies_used", {})
+
+    elig_passed, elig_failed = check_eligibility(row, regime=regime, config=config)
+    struct_passed, struct_failed = compute_market_structure(row, config=config)
+
+    # If eligible + structure passed, compute full score
+    if elig_passed and struct_passed:
+        sub_scores = {
+            "regime":         _regime_score(regime, config),
+            "weekly":         _weekly_score(row, config),
+            "breakout":       _breakout_score(row, config),
+            "overhead_supply":row.get("overhead_supply_score") or 0,
+            "rs":             _rs_score(row, config),
+            "volume":         _volume_score(row, config),
+            "sector":         _sector_score(row, config),
+        }
+        ms = compute_market_score(sub_scores, config)
+        cas = compute_portfolio_allocation_score(
+            ms,
+            winner_profit_pct=scenario.get("winner_profit_pct"),
+            concentration_weight_pct=scenario.get("concentration_weight_pct"),
+            config=config,
+        )
+        conf = compute_confidence_stars(row, sub_scores, proxies, config)
+        why = render_why_checklist(row, config=config)
+    else:
+        ms = 0.0
+        cas = 0.0
+        conf = 0
+        why = []
+
+    return {
+        "eligible_passed":    elig_passed,
+        "structure_passed":   struct_passed,
+        "eligible_failed":    elig_failed,
+        "structure_failed":   struct_failed,
+        "market_score":       ms,
+        "cas":                cas,
+        "confidence":         conf,
+        "why_lines":          why,
+    }
+
+
+@pytest.mark.parametrize("scenario", _load_golden_cases(), ids=lambda s: s["name"])
+def test_golden_cases(config, scenario):
+    """Regression suite: every scenario in tests/golden_cases.yaml must match its expected outcomes.
+
+    When you tune weights or thresholds, run this. If a scenario starts failing,
+    either the tuning was too aggressive (revert) or business intent changed
+    (update YAML + Decisions.md).
+    """
+    exp = scenario["expected"]
+    result = _run_golden_case(scenario, config)
+
+    # Eligibility / structure
+    assert result["eligible_passed"] is exp["eligible"], (
+        f"{scenario['name']}: eligibility expected {exp['eligible']}, got {result['eligible_passed']} "
+        f"(failed={result['eligible_failed']})"
+    )
+    assert result["structure_passed"] is exp["structure_passed"], (
+        f"{scenario['name']}: structure expected {exp['structure_passed']}, got {result['structure_passed']} "
+        f"(failed={result['structure_failed']})"
+    )
+
+    # Required gate / structure failures
+    for gate in exp.get("eligible_failed_contains", []):
+        assert gate in result["eligible_failed"], (
+            f"{scenario['name']}: expected '{gate}' in eligible_failed, got {result['eligible_failed']}"
+        )
+    for dim in exp.get("structure_failed_contains", []):
+        assert dim in result["structure_failed"], (
+            f"{scenario['name']}: expected '{dim}' in structure_failed, got {result['structure_failed']}"
+        )
+
+    # Market score / CAS / confidence bounds
+    if "market_score_gte" in exp:
+        assert result["market_score"] >= exp["market_score_gte"], (
+            f"{scenario['name']}: market_score {result['market_score']:.2f} < expected {exp['market_score_gte']}"
+        )
+    if "market_score_lte" in exp:
+        assert result["market_score"] <= exp["market_score_lte"], (
+            f"{scenario['name']}: market_score {result['market_score']:.2f} > expected {exp['market_score_lte']}"
+        )
+    if "cas_gte" in exp:
+        assert result["cas"] >= exp["cas_gte"], (
+            f"{scenario['name']}: CAS {result['cas']:.2f} < expected {exp['cas_gte']}"
+        )
+    if "cas_lte" in exp:
+        assert result["cas"] <= exp["cas_lte"], (
+            f"{scenario['name']}: CAS {result['cas']:.2f} > expected {exp['cas_lte']}"
+        )
+    if "confidence_gte" in exp:
+        assert result["confidence"] >= exp["confidence_gte"], (
+            f"{scenario['name']}: confidence {result['confidence']} < expected {exp['confidence_gte']}"
+        )
+    if "confidence_lte" in exp:
+        assert result["confidence"] <= exp["confidence_lte"], (
+            f"{scenario['name']}: confidence {result['confidence']} > expected {exp['confidence_lte']}"
+        )
+
+    # Why-checklist contents
+    why_text = "\n".join(result["why_lines"])
+    for substring in exp.get("why_contains", []):
+        assert substring in why_text, (
+            f"{scenario['name']}: expected '{substring}' in why-checklist, got:\n{why_text}"
+        )
+    for substring in exp.get("why_not_contains", []):
+        assert substring not in why_text, (
+            f"{scenario['name']}: did NOT expect '{substring}' in why-checklist, got:\n{why_text}"
+        )

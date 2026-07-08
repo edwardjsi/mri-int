@@ -56,7 +56,38 @@ Should `overhead_supply` be inverted before passing to `compute_confidence_stars
 - Extend `api/schema.py` auto-heal block (defense in depth).
 - Execute `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal).
 - Backfill 4 columns for Nifty 500 universe (~1.6M rows, ~5–10 min).
-- Smoke-test eligibility/sub-gate logic against real symbols.
+- Smoke-test eligibility/sub-gate logic against real symbols using the 5 stocks from `tests/golden_cases.yaml`.
+
+### N+1 Rev 3 Refinements (applied 2026-07-07, same day)
+
+After owner reviewed N+1 original, 8 design refinements + 1 recommendation applied on `feature/capital-allocation-v1`:
+
+| # | Change | Impact |
+|---|--------|--------|
+| 1 | Confidence = 5 model-certainty stars (Complete data, Factor agreement, Stable calculations, Low proxy usage, Indicator freshness) | Stock-quality signals moved out of confidence |
+| 2 | Invert `overhead_supply` BEFORE factor_agreement std-dev | All factors share "higher = better" direction |
+| 3 | All calibration constants → YAML `calibration.*` | Zero magic numbers in engine |
+| 4 | Missing data → ineligible (not score 0) | Added `weekly_data`, `rs_data` eligibility gates |
+| 5 | Renamed `check_market_subgates` → `compute_market_structure` | Investment-concept-aligned naming |
+| 6 | Added `compute_market_score_breakdown()` | Per-factor logging from day one |
+| 7 | Logging levels: DEBUG (breakdown) / INFO (summary) / WARNING (failures) | No per-call INFO spam in backfills |
+| 8 | Documentation invariant: design doc, YAML, Decisions, Sessions, Progress all synced | Code never intentionally diverges from spec |
+| +1 | `tests/golden_cases.yaml` regression basket | 7 curated scenarios for future tuning |
+
+**Branch strategy**: 3 PRs (engine → indicators → API/UI). PR1 is `feature/capital-allocation-v1`.
+
+**Test count**: **104 tests pass in 0.47s** (92 base + 12 golden-case assertions across 7 scenarios).
+
+**Files changed this session** (refinements only — originals were in the prior N+1 commit):
+- `engine_core/capital_allocation.py` (rev 3: ~600 lines)
+- `engine_core/test_capital_allocation.py` (rev 3: ~830 lines)
+- `config/capital_allocation.yaml` (rev 3: added `calibration.*` section)
+- `tests/golden_cases.yaml` (NEW, ~270 lines)
+- `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` (rev 3: amended §5, §7, §8, added §13)
+- `Decisions.md` (rev 3: refined point #9, updated implementation log)
+- `Sessions.md` (added refinements section)
+- `Progress.md` (this entry)
+- `requirements.txt` (unchanged from N+1: `pyyaml>=6.0`)
 
 ---
 
