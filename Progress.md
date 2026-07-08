@@ -2644,3 +2644,52 @@ All addendum code complete. **Awaiting backfill (~73 min) before final commit + 
 - [x] All 47+ backend tests pass (engine_debate, engine_fundamental, engine_core, api)
 - **No regressions introduced** — all changes confined to scripts/ and docs/
 
+
+### **📅 Session: July 8, 2026 afternoon — V1.1a (Engine Correctness) — COMPLETE**
+
+**Session Start:** ~12:45 IST
+**Session End:** ~14:15 IST (~1.5 hrs wall time, mostly backfill at 47 min)
+
+#### Completed
+- **Gap 1 fix**: `ema_100_slope_5d` column added + computed in indicator pipeline + backfilled
+- **Gap 5 fix**: `normalize_row()` helper in capital_allocation.py — all Decimal → float coercion in ONE place
+- **Age transition zones**: replaced single cliff at breakout_age=4 with 4-zone map
+- **Overhead 0.5% bucketing**: avoids float granularity artifact
+- **Engine signature**: `compute_engine_signature()` returns `{cas_version, config_hash, commit_sha, signature}`
+- **3 new helpers** + `CAS_VERSION` + `COMMIT_SHA` constants
+- **37 new tests** in `engine_core/test_cas_helpers.py`
+- **2 existing tests updated** for new YAML structure
+- **Migration 008 extended** with ema_100_slope_5d (idempotent)
+- **api/schema.py auto-heal** extended
+- **Full Nifty 500 backfill**: 961 symbols, 114,600 updates, ~47 min
+
+#### Test count progression
+| Version | Tests | Pass | Time |
+|---------|-------|------|------|
+| V1.0 (N+2b) | 137 | ✅ | 14.31s |
+| V1.1a | **174** | **✅** | **21s** |
+
+#### End-to-end verification
+INDUSINDBK row passes ALL eligibility gates (was failing on ema100_rising).
+Engine signature: `v1.1.0-{commit_sha}-{config_hash}`.
+
+#### Branch state (8 commits, all pushed)
+```
+250a748 docs(cas): Session V1.1a entry
+50d1638 feat(cas): V1.1a — engine correctness
+4361ae1 docs(cas): Decision 101 refinements
+ca0f4fa docs(cas): Decision 101 — expert review + V1.1 scope
+2f39437 docs(cas): append N+2b update
+0938bb0 docs(cas): N+2b completion
+75f32b3 fix(indicator): reset_index
+b2c4a4a feat(cas): N+2a — 4 indicator columns
+```
+
+#### Ready for V1.1b
+All mandatory + recommended fixes from Decision 101 are in. The engine now has:
+- `normalize_row()` for Decimal → float
+- `compute_engine_signature()` for provenance
+- `derive_metadata()` for completeness/age/proxies
+- `ema_100_slope_5d` populated for 498/498 symbols
+
+V1.1b (Outcome Tracking + UUIDs + Daily EOD worker) can begin.
