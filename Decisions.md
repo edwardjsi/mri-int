@@ -2399,42 +2399,87 @@ The expert's review establishes three things:
 The expert's specific disagreement (capture outcomes for every eligible stock vs only recommendations) is the most consequential V1.1 design change. It roughly doubles storage requirements but preserves information that would otherwise be permanently lost when a stock graduates from "borderline" to "obvious buy." This is a one-time, irreversible data loss if missed.
 
 ### Status
-**DRAFT — awaiting owner approval of the V1.1 implementation plan that follows.**
+**APPROVED — implementation in progress (V1.1a next).**
 
-### Implementation plan (proposed, awaits owner green light)
+### Implementation plan (V1.1 — 4 sessions, ~8–9 hours total)
 
-**Session V1.1a (mandatory fixes + recommended tuning, ~2-3 hours):**
-- Add `ema_100_slope_5d` to `indicator_engine.py` (compute + write + auto-heal).
-- Run backfill: only the new column (~5 min).
-- Add `normalize_row(row)` to `engine_core/capital_allocation.py` (Decimal → float).
-- Refactor existing `check_eligibility`, `compute_market_structure`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist`, `compute_market_score_breakdown` to call `normalize_row()` first.
+**Session V1.1a — Engine correctness (mandatory fixes + recommended tuning, ~2–3 hours):**
+- Add `ema_100_slope_5d` to `indicator_engine.py` (compute + write + auto-heal + backfill column).
+- Add `normalize_row(row)` to `engine_core/capital_allocation.py` (Decimal → float). Refactor all 7 existing entry points to call it first.
 - Add `derive_metadata(row)` helper (computes `data_completeness_pct`, `data_age_days`, `proxy_count` from a row).
 - Replace `breakout_age_cliff` with `breakout_age_zones` in YAML; update `compute_confidence_stars` accordingly.
 - Round overhead supply to 0.5% buckets in `compute_overhead_supply_score`.
+- **Add `compute_engine_signature()` helper** returning `{cas_version, config_hash, commit_sha}`. The signature is computed once per process and embedded in every recommendation record. `config_hash = sha256(yaml.safe_dump(config))[:8]`. `commit_sha = git rev-parse --short HEAD` at module load.
 - Run full test suite (must stay ≥ 137 PASS).
 - Update spec doc §5 (Confidence) and §3 (Age Decay) to reflect transition zone.
-- ~30+ new unit tests for the helpers and bucket rounding.
+- ~30+ new unit tests (helpers + bucket rounding + engine signature determinism).
 
-**Session V1.1b (Outcome Tracking + UUIDs, ~3 hours):**
-- Migration 009: `cas_recommendations` + `cas_recommendation_outcomes` tables.
-- `recommendation_id` generator (format: `CAS-YYYY-MM-DD-SYMBOL`).
-- `record_cas_recommendation()` helper (writes to `cas_recommendations` only — outcomes are written separately).
-- `record_cas_outcome()` helper (called weekly when market closes; captures path: entry, w1, w2, w4).
-- API wiring: `/top-by-cas` and `/breakout-status` write one row per eligible stock.
-- ~10 unit tests for the helpers + schema validation.
+**Session V1.1b — Persistence (Outcome Tracking + UUIDs + snapshot, ~3 hours):**
+- **Architecture (per expert, replaces Monday-based capture):**
+  - **Event A — Recommendation capture (immediate, on API CAS computation):** write one row to `cas_recommendations` for EVERY eligible stock (not just recommendations). Immutable record.
+  - **Event B — Daily EOD outcome updater (separate cron, runs daily after market close):** for each open recommendation, compute elapsed days. When elapsed ∈ {7, 14, 28, 63, 126} days, fill the corresponding path column (`price_w1`, `price_w2`, `price_w4`, `price_m3`, `price_m6`) and the return-pct variants. Catches Friday→Monday gap events that weekly sampling misses.
+  - NO reports yet — collect for 6 months.
+- **Migration 009 schema:**
+  - `cas_recommendations` table:
+    - `id` BIGSERIAL PRIMARY KEY
+    - `recommendation_id` TEXT UNIQUE — format `CAS-YYYY-MM-DD-SYMBOL` (deterministic, human-readable, sortable)
+    - `recommendation_date` DATE NOT NULL
+    - `symbol` TEXT NOT NULL
+    - `regime` TEXT NOT NULL
+    - `market_score` NUMERIC NOT NULL
+    - `cas` NUMERIC NOT NULL
+    - `confidence_stars` INTEGER NOT NULL
+    - `action` TEXT NOT NULL  (BUY / ADD / WATCH; NO_ACTION not persisted — see V1.1c)
+    - `price_at_recommendation` NUMERIC NOT NULL
+    - `factor_snapshot` JSONB NOT NULL  — **stores the actual inputs** (weekly, breakout, volume, RS, overhead, sector, regime)
+    - `cas_version` TEXT NOT NULL  (e.g., `1.1.0`)
+    - `config_hash` TEXT NOT NULL  (e.g., `8f1a29d3`)
+    - `commit_sha` TEXT NOT NULL  (e.g., `ca0f4fa`)
+    - `engine_signature` TEXT NOT NULL  — composite `v{cas_version}-{commit_sha}-{config_hash}` for one-shot traceability
+    - `created_at` TIMESTAMPTZ DEFAULT NOW()
+    - UNIQUE INDEX on `(symbol, recommendation_date)`
+    - UNIQUE INDEX on `recommendation_id`
+  - `cas_recommendation_outcomes` table:
+    - `id` BIGSERIAL PRIMARY KEY
+    - `recommendation_id` TEXT FK → `cas_recommendations.recommendation_id`
+    - `updated_at` TIMESTAMPTZ DEFAULT NOW()
+    - `current_price` NUMERIC  (latest close)
+    - `price_w1` NUMERIC  (filled at 7 days)
+    - `price_w2` NUMERIC  (filled at 14 days)
+    - `price_w4` NUMERIC  (filled at 28 days)
+    - `price_m3` NUMERIC  (filled at 63 days)
+    - `price_m6` NUMERIC  (filled at 126 days)
+    - `return_pct_w1`, `return_pct_w2`, `return_pct_w4`, `return_pct_m3`, `return_pct_m6` NUMERIC
+    - `max_favorable_excursion_pct` NUMERIC  (running high since recommendation)
+    - `max_adverse_excursion_pct` NUMERIC  (running low since recommendation)
+    - `milestones_reached` TEXT[]  (e.g., `{w1, w2}`)
+    - `status` TEXT  (open / closed-w4 / closed-m6)
+- **Helpers:**
+  - `make_recommendation_id(date, symbol) → "CAS-2026-07-08-WELCORP"`
+  - `compute_engine_signature() → {cas_version, config_hash, commit_sha, signature}`
+  - `record_cas_recommendation(row, cas_result, regime, config) → recommendation_id`  (idempotent on `(symbol, date)`)
+  - `update_cas_outcomes(date) → n_updated`  (called by daily EOD worker; fills milestones)
+- **API wiring:** `/top-by-cas` and `/breakout-status` call `record_cas_recommendation()` for every eligible stock in the response.
+- **Cron wiring:** add `scripts/daily_outcome_updater.py` (daily at 16:00 IST). Idempotent: re-running on the same day is safe (only fills new milestones).
+- ~10 unit tests + 5 integration tests against a temp DB.
 
-**Session V1.1c (Decision Stability + No Action + Calibration, ~2 hours):**
-- `stabilize_action(prev, today, config)` wrapper with hysteresis (3-point threshold).
-- "NO_ACTION" recommendation path in API.
-- `Calibration.md` initial seed (3 entries from existing weight choices).
-- Calibration Debt counter (start at manual count of unvalidated assumptions in YAML).
-- Spec doc §0 (Engineering Motto) + §1.0 (Three-Layer Architecture).
-- `assert_cas_within_tolerance()` helper.
-- Update `tests/golden_cases.yaml` to use tolerance for CAS values.
+**Session V1.1c — Decision layer (Decision Stability + No Action + Calibration + philosophy doc, ~2 hours):**
+- `stabilize_action(prev, today, config) → {action, stability}` wrapper with hysteresis (3-point CAS delta threshold, applied to the API response only).
+- "NO_ACTION" recommendation path in API when top-N list empty or all candidates fail eligibility. Return `{action: "NO_ACTION", reason: "..."}`.
+- `Calibration.md` initial seed (3 entries from existing weight choices + age-cliff→transition-zone change).
+- **Calibration Debt counter** — redefinition: count of unvalidated YAML assumptions, not hardcoded numbers. Implementation: `tools/calibration_debt.py` counts assumptions in YAML marked `validated: false` + manual entries in `Calibration.md`. Reports `total_assumptions / validated / debt`.
+- **Spec doc updates** (in this order — why before how):
+  - **§0 — Design Principles** (project motto + 7 principles)
+  - **§1.0 — Three-Layer Architecture** (Market → Portfolio → Decision; only Decision talks to humans)
+  - **§1.1 — Recommendation Lifecycle** (Recommendation → Daily Outcome Worker → Reports)
+- `assert_cas_within_tolerance(actual, expected, tolerance=2.0)` helper. Used by golden case regression tests.
+- Update `tests/golden_cases.yaml` to use tolerance assertions for CAS values.
 
-**Session V1.1d (validation + PR, ~1 hour):**
-- Full Nifty 500 backfill re-run for `ema_100_slope_5d` + overhead buckets.
+**Session V1.1d — Validation + PR (~1 hour):**
+- **Session rule (per expert):** No session is allowed to change scoring logic and database schema simultaneously unless tests stay green before and after the migration.
+- Full Nifty 500 backfill re-run for `ema_100_slope_5d` + overhead buckets (0.5% rounding means historical values will differ; recompute is required).
 - Golden case regression: all 7 cases must pass within tolerance.
+- Run outcome updater manually for the last 7 days to seed `cas_recommendation_outcomes` with historical data (optional — needs `recommendation_date` rows to exist; if not, skip).
 - All tests pass.
 - Branch pushed, PR created.
 - Decisions.md, Sessions.md, Progress.md updated.
