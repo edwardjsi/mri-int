@@ -266,3 +266,18 @@ why_templates:
     template: "✓ Clear overhead supply (score {overhead_supply_score}/100)"
   - condition: high_quality
     template: "✓ High QIF ({qif_score:.0f}/100)"
+
+# ----------------------------------------------------------------------------
+# CAS V1.1b (Decision 101) — Action verb thresholds (Layer 3 vocabulary)
+# ----------------------------------------------------------------------------
+# These thresholds map (CAS, confidence_stars, position state) → action verb.
+# BUY  = first tranche / fresh position
+# ADD  = adding to existing position
+# WATCH = eligible but no action yet
+# (NO_ACTION is not persisted — every recommendation has an action verb.)
+action:
+  buy_cas_min: 80                  # CAS >= this AND stars >= min → BUY (no position)
+  add_cas_min: 85                  # CAS >= this AND stars >= min → ADD (existing position)
+  watch_cas_min: 60                # CAS >= this → WATCH (eligible but no action)
+  min_confidence_stars_for_buy: 4  # Even high CAS with low stars → WATCH
+
