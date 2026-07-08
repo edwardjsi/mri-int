@@ -2323,3 +2323,118 @@ Implementation log:
 - **Test count**: 104 tests pass in 0.47s (92 base + 12 golden-case assertions).
 - **Files changed this session**: `engine_core/capital_allocation.py`, `engine_core/test_capital_allocation.py`, `config/capital_allocation.yaml`, `migrations/008_capital_allocation_columns.sql` (NEW), `tests/golden_cases.yaml` (NEW), `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`, this decision, `Sessions.md`, `Progress.md`, `requirements.txt`.
 - **Next**: Session N+2 — indicator engine wiring (compute 4 new columns) + `api/schema.py` auto-heal + backfill for Nifty 500.
+
+## Decision 101 — Expert Architectural Review & V1.1 Scope
+Date: 2026-07-08
+Decision-maker: Project Expert (third-party reviewer)
+Trigger: Post-N+2b review (backfill complete + latent pipeline bug fixed)
+
+### Decision
+
+1. **V1.0 architecturally sound — APPROVED.**
+   Expert's assessment after N+2b delivery: "V1.0 has reached a point where I would call it 'architecturally sound.' The fact that you found a latent pipeline bug during integration is actually a good sign — it means integration is doing its job."
+   Decision 100 status flipped to **FINAL — executed** for V1.0 engine + indicator pipeline + golden-case wiring. N+3 (API/UI) remains open.
+
+2. **Three-Layer Architecture (NEW — load-bearing for V1.1+).**
+   MRI is reorganized as three distinct layers, each with one output and one owner:
+   - **Layer 1 — Market Intelligence** → produces **Market Score** (current `compute_market_score`).
+   - **Layer 2 — Portfolio Intelligence** → produces **CAS** (current `compute_portfolio_allocation_score`).
+   - **Layer 3 — Decision Intelligence** → produces **Action** (`BUY` / `ADD` / `WATCH` / `NO ACTION`).
+   **Rule: only Layer 3 talks to humans.** Everything below Layer 3 is analytics. Layers 1 and 2 must never emit "BUY" or other action verbs — they produce numbers, not decisions. This separation will keep architecture clean as it grows.
+   Action verbs are renamed: `ADD SECOND TRANCHE` → `ADD` (to match Layer 3 vocabulary); `FIRST TRANCHE` → `BUY`; `WATCH` unchanged; `NO ACTION` new in V1.1.
+
+3. **Engineering Motto (project-wide).**
+   > **Every score must be explainable. Every threshold must be calibratable. Every recommendation must be measurable.**
+   If MRI never violates these three principles, the architecture stays clean. This motto goes at the top of the spec doc as §0.
+
+4. **Mandatory fixes before V1.1 ships.**
+   - **Gap 1 — `ema_100_slope_5d`**: Add computation to `indicator_engine.py`. The `ema100_rising` eligibility gate currently always fails because this field is `None`. A broken eligibility gate = good stock rejected = never scored. **Correctness issue.**
+   - **Gap 5 — `normalize_row()` helper**: All `Decimal` → `float` conversions must happen in ONE place, before the engine sees the row. The engine must not know or care whether Postgres returned Decimal. Add `normalize_row(row)` to `engine_core/capital_allocation.py`. Every caller goes through it.
+
+5. **Recommended fixes in V1.1.**
+   - **Age transition zone** (replaces single cliff at breakout_age=4): YAML `calibration.breakout_age_zones` map: `0–2 → excellent`, `3 → good`, `4–5 → transition`, `6+ → stale`. The current discontinuity is "mathematically convenient but not how markets behave." Also rename `stable_calculations` confidence criterion to penalize being in the transition zone rather than just being at exactly age 4.
+   - **Overhead supply 0.5% buckets** (V1): Round distinct highs to nearest 0.5% to avoid float granularity (110.01 / 110.03 / 110.04 → one resistance, not three). ATR-aware buckets deferred to long-term.
+   - **Keep week-over-week HH/HL detection** for V1.5-bar fractals belong in V2 (deterministic + explainable + faster).
+   - **Capture outcomes for every eligible stock**, not just top-N recommendations. Expert reasoning: a stock with CAS=68 today, 85 tomorrow, 95 later — you want to know if 68 already predicted a winner. Storage is cheap, historical evidence is priceless.
+   - **Immutable recommendation UUIDs from day one** (format: `CAS-YYYY-MM-DD-SYMBOL` or UUID). Future joins (recommendation → outcome → report → calibration) all link back. Without IDs, joins become painful.
+
+6. **V1.1 work items — locked.**
+   - **A. Outcome Tracking**: New tables `cas_recommendations` (immutable record per (date, symbol) for every eligible stock) + `cas_recommendation_outcomes` (path columns: entry, w1, w2, w4, max_drawdown, etc.). Helper `record_cas_recommendation()` called from API. NO reports — collect for 6 months first.
+   - **B. Decision Stability**: `stabilize_action(prev, today, config)` returns `UNCHANGED / UPGRADED / DOWNGRADED / NEW`. Dampens chip changes < 3 points. **API-only** — never persist hysteresis to DB. The DB stores facts; the API decides presentation.
+   - **C. "No Action" Recommendation**: API returns `{action: "NO_ACTION", reason: "..."}` when top-N list empty or all candidates fail eligibility.
+   - **D. Design Principles §0** + **Three-Layer Architecture §1.0**: Both inlined into the spec doc. One document, one source of truth.
+   - **E. Golden Cases**: **Deferred** (per owner). Wait for real production outcomes.
+   - **F. Regression Tolerance**: `assert_cas_within_tolerance(actual, expected, tolerance=2.0)` helper. Used by tests to allow ±2 point drift when only tuning, not refactoring.
+   - **G. `Calibration.md` journal**: every weight/threshold change logged (Date | Old | New | Reason | Expected Effect | Measured Effect).
+   - **H. Calibration Debt metric**: **redefined** as `Number of assumptions not yet validated through historical outcomes` (e.g., "17 assumptions, 3 validated → debt 14"). Living engineering metric, not just a code metric. Implementation: a counter in `Calibration.md` plus a runtime query against `cas_recommendation_outcomes` once enough data accumulates.
+
+7. **Defer to V1.2 or later (per expert).**
+   - ATR-aware overhead supply buckets.
+   - 5-bar fractal HH/HL detection.
+   - EMA50 fallback for thin-history stocks.
+   - Regime/QIF joins at API layer (not engine).
+   - Backtest alternative `max_count` values for overhead supply.
+   - Separate `cas_breakdown.log` file (use structured JSON in DEBUG instead).
+
+8. **Open expert questions answered.**
+   - **Q1 (overhead rounding)**: 0.5% buckets for V1.
+   - **Q2 (HH/HL)**: week-over-week for V1.
+   - **Q3 (EMA100 fallback)**: yes — to EMA50 when history <100 bars (V1.2).
+   - **Q4 (max_count=10)**: keep, backtest later.
+   - **Q5 (age cliff)**: replace with transition zone in V1.1.
+   - **Q6 (data_age_days source)**: indicator execution timestamp (`today - last_successful_indicator_calculation`), NOT last candle.
+   - **Q7 (breakdown logging)**: structured JSON in DEBUG, no separate file.
+   - **Q8 (branch strategy)**: keep 3 PRs.
+
+### Reasoning
+
+The expert's review establishes three things:
+
+1. **CAS is not the feature — decisions are.** From here on, MRI optimizes for *better decisions over time*, not just *better scores today*. This shifts the V1.1 priority toward Outcome Tracking and Decision Stability over further score refinement.
+
+2. **V1.1 must close two correctness gaps** (`ema_100_slope_5d`, `normalize_row()`) before any new feature ships. These are silent failures that would compound as new features depend on them.
+
+3. **The three-layer architecture is a forcing function for clean separation.** When "BUY" can only come from Layer 3, it's impossible for Market Score or CAS to leak action verbs to the UI. This prevents the gradual feature-creep that turns analytics engines into recommendation black boxes.
+
+The expert's specific disagreement (capture outcomes for every eligible stock vs only recommendations) is the most consequential V1.1 design change. It roughly doubles storage requirements but preserves information that would otherwise be permanently lost when a stock graduates from "borderline" to "obvious buy." This is a one-time, irreversible data loss if missed.
+
+### Status
+**DRAFT — awaiting owner approval of the V1.1 implementation plan that follows.**
+
+### Implementation plan (proposed, awaits owner green light)
+
+**Session V1.1a (mandatory fixes + recommended tuning, ~2-3 hours):**
+- Add `ema_100_slope_5d` to `indicator_engine.py` (compute + write + auto-heal).
+- Run backfill: only the new column (~5 min).
+- Add `normalize_row(row)` to `engine_core/capital_allocation.py` (Decimal → float).
+- Refactor existing `check_eligibility`, `compute_market_structure`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist`, `compute_market_score_breakdown` to call `normalize_row()` first.
+- Add `derive_metadata(row)` helper (computes `data_completeness_pct`, `data_age_days`, `proxy_count` from a row).
+- Replace `breakout_age_cliff` with `breakout_age_zones` in YAML; update `compute_confidence_stars` accordingly.
+- Round overhead supply to 0.5% buckets in `compute_overhead_supply_score`.
+- Run full test suite (must stay ≥ 137 PASS).
+- Update spec doc §5 (Confidence) and §3 (Age Decay) to reflect transition zone.
+- ~30+ new unit tests for the helpers and bucket rounding.
+
+**Session V1.1b (Outcome Tracking + UUIDs, ~3 hours):**
+- Migration 009: `cas_recommendations` + `cas_recommendation_outcomes` tables.
+- `recommendation_id` generator (format: `CAS-YYYY-MM-DD-SYMBOL`).
+- `record_cas_recommendation()` helper (writes to `cas_recommendations` only — outcomes are written separately).
+- `record_cas_outcome()` helper (called weekly when market closes; captures path: entry, w1, w2, w4).
+- API wiring: `/top-by-cas` and `/breakout-status` write one row per eligible stock.
+- ~10 unit tests for the helpers + schema validation.
+
+**Session V1.1c (Decision Stability + No Action + Calibration, ~2 hours):**
+- `stabilize_action(prev, today, config)` wrapper with hysteresis (3-point threshold).
+- "NO_ACTION" recommendation path in API.
+- `Calibration.md` initial seed (3 entries from existing weight choices).
+- Calibration Debt counter (start at manual count of unvalidated assumptions in YAML).
+- Spec doc §0 (Engineering Motto) + §1.0 (Three-Layer Architecture).
+- `assert_cas_within_tolerance()` helper.
+- Update `tests/golden_cases.yaml` to use tolerance for CAS values.
+
+**Session V1.1d (validation + PR, ~1 hour):**
+- Full Nifty 500 backfill re-run for `ema_100_slope_5d` + overhead buckets.
+- Golden case regression: all 7 cases must pass within tolerance.
+- All tests pass.
+- Branch pushed, PR created.
+- Decisions.md, Sessions.md, Progress.md updated.
