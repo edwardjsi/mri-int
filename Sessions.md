@@ -2669,6 +2669,96 @@ When resuming after owner P4 sign-off:
 
 **Result**: P5 ships. Frontend layer V2 ready. **Pausing for owner approval before P6 (backtest).**
 
+---
+
+## Session: P6 — Backtest Validation (Decision 103)
+
+**Date:** 2026-07-13  
+**Branch:** `feature/capital-allocation-v1`  
+**Status:** ✅ Backtest script shipped; calibration flip blocked on data coverage.
+
+### What was done
+
+1. **Identified the existing batch population path** — `scripts/daily_cas_scanner.py`
+   calls `scan_and_record_eligible_recommendations(as_of, config, limit=None)`,
+   which does an idempotent UPSERT per symbol per day. CLI supports
+   `--as-of YYYY-MM-DD` and `--limit N`. No new population script was needed.
+
+2. **Wrote `engine_core/backtest_v2_pyramiding.py`** (NEW, ~470 lines):
+   - Reads `cas_recommendations` over a configurable date range.
+   - Builds two signal sets:
+     - **V1.1d baseline**: rows where `action == 'ADD'`.
+     - **V2 gated**: rows where `factor_snapshot.final_state == 'ADD_SECOND_TRANCHE'`.
+   - Computes forward 20/60/120-trading-day returns from `daily_prices`.
+   - Benchmark: NIFTY50 from `market_index_prices` (with fallback to `index_prices`).
+   - Computes 60-day max drawdown per signal.
+   - Reports the 6 §14.8 success metrics with pass/fail verdicts.
+   - Supports `--json-out <path>` for machine-readable reports.
+   - Handles both V1.1d snapshots (no `final_state`) and V2 snapshots gracefully.
+
+3. **Validated syntax** with `python3 -c "import ast; ast.parse(...)"` → OK.
+
+4. **Smoke-tested against Neon**:
+   ```bash
+   venv/bin/python engine_core/backtest_v2_pyramiding.py \
+     --start-date 2026-01-01 --end-date 2026-07-31
+   ```
+   - Loaded 9 recommendations (2026-07-07 batch only).
+   - V1.1d ADD signals: 0
+   - V2 ADD_SECOND_TRANCHE signals: 0
+   - All 6 metrics returned `n/a` / FAIL as expected.
+
+### Results
+
+| Metric | V1.1d | V2 | Threshold | Verdict |
+|--------|-------|----|-----------|---------|
+| Signals/month | n/a | n/a | ≤ 5 | FAIL (no data) |
+| % outperform @ 20d | n/a | n/a | ≥ 60% | FAIL (no data) |
+| % outperform @ 60d | n/a | n/a | ≥ 60% | FAIL (no data) |
+| % outperform @ 120d | n/a | n/a | ≥ 55% | FAIL (no data) |
+| Win rate vs CAS-only | n/a | n/a | V2 ≥ V1.1d | FAIL (no data) |
+| Avg max drawdown (60d) | n/a | n/a | < −12% | FAIL (no data) |
+
+Sample size: 9 recommendations, 0 ADD signals of either kind.  
+This is the **expected data-coverage gap** identified in the P5 handoff notes, not a gate-design failure.
+
+### Decision
+
+- **Ship the backtest script** (`engine_core/backtest_v2_pyramiding.py`) so the tooling is ready as data accumulates.
+- **Keep all 5 calibration registry entries as `hypothesis`** until a meaningful sample of ADD signals exists.
+- **Do NOT tweak thresholds** — honor the Decision 103 calibration freeze (no changes for the first 100 ADD recommendations).
+- **Document the blocker** in `Calibration.md` and update `Progress.md` / `Decisions.md` state.
+
+### Files changed
+
+| File | Status | Lines |
+|---|---|---|
+| `engine_core/backtest_v2_pyramiding.py` | NEW | ~470 |
+| `Calibration.md` | modified | +12/-4 (measured effects updated) |
+| `Sessions.md` | modified | +75 (this entry) |
+| `Progress.md` | modified | +25/-8 (P6 shipped, P6d blocked, P7 next) |
+
+### P7 handoff notes
+
+When historical data is available:
+
+1. Run `scripts/daily_cas_scanner.py --as-of YYYY-MM-DD` for each historical
+   trading date over the desired 6-month window (full watchlist, no `--limit`).
+2. Re-run the backtest:
+   ```bash
+   venv/bin/python engine_core/backtest_v2_pyramiding.py \
+     --start-date 2026-01-01 --end-date 2026-07-31 \
+     --json-out /tmp/p6_report.json
+   ```
+3. If ALL 6 metrics pass: update `config/calibration_registry.yaml` for
+   G1–G5 + version stamp, set `validated: true` and `validated_after: <run date>`,
+   add a new `Calibration.md` entry with measured effects.
+4. If ANY metric fails: tighten thresholds in `config/capital_allocation.yaml`,
+   add a new `Calibration.md` entry explaining the change, re-run, and do not
+   flip calibration entries.
+5. After calibration flip (or documented failure), run P7: final
+   `Sessions.md`, `Progress.md`, and `Decisions.md` Decision 103 final entry + push.
+
 ### Multi-session handoff notes for P6
 
 When resuming after owner P5 sign-off:

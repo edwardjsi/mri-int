@@ -2923,20 +2923,40 @@ Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-o
 - [x] No build step run (no tsc in project root); owner to verify in dev server (`npm run dev`).
 - [x] Commit + push: `feat(cas-v2): frontend AddStatusChip + ADD Status column on BreakoutRadar (P5)`.
 
-### 🚧 P6–P7 backlog
+### ✅ P6 SHIPPED (backtest script + doc wrap-up, 2026-07-13)
 
-- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`. **Blocked on owner P5 diff review.**
-- **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push. Blocked on P6.
+- [x] **P6a** — Discovery complete. Confirmed §14.8 metrics, existing backtest scripts, calibration registry state (`hypothesis` for G1–G5), and the data-coverage gap.
+- [x] **P6b** — Identified `scripts/daily_cas_scanner.py` as the existing batch population path; no new population script needed. CLI supports `--as-of YYYY-MM-DD --limit N` and does idempotent UPSERT per symbol/day.
+- [x] **P6c** — Wrote `engine_core/backtest_v2_pyramiding.py` (NEW, ~470 lines):
+  - Reads `cas_recommendations` over a date range.
+  - Compares V1.1d `action == 'ADD'` vs V2 `factor_snapshot.final_state == 'ADD_SECOND_TRANCHE'`.
+  - Computes forward 20/60/120-trading-day returns vs NIFTY50 from `market_index_prices`.
+  - Computes 60-day max drawdown from `daily_prices`.
+  - Reports 6 §14.8 metrics with pass/fail verdicts; supports `--json-out`.
+  - Handles V1.1d snapshots (no `final_state`) and V2 snapshots gracefully.
+  - `ast.parse` OK; smoke-tested against Neon.
+- [x] **Smoke test result** — 9 recommendations loaded (2026-07-07 batch); 0 V1.1d ADD and 0 V2 ADD_SECOND_TRANCHE signals; all 6 metrics fail with `n/a` (expected data-coverage gap, not a gate-design failure).
+- [x] **P6d** — Calibration flip BLOCKED. 5 registry entries remain `hypothesis` / `validated_after: null` until historical data is populated and the backtest produces a meaningful ADD signal sample.
+- [x] **P6e** — Doc wrap-up:
+  - `Calibration.md` — updated 2026-07-13 Add Gate V2 entry + G1/G2/G4/G5 entries with measured-effect notes (insufficient data).
+  - `Sessions.md` — added "Session: P6 — Backtest Validation (Decision 103)" + P7 handoff notes.
+  - `Progress.md` — updated to this section (P6 shipped, P6d blocked, P7 next).
+
+### 🚧 P7 backlog / next actions
+
+- **Unblock P6d first**: populate historical `cas_recommendations` by running `scripts/daily_cas_scanner.py --as-of YYYY-MM-DD` for each trading date in the desired 6-month window (full watchlist). Then re-run `engine_core/backtest_v2_pyramiding.py`. If all 6 metrics pass, flip the 5 `config/calibration_registry.yaml` entries to `validated: true` + `validated_after: <run date>` and update `Calibration.md`.
+- **P7 (30 min)** — Final `Sessions.md`, `Progress.md`, and `Decisions.md` Decision 103 final entry + push. Blocked on P6d.
 
 ### 📌 Decisions.md State After This Session
 
-- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), and P5 (frontend) all shipped. P6–P7 pending owner P5 diff review**.
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), P5 (frontend), and P6 (backtest script + doc wrap-up) all shipped. Calibration flip (P6d) blocked on historical data population; P7 final wrap-up blocked on P6d.**
 - **Decision 102** still VALIDATED — no change.
 - **Decision 101** still APPROVED — no change.
 - **Decision 100** still APPROVED — no change.
 
 ### 📌 Next
 
-- (a) **Owner reviews P5 diff**: 280 insertions across 3 files (`AddStatusChip.tsx` +265 NEW, `api.ts` +12, `BreakoutRadar.tsx` +3). Commit `ade1c28`. No build step run in-session; user to verify in dev server. Authorize P6 to begin.
-- (b) **P6 starts at the backtest**. See Sessions.md "Multi-session handoff notes for P6" for resume-cold pointers, use `evaluate_add_gates()` + `compute_layered_state()` directly from engine (no re-implementation), data coverage gap (~9 rows currently), V1.1d row handling, calibration freeze (no threshold tweaks for first 100 ADD recs).
-- (c) P6 (backtest) is the validation gate before flipping 5 calibration registry entries to `validated`. P7 final wrap-up closes Decision 103.
+- (a) **Populate historical data** — run `scripts/daily_cas_scanner.py --as-of <date>` across the trailing 6 months. This is an operational step, not a code change.
+- (b) **Re-run backtest** — `venv/bin/python engine_core/backtest_v2_pyramiding.py --start-date 2026-01-01 --end-date 2026-07-31 --json-out /tmp/p6_report.json`.
+- (c) **If all 6 metrics pass**: update `config/calibration_registry.yaml` (G1–G5 + version stamp → `validated: true`), add measured-effect entries to `Calibration.md`, then run P7.
+- (d) **If any metric fails**: tighten thresholds in `config/capital_allocation.yaml`, document in `Calibration.md`, re-run, and keep registry entries as `hypothesis`.

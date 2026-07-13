@@ -176,9 +176,18 @@ owner refinement C5).
 that pass ALL five gates (plus confidence stars) earn the second tranche.
 Real-world effect size: see G1–G5 individual entries below.
 
-**Measured effect:** *(pending — requires P6 backtest, then ≥100 ADD
-recommendations with m6 outcomes to flip add_gate.* status to validated
-per Decision 102 calibration freeze)*
+**Measured effect:** P6 backtest script `engine_core/backtest_v2_pyramiding.py`
+executed on 2026-07-13 over 2026-01-01 → 2026-07-31 against Neon.
+`cas_recommendations` contained only 9 historical rows (2026-07-07 batch);
+0 V1.1d `ADD` signals and 0 V2 `ADD_SECOND_TRANCHE` signals were available.
+Consequently all 6 §14.8 metrics failed with `n/a` values:
+`signals_per_month`, `outperform_20d`, `outperform_60d`, `outperform_120d`,
+`win_rate_vs_cas_only`, `avg_max_drawdown_60d`.  This is the expected
+data-coverage gap, not a gate-design failure.  Next step: populate
+historical recommendations by running `scripts/daily_cas_scanner.py` for
+each historical trading date (full watchlist, no `--limit`), then re-run
+the backtest.  Calibration entries remain `hypothesis` until the sample
+contains enough ADD signals to compute all 6 metrics.
 
 ---
 
@@ -199,7 +208,8 @@ disappear — they now need to also clear G2–G5.
 **Expected effect:** No change in the set of CAS-85+ candidates reaching
 the gate; the G1 floor anchors the layered check.
 
-**Measured effect:** *(pending P6 backtest)*
+**Measured effect:** *(pending — P6 backtest executed but sample has 0
+ADD signals; see main 2026-07-13 Add Gate V2 entry)*
 
 ---
 
@@ -221,8 +231,8 @@ backtests, then revisit it. Until then, I'd keep both."
 EMA stack violation). Tightens ADD signal without disturbing CAS
 scoring itself.
 
-**Measured effect:** *(pending P6 backtest; will revisit if ρ(decision_score,
-mri_technical_score) > 0.9)*
+**Measured effect:** *(pending — P6 backtest executed but sample has 0
+ADD signals; see main 2026-07-13 Add Gate V2 entry)*
 
 ---
 
@@ -251,7 +261,8 @@ historical recommendations were generated under the 1.3× rule.
 resistance without institutional commitment. Reduces false positives
 without adding daily recomputation overhead (computed once, frozen).
 
-**Measured effect:** *(pending P6 backtest)*
+**Measured effect:** *(pending — P6 backtest executed but sample has 0
+ADD signals; see main 2026-07-13 Add Gate V2 entry)*
 
 ---
 
