@@ -2612,3 +2612,84 @@ When resuming after owner P4 sign-off:
 - **Loading states**: `/api/cas/add-eligibility` involves 3 SQL queries + a MOSI Lite enrichment call (~50-200ms per symbol). Show a loading spinner on the chip while waiting; cache results for the radar page lifetime to avoid re-fetching on every row hover.
 - **Error handling**: API returns `error: "no_cas_recommendation"` when the symbol has no CAS rec yet. Render the chip as `OBSERVE` with a tooltip "CAS recommendation not yet generated — run indicator engine first." Do NOT show "—" or a broken state.
 - **Backwards compat for V1.1d radar rows**: The V2 columns from `/api/breakout/radar` will be `null` for symbols that haven't been through the indicator pipeline yet. Render as "—" (em dash) in the tooltip, not "undefined" or "null".
+
+---
+
+## Session: P5 — Frontend (Decision 103) [2026-07-13]
+
+**Goal**: Build the user-visible payoff of Decision 103 — AddStatusChip component + new "ADD Status" column on BreakoutRadar. No engine changes (P3). No API changes (P4). No DB migrations (P2). Pure frontend layer + wiring.
+
+**Built**:
+
+- **`frontend/src/AddStatusChip.tsx`** (NEW, 265 lines)
+  - 4 V2 states color-coded per `Sessions.md` P5 handoff notes:
+    - `OBSERVE` → ⏳ gray (`#6b7280`)
+    - `APPROACHING_ADD` → 👀 blue (`#3b82f6`)
+    - `READY_FOR_ADD` → ⚡ amber (`#f59e0b`)
+    - `ADD_SECOND_TRANCHE` → ✅ green (`#22c55e`)
+  - Mirrors `BreakoutBadge.tsx` styling (inline-flex, `${color}20` bg, `${color}40` border, `2px 6px` padding, `10px` font, `4px` radius).
+  - Fetches `GET /api/cas/add-eligibility?symbol=X&client_id=Y` on mount.
+  - `client_id` from `props.clientId ?? localStorage.getItem('mri_client_id')`.
+  - Loading state: gray "⏳ …" pill.
+  - Error/no-data state: gray "⏳ OBSERVE" pill with tooltip (handles `no_client_id`, `no_cas_recommendation`, `fetch_failed` — all degrade to OBSERVE per Sessions.md P5 handoff).
+  - Hover popover: lists `cas_score`, `cas_action`, `breakout_state`, `resistance_source`, `has_existing_position` + full 6-gate breakdown with ✓/✗ icons per gate. Popover styled as dark card with absolute positioning below chip.
+
+- **`frontend/src/api.ts`** (+12 lines)
+  - `listCasRecommendations({symbol?, days?, limit?})` — calls `/api/cas/recommendations`.
+  - `getAddEligibility(symbol, client_id)` — calls `/api/cas/add-eligibility?symbol=X&client_id=Y`. URL-encoded.
+
+- **`frontend/src/BreakoutRadar.tsx`** (+3 lines)
+  - `import AddStatusChip from './AddStatusChip';` (after existing `BreakoutBadge` import).
+  - `<th title="Decision 103 V2 — 4-state ADD_SECOND_TRANCHE gate evaluation (hover chip for detail)">ADD Status</th>` as the last column header (after `Status`).
+  - `<td><AddStatusChip symbol={item.symbol} /></td>` as the last cell in each row.
+  - Single `renderTable()` change cascades to all 6 sections: fresh/early/late/mature/ready/consolidating.
+
+**Verification**:
+
+- `git diff --stat` shows 3 files, 280 insertions (ade1c28).
+- `grep -c AddStatusChip BreakoutRadar.tsx` → 2 (import + JSX usage).
+- `grep -c AddStatusChip AddStatusChip.tsx` → 3 (internal component references).
+- No TypeScript build step run in this session (no `tsc`/`npm install` available in project root). Owner to verify in dev server: `npm run dev` then navigate to BreakoutRadar page.
+- Backend smoke tests from P4 (14/14) verify the API contract the chip consumes; no regression risk to backend.
+
+**Edge cases handled**:
+
+- Symbol not yet in `cas_recommendations` → chip renders OBSERVE with tooltip "CAS recommendation not yet generated — run indicator engine first."
+- Symbol has no `daily_prices` row → chip renders OBSERVE with tooltip from `no_market_data` error.
+- `client_id` missing (not logged in) → chip renders OBSERVE with tooltip "No client_id available — sign in to see gate state."
+- Network failure → chip renders OBSERVE with tooltip from error message; no broken UI.
+- V1.1d radar rows (V2 columns are NULL) → chip still works because it calls its own API endpoint which gracefully handles NULL columns.
+
+**Backward compatibility**:
+
+- New column is additive; existing sort/filter/pagination logic in BreakoutRadar unchanged.
+- Existing `BreakoutBadge` usage unchanged (sits next to new chip in same row).
+- `AddStatusChip` degrades gracefully when any input is missing — never crashes.
+- No new dependencies added; uses only existing React patterns + the existing `api.ts` `apiFetch` helper.
+
+**Result**: P5 ships. Frontend layer V2 ready. **Pausing for owner approval before P6 (backtest).**
+
+### Multi-session handoff notes for P6
+
+When resuming after owner P5 sign-off:
+
+1. **P6 (2 hr)**: Backtest validation against trailing 6 months.
+   - Use `cas_recommendations` table — every row already has `factor_snapshot` with V2 keys (for rows generated after P3 deploy) OR V1.1d shape (for rows before). The backtest script must handle BOTH gracefully.
+   - For each V2 row: extract `gate_inputs` from `factor_snapshot` + `cas` column, re-run `evaluate_add_gates()`, compare predicted `final_state` against actual 20d/60d/120d return (from `daily_prices`).
+   - Hit all 6 success metrics from §14.8 of `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md`:
+     - ADD signals/month ≤ 5
+     - % outperform benchmark at 20/60/120 days ≥ 60/60/55%
+     - Win rate vs CAS-only ≥ CAS-only
+     - Avg max drawdown < −12%
+   - If ALL 6 metrics pass: flip 5 calibration registry entries in `config/calibration_registry.yaml` from `PROPOSED` → `validated`.
+   - If ANY metric fails: tighten thresholds in `config/capital_allocation.yaml`, re-run, document the new entry in `Calibration.md` journal.
+
+2. **P7 (30 min)**: Final Sessions.md, Progress.md, Decisions 103 final entry + push.
+
+### Critical reminders for P6
+
+- **Use `evaluate_add_gates()` + `compute_layered_state()` directly from engine** — do NOT re-implement gate logic in the backtest script. Reuse the same functions the API uses.
+- **Data coverage gap**: Only ~9 rows in `cas_recommendations` from the 2026-07-07 batch. The full indicator pipeline must run on more symbols (or the existing 9 symbols across more dates) to get a meaningful backtest sample. Coordinate with whoever runs the indicator pipeline.
+- **V1.1d rows**: Pre-2026-07-13 `cas_recommendations` rows have a V1.1d `factor_snapshot` shape. The backtest script should either skip these OR construct synthetic `gate_inputs` from `factor_snapshot` sub-scores.
+- **Calibration freeze**: After P5 ships, do NOT tweak `add_gate` thresholds for the first 100 ADD recommendations (matches Decision 102's pattern). Re-validate at 100 / 250 / 500 ADD signals.
+- **Document the backtest results** in `Sessions.md` under a new "## Session: P6 — Backtest (Decision 103)" section. Include: sample size, hit rate per metric, decision (ship / tighten / abandon).

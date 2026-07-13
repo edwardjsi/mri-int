@@ -2914,21 +2914,29 @@ Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-o
 - [x] One design bug caught+fixed: `GateResult` field names (`blocked`→`blocked_gates`, `score_pct`→`gate_score_pct`, `passed`→`gates_passed`, `total`→`gates_total`) per `engine_core/cas_recommendations.py` L55-66 NamedTuple.
 - [x] Commit + push: `feat(cas-v2): API layer for Decision 103 — /api/cas/recommendations + /api/cas/add-eligibility + /api/breakout/radar V2 cols (P4)`. 353 insertions across 3 files.
 
-### 🚧 P5–P7 backlog
+### ✅ P5 SHIPPED (commit ade1c28, 2026-07-13)
 
-- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar ADD Status column integration. 4 states color-coded (gray/blue/amber/green); hover popover lists all 6 gate results. **Blocked on owner P4 diff review.**
-- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`. Blocked on P5.
+- [x] `frontend/src/AddStatusChip.tsx` (NEW, 265 lines) — 4 V2 states color-coded (OBSERVE=gray, APPROACHING_ADD=blue, READY_FOR_ADD=amber, ADD_SECOND_TRANCHE=green); hover popover lists all 6 gate results with ✓/✗ icons; handles loading / no_client_id / no_cas_recommendation / fetch_failed edge cases (all degrade to OBSERVE).
+- [x] `frontend/src/api.ts` (+12 lines) — `listCasRecommendations({symbol?, days?, limit?})` + `getAddEligibility(symbol, client_id)` after `getBreakoutRadar`. Both URL-encoded.
+- [x] `frontend/src/BreakoutRadar.tsx` (+3 lines) — `AddStatusChip` import + `<th>ADD Status</th>` header + `<td><AddStatusChip symbol={item.symbol} /></td>` cell. Single `renderTable()` change cascades to all 6 sections (fresh/early/late/mature/ready/consolidating).
+- [x] Verification: `grep -c AddStatusChip BreakoutRadar.tsx` → 2 (import + JSX usage); `AddStatusChip.tsx` → 3 (internal refs). git diff --stat: 3 files, 280 insertions.
+- [x] No build step run (no tsc in project root); owner to verify in dev server (`npm run dev`).
+- [x] Commit + push: `feat(cas-v2): frontend AddStatusChip + ADD Status column on BreakoutRadar (P5)`.
+
+### 🚧 P6–P7 backlog
+
+- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`. **Blocked on owner P5 diff review.**
 - **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push. Blocked on P6.
 
 ### 📌 Decisions.md State After This Session
 
-- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), and P4 (API layer) all shipped. P5–P7 pending owner P4 diff review**.
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), and P5 (frontend) all shipped. P6–P7 pending owner P5 diff review**.
 - **Decision 102** still VALIDATED — no change.
 - **Decision 101** still APPROVED — no change.
 - **Decision 100** still APPROVED — no change.
 
 ### 📌 Next
 
-- (a) **Owner reviews P4 diff**: 353 insertions across 3 files (`api/breakout_status.py` +10, `api/cas.py` +341 NEW, `api/main.py` +2). Commit `54ef6e6`. Direct DB smoke tests 14/14 pass. Authorize P5 to begin.
-- (b) **P5 starts at the frontend**. See Sessions.md "Multi-session handoff notes for P5" for resume-cold pointers, AddStatusChip data source requirement (`/api/cas/add-eligibility` NOT `/api/cas/recommendations`), client_id sourcing, loading state UX, and error handling for `no_cas_recommendation`.
-- (c) P5 is user-visible (frontend). P6 (backtest) is the validation gate before flipping 5 calibration entries to `validated`.
+- (a) **Owner reviews P5 diff**: 280 insertions across 3 files (`AddStatusChip.tsx` +265 NEW, `api.ts` +12, `BreakoutRadar.tsx` +3). Commit `ade1c28`. No build step run in-session; user to verify in dev server. Authorize P6 to begin.
+- (b) **P6 starts at the backtest**. See Sessions.md "Multi-session handoff notes for P6" for resume-cold pointers, use `evaluate_add_gates()` + `compute_layered_state()` directly from engine (no re-implementation), data coverage gap (~9 rows currently), V1.1d row handling, calibration freeze (no threshold tweaks for first 100 ADD recs).
+- (c) P6 (backtest) is the validation gate before flipping 5 calibration registry entries to `validated`. P7 final wrap-up closes Decision 103.
