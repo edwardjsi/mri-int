@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, NamedTuple, Optional
 
 from engine_core.capital_allocation import compute_engine_signature
 from engine_core.db import get_connection
@@ -49,6 +49,58 @@ REQUIRED_FACTOR_KEYS: tuple[str, ...] = (
 
 
 # ===========================================================================
+# Decision 103 V2 Pyramiding Discipline — gate result + action result types
+# ===========================================================================
+
+class GateResult(NamedTuple):
+    """Result of `evaluate_add_gates()` (Decision 103).
+
+    Attributes:
+        gates_passed:   how many of the 6 checks passed (G1–G5 + confidence)
+        gates_total:    total checks evaluated (always 6 for the V2 model)
+        blocked_gates:  machine-readable codes for the failed checks,
+                        empty list when all pass
+        gate_score_pct: 0–100, gates_passed / gates_total × 100, rounded to 1 dp
+    """
+
+    gates_passed: int
+    gates_total: int
+    blocked_gates: list[str]
+    gate_score_pct: float
+
+
+class ActionResult(NamedTuple):
+    """Result of `compute_action()` (Decision 103).
+
+    Replaces the legacy `str` return type. `final_state` is the V2
+    4-state model label, or None when gate_inputs was not provided
+    (legacy compatibility — see `compute_action` docstring).
+
+    Attributes:
+        action:        'BUY' | 'ADD' | 'WATCH'
+        final_state:   'OBSERVE' | 'APPROACHING_ADD' | 'READY_FOR_ADD' |
+                       'ADD_SECOND_TRANCHE' | None
+        blocked_gates: from GateResult, [] when all pass
+    """
+
+    action: str
+    final_state: Optional[str]
+    blocked_gates: list[str]
+
+
+# Gate failure codes (machine-readable, used in factor_snapshot.blocked_gates
+# and surfaced in the UI/API for debugging).
+GATE_BLOCK_CODES: tuple[str, ...] = (
+    "G1_DECISION_SCORE_BELOW_MIN",
+    "G2_MRI_TECHNICAL_BELOW_MIN",
+    "G3_WEEKLY_CLOSE_BELOW_RESISTANCE",
+    "G4_VOLUME_NOT_CONFIRMED",
+    "G5_BREAKOUT_AGE_TOO_OLD",
+    "CONFIDENCE_STARS_BELOW_MIN",
+)
+
+
+# ===========================================================================
 # Pure helpers
 # ===========================================================================
 
@@ -67,24 +119,127 @@ def make_recommendation_id(rec_date: Any, symbol: str) -> str:
     return f"CAS-{rec_date.isoformat()}-{symbol.upper()}"
 
 
+def evaluate_add_gates(
+    gate_inputs: dict[str, Any] | None,
+    config: dict[str, Any],
+) -> GateResult:
+    """Evaluate the 5 ADD_SECOND_TRANCHE gates + confidence stars.
+
+    Decision 103 P3: pure helper, all thresholds read from YAML.
+
+    Args:
+        gate_inputs: dict with these optional keys:
+            - decision_score             (float)  — G1 (≥ decision_score_min)
+            - mri_technical_score        (float)  — G2 (≥ mri_technical_min)
+            - weekly_close_above_resistance (bool) — G3 (must be True)
+            - volume_confirmed_breakout  (bool)   — G4 (must be True)
+            - breakout_age               (int)    — G5 (≤ breakout_age_max)
+            - confidence_stars           (int)    — confidence (≥ confidence_stars_min)
+
+            Missing keys count as 'not passed' (defensive: never auto-pass).
+
+            Pass `None` to fall back to legacy behavior (assume all 6 pass).
+            This keeps the V1.1d behavior for callers that haven't migrated
+            to the V2 gate model yet.
+
+        config: full CAS config dict (must be loaded via load_config).
+                Reads `add_gate.decision_score_min`, `add_gate.mri_technical_min`,
+                `add_gate.breakout_age_max`, `add_gate.confidence_stars_min`.
+
+    Returns:
+        GateResult(gates_passed, gates_total, blocked_gates, gate_score_pct).
+    """
+    if gate_inputs is None:
+        # Legacy compatibility path: assume all 6 checks pass so the
+        # V1.1d CAS+stars behavior is preserved exactly.
+        return GateResult(6, 6, [], 100.0)
+
+    add_gate = config.get("add_gate", {})
+    g1_min = add_gate.get("decision_score_min", 85)
+    g2_min = add_gate.get("mri_technical_min", 80)
+    g5_max = add_gate.get("breakout_age_max", 15)
+    conf_min = add_gate.get("confidence_stars_min", 4)
+
+    blocked: list[str] = []
+
+    # G1: decision_score ≥ threshold
+    ds = gate_inputs.get("decision_score")
+    if ds is None or not isinstance(ds, (int, float)) or ds < g1_min:
+        blocked.append(GATE_BLOCK_CODES[0])
+
+    # G2: mri_technical_score ≥ threshold
+    mts = gate_inputs.get("mri_technical_score")
+    if mts is None or not isinstance(mts, (int, float)) or mts < g2_min:
+        blocked.append(GATE_BLOCK_CODES[1])
+
+    # G3: weekly close strictly above resistance
+    wcar = gate_inputs.get("weekly_close_above_resistance")
+    if wcar is not True:
+        blocked.append(GATE_BLOCK_CODES[2])
+
+    # G4: breakout-day volume ≥ 1.3× 20d average
+    vcb = gate_inputs.get("volume_confirmed_breakout")
+    if vcb is not True:
+        blocked.append(GATE_BLOCK_CODES[3])
+
+    # G5: breakout_age ≤ 15 trading days
+    ba = gate_inputs.get("breakout_age")
+    if ba is None or not isinstance(ba, int) or ba > g5_max:
+        blocked.append(GATE_BLOCK_CODES[4])
+
+    # Confidence stars ≥ threshold
+    stars = gate_inputs.get("confidence_stars")
+    if stars is None or not isinstance(stars, int) or stars < conf_min:
+        blocked.append(GATE_BLOCK_CODES[5])
+
+    gates_total = 6
+    gates_passed = gates_total - len(blocked)
+    gate_score_pct = round(100.0 * gates_passed / gates_total, 1)
+
+    return GateResult(gates_passed, gates_total, blocked, gate_score_pct)
+
+
 def compute_action(
     cas_score: float,
     confidence_stars: int,
     has_existing_position: bool,
     config: dict[str, Any],
-) -> str:
-    """Map (cas_score, confidence_stars, position state) → action verb.
+    gate_inputs: dict[str, Any] | None = None,
+) -> ActionResult:
+    """Map (cas_score, confidence_stars, position state, gates) → ActionResult.
 
-    Layer 3 vocabulary per Decision 101:
+    Decision 103 V2: extends the legacy 3-action model (BUY/ADD/WATCH) with
+    a 4-state decision state (OBSERVE / APPROACHING_ADD / READY_FOR_ADD /
+    ADD_SECOND_TRANCHE) plus a list of blocked gates.
+
+    Layer 3 vocabulary (action):
       BUY   = first tranche / fresh position
       ADD   = adding to existing position
-      WATCH = eligible but no action yet
-    NO_ACTION is NOT persisted (every recommendation has an action).
+      WATCH = eligible but no action yet (or gates failed)
 
     Priority:
-      1. If has_existing_position AND cas ≥ add_cas_min AND stars ≥ min_stars → ADD
-      2. If cas ≥ buy_cas_min AND stars ≥ min_stars → BUY
-      3. Else → WATCH
+      1. If has_existing_position AND cas ≥ add_cas_min AND stars ≥ min_stars
+         AND all 6 gates pass → ADD
+      2. If has_existing_position AND cas ≥ add_cas_min AND stars ≥ min_stars
+         BUT some gates fail → WATCH (degraded — final_state = READY_FOR_ADD)
+      3. If cas ≥ buy_cas_min AND stars ≥ min_stars → BUY
+      4. Else → WATCH
+
+    The 4-state decision state (`final_state`):
+      ADD_SECOND_TRANCHE — action == 'ADD' (all gates passed)
+      READY_FOR_ADD     — cas ≥ add_cas_min but some gate failed
+      APPROACHING_ADD   — 80 ≤ cas < add_cas_min
+      OBSERVE           — cas < 80
+
+    Backward compatibility:
+      - When `gate_inputs is None`, the function falls back to legacy V1.1d
+        behavior: action = BUY/ADD/WATCH based purely on CAS+stars, with
+        `final_state = None` and `blocked_gates = []`. This keeps the
+        existing 259 CAS tests green.
+      - Return type changed from `str` to `ActionResult` (NamedTuple). Callers
+        that need just the action should access `.action`. The two internal
+        callers in this module have been updated; external callers should
+        migrate to `compute_action(...).action`.
 
     Note: stars check applies to BOTH BUY and ADD. Even high CAS with
     low stars → WATCH (we don't act on uncertain signals).
@@ -94,9 +249,35 @@ def compute_action(
     add_min = a.get("add_cas_min", buy_min)  # default: ADD requires same CAS
     min_stars = a.get("min_confidence_stars_for_buy", 4)
 
+    # Legacy action path (CAS+stars only)
     if cas_score >= max(buy_min, add_min) and confidence_stars >= min_stars:
-        return "ADD" if has_existing_position else "BUY"
-    return "WATCH"
+        base_action = "ADD" if has_existing_position else "BUY"
+    else:
+        base_action = "WATCH"
+
+    # V2 gate evaluation
+    gate_result = evaluate_add_gates(gate_inputs, config)
+    blocked_gates: list[str] = list(gate_result.blocked_gates)
+
+    # Degrade ADD → WATCH if any gate failed (Decision 103 invariant: we
+    # never recommend adding to a position when the gate evidence is incomplete).
+    if base_action == "ADD" and blocked_gates:
+        action = "WATCH"
+    else:
+        action = base_action
+
+    # V2 4-state final_state (only computed when gate_inputs was provided)
+    # Delegate to compute_layered_state for DRY — single source of truth.
+    # (Previous inline derivation duplicated logic and missed the
+    # READY_FOR_ADD branch for the BUY-without-position case.)
+    final_state: Optional[str] = None
+    if gate_inputs is not None:
+        from engine_core.cas_decision_layer import compute_layered_state
+        final_state = compute_layered_state(
+            cas_score, blocked_gates, has_existing_position, config
+        )
+
+    return ActionResult(action, final_state, blocked_gates)
 
 
 def compute_milestones_to_fill(
@@ -119,6 +300,11 @@ def compute_factor_snapshot(
     sub_scores: dict[str, float],
     regime: str,
     action: str,
+    *,
+    gate_result: "GateResult | None" = None,
+    final_state: str | None = None,
+    resistance_source: str | None = None,
+    add_gate_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the factor_snapshot dict for JSONB storage.
 
@@ -130,6 +316,15 @@ def compute_factor_snapshot(
     the key 'regime' so it can be filtered cleanly in dashboards. The
     regime sub-score is implied by the state (BULLISH=100, BEAR_TRANSITION
     = 50, BEARISH=0) and recoverable via _regime_score().
+
+    Decision 103 V2 ADD gate inputs (all optional, backward-compatible):
+      gate_result       — if provided, adds 'gates' (passed/total/blocked)
+                          and 'gate_score_pct'
+      final_state       — if provided, adds 'final_state' (V2 4-state label)
+      resistance_source — if provided, adds 'resistance_source' (C9 enum)
+      add_gate_config   — if provided, adds 'config_snapshot' (Decision 103 C5:
+                          version + thresholds, so historical rows can be
+                          reproduced even after threshold changes)
     """
     snap: dict[str, Any] = {
         # Sub-scores (the inputs to compute_market_score_breakdown)
@@ -151,6 +346,32 @@ def compute_factor_snapshot(
         # Decision context
         "action": action,
     }
+
+    # ── Decision 103 V2 ADD gate inputs ──────────────────────────────────
+    if gate_result is not None:
+        snap["gates"] = {
+            "passed": gate_result.gates_passed,
+            "total": gate_result.gates_total,
+            "blocked": list(gate_result.blocked_gates),
+        }
+        snap["gate_score_pct"] = gate_result.gate_score_pct
+    if final_state is not None:
+        snap["final_state"] = final_state
+    if resistance_source is not None:
+        snap["resistance_source"] = resistance_source
+    if add_gate_config is not None:
+        # C5: persist the gate config that was active when this snapshot
+        # was generated. Lets us reproduce historical gate decisions even
+        # after the live YAML thresholds change.
+        snap["config_snapshot"] = {
+            "version": add_gate_config.get("version", "2.0.0"),
+            "decision_score_min": add_gate_config.get("decision_score_min"),
+            "mri_technical_min": add_gate_config.get("mri_technical_min"),
+            "breakout_age_max": add_gate_config.get("breakout_age_max"),
+            "breakout_volume_ratio": add_gate_config.get("breakout_volume_ratio"),
+            "confidence_stars_min": add_gate_config.get("confidence_stars_min"),
+        }
+
     return snap
 
 
@@ -222,6 +443,7 @@ def record_cas_recommendation(
     sub_scores: dict[str, float],
     config: dict[str, Any],
     has_existing_position: bool = False,
+    gate_inputs: dict[str, Any] | None = None,
 ) -> str:
     """Event A — Record a CAS recommendation (idempotent UPSERT).
 
@@ -238,6 +460,10 @@ def record_cas_recommendation(
         sub_scores: dict of factor scores (weekly, breakout, volume, rs, overhead_supply, regime, sector)
         config: full CAS config dict (must be loaded via load_config)
         has_existing_position: whether user already holds this symbol
+        gate_inputs: Decision 103 V2 ADD_SECOND_TRANCHE gate inputs (None
+                     = legacy behavior; assume all gates pass). When provided,
+                     the snapshot records gate_result + final_state +
+                     config_snapshot for historical reproducibility.
 
     Returns:
         The recommendation_id string.
@@ -251,7 +477,28 @@ def record_cas_recommendation(
     symbol = row["symbol"]
     rid = make_recommendation_id(rec_date, symbol)
     sig = compute_engine_signature(config)
-    snap = compute_factor_snapshot(row, sub_scores, regime, action)
+
+    # ── Decision 103 V2 gate evaluation + final_state derivation ───────────
+    gate_result = evaluate_add_gates(gate_inputs, config)
+    final_state: str | None = None
+    if gate_inputs is not None:
+        # Lazy import to avoid any circular import risk (cas_decision_layer
+        # does not currently import cas_recommendations, but keeping this
+        # local keeps the dependency direction explicit).
+        from engine_core.cas_decision_layer import compute_layered_state
+        final_state = compute_layered_state(
+            cas_score, gate_result.blocked_gates, has_existing_position, config
+        )
+    resistance_source = row.get("resistance_source")
+    add_gate_config = config.get("add_gate") if isinstance(config, dict) else None
+
+    snap = compute_factor_snapshot(
+        row, sub_scores, regime, action,
+        gate_result=gate_result,
+        final_state=final_state,
+        resistance_source=resistance_source,
+        add_gate_config=add_gate_config,
+    )
     price = float(row.get("close") or 0)
 
     with get_connection() as conn:
@@ -677,9 +924,15 @@ def scan_and_record_eligible_recommendations(
             row, sub_scores, row.get("proxies_used", {}), config
         )
 
-        # Action verb (BUY/ADD/WATCH — V1.1c will add NO_ACTION path)
-        # For V1.1b scanner: assume no existing position (BUY if high CAS).
-        action = compute_action(cas, stars, has_existing_position=False, config=config)
+        # Action verb (BUY/ADD/WATCH — V1.1c will add NO_ACTION path).
+        # Decision 103 P3c: compute_action now returns ActionResult. The
+        # scanner passes `gate_inputs=None` to keep V1.1d legacy behavior
+        # (final_state will be None). Future P5 frontend work will pass
+        # real gate inputs from the new daily_prices columns.
+        action = compute_action(
+            cas, stars, has_existing_position=False,
+            config=config, gate_inputs=None,
+        ).action
 
         record_cas_recommendation(
             row=row,

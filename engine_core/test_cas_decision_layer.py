@@ -16,7 +16,9 @@ from engine_core.cas_decision_layer import (
     STABILITY_NEW,
     TIER_ORDER,
     ACTION_TIER_MAP,
+    LAYERED_STATE_ORDER,
     cas_to_tier,
+    compute_layered_state,
     tier_to_action,
     stabilize_action,
     compute_recommendation_lifecycle,
@@ -389,3 +391,74 @@ class TestAssertCasWithinTolerance:
         config = load_config("config/capital_allocation.yaml")
         expected_default = config.get("regression_tolerance", {}).get("cas_points", 2.0)
         assert expected_default == 2.0
+
+
+# ===========================================================================
+# Decision 103 P3f — compute_layered_state tests (V2 4-state model)
+# ===========================================================================
+
+def _v2_decision_config(add_min=85.0):
+    return {"action": {"buy_cas_min": 80, "add_cas_min": add_min, "watch_cas_min": 60}}
+
+
+class TestComputeLayeredState:
+    """Decision 103 V2: 4-state model — OBSERVE / APPROACHING_ADD /
+    READY_FOR_ADD / ADD_SECOND_TRANCHE."""
+
+    def test_low_cas_returns_observe(self):
+        cfg = _v2_decision_config()
+        assert compute_layered_state(70.0, [], False, cfg) == "OBSERVE"
+        assert compute_layered_state(50.0, [], False, cfg) == "OBSERVE"
+
+    def test_cas_in_80_to_84_returns_approaching_add(self):
+        cfg = _v2_decision_config()
+        assert compute_layered_state(80.0, [], False, cfg) == "APPROACHING_ADD"
+        assert compute_layered_state(82.5, [], True, cfg) == "APPROACHING_ADD"
+        assert compute_layered_state(84.9, [], False, cfg) == "APPROACHING_ADD"
+
+    def test_high_cas_no_position_is_ready_for_add(self):
+        """CAS >= 85 + no position → READY_FOR_ADD (can BUY but not ADD)."""
+        cfg = _v2_decision_config()
+        assert compute_layered_state(88.0, [], False, cfg) == "READY_FOR_ADD"
+
+    def test_high_cas_with_position_and_all_passes_is_add_second_tranche(self):
+        cfg = _v2_decision_config()
+        assert compute_layered_state(88.0, [], True, cfg) == "ADD_SECOND_TRANCHE"
+        assert compute_layered_state(99.9, [], True, cfg) == "ADD_SECOND_TRANCHE"
+
+    def test_high_cas_with_failed_gate_is_ready_for_add(self):
+        """Even with position, a failed gate → READY_FOR_ADD (not ADD_SECOND_TRANCHE)."""
+        cfg = _v2_decision_config()
+        assert compute_layered_state(
+            90.0, ["G3_WEEKLY_CLOSE_BELOW_RESISTANCE"], True, cfg
+        ) == "READY_FOR_ADD"
+
+    def test_none_cas_returns_observe(self):
+        cfg = _v2_decision_config()
+        assert compute_layered_state(None, [], False, cfg) == "OBSERVE"
+        assert compute_layered_state(None, [], True, cfg) == "OBSERVE"
+
+    def test_config_override_add_cas_min(self):
+        """Custom add_cas_min shifts the state boundaries."""
+        cfg = _v2_decision_config(add_min=90.0)
+        # With add_cas_min=90, CAS=88 is now APPROACHING_ADD (not READY_FOR_ADD)
+        assert compute_layered_state(88.0, [], False, cfg) == "APPROACHING_ADD"
+        # CAS=92 + has_position + gates pass → ADD_SECOND_TRANCHE
+        assert compute_layered_state(92.0, [], True, cfg) == "ADD_SECOND_TRANCHE"
+
+    def test_layered_state_order_constant(self):
+        """LAYERED_STATE_ORDER exports the 4 states in progression order."""
+        assert LAYERED_STATE_ORDER == [
+            "OBSERVE", "APPROACHING_ADD", "READY_FOR_ADD", "ADD_SECOND_TRANCHE",
+        ]
+
+    def test_cas_to_tier_still_works_for_v1_backward_compat(self):
+        """V1.1d cas_to_tier() must continue working unchanged.
+
+        V1 boundaries: NO_ACTION <60, WATCH [60,80), FIRST_TRANCHE [80,85),
+        ADD_SECOND_TRANCHE ≥85.
+        """
+        assert cas_to_tier(50.0) == "NO_ACTION"
+        assert cas_to_tier(70.0) == "WATCH"
+        assert cas_to_tier(82.0) == "FIRST_TRANCHE"
+        assert cas_to_tier(88.0) == "ADD_SECOND_TRANCHE"

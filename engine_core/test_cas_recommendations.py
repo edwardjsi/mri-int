@@ -18,15 +18,19 @@ from decimal import Decimal
 import pytest
 
 from engine_core.cas_recommendations import (
-    make_recommendation_id,
-    compute_action,
-    compute_milestones_to_fill,
-    compute_factor_snapshot,
-    compute_outcome_returns,
-    compute_outcome_status,
-    build_factor_snapshot,
+    ActionResult,
+    GATE_BLOCK_CODES,
+    GateResult,
     REQUIRED_FACTOR_KEYS,
     MILESTONE_DAYS,
+    build_factor_snapshot,
+    compute_action,
+    compute_factor_snapshot,
+    compute_milestones_to_fill,
+    compute_outcome_returns,
+    compute_outcome_status,
+    evaluate_add_gates,
+    make_recommendation_id,
 )
 from engine_core.capital_allocation import compute_engine_signature
 
@@ -86,46 +90,64 @@ class TestComputeAction:
       confidence_stars: int (0-5)
       has_existing_position: bool
       config: dict with action thresholds
+
+    Decision 103 P3c: compute_action now returns ActionResult (NamedTuple).
+    These tests cover the V1.1d legacy behavior — they pass `gate_inputs=None`
+    and assert on `.action`. New tests in TestEvaluateAddGates / TestV2LayeredState
+    cover the V2 5-gate behavior.
     """
 
     def test_high_cas_high_stars_no_position_is_buy(self):
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60}}
-        action = compute_action(cas_score=92, confidence_stars=5,
+        result = compute_action(cas_score=92, confidence_stars=5,
                                 has_existing_position=False, config=cfg)
-        assert action == "BUY"
+        assert result.action == "BUY"
+        # V2 final_state is None in legacy mode (gate_inputs not provided)
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
     def test_high_cas_with_existing_position_is_add(self):
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60}}
-        action = compute_action(cas_score=92, confidence_stars=5,
+        result = compute_action(cas_score=92, confidence_stars=5,
                                 has_existing_position=True, config=cfg)
-        assert action == "ADD"
+        assert result.action == "ADD"
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
     def test_medium_cas_is_watch(self):
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60}}
-        action = compute_action(cas_score=70, confidence_stars=3,
+        result = compute_action(cas_score=70, confidence_stars=3,
                                 has_existing_position=False, config=cfg)
-        assert action == "WATCH"
+        assert result.action == "WATCH"
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
     def test_low_cas_is_watch(self):
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60}}
-        action = compute_action(cas_score=55, confidence_stars=2,
+        result = compute_action(cas_score=55, confidence_stars=2,
                                 has_existing_position=False, config=cfg)
-        assert action == "WATCH"
+        assert result.action == "WATCH"
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
     def test_low_stars_disqualifies_buy(self):
         """Even with high CAS, low stars → WATCH (not BUY)."""
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60,
                           "min_confidence_stars_for_buy": 4}}
-        action = compute_action(cas_score=92, confidence_stars=2,
+        result = compute_action(cas_score=92, confidence_stars=2,
                                 has_existing_position=False, config=cfg)
-        assert action == "WATCH"
+        assert result.action == "WATCH"
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
     def test_below_watch_threshold_is_watch_at_floor(self):
         """Below watch floor, still WATCH (never NO_ACTION from this fn)."""
         cfg = {"action": {"buy_cas_min": 80, "add_cas_min": 85, "watch_cas_min": 60}}
-        action = compute_action(cas_score=20, confidence_stars=1,
+        result = compute_action(cas_score=20, confidence_stars=1,
                                 has_existing_position=False, config=cfg)
-        assert action == "WATCH"
+        assert result.action == "WATCH"
+        assert result.final_state is None
+        assert result.blocked_gates == []
 
 
 # ===========================================================================
@@ -531,3 +553,199 @@ class TestUpdateCasOutcomesIntegration:
         # Processed=0 is OK because elapsed_days < 7 for a same-day rec.
         # The function simply skips with no work to do.
         assert stats["recommendations_processed"] >= 0
+
+
+# ===========================================================================
+# Decision 103 P3f — evaluate_add_gates + ActionResult tests (V2 6-gate model)
+# ===========================================================================
+
+def _v2_config():
+    """Canonical V2 test config mirroring config/capital_allocation.yaml."""
+    return {
+        "action": {
+            "buy_cas_min": 80,
+            "add_cas_min": 85,
+            "watch_cas_min": 60,
+            "min_confidence_stars_for_buy": 4,
+        },
+        "add_gate": {
+            "version": "2.0.0",
+            "decision_score_min": 85,
+            "mri_technical_min": 80,
+            "breakout_age_max": 15,
+            "breakout_volume_ratio": 1.3,
+            "confidence_stars_min": 4,
+        },
+    }
+
+
+def _all_pass_gate_inputs():
+    """Gate inputs that pass every gate (used as baseline)."""
+    return {
+        "decision_score": 88.0,
+        "mri_technical_score": 85.0,
+        "weekly_close_above_resistance": True,
+        "volume_confirmed_breakout": True,
+        "breakout_age": 5,
+        "confidence_stars": 4,
+    }
+
+
+class TestEvaluateAddGates:
+    """Decision 103 V2: pure gate evaluation. All 6 gates must pass for ADD."""
+
+    def test_all_gates_pass(self):
+        result = evaluate_add_gates(_all_pass_gate_inputs(), _v2_config())
+        assert isinstance(result, GateResult)
+        assert result.gates_passed == 6
+        assert result.gates_total == 6
+        assert result.blocked_gates == []
+        assert result.gate_score_pct == 100.0
+
+    def test_none_inputs_returns_legacy_all_pass(self):
+        """Backward compat: gate_inputs=None → all gates pass (V1.1d behavior)."""
+        result = evaluate_add_gates(None, _v2_config())
+        assert result.gates_passed == 6
+        assert result.gates_total == 6
+        assert result.blocked_gates == []
+        assert result.gate_score_pct == 100.0
+
+    def test_g1_decision_score_too_low(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["decision_score"] = 80.0  # < 85
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "G1_DECISION_SCORE_BELOW_MIN" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_g2_mri_technical_too_low(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["mri_technical_score"] = 70.0  # < 80
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "G2_MRI_TECHNICAL_BELOW_MIN" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_g3_weekly_close_below_resistance(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["weekly_close_above_resistance"] = False
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "G3_WEEKLY_CLOSE_BELOW_RESISTANCE" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_g4_volume_not_confirmed(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["volume_confirmed_breakout"] = False
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "G4_VOLUME_NOT_CONFIRMED" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_g5_breakout_age_too_old(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["breakout_age"] = 20  # > 15
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "G5_BREAKOUT_AGE_TOO_OLD" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_confidence_stars_too_low(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["confidence_stars"] = 3  # < 4
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert "CONFIDENCE_STARS_BELOW_MIN" in result.blocked_gates
+        assert result.gates_passed == 5
+
+    def test_multiple_gates_fail_simultaneously(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["decision_score"] = 70.0
+        inputs["volume_confirmed_breakout"] = False
+        inputs["breakout_age"] = 25
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert result.gates_passed == 3
+        assert "G1_DECISION_SCORE_BELOW_MIN" in result.blocked_gates
+        assert "G4_VOLUME_NOT_CONFIRMED" in result.blocked_gates
+        assert "G5_BREAKOUT_AGE_TOO_OLD" in result.blocked_gates
+        assert result.gate_score_pct == 50.0  # 3/6
+
+    def test_missing_keys_count_as_failed(self):
+        """Missing keys = gate fails (defensive default)."""
+        result = evaluate_add_gates({"decision_score": 90.0}, _v2_config())
+        assert result.gates_passed == 1
+        assert len(result.blocked_gates) == 5
+
+    def test_gate_block_codes_constant_matches_emitted_codes(self):
+        """GATE_BLOCK_CODES exported constant is exactly the set evaluate_add_gates emits."""
+        inputs = {k: 0 for k in _all_pass_gate_inputs()}
+        inputs["breakout_age"] = 999  # ensure G5 also fails (0 would actually PASS)
+        inputs["weekly_close_above_resistance"] = False
+        inputs["volume_confirmed_breakout"] = False
+        inputs["confidence_stars"] = 0
+        result = evaluate_add_gates(inputs, _v2_config())
+        assert result.gates_passed == 0
+        assert set(result.blocked_gates) == set(GATE_BLOCK_CODES)
+        assert result.gate_score_pct == 0.0
+
+
+class TestActionResultWithGates:
+    """Decision 103 P3c: compute_action returns ActionResult(action, final_state, blocked_gates)."""
+
+    def test_add_with_all_gates_and_position_is_add_second_tranche(self):
+        result = compute_action(
+            cas_score=90, confidence_stars=4, has_existing_position=True,
+            config=_v2_config(), gate_inputs=_all_pass_gate_inputs(),
+        )
+        assert isinstance(result, ActionResult)
+        assert result.action == "ADD"
+        assert result.final_state == "ADD_SECOND_TRANCHE"
+        assert result.blocked_gates == []
+
+    def test_add_with_gate_failure_is_ready_for_add(self):
+        inputs = _all_pass_gate_inputs()
+        inputs["weekly_close_above_resistance"] = False
+        result = compute_action(
+            cas_score=90, confidence_stars=4, has_existing_position=True,
+            config=_v2_config(), gate_inputs=inputs,
+        )
+        assert result.action == "WATCH"  # CAS gate blocked, V1 behavior preserved
+        assert result.final_state == "READY_FOR_ADD"
+        assert "G3_WEEKLY_CLOSE_BELOW_RESISTANCE" in result.blocked_gates
+
+    def test_buy_with_all_gates_pass_is_ready_for_add(self):
+        """CAS≥85 + all gates + no position → READY_FOR_ADD (can BUY, not ADD)."""
+        result = compute_action(
+            cas_score=90, confidence_stars=4, has_existing_position=False,
+            config=_v2_config(), gate_inputs=_all_pass_gate_inputs(),
+        )
+        assert result.action == "BUY"
+        assert result.final_state == "READY_FOR_ADD"
+        assert result.blocked_gates == []
+
+    def test_cas_82_with_all_gates_is_approaching_add(self):
+        """CAS in [80, 85) with has_position=True → action=WATCH but state=APPROACHING_ADD.
+
+        V1.1d verb logic uses max(buy_min, add_min) when has_position=True, so
+        CAS=82 < 85=add_min → WATCH (never BUY for an existing position).
+        V2 final_state correctly captures that we're approaching the ADD threshold.
+        """
+        result = compute_action(
+            cas_score=82, confidence_stars=4, has_existing_position=True,
+            config=_v2_config(), gate_inputs=_all_pass_gate_inputs(),
+        )
+        assert result.action == "WATCH"
+        assert result.final_state == "APPROACHING_ADD"
+        assert result.blocked_gates == []
+
+    def test_low_cas_is_observe_with_gates(self):
+        result = compute_action(
+            cas_score=70, confidence_stars=3, has_existing_position=False,
+            config=_v2_config(), gate_inputs=_all_pass_gate_inputs(),
+        )
+        assert result.action == "WATCH"
+        assert result.final_state == "OBSERVE"
+
+    def test_none_gate_inputs_keeps_final_state_none(self):
+        """Backward compat: gate_inputs=None → final_state=None (V1.1d legacy)."""
+        result = compute_action(
+            cas_score=92, confidence_stars=5, has_existing_position=True,
+            config=_v2_config(), gate_inputs=None,
+        )
+        assert result.action == "ADD"
+        assert result.final_state is None
+        assert result.blocked_gates == []

@@ -87,6 +87,84 @@ def cas_to_tier(cas: float | None) -> str:
     return "ADD_SECOND_TRANCHE"
 
 
+# ----------------------------------------------------------------------------
+# Decision 103 V2 4-state model (replaces cas_to_tier for new callers)
+# ----------------------------------------------------------------------------
+
+# V2 state labels — different vocabulary than V1.1d tiers.
+#   OBSERVE              — CAS < 80 (replaces NO_ACTION + WATCH combined)
+#   APPROACHING_ADD      — 80 <= CAS < add_cas_min (replaces FIRST_TRANCHE)
+#   READY_FOR_ADD        — CAS >= add_cas_min but EITHER some gate failed OR no
+#                          existing position (can BUY but not yet ADD)
+#   ADD_SECOND_TRANCHE   — CAS >= add_cas_min, all 6 gates pass, has position
+#
+# cas_to_tier() is KEPT for V1.1d callers (no gate info available); new V2
+# callers should use compute_layered_state() instead.
+
+LAYERED_STATE_ORDER = [
+    "OBSERVE",
+    "APPROACHING_ADD",
+    "READY_FOR_ADD",
+    "ADD_SECOND_TRANCHE",
+]
+
+OBSERVE_MAX_CAS = 80.0  # CAS below this = OBSERVE
+
+
+def compute_layered_state(
+    cas_score: float | None,
+    blocked_gates: list[str] | None = None,
+    has_existing_position: bool = False,
+    config: dict[str, Any] | None = None,
+) -> str:
+    """V2 4-state decision layer (Decision 103).
+
+    Replaces `cas_to_tier()` for new callers. Same CAS thresholds, but
+    introduces READY_FOR_ADD as a new state between APPROACHING_ADD and
+    ADD_SECOND_TRANCHE — distinguishes "the score says ADD" from "the
+    gates say we can actually do it".
+
+    State classification:
+      OBSERVE            — CAS < 80 (configurable via OBSERVE_MAX_CAS)
+      APPROACHING_ADD    — 80 <= CAS < add_cas_min
+      READY_FOR_ADD      — CAS >= add_cas_min BUT (gates failed OR no position)
+      ADD_SECOND_TRANCHE — CAS >= add_cas_min AND all gates pass AND has position
+
+    Args:
+        cas_score: Capital Allocation Score (0-100). None → OBSERVE.
+        blocked_gates: list of failed gate codes from evaluate_add_gates().
+                       Empty list (or None) means all gates pass.
+        has_existing_position: whether user holds the symbol already.
+                               No position → can BUY but not ADD.
+        config: optional CAS config dict. Reads
+                `config['action']['add_cas_min']` (default 85) and
+                `config['add_gate']` for the OBSERVE_MAX_CAS override.
+
+    Returns:
+        One of 'OBSERVE' | 'APPROACHING_ADD' | 'READY_FOR_ADD' | 'ADD_SECOND_TRANCHE'.
+    """
+    if cas_score is None or cas_score < OBSERVE_MAX_CAS:
+        return "OBSERVE"
+
+    # CAS >= 80: figure out which of the 3 upper states we're in.
+    add_min = 85.0
+    if config is not None:
+        add_min = float(
+            config.get("action", {}).get("add_cas_min", add_min)
+        )
+
+    if cas_score < add_min:
+        return "APPROACHING_ADD"
+
+    # CAS >= add_min (typically 85). The remaining states depend on gates + position.
+    gates_failed = bool(blocked_gates)  # None or [] = no failures
+    if gates_failed:
+        return "READY_FOR_ADD"
+    if not has_existing_position:
+        return "READY_FOR_ADD"
+    return "ADD_SECOND_TRANCHE"
+
+
 def tier_to_action(tier: str) -> str:
     """Map tier name back to DB action enum (BUY/ADD/WATCH/NO_ACTION)."""
     if tier not in TIER_ACTION_MAP:
