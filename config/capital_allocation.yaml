@@ -5,7 +5,55 @@
 #   relaxed EMA stack; QIF >= 70; R/R removed (deferred to V1.1); Overhead Supply
 #   added; Weekly Trend multi-component; Winner cap 1.10; Confidence stars added.
 
-version: "1.0.0-rev2"
+version: "1.0.0-rev3"
+
+# ── Calibration Constants (rev 3) ────────────────────────────────────────────
+# These are NOT architecture — they are tuning knobs. Move freely when backtests
+# say so. Do NOT move the same constant into Python. Single source of truth:
+# the YAML. Engine reads them via `load_config()['calibration']`.
+#
+# Hierarchy: Design Doc → YAML → Code → Sessions.md
+# If a constant lives in Python, it's a bug. File an issue.
+calibration:
+  # Numeric thresholds used by the why-checklist and sub-score helpers.
+  rs_strong: 0.05              # rs_90d >= this → "Strong RS" in why-checklist
+  volume_confirmed: 1.5        # vol_ratio >= this → "Volume confirmed" line
+  overhead_clear_air: 30       # overhead_supply_score <= this → "Clear overhead"
+  qif_high: 70                 # qif_score >= this → "High QIF" line
+  weekly_strong: 75            # weekly_trend_score >= this → "Weekly trend strengthening"
+  near_52wh_pct: 5             # close >= (1 - pct/100) * 52w_high → "Near 52w high"
+  breakout_early_max_age: 5    # breakout_age in [1, max] → "Early continuation"
+
+  # Breakout AGE_DECAY table (Decision 099). Maps breakout_age → base sub-score.
+  # A cliff exists at age 3→4 (85→70); indicator_freshness handles stability.
+  age_decay:
+    0: 100
+    1: 95
+    2: 90
+    3: 85
+    4: 70
+    5: 65
+    beyond: 40
+
+  # Confidence star criteria (rev 3: 5 model-certainty dimensions).
+  # All threshold tunables live here, NOT in the engine.
+  confidence:
+    complete_data_threshold_pct: 90     # data_completeness_pct >= this → star
+    factor_agreement_max_std_dev: 20    # sub-score std-dev <= this → star
+    # Stable calculations (Decision 101, expert Q5): replaced single cliff
+    # at breakout_age=4 with transition zones. The current discontinuity is
+    # "mathematically convenient but not how markets behave." A stock sitting
+    # in the 'transition' or 'stale' zone produces scores at the noisy edge
+    # of the AGE_DECAY table. The stable_calculations star fires ONLY for
+    # ages in the 'excellent' or 'good' zones.
+    breakout_age_zones:
+      excellent: [0, 2]    # star fires
+      good: [3, 3]         # star fires
+      transition: [4, 5]   # star does NOT fire
+      stale: [6, 999]      # star does NOT fire
+    low_proxy_usage_max_proxies: 0      # proxies_used count <= this → star
+    indicator_freshness_max_age_days: 5 # data_age_days <= this → star
+
 
 # ── Stage 1: Eligibility Filter (pass/fail) ──────────────────────────────────
 # If a stock fails ANY of these gates, it does NOT receive a Capital Allocation
@@ -102,27 +150,34 @@ multiplier:
     max_penalty: 0.10    # at 15% weight → 0.90x (max -10% penalty)
 
 # ── Stage 5: Confidence (star rating, NOT a numeric) ─────────────────────────
-# NEW in rev 2: Confidence is a 0-5 star rating shown next to the CAS number.
-# Stars depend on 5 binary criteria. Each contributes 1 star if met. Max = 5.
+# REV 3 (2026-07-07): Confidence is now a measure of MODEL CERTAINTY, not
+# stock quality. The 5 stars depend on 5 binary model-certainty dimensions:
+#   1. Complete data        — enough fields populated to compute reliably
+#   2. Factor agreement     — sub-scores point the same direction
+#   3. Stable calculations  — inputs aren't on cliffs or threshold boundaries
+#   4. Low proxy usage      — real indicators preferred over placeholders
+#   5. Indicator freshness  — inputs aren't stale
+#
+# Stock-quality signals (trend maturity, breakout maturity) intentionally
+# removed — those belong in CAS itself, not in the model's certainty about
+# its own score. They still appear in the why-checklist and breakout_age_emoji.
 #
 # Why stars (not numbers): users grasp "5 of 5 stars" faster than "92% confidence".
+#
+# Tunables (thresholds, ranges) live in `calibration.confidence` above.
+# This section only declares WHICH criteria exist and their weights.
 confidence:
   factors:
-    no_proxy_used:        # 1 star if all sub-scores use real data (no V1 proxies)
+    complete_data:
       weight: 1
-    data_completeness:    # 1 star if >= 90% of expected columns are populated
+    factor_agreement:
       weight: 1
-      threshold_pct: 90
-    factor_agreement:     # 1 star if sub-scores are within 20 points of each other
+    stable_calculations:
       weight: 1
-      max_std_dev: 20
-    trend_maturity:       # 1 star if weekly_trend_score >= 75 (established, not nascent)
+    low_proxy_usage:
       weight: 1
-      min_weekly_trend: 75
-    breakout_maturity:    # 1 star if breakout_age in 1..3 (not too fresh, not too stale)
+    indicator_freshness:
       weight: 1
-      age_min: 1
-      age_max: 3
 
 # ── Sub-Score Normalization ──────────────────────────────────────────────────
 subscore:
@@ -153,7 +208,7 @@ subscore:
     # Compute: count distinct local swing highs in last 6m above current close,
     # weighted by recency and volume.
     lookback_days: 126  # ~6 months
-    max_count_for_100: 10  # 10+ distinct overhead swing highs = max score
+    max_count_for_100: 20  # 20+ distinct overhead swing highs = max score (Decision 102, was 10)
   rr:
     # NOT USED IN V1.0 — rev 2 removed the proxy. Configured here for V1.1
     # readiness when a real `support_3m` column ships.
@@ -211,3 +266,116 @@ why_templates:
     template: "✓ Clear overhead supply (score {overhead_supply_score}/100)"
   - condition: high_quality
     template: "✓ High QIF ({qif_score:.0f}/100)"
+
+# ----------------------------------------------------------------------------
+# CAS V1.1b (Decision 101) — Action verb thresholds (Layer 3 vocabulary)
+# ----------------------------------------------------------------------------
+# These thresholds map (CAS, confidence_stars, position state) → action verb.
+# BUY  = first tranche / fresh position
+# ADD  = adding to existing position
+# WATCH = eligible but no action yet
+# (NO_ACTION is not persisted — every recommendation has an action verb.)
+action:
+  buy_cas_min: 80                  # CAS >= this AND stars >= min → BUY (no position)
+  add_cas_min: 85                  # CAS >= this AND stars >= min → ADD (existing position)
+  watch_cas_min: 60                # CAS >= this → WATCH (eligible but no action)
+  min_confidence_stars_for_buy: 4  # Even high CAS with low stars → WATCH
+
+
+# ----------------------------------------------------------------------------
+# CAS V1.1c (Decision 101) — Decision Layer (Action Lifecycle)
+# ----------------------------------------------------------------------------
+# The Decision Layer wraps the CAS engine with three concerns:
+#   1. Tier-based action hysteresis (prevents flip-flopping around tier boundaries)
+#   2. NO_ACTION triggers (when to recommend NOT deploying capital)
+#   3. Recommendation lifecycle (NEW → ACTIVE → MATURED → ARCHIVED)
+#
+# Design philosophy: "A recommendation is a scientific hypothesis.
+# Calibration is the process of proving or disproving it using observed outcomes."
+#
+# See config/calibration_registry.yaml for the validation status of each
+# assumption. Calibration Debt = number of unvalidated entries.
+decision_layer:
+  # Hysteresis: dampen both upgrades and downgrades near tier boundaries.
+  # An upgrade to tier T is only applied if current_cas >= T_threshold + hysteresis.
+  # A downgrade to tier T is only applied if current_cas < T_threshold - hysteresis.
+  hysteresis_cas: 3.0
+
+  # Tier CAS thresholds (lower bound of each tier). Tiers are inclusive at
+  # the lower bound, exclusive at the upper bound (except the top tier).
+  tier_thresholds:
+    WATCH: 60.0
+    FIRST_TRANCHE: 80.0
+    ADD_SECOND_TRANCHE: 85.0
+
+  # Minimum Deployable Score: if the BEST eligible stock's CAS is below this,
+  # the engine returns NO_ACTION with reason "BELOW_DEPLOYMENT_THRESHOLD".
+  # Different from "no eligible stocks" — that means no opportunities passed
+  # the gates at all. This means opportunities exist but none are good enough
+  # to deploy capital against. The market condition is fundamentally different.
+  min_deployable_cas: 70.0
+
+  # Recommendation Lifecycle: when does a recommendation transition states?
+  #   NEW      → created today (age == 0 days)
+  #   ACTIVE   → past creation, milestones still being filled
+  #   MATURED  → all 5 milestones filled (w1, w2, w4, m3, m6)
+  #   ARCHIVED → MATURED + age > archive_age_days (kept for historical analysis)
+  lifecycle:
+    archive_age_days: 180
+    required_milestones:  # all must be filled for MATURED
+      - w1
+      - w2
+      - w4
+      - m3
+      - m6
+
+# ----------------------------------------------------------------------------
+# CAS V1.1d (Decision 101) — Regression Tolerance
+# ----------------------------------------------------------------------------
+# When tuning weights/thresholds (not refactoring logic), allow ±2 points
+# of CAS drift in regression tests via assert_cas_within_tolerance().
+# This prevents test fatigue from chasing ±0.5 point changes that don't
+# change real behavior. If a tuning change moves CAS by >2 points, that
+# is a SIGNAL — review the calibration journal.
+regression_tolerance:
+  cas_points: 2.0   # ±2 points CAS drift acceptable when tuning
+  stars: 0          # stars must be exact (no drift allowed)
+
+
+# ----------------------------------------------------------------------------
+# Stage 7: ADD_SECOND_TRANCHE Discipline Gates (V2, Decision 103)
+# ----------------------------------------------------------------------------
+# ALL thresholds live here, NOT in Python code (per owner refinement C3).
+# `evaluate_add_gates()` in engine_core/cas_recommendations.py reads these
+# via load_config()['add_gate']. Any change to this section requires:
+#   1. Calibration.md journal entry
+#   2. Decision log update if architectural
+#   3. After P6 backtest hits all 6 success metric targets → status VALIDATED
+#
+# Versioning: `version` is persisted in every cas_recommendation's
+# factor_snapshot.config_snapshot.version so historical recommendations
+# remain reproducible even if this YAML evolves.
+add_gate:
+  version: "2.0.0"            # Bump on ANY threshold change (C5)
+  decision_score_min: 85      # G1 — capital allocation quality
+  mri_technical_min: 80       # G2 — technical structure strength
+  breakout_age_max: 15        # G5 — opportunity freshness (trading days)
+  breakout_volume_ratio: 1.3  # G4 — breakout_day_volume / 20d avg
+  weekly_breakout_mode: prior_52w   # 'prior_52w' | 'all_time_high' (resolved per-row by history)
+  weekly_breakout_min_history_weeks: 52  # fallback threshold (C1: ATH if history < this)
+  confidence_stars_min: 4     # existing precondition, now config-driven
+
+
+# ----------------------------------------------------------------------------
+# Stage 8: Approaching ADD Surface Cap (C4)
+# ----------------------------------------------------------------------------
+# CAS 80–84 surfaces candidates for active watch but does NOT trigger alerts.
+# Top-N by radar_priority keeps the radar page focused. Tighten
+# radar_top_n if users still find this noisy.
+approaching_add:
+  cas_min: 80.0
+  cas_max: 84.99
+  radar_top_n: 20             # only top N by radar_priority
+  send_notifications: false   # no email / push (radar page only)
+  surface_on:
+    - radar_page

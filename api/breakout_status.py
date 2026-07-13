@@ -266,6 +266,11 @@ def get_breakout_radar(conn=Depends(get_db)):
         FROM (
             SELECT 
                 dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
+                -- Decision 103 V2 ADD_SECOND_TRANCHE gate indicators (P4b)
+                dp.prior_52w_high, dp.all_time_high_before_current_week,
+                dp.resistance_source, dp.weekly_close_above_resistance,
+                dp.breakout_day_volume_ratio, dp.volume_confirmed_breakout,
+                dp.breakout_date_for_volume,
                 (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
                 (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
                 0 as sort_grp
@@ -278,6 +283,11 @@ def get_breakout_radar(conn=Depends(get_db)):
 
             SELECT 
                 dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
+                -- Decision 103 V2 ADD_SECOND_TRANCHE gate indicators (P4b)
+                dp.prior_52w_high, dp.all_time_high_before_current_week,
+                dp.resistance_source, dp.weekly_close_above_resistance,
+                dp.breakout_day_volume_ratio, dp.volume_confirmed_breakout,
+                dp.breakout_date_for_volume,
                 (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) as watchers,
                 (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) as holders,
                 1 as sort_grp

@@ -1,0 +1,303 @@
+# Regression Basket — Capital Allocation Score V1.0 (rev 3)
+#
+# Curated scenarios that exercise the full CAS pipeline (eligibility →
+# structure → market score → CAS → confidence → why-checklist). Every future
+# tuning of weights, thresholds, or formulas should pass these scenarios
+# unchanged. If a scenario starts failing, either:
+#   (a) The tuning was too aggressive — revisit the change.
+#   (b) The business intent has changed — update the YAML AND Decisions.md.
+#
+# Schema per scenario:
+#   name:            unique identifier (becomes pytest test name)
+#   description:     human-readable context (the "why")
+#   row:             full row dict passed to the engine (all gates + sub-scores)
+#   regime:          "BULLISH" | "SIDEWAYS" | "BEARISH"
+#   winner_profit_pct:    optional; omit for non-portfolio scenarios
+#   concentration_weight_pct: optional; omit for non-portfolio scenarios
+#   proxies_used:    {factor_name: bool} — True means proxy was used for that factor
+#   expected:
+#     eligible:               bool — passed all 8 eligibility gates
+#     structure_passed:       bool — passed all 3 structure dimensions
+#     eligible_failed_contains: list of gate names that MUST appear in failed
+#     structure_failed_contains: list of structure dims that MUST appear in failed
+#     market_score_gte:       float — market score must be ≥ this
+#     market_score_lte:       float — market score must be ≤ this
+#     cas_gte:                float — CAS must be ≥ this
+#     cas_lte:                float — CAS must be ≤ this
+#     confidence_gte:         int — confidence stars must be ≥ this
+#     confidence_lte:         int — confidence stars must be ≤ this
+#     why_contains:           list of substrings that MUST appear in why-checklist
+#     why_not_contains:       list of substrings that MUST NOT appear
+
+- name: WELCORP_existing_winner
+  description: |
+    Existing winner with significant unrealized profit (~25%). The CAS should be
+    boosted by the winner multiplier (1.10× cap). Should pass everything.
+  row:
+    close: 450.0
+    ema_20: 420.0
+    ema_50: 400.0
+    ema_200: 350.0
+    ema_100_slope_5d: 1.2
+    volume: 3_000_000
+    avg_volume_20d: 2_000_000
+    rolling_high_52w: 460.0
+    weekly_ema13: 410.0
+    weekly_ema20: 390.0
+    hh_confirmed: true
+    hl_confirmed: true
+    weekly_trend_score: 85
+    breakout_state: BROKEN_OUT
+    breakout_age: 3
+    rs_90d: 0.08
+    overhead_supply_score: 25
+    qif_score: 82
+    data_completeness_pct: 95
+    data_age_days: 1
+    winner_profit_pct: 25.0
+    concentration_weight_pct: 4.0
+  regime: BULLISH
+  proxies_used:
+    sector: false
+    rr: false
+  expected:
+    eligible: true
+    structure_passed: true
+    market_score_gte: 75
+    cas_gte: 75  # winner (1.10) × concentration (~0.97) ≈ 1.07 boost
+    confidence_gte: 4  # high data completeness + freshness + low proxy + agreement
+    why_contains:
+      - "Existing winner"
+      - "Clear overhead supply"
+      - "High QIF"
+
+- name: CHOLAFIN_perfect_breakout
+  description: |
+    Perfect breakout candidate: fresh (age 0), high volume, all sub-scores high,
+    no overhead supply. Should score near max and hit 5 stars if sub-scores
+    agree.
+  row:
+    close: 1000.0
+    ema_20: 950.0
+    ema_50: 900.0
+    ema_200: 800.0
+    ema_100_slope_5d: 2.0
+    volume: 5_000_000
+    avg_volume_20d: 2_500_000
+    rolling_high_52w: 1010.0
+    weekly_ema13: 920.0
+    weekly_ema20: 880.0
+    hh_confirmed: true
+    hl_confirmed: true
+    weekly_trend_score: 90
+    breakout_state: BROKEN_OUT
+    breakout_age: 0
+    rs_90d: 0.10
+    overhead_supply_score: 10
+    qif_score: 90
+    data_completeness_pct: 98
+    data_age_days: 0
+    winner_profit_pct: 0.0
+    concentration_weight_pct: 2.0
+  regime: BULLISH
+  proxies_used:
+    sector: false
+    rr: false
+  expected:
+    eligible: true
+    structure_passed: true
+    market_score_gte: 80
+    cas_gte: 80
+    confidence_gte: 4
+    why_contains:
+      - "Fresh breakout today"
+      - "Clear overhead supply"
+      - "Strong RS"
+
+- name: PHOENIXLTD_fresh_breakout
+  description: |
+    Day 1 breakout. Strong momentum, average QIF. Should pass everything but
+    breakout_age=1 means stable_calculations fires (not at cliff).
+  row:
+    close: 250.0
+    ema_20: 240.0
+    ema_50: 230.0
+    ema_200: 200.0
+    ema_100_slope_5d: 0.8
+    volume: 2_500_000
+    avg_volume_20d: 1_500_000
+    rolling_high_52w: 255.0
+    weekly_ema13: 230.0
+    weekly_ema20: 220.0
+    hh_confirmed: true
+    hl_confirmed: false
+    weekly_trend_score: 75
+    breakout_state: BROKEN_OUT
+    breakout_age: 1
+    rs_90d: 0.06
+    overhead_supply_score: 30
+    qif_score: 78
+    data_completeness_pct: 92
+    data_age_days: 1
+  regime: BULLISH
+  proxies_used:
+    sector: false
+  expected:
+    eligible: true
+    structure_passed: true
+    market_score_gte: 65
+    confidence_gte: 3
+    why_contains:
+      - "Early continuation"
+
+- name: NAVINFLUOR_extended_leader
+  description: |
+    Long-running uptrend leader. Clear overhead supply (low score),
+    high QIF, very high weekly trend. Should pass with high score.
+  row:
+    close: 6000.0
+    ema_20: 5800.0
+    ema_50: 5500.0
+    ema_200: 4800.0
+    ema_100_slope_5d: 15.0
+    volume: 800_000
+    avg_volume_20d: 600_000
+    rolling_high_52w: 6050.0
+    weekly_ema13: 5500.0
+    weekly_ema20: 5300.0
+    hh_confirmed: true
+    hl_confirmed: true
+    weekly_trend_score: 95
+    breakout_state: BROKEN_OUT
+    breakout_age: 2
+    rs_90d: 0.12
+    overhead_supply_score: 15
+    qif_score: 88
+    data_completeness_pct: 96
+    data_age_days: 2
+  regime: BULLISH
+  proxies_used:
+    sector: false
+    rr: false
+  expected:
+    eligible: true
+    structure_passed: true
+    market_score_gte: 75
+    confidence_gte: 4
+    why_contains:
+      - "Clear overhead supply"
+      - "Strong RS"
+
+- name: POONAWALLA_breakout_into_resistance
+  description: |
+    Has just broken out, but there's significant overhead supply above
+    (score ~75). The breakout sub-score is fine but overhead_supply
+    weight pulls the market score down. Should pass eligibility and
+    structure but with a lower market score.
+  row:
+    close: 500.0
+    ema_20: 480.0
+    ema_50: 460.0
+    ema_200: 400.0
+    ema_100_slope_5d: 0.6
+    volume: 1_500_000
+    avg_volume_20d: 1_000_000
+    rolling_high_52w: 510.0
+    weekly_ema13: 470.0
+    weekly_ema20: 450.0
+    hh_confirmed: true
+    hl_confirmed: true
+    weekly_trend_score: 70
+    breakout_state: BROKEN_OUT
+    breakout_age: 2
+    rs_90d: 0.04
+    overhead_supply_score: 75
+    qif_score: 76
+    data_completeness_pct: 90
+    data_age_days: 2
+  regime: BULLISH
+  proxies_used:
+    sector: false
+  expected:
+    eligible: true
+    structure_passed: true
+    market_score_lte: 80  # overhead drag pulls it down
+    market_score_gte: 55
+    confidence_gte: 3
+    why_not_contains:
+      - "Clear overhead supply"  # score 75 > threshold 30
+
+- name: BEARISH_bear_market_test
+  description: |
+    Deliberate failing case in BEARISH regime. Should fail eligibility
+    on regime gate (with aggressive_mode=False).
+  row:
+    close: 200.0
+    ema_20: 220.0  # close < ema20
+    ema_50: 240.0
+    ema_200: 280.0
+    ema_100_slope_5d: -2.0  # falling
+    volume: 200_000
+    avg_volume_20d: 500_000
+    rolling_high_52w: 350.0
+    weekly_ema13: 240.0
+    weekly_ema20: 260.0
+    hh_confirmed: false
+    hl_confirmed: false
+    weekly_trend_score: 20
+    breakout_state: CONSOLIDATING
+    breakout_age: null
+    rs_90d: -0.10
+    overhead_supply_score: 95
+    qif_score: 35
+    data_completeness_pct: 60
+    data_age_days: 8
+  regime: BEARISH
+  proxies_used:
+    sector: true
+    rr: true
+  expected:
+    eligible: false
+    structure_passed: false
+    eligible_failed_contains:
+      - "regime"
+      - "ema_stack"
+      - "quality"
+      - "52w_position"
+    confidence_lte: 1
+
+- name: MISSING_DATA_missing_weekly_and_rs
+  description: |
+    Eligible on every gate EXCEPT the new rev 3 missing-data gates:
+    weekly_trend_score is None and rs_90d is None.
+    Should fail weekly_data + rs_data gates.
+  row:
+    close: 100.0
+    ema_20: 95.0
+    ema_50: 90.0
+    ema_200: 80.0
+    ema_100_slope_5d: 0.5
+    volume: 2_000_000
+    avg_volume_20d: 1_000_000
+    rolling_high_52w: 105.0
+    weekly_ema13: 90.0
+    weekly_ema20: 88.0
+    hh_confirmed: true
+    hl_confirmed: true
+    weekly_trend_score: null
+    breakout_state: BROKEN_OUT
+    breakout_age: 2
+    rs_90d: null
+    overhead_supply_score: 18
+    qif_score: 80
+    data_completeness_pct: 90
+    data_age_days: 2
+  regime: BULLISH
+  proxies_used:
+    sector: false
+  expected:
+    eligible: false
+    structure_passed: false
+    eligible_failed_contains:
+      - "weekly_data"
+      - "rs_data"

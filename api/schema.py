@@ -245,6 +245,27 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_63d NUMERIC;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_126d NUMERIC;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rs_252d NUMERIC;")
+
+    # 12d. CAS V1.0 (Decision 100) — 4 new indicator columns. Defense in depth
+    # alongside migrations/008_capital_allocation_columns.sql.
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS ema_100 NUMERIC DEFAULT NULL;")
+    # CAS V1.1a (Decision 101, Gap 1): ema_100_slope_5d is required for the
+    # ema100_rising eligibility gate. Without it, the gate always fails.
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS ema_100_slope_5d NUMERIC DEFAULT NULL;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rolling_high_52w NUMERIC DEFAULT NULL;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS weekly_trend_score NUMERIC DEFAULT NULL;")
+    cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS overhead_supply_score NUMERIC DEFAULT NULL;")
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_daily_prices_weekly_trend_score "
+        "ON daily_prices (date, weekly_trend_score) "
+        "WHERE weekly_trend_score IS NOT NULL;"
+    )
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_daily_prices_overhead_supply_score "
+        "ON daily_prices (date, overhead_supply_score) "
+        "WHERE overhead_supply_score IS NOT NULL;"
+    )
+
     cur.execute("ALTER TABLE stock_scores ADD COLUMN IF NOT EXISTS breakout_state VARCHAR(30) DEFAULT 'CONSOLIDATING';")
 
     # 12b. Migration: 7-Step System Expansion

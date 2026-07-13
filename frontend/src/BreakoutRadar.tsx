@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
+import AddStatusChip from './AddStatusChip';  // Decision 103 V2 — ADD_SECOND_TRANCHE gate chip
 
 export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [radarData, setRadarData] = useState<any[]>([]);
@@ -81,6 +82,7 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
             {showAge && <th onClick={() => requestSort('breakout_age')} style={{ cursor: 'pointer', userSelect: 'none' }}>Age <SortIcon columnKey="breakout_age" /></th>}
             <th onClick={() => requestSort('radar_priority')} style={{ cursor: 'pointer', userSelect: 'none' }}>Radar Priority <SortIcon columnKey="radar_priority" /></th>
             <th>Status</th>
+            <th title="Decision 103 V2 — 4-state ADD_SECOND_TRANCHE gate evaluation (hover chip for detail)">ADD Status</th>
           </tr>
         </thead>
         <tbody>
@@ -96,6 +98,7 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
                 {item.radar_priority ? item.radar_priority.toFixed(1) : '-'}
               </td>
               <td><BreakoutBadge state={item.breakout_state} ageInfo={item.age_info} /></td>
+              <td><AddStatusChip symbol={item.symbol} /></td>
             </tr>
           ))}
         </tbody>

@@ -2,6 +2,182 @@
 
 ---
 
+## 📅 Session: July 7, 2026 — Capital Allocation Score V1.0 Session N+1 (Migration + Pure Engine + Tests)
+
+**Session Start:** (afternoon IST)
+**Session End:** (ongoing — awaiting commit)
+
+> **Status: ✅ Complete, awaiting user review before commit.** N+1 ships the smallest testable unit: schema migration + pure-logic engine + 92 unit tests. No API, no frontend, no DB writes. N+2 wires the indicator computations; N+3 ships the API + UI.
+
+### What Was Done This Session
+
+#### 1. CAS V1.0 — Session N+1 Implementation ✅
+- [x] **Decision 100 flipped DRAFT → APPROVED.** Implementation log line added in `Decisions.md` so the decision reflects live status.
+- [x] **pyyaml installed in venv** + added to `requirements.txt` (pulled forward from N+3; tests needed it).
+- [x] **`migrations/008_capital_allocation_columns.sql` (NEW).** 4 columns (`ema_100`, `rolling_high_52w`, `weekly_trend_score`, `overhead_supply_score`) on `daily_prices`, plus 3 indexes for radar query performance. Idempotent `ADD COLUMN IF NOT EXISTS` pattern. NOT yet executed against prod DB.
+- [x] **`engine_core/capital_allocation.py` (NEW, ~450 lines).** Pure-logic CAS engine: `load_config`, `check_eligibility`, `check_market_subgates`, `compute_market_score`, `compute_portfolio_allocation_score`, `compute_confidence_stars`, `render_why_checklist`, plus 6 sub-score helpers. No DB access, no I/O — only Python primitives in/out.
+- [x] **`engine_core/test_capital_allocation.py` (NEW, 24 scenarios / 92 test cases via parametrization).** 5 sub-score + 3 multiplier + 8 eligibility/sub-gate + 5 confidence + 3 why-checklist, all passing on first run after one test-data fix.
+
+### Verification
+
+```bash
+pytest engine_core/test_capital_allocation.py -v
+# 92 passed in 0.28s
+```
+
+- All eligibility gates return `(passed, failed_gates)` correctly — verified via 4 parametrized regime cases, 4 parametrized EMA-stack cases, and a multi-fail scenario that returns all 6 gate names.
+- All 3 sub-gates return `(passed, failed_subgates)` correctly — trend (weekly ≥ 50), breakout (age ≤ 3), quality (qif ≥ 75).
+- Winner multiplier caps at 1.10 / floors at 0.85 — verified across +30% / +10% / 0% / −10% / −15% / −30% scenarios.
+- Concentration curve: 0% → 1.00×, 7.5% → 0.95×, 15%+ → 0.90× (capped).
+- Confidence stars correctly fire for each of 5 criteria independently (11 parametrized cases).
+- Why-checklist renders 8 ✓ lines on a gold-platter row, skips "Existing winner" when `winner_profit_pct` is missing, interpolates `Day {breakout_age}`, `{vol_ratio:.1f}x average`, and `score {overhead_supply_score}/100`.
+- Integration sanity: gold-platter row → eligibility PASS, sub-gates PASS, Market Score 84.98, CAS 88.72, 4 stars, 8 ✓ lines.
+
+### Open Question (for N+2 review)
+
+Should `overhead_supply` be inverted before passing to `compute_confidence_stars` so `factor_agreement` std-dev is apples-to-apples? Currently the literal spec is implemented (raw sub_scores in, std-dev compared directly). For a clear-air stock with overhead=18 and other factors at 50–100, the std-dev exceeds 20 → loses 1 confidence star. Either (a) caller pre-inverts, or (b) engine inverts internally. Decision needed before N+3 wires the real `/top-by-cas` endpoint.
+
+### Files Changed This Session
+
+| File | Status | Lines |
+|---|---|---|
+| `Decisions.md` | modified | +3, −1 (DRAFT → APPROVED + implementation log) |
+| `requirements.txt` | modified | +1 (pyyaml>=6.0) |
+| `migrations/008_capital_allocation_columns.sql` | NEW | 60 |
+| `engine_core/capital_allocation.py` | NEW | ~450 |
+| `engine_core/test_capital_allocation.py` | NEW | ~430 |
+| `Sessions.md` | modified | +50 (Session N+1 entry) |
+| `Progress.md` | modified | +50 (Session N+1 entry — this block) |
+
+### Next Session (N+2, 1.5–2 hrs)
+
+- Wire 4 new indicator column computations into `engine_core/indicator_engine.py`: `ema_100`, `rolling_high_52w`, `weekly_trend_score` (multi-component), `overhead_supply_score` (distinct swing highs).
+- Extend `INDICATOR_COLUMNS` tuple + `add_indicator_columns_if_missing()` (mirrors Decision 099 breakout_age pattern).
+- Extend `api/schema.py` auto-heal block (defense in depth).
+- Execute `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal).
+- Backfill 4 columns for Nifty 500 universe (~1.6M rows, ~5–10 min).
+- Smoke-test eligibility/sub-gate logic against real symbols using the 5 stocks from `tests/golden_cases.yaml`.
+
+- Wire 4 new indicator column computations into `engine_core/indicator_engine.py`: `ema_100`, `rolling_high_52w`, `weekly_trend_score` (multi-component), `overhead_supply_score` (distinct swing highs).
+- Extend `INDICATOR_COLUMNS` tuple + `add_indicator_columns_if_missing()` (mirrors Decision 099 breakout_age pattern).
+- Extend `api/schema.py` auto-heal block (defense in depth).
+- Execute `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal).
+- Backfill 4 columns for Nifty 500 universe (~1.6M rows, ~5–10 min).
+- Smoke-test eligibility/sub-gate logic against real symbols using the 5 stocks from `tests/golden_cases.yaml`.
+
+### **📅 Session: July 8, 2026 morning — Capital Allocation Score V1.0 Session N+2a (Pure indicator code, no DB)**
+
+**Session Start:** ~08:40 IST
+**Status:** N+2a (pure code, no DB) COMPLETE. N+2b (DB-touching) deferred to next DB session.
+
+#### Completed (N+2a)
+- Created `engine_core/cas_indicators.py` (4 pure functions + helper):
+  - `compute_ema_100(close)` — EMA over 100 days, masks first 99 rows as NaN warm-up.
+  - `compute_rolling_high_52w(high)` — rolling max over 252 days, min_periods=50. Uses `high` (intraday peaks matter for resistance).
+  - `compute_weekly_trend_score(df, rolling_high_52w)` — 5-component composite (HH +25, HL +25, above weekly EMA-13 +20, above weekly EMA-20 +15, within 5% of 52w high +15).
+  - `compute_overhead_supply_score(high, close)` — distinct highs above current close in 126-day window, normalized 0–100.
+- Created `engine_core/test_cas_indicators.py` — **25 tests pass in 0.67s**.
+- Wired into `engine_core/indicator_engine.py`:
+  - `INDICATOR_COLUMNS` tuple extended (17 → 21 columns).
+  - `compute_indicators()` calls the 4 pure functions inline.
+  - Updates dict + UPDATE SQL include the 4 new fields.
+  - `fetch_symbols_needing_repair` includes the 4 new `IS NULL` checks.
+  - `fetch_data` SELECT includes `ema_100`.
+- Wired into `api/schema.py` auto-heal: section "12d. CAS V1.0 (Decision 100)" — 4 ALTER TABLE statements + 2 partial indexes.
+
+#### Test counts
+| File | Tests | Pass | Time |
+|------|-------|------|------|
+| `test_capital_allocation.py` | 104 | ✅ | 0.47s |
+| `test_cas_indicators.py` | 25 | ✅ | 0.67s |
+| `test_guidance_email_sections.py` | 7 | ✅ | (slow) |
+| `test_survivorship_bias.py` | 1 | ✅ | (slow) |
+| **Total engine_core tests** | **137** | **✅** | **14.31s** |
+
+#### Remaining (N+2b — needs DB)
+- Run `migrations/008_capital_allocation_columns.sql` against prod DB (or rely on auto-heal on next API startup).
+- Run `compute_indicators_all()` for Nifty 500 (~1.6M rows, ~5–10 min).
+- Smoke-test against the 5 golden-case symbols.
+
+### **📅 Session: July 8, 2026 afternoon — N+2b (DB Migration + Backfill) — COMPLETE**
+
+**Session Start:** ~10:15 IST
+**Session End:** ~11:55 IST (~1.5 hrs wall time, mostly backfill)
+
+#### Completed
+- Migration 008 executed (via psycopg2; psql not installed). 4 columns + 3 indexes created.
+- Smoke test on 5 golden-case symbols revealed **silent NaN bug** in `indicator_engine.py` per-symbol filter (non-contiguous index from multi-symbol `df`).
+- Fix committed (`75f32b3`): `.copy().reset_index(drop=True)` before per-symbol computation.
+- Full backfill: 961 symbols, 2.15M rows, 114,600 indicator updates, ~32 min runtime.
+- Validation: NULL EMA-50 rate 0.0% (pass).
+- Coverage: 498 symbols with all 4 new columns populated on latest date.
+
+#### Coverage stats (latest date 2026-07-07)
+| Metric | Value |
+|--------|-------|
+| Total symbols with non-null CAS cols | 498 |
+| Weekly trend score: min/avg/max | 0 / 44.4 / 100 |
+| Weekly trend ≥ 75 (high quality) | 138 symbols |
+| Weekly trend 50–74 (medium) | 87 symbols |
+| Weekly trend < 50 (low) | 273 symbols |
+
+#### Known gaps surfaced (carry to N+3)
+- `ema_100_slope_5d` not yet computed — CAS `ema100_rising` gate needs it
+- `regime`, `qif_score`, `data_completeness_pct`, `data_age_days` need API-layer joins
+- `Decimal → float` conversion before passing DB rows to CAS engine (engine throws on `Decimal * float`)
+
+#### Branch state (5 commits, all pushed)
+```
+75f32b3 fix(indicator): reset_index in per-symbol filter
+b2c4a4a feat(cas): N+2a — 4 new indicator columns
+287f27c refactor(cas): N+1 rev 3 refinements
+f4dc161 feat(cas): N+1 — migration + engine + tests
+63f5fca docs(cas): freeze V1.0 design (rev 2)
+```
+
+#### Ready for V1.1
+N+2b complete and verified. Per expert sequencing directive (N+2b → Verify → V1.1), the historical dataset is now clean. Ready to start V1.1: Outcome Tracking, Decision Stability, No Action, Design Principles, Regression Tolerance, plus Calibration.md journal.
+
+#### Files changed
+- `engine_core/cas_indicators.py` (NEW, ~340 lines)
+- `engine_core/test_cas_indicators.py` (NEW, ~310 lines)
+- `engine_core/indicator_engine.py` (modified: +4 INDICATOR_COLUMNS, +4 computations, +4 fields in updates/SQL, +4 NULL checks)
+- `api/schema.py` (modified: +4 ALTER + 2 INDEX in auto-heal section 12d)
+- `Sessions.md`, `Progress.md` (this entry)
+
+### N+1 Rev 3 Refinements (applied 2026-07-07, same day)
+
+After owner reviewed N+1 original, 8 design refinements + 1 recommendation applied on `feature/capital-allocation-v1`:
+
+| # | Change | Impact |
+|---|--------|--------|
+| 1 | Confidence = 5 model-certainty stars (Complete data, Factor agreement, Stable calculations, Low proxy usage, Indicator freshness) | Stock-quality signals moved out of confidence |
+| 2 | Invert `overhead_supply` BEFORE factor_agreement std-dev | All factors share "higher = better" direction |
+| 3 | All calibration constants → YAML `calibration.*` | Zero magic numbers in engine |
+| 4 | Missing data → ineligible (not score 0) | Added `weekly_data`, `rs_data` eligibility gates |
+| 5 | Renamed `check_market_subgates` → `compute_market_structure` | Investment-concept-aligned naming |
+| 6 | Added `compute_market_score_breakdown()` | Per-factor logging from day one |
+| 7 | Logging levels: DEBUG (breakdown) / INFO (summary) / WARNING (failures) | No per-call INFO spam in backfills |
+| 8 | Documentation invariant: design doc, YAML, Decisions, Sessions, Progress all synced | Code never intentionally diverges from spec |
+| +1 | `tests/golden_cases.yaml` regression basket | 7 curated scenarios for future tuning |
+
+**Branch strategy**: 3 PRs (engine → indicators → API/UI). PR1 is `feature/capital-allocation-v1`.
+
+**Test count**: **104 tests pass in 0.47s** (92 base + 12 golden-case assertions across 7 scenarios).
+
+**Files changed this session** (refinements only — originals were in the prior N+1 commit):
+- `engine_core/capital_allocation.py` (rev 3: ~600 lines)
+- `engine_core/test_capital_allocation.py` (rev 3: ~830 lines)
+- `config/capital_allocation.yaml` (rev 3: added `calibration.*` section)
+- `tests/golden_cases.yaml` (NEW, ~270 lines)
+- `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` (rev 3: amended §5, §7, §8, added §13)
+- `Decisions.md` (rev 3: refined point #9, updated implementation log)
+- `Sessions.md` (added refinements section)
+- `Progress.md` (this entry)
+- `requirements.txt` (unchanged from N+1: `pyyaml>=6.0`)
+
+---
+
 ## 📅 Session: July 6, 2026 (late evening) — Capital Allocation Score V1.0 Design Freeze (rev 2) — DESIGN ONLY, NO CODE
 
 **Session Start:** ~23:30 IST
@@ -2468,3 +2644,345 @@ All addendum code complete. **Awaiting backfill (~73 min) before final commit + 
 - [x] All 47+ backend tests pass (engine_debate, engine_fundamental, engine_core, api)
 - **No regressions introduced** — all changes confined to scripts/ and docs/
 
+
+### **📅 Session: July 8, 2026 afternoon — V1.1a (Engine Correctness) — COMPLETE**
+
+**Session Start:** ~12:45 IST
+**Session End:** ~14:15 IST (~1.5 hrs wall time, mostly backfill at 47 min)
+
+#### Completed
+- **Gap 1 fix**: `ema_100_slope_5d` column added + computed in indicator pipeline + backfilled
+- **Gap 5 fix**: `normalize_row()` helper in capital_allocation.py — all Decimal → float coercion in ONE place
+- **Age transition zones**: replaced single cliff at breakout_age=4 with 4-zone map
+- **Overhead 0.5% bucketing**: avoids float granularity artifact
+- **Engine signature**: `compute_engine_signature()` returns `{cas_version, config_hash, commit_sha, signature}`
+- **3 new helpers** + `CAS_VERSION` + `COMMIT_SHA` constants
+- **37 new tests** in `engine_core/test_cas_helpers.py`
+- **2 existing tests updated** for new YAML structure
+- **Migration 008 extended** with ema_100_slope_5d (idempotent)
+- **api/schema.py auto-heal** extended
+- **Full Nifty 500 backfill**: 961 symbols, 114,600 updates, ~47 min
+
+#### Test count progression
+| Version | Tests | Pass | Time |
+|---------|-------|------|------|
+| V1.0 (N+2b) | 137 | ✅ | 14.31s |
+| V1.1a | **174** | **✅** | **21s** |
+
+#### End-to-end verification
+INDUSINDBK row passes ALL eligibility gates (was failing on ema100_rising).
+Engine signature: `v1.1.0-{commit_sha}-{config_hash}`.
+
+#### Branch state (8 commits, all pushed)
+```
+250a748 docs(cas): Session V1.1a entry
+50d1638 feat(cas): V1.1a — engine correctness
+4361ae1 docs(cas): Decision 101 refinements
+ca0f4fa docs(cas): Decision 101 — expert review + V1.1 scope
+2f39437 docs(cas): append N+2b update
+0938bb0 docs(cas): N+2b completion
+75f32b3 fix(indicator): reset_index
+b2c4a4a feat(cas): N+2a — 4 indicator columns
+```
+
+#### Ready for V1.1b
+All mandatory + recommended fixes from Decision 101 are in. The engine now has:
+- `normalize_row()` for Decimal → float
+- `compute_engine_signature()` for provenance
+- `derive_metadata()` for completeness/age/proxies
+- `ema_100_slope_5d` populated for 498/498 symbols
+
+V1.1b (Outcome Tracking + UUIDs + Daily EOD worker) can begin.
+
+---
+
+### **📅 Session: July 8, 2026 evening — V1.1c (Decision Layer + Calibration Journal) — COMPLETE**
+
+**Decision 101 expert feedback addressed (5 design pivots):**
+1. Tier-based hysteresis (not CAS delta) — `stabilize_action()` with ±3pt bands
+2. Hysteresis on ACTION only, never on Confidence/Stars
+3. NO_ACTION now has 3 triggers (added "Best CAS < min_deployable_cas" trigger)
+4. Calibration status moved to `config/calibration_registry.yaml` (separate from runtime config)
+5. Recommendation Lifecycle: NEW → ACTIVE → MATURED → ARCHIVED (derived from dates)
+
+**Deliverables:**
+
+| Component | Purpose | Tests |
+|-----------|---------|-------|
+| `engine_core/cas_decision_layer.py` | stabilize_action, NO_ACTION, lifecycle, regression tolerance | 39 |
+| `Calibration.md` | Narrative journal of every parameter change (3 seed entries) | — |
+| `config/calibration_registry.yaml` | Validation status for 11 tunables | — |
+| `tools/calibration_debt.py` | Debt counter (`--json`, `--exit-nonzero` flags) | — |
+| `docs/CAS_SPEC.md` | §0 Motto, §1.0 Architecture, §1.1 Lifecycle | — |
+| YAML config | decision_layer + regression_tolerance blocks | — |
+| Golden case runner | Supports `cas_target` + `cas_tolerance` | +0 |
+
+**Test totals (cumulative):**
+
+| Version | Tests | Pass | Notes |
+|---------|-------|------|-------|
+| V1.1a | 174 | ✅ | Engine correctness |
+| V1.1b | 220 | ✅ | Outcome tracking + persistence |
+| **V1.1c** | **259** | **✅** | **Decision Layer + Calibration** |
+
+**Calibration Debt:** 11 hypothesis / 0 validated / 0 deprecated → debt = 11
+
+**Engineering Motto (now in CAS_SPEC.md §0 and Calibration.md):**
+> "A recommendation is a scientific hypothesis. Calibration is the process of proving or disproving that hypothesis using observed outcomes."
+
+**Commits on this session:**
+```
+020960c docs(cas): Session V1.1c entry
+967b64c feat(cas): V1.1c — Decision Layer + Calibration Journal
+```
+
+**Ready for V1.1d:** Validation + PR — overhead buckets backfill re-run,
+golden case regression, all tests green, ready to merge.
+
+---
+
+### **📅 Session: July 8, 2026 evening — V1.1d (Release Candidate 4-Gate Validation) — COMPLETE**
+
+**Decision 102:** V1.1d is a RELEASE CANDIDATE. Expert prefers 30 minutes of deliberate review over rushed merge that lives for years.
+
+**Four mandatory gates — ALL PASS:**
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| 1. Tests green | ✅ | 259/259 pass in 28.51s |
+| 2. Golden cases | ✅ | 7/7 within ±2.0 CAS tolerance |
+| 3. Distribution sanity | ✅ | 2 WARN (informational); no FAIL |
+| 4. Top-20 eyeball | ✅ | 9 candidates all pass manual review |
+
+**Two new tools (gates 3 & 4):**
+
+- `tools/distribution_sanity_check.py` — distribution stats over all 961 symbols
+- `tools/top20_report.py` — top-N ranked table with eyeball test prompt
+
+**Full Nifty universe backfill (Q1):**
+
+- 961 total symbols, 955 with full indicators (99.4%)
+- 6 thin-history symbols (<20 rows) — known engine limitation, not bug
+
+**Distribution findings:**
+
+- Eligible universe: 0.9% (9 stocks) — sparse-breakout market
+- No CAS >= 80 — engine correctly returns WATCH, not BUY
+- Overhead supply saturating at 100 (83% of stocks) — V1.2 follow-up
+
+**Top-9 candidates (Buffett sniff test):**
+
+TITAN, GLAND, INDUSINDBK, JBCHEPHARM, PNBHOUSING, INOXINDIA, ALKEM, ADANIENSOL, PAYTM
+
+**Strategic transition (Decision 102):**
+
+> V1.x = scoring infrastructure → V2.x = outcomes-driven calibration
+
+**V1.2 priorities (Decision 102 Q4):**
+1. Regime-aware API
+2. QIF joins
+3. EMA50 fallback
+4. ATR-aware overhead buckets
+5. 5-bar fractals (V2+)
+
+**Commits on this session:**
+```
+b777156 docs(cas): Session V1.1d entry
+e5c2171 docs(cas): V1.1d validation report
+6bc173b feat(tools): distribution + top20 tools
+```
+
+**Ready for:** Expert review → open PR → merge to `main`.
+
+---
+
+## 📅 Session: July 8, 2026 — Capital Allocation Score V1.1 Release Candidate (READY, BLOCKED ON gh INSTALL)
+
+**Status:** ✅ Code complete, docs synced, branch pushed. ⏸️ Awaiting `gh` install + `gh pr create`.
+
+### Work completed
+
+- **V1.1a Engine correctness** — 174 tests, EMA100 slope, overhead_supply, weekly_trend
+- **V1.1b Outcome tracking + persistence** — 220 tests, `cas_recommendations` table, milestone cron
+- **V1.1c Decision layer + calibration journal** — 259 tests, tiers/hysteresis/NO_ACTION, Calibration.md
+- **V1.1d Release candidate validation** — 5 gates (tests, golden cases, distribution, eyeball, rank correlation)
+- **Calibration override** — `overhead_supply.max_count_for_100` 10→20, saturation 83%→35.5%
+
+### Key metrics
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| Tests passing | **259/259** | ✅ |
+| Saturation at overhead=100 | **35.5%** (was 83%) | ✅ in target 20–40% |
+| Top-9 leaderboard overlap | **9/9 (100%)** | ✅ no stocks dropped |
+| Spearman rank correlation | **0.683** | ✅ significant positive |
+| Calibration debt | **11** | 1 validated, 11 hypothesis |
+| Historical eligible range (6 weeks) | **0.2–1.4%** | ✅ consistent |
+
+### Branch state
+
+- `feature/capital-allocation-v1` — **24 commits** ahead of `main`, all pushed
+- Working tree: clean
+- PR body: `docs/PR_BODY.md` (concise executive summary)
+- Full validation: `docs/CAS_V11D_VALIDATION.md`
+
+### Tomorrow's first action (BLOCKED on tooling)
+
+```bash
+sudo snap install gh          # or: sudo apt install gh
+gh auth login                 # one-time
+gh pr create \
+  --base main \
+  --head feature/capital-allocation-v1 \
+  --title "Capital Allocation Score V1.1 — Release Candidate" \
+  --body-file docs/PR_BODY.md
+```
+
+### V1.2 Backlog (post-merge)
+
+1. Regime-aware API (read from detector, not hardcoded BULLISH)
+2. QIF joins (replace `proxy_score_v1`)
+3. EMA50 fallback for thin-history stocks
+4. ATR-aware overhead buckets
+5. Weekly fractals (V2+)
+
+### Project phase transition
+
+> **V1.x = scoring infrastructure.** From here, the project's biggest improvements
+> come from **measuring** how well the engine predicts successful capital
+> allocation. **V2.x = outcome-driven calibration.** Merge V1.1, let it run,
+> start collecting recommendation outcomes.
+
+### Commits added today
+
+```
+c521b44 docs(cas): PR body for V1.1 release candidate
+b47cd97 docs(cas): Decision 102 entry
+68f9907 docs(cas): Session V1.1d post-review calibration entry
+2059d08 feat(cas): V1.1d calibration override (max_count 10→20) + 5-gate validation
+fde49bf docs(cas): Progress.md entry for V1.1d release candidate validation
+b777156 docs(cas): Session V1.1d entry
+e5c2171 docs(cas): V1.1d validation report
+6bc173b feat(tools): distribution + top20 tools
+```
+
+---
+
+## 🚧 Day 75: V2 Pyramiding Discipline Gates (Decision 103) — P1 (Documentation)
+
+Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-only (≥85 + 4★) to a 5-condition layered check (decision_score, mri_technical_score, weekly breakout above resistance, breakout-day volume, breakout age) + confidence stars. All thresholds live in YAML; spec is frozen before any engine code is written.
+
+### P1 sub-tasks (all complete)
+
+- [x] **Decision 103** added to `Decisions.md` (full rationale, 9 refinements C1–C9, 7-phase plan, calibration freeze).
+- [x] **`docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` §14** added (full gate spec, G3 resistance selection with C1 fallback, G4 versioned metadata, 4-state model, `evaluate_add_gates()` output shape, P6 success metrics, schema delta, alternatives rejected).
+- [x] **`config/capital_allocation.yaml`** — appended `add_gate` (version 2.0.0) and `approaching_add` sections. All 7 gate parameters + 4 surface-cap parameters YAML-driven.
+- [x] **`config/calibration_registry.yaml`** — 5 new `hypothesis` entries (G1–G5 + version stamp). All marked `validated_after: null` pending P6 backtest.
+- [x] **`Calibration.md`** — 6 new journal entries (1 overview + 5 per-gate). Each follows the `Reason / Expected effect / Measured effect pending` template.
+- [x] **`docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md`** (NEW, 9.9 KB) — full multi-round design discussion record (C1–C4 round 1, C5–C9 round 2, alternatives considered). Read BEFORE resuming work on this branch.
+- [x] **`Sessions.md`** — full P1 session entry with multi-session handoff notes for P2–P7 (resume-cold pointers, critical reminders, backward-compat requirements).
+
+### 📦 Deliverable (P1)
+
+- **Decision 103**: full rationale + 7-phase plan, frozen.
+- **Spec**: §14 of plan doc, canonical gate/state/schema/source-of-truth definition.
+- **Config**: `add_gate` + `approaching_add` sections, 11 new parameters, all YAML-driven.
+- **Calibration registry**: 5 `hypothesis` entries with status, intro date, rationale, journal cross-ref.
+- **Calibration journal**: 6 entries (1 overview + 5 per-gate) with expected effects; measured effects pending P6.
+- **Discussion record**: 9.9 KB institutional memory of the design rationale.
+- **Session log**: today's entry + multi-session handoff notes.
+
+### ✅ P2 SHIPPED (commit c1052d0, 2026-07-13)
+
+- [x] `migrations/010_add_second_tranche_gates.sql` — 10 new columns on `daily_prices` (G3: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`; G4: `breakout_day_volume`, `breakout_day_avg20_volume`, `breakout_day_volume_ratio`, `volume_threshold_used`, `breakout_date_for_volume`, `volume_confirmed_breakout`) + 2 partial indexes + CHECK constraint.
+- [x] `engine_core/cas_indicators.py` — 4 new pure functions: `compute_prior_52w_high`, `compute_all_time_high_before_current_week`, `compute_weekly_close_above_resistance`, `compute_breakout_day_volume_ratio`. Plus `ResistanceSource` enum.
+- [x] `engine_core/test_cas_indicators.py` — 17 new test cases (43/43 pass total).
+- [x] G3+G4 wired into `engine_core/indicator_engine.py` (`compute_indicators`).
+- [x] Smoke test passed on 5 hand-picked symbols (WELCORP, ADANIENSOL, NEULANDLAB, TITAN, ALKEM) — 600 updates written, all 10 V2 columns populate in DB.
+- [x] Commit + push: `feat(cas-v2): G3+G4 indicator computations for ADD_SECOND_TRANCHE gates (P2)`. Tests 277/277 pass.
+
+### ✅ P4 SHIPPED (commit 54ef6e6, 2026-07-13)
+
+- [x] `api/breakout_status.py` — extended `GET /api/breakout/radar` SELECT with 7 V2 columns on both watchlist + full-universe branches (`prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`, `breakout_day_volume_ratio`, `volume_confirmed_breakout`, `breakout_date_for_volume`). Backward compat: existing fields preserved.
+- [x] `api/cas.py` (NEW, 341 lines) — 2 new endpoints + 1 helper:
+  - `GET /api/cas/recommendations?symbol=X&days=N&limit=N` — queries `cas_recommendations`, expands V2 keys from `factor_snapshot` JSONB to top-level. Supports symbol/days/limit filters. V1.1d rows return `None` for V2 fields (graceful backward compat).
+  - `GET /api/cas/add-eligibility?symbol=X&client_id=Y` — per-(symbol, client) V2 gate evaluation. Reads `daily_prices` + `cas_recommendations` + `client_portfolio`. Reuses `_enrich_with_mosi_lite` for `decision_score` + `mri_technical_score`. Calls `evaluate_add_gates()` + `compute_layered_state()`. Module-level YAML config cache. Explicit error codes (`no_market_data`, `no_cas_recommendation`, `internal_error`).
+  - `_expand_factor_snapshot(row)` helper — hoists V2 keys to top-level.
+- [x] `api/main.py` — import + `include_router` for `api.cas`.
+- [x] Direct DB smoke tests 14/14 pass (7 P4c + 7 P4d).
+- [x] Golden cases via direct engine calls: 3/4 V2 states confirmed (OBSERVE, APPROACHING_ADD, READY_FOR_ADD); ADD_SECOND_TRANCHE revealed G4 needs `volume_confirmed_breakout` flag (engine nuance noted for P6 backtest).
+- [x] One design bug caught+fixed: `GateResult` field names (`blocked`→`blocked_gates`, `score_pct`→`gate_score_pct`, `passed`→`gates_passed`, `total`→`gates_total`) per `engine_core/cas_recommendations.py` L55-66 NamedTuple.
+- [x] Commit + push: `feat(cas-v2): API layer for Decision 103 — /api/cas/recommendations + /api/cas/add-eligibility + /api/breakout/radar V2 cols (P4)`. 353 insertions across 3 files.
+
+### ✅ P5 SHIPPED (commit ade1c28, 2026-07-13)
+
+- [x] `frontend/src/AddStatusChip.tsx` (NEW, 265 lines) — 4 V2 states color-coded (OBSERVE=gray, APPROACHING_ADD=blue, READY_FOR_ADD=amber, ADD_SECOND_TRANCHE=green); hover popover lists all 6 gate results with ✓/✗ icons; handles loading / no_client_id / no_cas_recommendation / fetch_failed edge cases (all degrade to OBSERVE).
+- [x] `frontend/src/api.ts` (+12 lines) — `listCasRecommendations({symbol?, days?, limit?})` + `getAddEligibility(symbol, client_id)` after `getBreakoutRadar`. Both URL-encoded.
+- [x] `frontend/src/BreakoutRadar.tsx` (+3 lines) — `AddStatusChip` import + `<th>ADD Status</th>` header + `<td><AddStatusChip symbol={item.symbol} /></td>` cell. Single `renderTable()` change cascades to all 6 sections (fresh/early/late/mature/ready/consolidating).
+- [x] Verification: `grep -c AddStatusChip BreakoutRadar.tsx` → 2 (import + JSX usage); `AddStatusChip.tsx` → 3 (internal refs). git diff --stat: 3 files, 280 insertions.
+- [x] No build step run (no tsc in project root); owner to verify in dev server (`npm run dev`).
+- [x] Commit + push: `feat(cas-v2): frontend AddStatusChip + ADD Status column on BreakoutRadar (P5)`.
+
+### ✅ P6 SHIPPED (backtest script + doc wrap-up, 2026-07-13)
+
+- [x] **P6a** — Discovery complete. Confirmed §14.8 metrics, existing backtest scripts, calibration registry state (`hypothesis` for G1–G5), and the data-coverage gap.
+- [x] **P6b** — Identified `scripts/daily_cas_scanner.py` as the existing batch population path; no new population script needed. CLI supports `--as-of YYYY-MM-DD --limit N` and does idempotent UPSERT per symbol/day.
+- [x] **P6c** — Wrote `engine_core/backtest_v2_pyramiding.py` (NEW, ~470 lines):
+  - Reads `cas_recommendations` over a date range.
+  - Compares V1.1d `action == 'ADD'` vs V2 `factor_snapshot.final_state == 'ADD_SECOND_TRANCHE'`.
+  - Computes forward 20/60/120-trading-day returns vs NIFTY50 from `market_index_prices`.
+  - Computes 60-day max drawdown from `daily_prices`.
+  - Reports 6 §14.8 metrics with pass/fail verdicts; supports `--json-out`.
+  - Handles V1.1d snapshots (no `final_state`) and V2 snapshots gracefully.
+  - `ast.parse` OK; smoke-tested against Neon.
+- [x] **Smoke test result** — 9 recommendations loaded (2026-07-07 batch); 0 V1.1d ADD and 0 V2 ADD_SECOND_TRANCHE signals; all 6 metrics fail with `n/a` (expected data-coverage gap, not a gate-design failure).
+- [x] **P6d** — Calibration flip BLOCKED. 5 registry entries remain `hypothesis` / `validated_after: null` until historical data is populated and the backtest produces a meaningful ADD signal sample.
+- [x] **P6e** — Doc wrap-up:
+  - `Calibration.md` — updated 2026-07-13 Add Gate V2 entry + G1/G2/G4/G5 entries with measured-effect notes (insufficient data).
+  - `Sessions.md` — added "Session: P6 — Backtest Validation (Decision 103)" + P7 handoff notes.
+  - `Progress.md` — updated to this section (P6 shipped, P6d blocked, P7 next).
+
+### ✅ P6.5 SHIPPED — Validation Verdict (Decision 103)
+
+A four-step validation phase was inserted before P7 to prove the V2 gate
+engine was behaving correctly despite zero ADD signals.
+
+- [x] **Step 1 — V2 indicator backfill.** `engine_core/indicator_engine.py`
+  `fetch_symbols_needing_repair()` extended to include all 10 V2 columns.
+  Targeted 5-symbol proof passed (600 updates, 36.4 s). Full latest-date
+  backfill deferred to production pipeline because estimated runtime
+  (~60 min) exceeds safe interactive timeout.
+- [x] **Step 2 — CAS distribution report.** Over 671 historical
+  recommendations: max CAS 78.45, p95 74.62, median 69.03, avg 69.22;
+  286 ≥ 70, 30 ≥ 75, 0 ≥ 80, 0 ≥ 85; all rows had confidence_stars = 3.
+- [x] **Step 3 — Synthetic sanity tests.** 17/17 targeted tests passed
+  (`TestEvaluateAddGates` 11 + `TestActionResultWithGates` 6). All-pass
+  → `ADD_SECOND_TRANCHE`; each gate blocks independently as expected.
+- [x] **Step 4 — Final verdict.** Zero ADD recommendations are explained by:
+  - A. Engine behaviour is correct (tests + targeted backfill prove it).
+  - B. CAS floor (≥ 85) was never reached (max 78.45).
+  - C. Confidence-stars floor (≥ 4) was never reached (all 3 stars).
+  - D. V2 G3/G4 gates therefore never got a chance to influence outcomes.
+
+Calibration entries G1–G5 remain `hypothesis` until live ADD signals
+accumulate. Decision 103 calibration freeze is intact.
+
+### 🚧 P7 backlog / next actions
+
+- **P7 (30 min)** — Final `Sessions.md`, `Progress.md`, and `Decisions.md`
+  Decision 103 final entry + push. P6.5 has validated the zero-ADD root
+cause, so P7 is now unblocked.
+
+### 📌 Decisions.md State After This Session
+
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), P5 (frontend), P6 (backtest script + doc wrap-up), and P6.5 (validation verdict) all shipped. Calibration flip (P6d) remains blocked pending live ADD signals; P7 final wrap-up is next.**
+- **Decision 102** still VALIDATED — no change.
+- **Decision 101** still APPROVED — no change.
+- **Decision 100** still APPROVED — no change.
+
+### 📌 Next
+
+- Run **P7 final wrap-up**: update `Decisions.md` Decision 103 final entry,
+  finalise `Sessions.md` + `Progress.md`, commit + push.
+- **Decision 104** (Earn the Tranche Policy) remains deferred until after
+  Decision 103 closes.

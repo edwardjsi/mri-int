@@ -1,0 +1,191 @@
+# CAS Calibration Registry — validation status of every tunable parameter.
+# ----------------------------------------------------------------------------
+# Per Decision 101 expert feedback (Q4): YAML should answer "What are the
+# current parameters?" not "What is the research status of those parameters?"
+# Those are separate concerns. This file tracks the SECOND question.
+#
+# Tooling: venv/bin/python tools/calibration_debt.py reads this file and
+# reports total / validated / debt.
+#
+# Schema:
+#   <param_name>:
+#     value: <current value>
+#     status: hypothesis | validated | deprecated
+#     introduced: <YYYY-MM-DD>
+#     last_reviewed: <YYYY-MM-DD or null>
+#     validated_after: <N recommendations or null>
+#     rationale: <one-line human explanation>
+#     journal_entry: <Calibration.md section anchor>
+#
+# Status meanings:
+#   hypothesis   — parameter is in active use but not yet validated through outcomes.
+#   validated    — supported by outcome data (N recommendations + observed effect).
+#   deprecated   — no longer in use; kept for historical reference.
+
+# === V1.0 original tunables (Decision 099) ===
+
+eligibility_min_quality:
+  value: 70
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Raise QIF threshold from 65 to 70 to reduce mediocre breakouts."
+  journal_entry: "Calibration.md#2026-07-08-quality-threshold-raised-65-70"
+
+winner_max_boost:
+  value: 1.10
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Soften winner multiplier cap from 1.20 to 1.10 to prevent concentration bias."
+  journal_entry: "Calibration.md#2026-07-08-winner-multiplier-cap-softened-120-110"
+
+confidence_definition:
+  value: "model_certainty"
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Stars now measure model certainty, not stock quality (philosophical shift)."
+  journal_entry: "Calibration.md#2026-07-08-confidence-redefined-stock-quality-model-certainty"
+
+# === V1.1 sub-gate additions ===
+
+min_quality_structure:
+  value: 75
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Structure sub-gate (stricter than eligibility min_quality=70) for high quality."
+  journal_entry: null
+
+max_breakout_age_days:
+  value: 3
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Structure sub-gate requires breakout_age <= 3 (fresh continuations only)."
+  journal_entry: null
+
+# === V1.1d calibration override (Decision 102 Q2) ===
+
+subscore.overhead_supply.max_count_for_100:
+  value: 20
+  status: validated
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null  # No outcomes yet — validated via distribution check
+  rationale: "Raised from 10 to 20 to fix 83% saturation (V1.1d Gate 3). New saturation: 35.5% (target 20-40%)."
+  journal_entry: "Calibration.md#2026-07-08-overhead-supply-max_count_for_100-raised-10-20"
+
+# === V1.1c decision layer (Decision 101 expert feedback) ===
+
+decision_layer.hysteresis_cas:
+  value: 3.0
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Tier-boundary hysteresis prevents flip-flopping on small CAS movements."
+  journal_entry: null
+
+decision_layer.min_deployable_cas:
+  value: 70.0
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Below this CAS, even eligible stocks don't justify deployment. Distinct from 'no eligible'."
+  journal_entry: null
+
+decision_layer.tier_thresholds:
+  value: { WATCH: 60.0, FIRST_TRANCHE: 80.0, ADD_SECOND_TRANCHE: 85.0 }
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "Tier boundaries for action classification. Aligned with action.* thresholds."
+  journal_entry: null
+
+# === V1.1b action thresholds ===
+
+action.buy_cas_min:
+  value: 80
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "CAS >= 80 + stars >= 4 → BUY (first tranche)."
+  journal_entry: null
+
+action.add_cas_min:
+  value: 85
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "CAS >= 85 + existing position → ADD (second tranche)."
+  journal_entry: null
+
+action.watch_cas_min:
+  value: 60
+  status: hypothesis
+  introduced: 2026-07-08
+  last_reviewed: 2026-07-08
+  validated_after: null
+  rationale: "CAS >= 60 → WATCH (eligible but no action yet)."
+  journal_entry: null
+
+# === V2 Pyramiding Discipline Gates (Decision 103, 2026-07-13) ===
+# All 5 thresholds are PROPOSED until P6 backtest hits all 6 success metrics.
+# Status flips to validated after P6 + 100 ADD recommendations (Calibration freeze).
+# Decision 103 owner refinement: every gate must be YAML-driven, no hardcoded Python.
+
+add_gate.version:
+  value: "2.0.0"
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "Calibration version stamp. Persisted in cas_recommendations.factor_snapshot.config_snapshot.version (C5) so historical recommendations remain reproducible."
+  journal_entry: "Calibration.md#2026-07-13-add-gate-v2-introduced"
+
+add_gate.decision_score_min:
+  value: 85
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G1 — capital allocation quality gate. decision_score is the ONLY score gate; mri_technical_score is separate (single-responsibility per owner)."
+  journal_entry: "Calibration.md#2026-07-13-g1-decision-score-min-85"
+
+add_gate.mri_technical_min:
+  value: 80
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G2 — technical structure confirmation. Answers 'is this chart still healthy?' Distinct from G1 (ownership quality). Revisit only if backtest correlation with decision_score exceeds 0.9."
+  journal_entry: "Calibration.md#2026-07-13-g2-mri-technical-min-80"
+
+add_gate.breakout_volume_ratio:
+  value: 1.3
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G4 — institutional sponsorship confirmation. breakout_day_volume / 20d_avg, computed ONCE on breakout day, frozen, metadata versioned (C2). If calibration changes later, volume_threshold_used preserves historical reproducibility."
+  journal_entry: "Calibration.md#2026-07-13-g4-breakout-volume-ratio-13"
+
+add_gate.breakout_age_max:
+  value: 15
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G5 — pyramiding discipline: opportunity must still be fresh. 15 trading days = ~3 weeks; broader than V1.1 eligibility (5d) but tighter than mature (30d+)."
+  journal_entry: "Calibration.md#2026-07-13-g5-breakout-age-max-15"
