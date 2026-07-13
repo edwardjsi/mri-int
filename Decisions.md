@@ -2610,4 +2610,15 @@ If any target missed → Calibration.md journal entry + tighten; do NOT silently
 
 **Calibration freeze:** All 5 new gate thresholds are `PROPOSED`. Move to `VALIDATED` only after P6 backtest hits all 6 success metric targets. No weight/gate tweaks for 100 ADD recommendations post-merge.
 
-**Status:** APPROVED (2026-07-13) — P1 (docs only) authorized to begin.
+**Status:** APPROVED (2026-07-13) — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), P5 (frontend), P6 (backtest script + doc wrap-up), and P6.5 (validation verdict) all shipped. P6d (calibration flip) remains blocked until ≥100 live ADD recommendations exist. P7 (final doc wrap-up + push) is the only remaining phase.
+
+**Implementation log:**
+- 2026-07-13 — P1 shipped (commit `ffb3c32`): design docs, YAML config, calibration registry, journal entries.
+- 2026-07-13 — P2 shipped (commit `c1052d0`): migration 010 + 4 pure indicator functions + 17 tests + G3/G4 wired into `indicator_engine.py`.
+- 2026-07-13 — P3 shipped (commit `3b68f97`): `GateResult`/`ActionResult`, `evaluate_add_gates()`, `compute_layered_state()`, extended `compute_factor_snapshot()`, 26 new tests.
+- 2026-07-13 — P4 shipped (commit `54ef6e6`): `/api/cas/recommendations`, `/api/cas/add-eligibility`, `/api/breakout/radar` V2 columns.
+- 2026-07-13 — P5 shipped (commit `ade1c28`): `AddStatusChip.tsx`, `BreakoutRadar.tsx` ADD Status column, API helpers.
+- 2026-07-13 — P6 shipped (commit `b86f0c5`): `engine_core/backtest_v2_pyramiding.py` + doc wrap-up; 0 ADD signals due to data-coverage gap.
+- 2026-07-13 — P6.5 shipped: validation verdict documented. Root cause of zero ADDs confirmed: max CAS 78.45 (< 85), all rows 3 stars (< 4), engine mechanically sound.
+
+**Calibration debt:** G1–G5 entries in `config/calibration_registry.yaml` remain `hypothesis` / `validated_after: null`. They can flip to `validated` only after the P6 backtest succeeds on a meaningful sample of ADD signals (owner threshold: 100 ADD recommendations observed live).

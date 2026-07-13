@@ -176,6 +176,17 @@ def fetch_symbols_needing_repair():
                     OR rolling_high_52w IS NULL    -- CAS V1.0 (Decision 100)
                     OR weekly_trend_score IS NULL  -- CAS V1.0 (Decision 100)
                     OR overhead_supply_score IS NULL  -- CAS V1.0 (Decision 100)
+                    -- Decision 103 V2 ADD_SECOND_TRANCHE gates (P6.5 validation backfill)
+                    OR prior_52w_high IS NULL
+                    OR all_time_high_before_current_week IS NULL
+                    OR resistance_source IS NULL
+                    OR weekly_close_above_resistance IS NULL
+                    OR breakout_day_volume IS NULL
+                    OR breakout_day_avg20_volume IS NULL
+                    OR breakout_day_volume_ratio IS NULL
+                    OR volume_threshold_used IS NULL
+                    OR breakout_date_for_volume IS NULL
+                    OR volume_confirmed_breakout IS NULL
                 )
                 OR (
                     date = (SELECT * FROM latest_date)

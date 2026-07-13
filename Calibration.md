@@ -318,6 +318,48 @@ listings separately)*
 
 ---
 
+### 2026-07-13 — P6.5 Validation Verdict: zero ADD signals are explained by CAS + stars gap, not gate bugs
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.decision_score_min` | 85 | 85 (unchanged) |
+| `add_gate.confidence_stars_min` | 4 | 4 (unchanged) |
+| Understanding of zero ADDs | data-coverage gap suspected | root cause validated |
+
+**Reason:** Before closing Decision 103 we needed to distinguish between
+(a) a bug in the gate engine and (b) the market/universe simply not
+producing candidates that clear the thresholds. A four-part validation
+was run:
+
+1. **V2 indicator backfill** — `fetch_symbols_needing_repair()` in
+   `engine_core/indicator_engine.py` was extended to include all 10 V2
+   columns so the repair loop knows to backfill them. A targeted 5-symbol
+   run (RELIANCE / TCS / INFY / HDFCBANK / WELCORP) wrote 600 updates
+   and verified all 10 columns populate correctly. Historical coverage is
+   already ~49k rows, confirming the indicator computation works.
+2. **CAS distribution** — over the 127-date trailing-6-month window
+   (671 `cas_recommendations` rows): max CAS = 78.45, p95 = 74.62,
+   median = 69.03, avg = 69.22. Counts: 286 ≥ 70, 30 ≥ 75, 0 ≥ 80,
+   0 ≥ 85.
+3. **Synthetic sanity tests** — 17 targeted unit tests pass: all gates
+   pass → `ADD_SECOND_TRANCHE`, plus each gate failing independently
+   blocks correctly.
+4. **Verdict synthesis** — no stock reached the 85 CAS floor or the
+   4-star confidence requirement in the backtest window. The V2 gates
+   never got a chance to fire because the preconditions (CAS ≥ 85,
+   stars ≥ 4) were not met. This is a market/universe + data-age issue,
+   not a gate-logic defect.
+
+**Expected effect:** Validation confirms the gate model is mechanically
+sound. When the market produces a CAS ≥ 85 / 4-star candidate, the
+engine is expected to evaluate G1–G5 correctly.
+
+**Measured effect:** 0 ADD_SECOND_TRANCHE signals in 671 historical
+recommendations. Max CAS 78.45 (< 85); all 671 rows had confidence_stars
+= 3 (< 4). Calibration registry entries G1–G5 remain `hypothesis`.
+
+---
+
 ## Calibration Debt
 
 Run `venv/bin/python tools/calibration_debt.py` to see current count.

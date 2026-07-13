@@ -2783,3 +2783,114 @@ When resuming after owner P5 sign-off:
 - **V1.1d rows**: Pre-2026-07-13 `cas_recommendations` rows have a V1.1d `factor_snapshot` shape. The backtest script should either skip these OR construct synthetic `gate_inputs` from `factor_snapshot` sub-scores.
 - **Calibration freeze**: After P5 ships, do NOT tweak `add_gate` thresholds for the first 100 ADD recommendations (matches Decision 102's pattern). Re-validate at 100 / 250 / 500 ADD signals.
 - **Document the backtest results** in `Sessions.md` under a new "## Session: P6 — Backtest (Decision 103)" section. Include: sample size, hit rate per metric, decision (ship / tighten / abandon).
+
+---
+
+## Session: P6.5 — Validation Verdict (Decision 103)
+
+**Date:** 2026-07-13  
+**Objective:** Before closing Decision 103, prove that zero ADD signals were
+caused by the market/universe not clearing the CAS and confidence
+thresholds, NOT by a bug in the V2 gate engine.
+
+### Validation checklist
+
+| # | Check | Result |
+|---|-------|--------|
+| 1 | V2 indicator backfill across full universe | Partial — engine fix shipped, targeted 5-symbol proof passed, full latest-date backfill deferred |
+| 2 | CAS distribution report | Complete |
+| 3 | Synthetic sanity tests | 17/17 pass |
+| 4 | Final verdict written | Complete |
+
+### 1. V2 indicator backfill
+
+- **Engine fix:** `fetch_symbols_needing_repair()` in
+  `engine_core/indicator_engine.py` now includes all 10 Decision 103 V2
+  columns (`prior_52w_high`, `all_time_high_before_current_week`,
+  `resistance_source`, `weekly_close_above_resistance`,
+  `breakout_day_volume`, `breakout_day_avg20_volume`,
+  `breakout_day_volume_ratio`, `volume_threshold_used`,
+  `breakout_date_for_volume`, `volume_confirmed_breakout`). This ensures
+  future indicator repair loops know to backfill these columns.
+- **Targeted proof:** `compute_indicators_for_symbols(['RELIANCE','TCS','INFY','HDFCBANK','WELCORP'])`
+  wrote 600 indicator updates in 36.4 s and verified all 10 V2 columns
+  populate correctly.
+- **Historical coverage:** ~49,560 rows already carry V2 G3 indicators and
+  ~45,300 rows carry V2 G4 indicators, proving the computation pipeline
+  is sound.
+- **Full latest-date backfill:** BLOCKED for this session. A full run is
+  estimated at ~60 minutes and exceeds the safe interactive timeout. The
+  production indicator pipeline should run this automatically on its
+  next scheduled pass; no code change is required beyond the repair-query
+  fix above.
+
+### 2. CAS distribution report (trailing 6 months, 671 rows)
+
+```
+max CAS:  78.45
+p95:      74.62
+p90:      72.17
+median:   69.03
+avg:      69.22
+≥ 70:     286 rows
+≥ 75:      30 rows
+≥ 80:       0 rows
+≥ 85:       0 rows
+```
+
+**Confidence stars:** 671 / 671 rows = 3 stars.
+
+The distribution shows a hard ceiling: the strongest candidate in the
+entire 6-month window scored 78.45, well below the 85 ADD floor.
+
+### 3. Synthetic sanity tests
+
+```bash
+venv/bin/python -m pytest engine_core/test_cas_recommendations.py \
+  -k "TestEvaluateAddGates or TestActionResultWithGates" -v
+```
+
+Result: **17 passed, 46 deselected**.
+
+- All gates pass → `ADD_SECOND_TRANCHE`
+- G1 (decision_score < 85), G2 (mri_technical < 80), G3 (weekly close
+  below resistance), G4 (volume not confirmed), G5 (breakout age too
+  old), and confidence_stars < 4 each block independently.
+
+### 4. Final verdict: why there were zero ADD recommendations
+
+**A. Engine behaviour is correct.** The gate functions, layered state
+machine, and indicator pipeline all behave as designed and are covered by
+passing unit tests.
+
+**B. The CAS floor was never reached.** The highest CAS in 6 months was
+78.45; the ADD gate requires CAS ≥ 85.
+
+**C. The confidence-stars floor was never reached.** Every row in the
+backtest window had exactly 3 stars; the ADD gate requires ≥ 4.
+
+**D. The V2 gate preconditions were therefore never tested by real data.**
+G1–G5 and the confidence gate blocked every candidate before the V2
+G3/G4 indicators could influence the outcome. This is a market/universe
++ data-age condition, not a gate-design failure.
+
+### Decision
+
+- **Do NOT lower thresholds or tweak calibration.** The Decision 103
+  calibration freeze stands: no changes until 100 live ADD
+  recommendations have been observed.
+- **Ship the P6.5 verdict** in `Calibration.md`, `Sessions.md`, and
+  `Progress.md`.
+- **Unblock P7** — final Decision 103 wrap-up can now proceed because the
+  zero-ADD root cause is documented and validated, not mysterious.
+- **Defer Decision 104** (Earn the Tranche Policy) to a separate branch
+  after P7.
+
+### Files changed
+
+| File | Status | Lines |
+|---|---|---|
+| `engine_core/indicator_engine.py` | modified | +13 (V2 columns added to `fetch_symbols_needing_repair`) |
+| `Calibration.md` | modified | +35 (P6.5 validation verdict entry) |
+| `Sessions.md` | modified | +70 (this entry) |
+| `Progress.md` | modified | +25/-8 (P6.5 shipped, P7 next) |
