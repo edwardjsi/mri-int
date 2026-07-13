@@ -305,6 +305,18 @@ export const api = {
     // Breakout Radar
     getBreakoutRadar: () => apiFetch('/breakout/radar'),
 
+    // Decision 103 V2 — CAS Recommendations API (P4c + P4d)
+    listCasRecommendations: (params?: { symbol?: string; days?: number; limit?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.symbol) qs.set('symbol', params.symbol);
+        if (params?.days != null) qs.set('days', String(params.days));
+        if (params?.limit != null) qs.set('limit', String(params.limit));
+        const q = qs.toString();
+        return apiFetch(`/cas/recommendations${q ? `?${q}` : ''}`);
+    },
+    getAddEligibility: (symbol: string, client_id: string) =>
+        apiFetch(`/cas/add-eligibility?symbol=${encodeURIComponent(symbol)}&client_id=${encodeURIComponent(client_id)}`),
+
     uploadWatchlistCsv: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
