@@ -25,9 +25,14 @@ import pandas as pd
 import pytest
 
 from engine_core.cas_indicators import (
+    ResistanceSource,
+    compute_all_time_high_before_current_week,
+    compute_breakout_day_volume_metrics,
     compute_ema_100,
     compute_overhead_supply_score,
+    compute_prior_52w_high,
     compute_rolling_high_52w,
+    compute_weekly_close_above_resistance,
     compute_weekly_trend_score,
     compute_weekly_components,
 )
@@ -337,3 +342,313 @@ class TestIntegration:
         )
         # Overhead should be moderate or low (tight uptrend keeps close near highs)
         assert last["overhead_supply_score"] <= 80
+
+
+# ── Decision 103 V2 ADD gate inputs ─────────────────────────────────────────
+#
+# Tests for the four new pure indicator functions + ResistanceSource enum
+# introduced by Decision 103. The functions are pure (pd.Series → pd.Series /
+# pd.DataFrame) so the tests synthesize daily Series directly with known
+# weekly structure and assert on the output.
+#
+# Helpers `_make_daily_with_weekly_highs` and `_make_daily_with_weekly_closes`
+# build a daily Series where every business day in week N shares the same
+# high (or close), so the weekly resample is fully deterministic.
+
+
+def _make_daily_with_weekly_highs(
+    n_weeks: int, weekly_highs: list[float]
+) -> pd.Series:
+    """Build a daily-indexed Series of `high` where each week's max equals
+    `weekly_highs[w]` exactly (5 business days per week, all set to that value).
+    """
+    assert len(weekly_highs) == n_weeks
+    n_days = n_weeks * 5
+    dates = pd.date_range("2024-01-01", periods=n_days, freq="B")
+    highs: list[float] = []
+    for w in range(n_weeks):
+        highs.extend([float(weekly_highs[w])] * 5)
+    return pd.Series(highs, index=dates, name="high")
+
+
+def _make_daily_with_weekly_closes(
+    n_weeks: int, weekly_closes: list[float]
+) -> pd.Series:
+    """Build a daily-indexed Series of `close` where every business day in
+    week N uses `weekly_closes[w]`. Resample('W-FRI').last() returns exactly
+    `weekly_closes[w]` for week N.
+    """
+    assert len(weekly_closes) == n_weeks
+    n_days = n_weeks * 5
+    dates = pd.date_range("2024-01-01", periods=n_days, freq="B")
+    closes: list[float] = []
+    for w in range(n_weeks):
+        closes.extend([float(weekly_closes[w])] * 5)
+    return pd.Series(closes, index=dates, name="close")
+
+
+# ── ResistanceSource enum tests ─────────────────────────────────────────────
+
+
+class TestResistanceSource:
+    def test_enum_values_match_db_check_constraint(self):
+        """Migration 010 has a CHECK constraint allowing exactly these two values.
+        If we ever rename a member here, the migration must move with it.
+        """
+        assert ResistanceSource.PRIOR_52W_HIGH.value == "PRIOR_52W_HIGH"
+        assert ResistanceSource.ALL_TIME_HIGH.value == "ALL_TIME_HIGH"
+        # No other members should exist.
+        assert {m.value for m in ResistanceSource} == {
+            "PRIOR_52W_HIGH",
+            "ALL_TIME_HIGH",
+        }
+
+    def test_enum_is_str_subclass_for_json_serialization(self):
+        """Inherits from `str` so it serializes to plain strings in JSON / DB."""
+        assert isinstance(ResistanceSource.PRIOR_52W_HIGH, str)
+        assert ResistanceSource.PRIOR_52W_HIGH == "PRIOR_52W_HIGH"
+
+
+# ── prior_52w_high tests ────────────────────────────────────────────────────
+
+
+class TestPrior52wHigh:
+    def test_exactly_52_weeks_boundary(self):
+        """With exactly 52 weeks of data, the most recent daily row's value
+        must be the max of weekly highs from weeks 0..50 (i.e., the prior 51
+        weeks — the 52nd is excluded as the current week).
+        """
+        # Week 51 is the "current week" for the last daily row.
+        # Prior 52 weeks = weeks 0..50 (51 weeks since we exclude current).
+        # Wait — the spec says rolling(window=52).max() after shift(1), so:
+        #   shift(1) drops current week, then rolling(52).max() takes up to 52
+        #   prior weeks. With 52 total weeks, that means weeks 0..50 → 51 weeks.
+        prior_highs = [100.0 + i for i in range(51)]  # weeks 0..50
+        current_week_high = 999.0  # should be EXCLUDED
+        weekly_highs = prior_highs + [current_week_high]  # 52 weeks total
+        high = _make_daily_with_weekly_highs(n_weeks=52, weekly_highs=weekly_highs)
+
+        result = compute_prior_52w_high(high, window_weeks=52)
+        last_val = result.iloc[-1]
+
+        # Prior weeks 0..50 max = 100 + 50 = 150. Current week (999) excluded.
+        assert last_val == pytest.approx(150.0, rel=1e-9)
+
+    def test_excludes_current_week_via_shift(self):
+        """If the current week's high is HIGHER than any prior week, the result
+        must still reflect only the prior weeks (shift(1) verification).
+        """
+        # 10 weeks total. Weekly highs: 100, 110, 120, ..., 180, 999 (current).
+        weekly_highs = [100.0 + i * 10 for i in range(10)]
+        weekly_highs[-1] = 999.0  # current week
+        high = _make_daily_with_weekly_highs(n_weeks=10, weekly_highs=weekly_highs)
+
+        result = compute_prior_52w_high(high, window_weeks=10)
+        # Last row's value = max of weeks 0..8 (prior 9 weeks) = 100 + 80 = 180.
+        assert result.iloc[-1] == pytest.approx(180.0, rel=1e-9)
+
+    def test_warmup_returns_nan_before_first_completed_week(self):
+        """Daily rows in the very first week should be NaN (no prior weeks).
+
+        Also: daily rows in week 2 (before Friday) are still NaN because the
+        forward-fill from the prior weekly bucket only kicks in at the week's
+        Friday close (the W-FRI resample boundary).
+        """
+        weekly_highs = [100.0] * 5
+        high = _make_daily_with_weekly_highs(n_weeks=5, weekly_highs=weekly_highs)
+        result = compute_prior_52w_high(high, window_weeks=52)
+
+        # First week + first 4 days of week 2 (rows 0..8): no prior completed
+        # week yet → NaN.
+        assert result.iloc[:9].isna().all()
+        # From Friday of week 2 onward (rows 9..): prior_max = week-1 high = 100.
+        assert not result.iloc[9:].isna().any()
+        assert result.iloc[9] == pytest.approx(100.0, rel=1e-9)
+
+    def test_window_weeks_parameter_limits_lookback(self):
+        """Setting window_weeks=2 limits the lookback to 2 prior weeks."""
+        # 5 weeks total. Prior highs: 100, 200, 300, 400 (weeks 0..3).
+        # Current week (4) = 999 (excluded).
+        weekly_highs = [100.0, 200.0, 300.0, 400.0, 999.0]
+        high = _make_daily_with_weekly_highs(n_weeks=5, weekly_highs=weekly_highs)
+
+        # window_weeks=2 → look at prior 2 weeks only (weeks 2,3) → max=400.
+        result = compute_prior_52w_high(high, window_weeks=2)
+        assert result.iloc[-1] == pytest.approx(400.0, rel=1e-9)
+
+
+# ── all_time_high_before_current_week tests ────────────────────────────────
+
+
+class TestAllTimeHighBeforeCurrentWeek:
+    def test_cumulative_max_excludes_current_week(self):
+        """The value at the last row must equal the max of ALL prior weeks."""
+        weekly_highs = [50.0, 80.0, 70.0, 120.0, 60.0, 999.0]  # 6 weeks
+        high = _make_daily_with_weekly_highs(n_weeks=6, weekly_highs=weekly_highs)
+        result = compute_all_time_high_before_current_week(high)
+        # Prior 5 weeks max = 120 (week 3). Current week (999) excluded.
+        assert result.iloc[-1] == pytest.approx(120.0, rel=1e-9)
+
+    def test_thin_history_no_nan_after_warmup(self):
+        """A symbol with only 20 weeks of history must still produce a valid
+        value (not NaN) — this is what makes it the G3 fallback.
+        """
+        weekly_highs = [100.0 + i for i in range(20)]
+        weekly_highs[-1] = 999.0  # current week, should be excluded
+        high = _make_daily_with_weekly_highs(n_weeks=20, weekly_highs=weekly_highs)
+        result = compute_all_time_high_before_current_week(high)
+        # First week rows: NaN (no prior week yet).
+        assert result.iloc[:5].isna().all()
+        # From week 2 onward: max of prior weeks (excludes current).
+        assert result.iloc[-1] == pytest.approx(118.0, rel=1e-9)
+
+
+# ── weekly_close_above_resistance tests ─────────────────────────────────────
+
+
+class TestWeeklyCloseAboveResistance:
+    def test_returns_true_when_weekly_close_above_resistance(self):
+        """Most recent weekly close > resistance_level → True."""
+        # 3 weeks: weekly closes = [100, 110, 120]; resistance = 115.
+        close = _make_daily_with_weekly_closes(
+            n_weeks=3, weekly_closes=[100.0, 110.0, 120.0]
+        )
+        resistance = pd.Series(115.0, index=close.index)
+        result = compute_weekly_close_above_resistance(close, resistance)
+        # Last row: most recent Friday close = 120 > 115 → True.
+        assert result.iloc[-1] == True  # noqa: E712 — comparing to pd bool
+
+    def test_returns_false_when_weekly_close_below_resistance(self):
+        """Most recent weekly close < resistance_level → False."""
+        close = _make_daily_with_weekly_closes(
+            n_weeks=3, weekly_closes=[100.0, 110.0, 120.0]
+        )
+        resistance = pd.Series(125.0, index=close.index)
+        result = compute_weekly_close_above_resistance(close, resistance)
+        # 120 < 125 → False.
+        assert result.iloc[-1] == False  # noqa: E712
+
+    def test_strict_inequality_at_boundary(self):
+        """A weekly close EQUAL to resistance must be False (strict > spec).
+
+        Decision 103 G3 wording: 'weekly close > resistance'. Equal does NOT
+        count — avoids the 'kissed the high' false-positive case.
+        """
+        close = _make_daily_with_weekly_closes(
+            n_weeks=3, weekly_closes=[100.0, 110.0, 120.0]
+        )
+        resistance = pd.Series(120.0, index=close.index)
+        result = compute_weekly_close_above_resistance(close, resistance)
+        # 120 > 120 is False.
+        assert result.iloc[-1] == False  # noqa: E712
+
+
+# ── breakout_day_volume_metrics tests ──────────────────────────────────────
+
+
+class TestBreakoutDayVolumeMetrics:
+    def test_populates_only_breakout_date_row(self):
+        """All 6 columns must be NaN/NaT/False everywhere EXCEPT on breakout_date."""
+        dates = pd.date_range("2024-01-01", periods=20, freq="B")
+        volume = pd.Series([100_000.0] * 20, index=dates)
+        avg20 = pd.Series([100_000.0] * 20, index=dates)
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=dates[10], avg20_volume=avg20, threshold=1.3
+        )
+
+        # Other rows: NaN / NaT / False.
+        other_mask = result.index != dates[10]
+        assert result.loc[other_mask, "breakout_day_volume"].isna().all()
+        assert result.loc[other_mask, "breakout_day_avg20_volume"].isna().all()
+        assert result.loc[other_mask, "breakout_day_volume_ratio"].isna().all()
+        assert result.loc[other_mask, "volume_threshold_used"].isna().all()
+        assert result.loc[other_mask, "breakout_date_for_volume"].isna().all()
+        assert result.loc[other_mask, "volume_confirmed_breakout"].eq(False).all()
+
+        # Breakout-day row: all populated.
+        row = result.loc[dates[10]]
+        assert row["breakout_day_volume"] == pytest.approx(100_000.0, rel=1e-9)
+        assert row["breakout_day_avg20_volume"] == pytest.approx(100_000.0, rel=1e-9)
+        assert row["breakout_day_volume_ratio"] == pytest.approx(1.0, rel=1e-9)
+        assert row["volume_threshold_used"] == pytest.approx(1.3, rel=1e-9)
+        assert row["breakout_date_for_volume"] == dates[10]
+        assert row["volume_confirmed_breakout"] == False  # 1.0 < 1.3
+
+    def test_volume_ratio_above_threshold_confirms(self):
+        """ratio=1.5 >= 1.3 threshold → volume_confirmed_breakout=True."""
+        dates = pd.date_range("2024-01-01", periods=20, freq="B")
+        volume = pd.Series([100_000.0] * 20, index=dates)
+        avg20 = pd.Series([100_000.0] * 20, index=dates)
+        # Spike the breakout day to 150k → ratio 1.5.
+        volume.iloc[10] = 150_000.0
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=dates[10], avg20_volume=avg20, threshold=1.3
+        )
+        row = result.loc[dates[10]]
+        assert row["breakout_day_volume_ratio"] == pytest.approx(1.5, rel=1e-9)
+        assert row["volume_confirmed_breakout"] == True  # noqa: E712
+
+    def test_volume_ratio_at_threshold_confirms(self):
+        """Boundary: ratio EXACTLY at threshold (1.3) → True (>= is inclusive)."""
+        dates = pd.date_range("2024-01-01", periods=20, freq="B")
+        volume = pd.Series([100_000.0] * 20, index=dates)
+        avg20 = pd.Series([100_000.0] * 20, index=dates)
+        volume.iloc[10] = 130_000.0  # ratio = 1.3 exactly
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=dates[10], avg20_volume=avg20, threshold=1.3
+        )
+        row = result.loc[dates[10]]
+        assert row["volume_confirmed_breakout"] == True  # noqa: E712
+
+    def test_volume_ratio_just_below_threshold_rejects(self):
+        """Boundary: ratio 1.29 < 1.3 → volume_confirmed_breakout=False."""
+        dates = pd.date_range("2024-01-01", periods=20, freq="B")
+        volume = pd.Series([100_000.0] * 20, index=dates)
+        avg20 = pd.Series([100_000.0] * 20, index=dates)
+        volume.iloc[10] = 129_000.0  # ratio = 1.29
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=dates[10], avg20_volume=avg20, threshold=1.3
+        )
+        row = result.loc[dates[10]]
+        assert row["volume_confirmed_breakout"] == False  # noqa: E712
+
+    def test_avg_zero_returns_nan_ratio_no_division_error(self):
+        """If avg20_volume is 0 on breakout day, ratio must be NaN (no crash)."""
+        dates = pd.date_range("2024-01-01", periods=20, freq="B")
+        volume = pd.Series([100_000.0] * 20, index=dates)
+        avg20 = pd.Series([0.0] * 20, index=dates)  # zero avg → div-by-zero guard
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=dates[10], avg20_volume=avg20, threshold=1.3
+        )
+        row = result.loc[dates[10]]
+        assert pd.isna(row["breakout_day_volume_ratio"])
+        # volume_confirmed_breakout remains False (NaN >= 1.3 is False).
+        assert row["volume_confirmed_breakout"] == False  # noqa: E712
+
+    def test_breakout_date_none_populates_all_rows(self):
+        """Test mode: breakout_date=None treats the whole series as breakout."""
+        dates = pd.date_range("2024-01-01", periods=5, freq="B")
+        volume = pd.Series([100_000.0] * 5, index=dates)
+        avg20 = pd.Series([100_000.0] * 5, index=dates)
+
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=None, avg20_volume=avg20, threshold=1.3
+        )
+        # Every row populated.
+        assert result["breakout_day_volume"].notna().all()
+        assert result["volume_confirmed_breakout"].eq(False).all()  # ratio = 1.0 < 1.3
+
+    def test_breakout_date_not_in_index_returns_empty(self):
+        """If breakout_date is not in the index, return all-NaN (no crash)."""
+        dates = pd.date_range("2024-01-01", periods=10, freq="B")
+        volume = pd.Series([100_000.0] * 10, index=dates)
+        result = compute_breakout_day_volume_metrics(
+            volume, breakout_date=pd.Timestamp("2030-01-01")  # far future
+        )
+        assert result["breakout_day_volume"].isna().all()
+        assert result["volume_confirmed_breakout"].eq(False).all()

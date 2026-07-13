@@ -13,9 +13,14 @@ except Exception:  # pragma: no cover
         # No‑op placeholder when email services are unavailable (e.g., during unit tests)
         pass
 from engine_core.cas_indicators import (
+    ResistanceSource,
+    compute_all_time_high_before_current_week,
+    compute_breakout_day_volume_metrics,
     compute_ema_100,
     compute_overhead_supply_score,
+    compute_prior_52w_high,
     compute_rolling_high_52w,
+    compute_weekly_close_above_resistance,
     compute_weekly_trend_score,
 )
 
@@ -42,6 +47,33 @@ def _get_overhead_max_count() -> int:
         # Config not loadable (test env, missing file, etc.) — use default.
         from engine_core.cas_indicators import OVERHEAD_MAX_COUNT
         return OVERHEAD_MAX_COUNT
+
+
+def _get_add_gate_config() -> dict:
+    """Read the ADD_SECOND_TRANCHE gate config block from capital_allocation.yaml.
+
+    Decision 103 P2: all G1–G5 thresholds live in YAML — this helper is the
+    ONLY way the indicator pipeline reads them. No hardcoded constants.
+
+    Falls back to sensible defaults (matching the YAML as of 2026-07-13)
+    when the config file is unavailable, so unit tests don't need disk access.
+    """
+    defaults = {
+        "weekly_breakout_min_history_weeks": 52,
+        "weekly_breakout_window_weeks": 52,
+        "breakout_volume_ratio": 1.3,
+        "breakout_age_max": 15,
+    }
+    try:
+        from engine_core.capital_allocation import load_config
+        cfg = load_config("config/capital_allocation.yaml")
+        gate = cfg.get("add_gate", {})
+        # Only override defaults for keys actually present in the YAML block.
+        return {**defaults, **{
+            k: gate[k] for k in defaults if k in gate
+        }}
+    except Exception:
+        return defaults
 
 
 class IndicatorComputationError(Exception):
@@ -71,6 +103,19 @@ INDICATOR_COLUMNS = (
     ("condition_price_quality", "NUMERIC"),
     ("breakout_state", "VARCHAR(30) DEFAULT 'CONSOLIDATING'"),
     ("breakout_age", "INTEGER DEFAULT NULL"),
+    # ── Decision 103 V2 ADD_SECOND_TRANCHE gates ──────────────────────
+    # G3 (weekly breakout above resistance)
+    ("prior_52w_high", "NUMERIC DEFAULT NULL"),
+    ("all_time_high_before_current_week", "NUMERIC DEFAULT NULL"),
+    ("resistance_source", "TEXT DEFAULT NULL"),
+    ("weekly_close_above_resistance", "BOOLEAN DEFAULT NULL"),
+    # G4 (volume-confirmed breakout, C2 versioned metadata)
+    ("breakout_day_volume", "NUMERIC DEFAULT NULL"),
+    ("breakout_day_avg20_volume", "NUMERIC DEFAULT NULL"),
+    ("breakout_day_volume_ratio", "NUMERIC DEFAULT NULL"),
+    ("volume_threshold_used", "NUMERIC DEFAULT NULL"),
+    ("breakout_date_for_volume", "DATE DEFAULT NULL"),
+    ("volume_confirmed_breakout", "BOOLEAN DEFAULT NULL"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing
@@ -346,7 +391,7 @@ def compute_indicators(df, idx_df):
         prev_age = None
         for idx in s_df.index:
             curr_state = s_df.at[idx, 'breakout_state']
-            
+
             if curr_state == 'CONSOLIDATING':
                 s_df.at[idx, 'breakout_age'] = None
                 prev_age = None
@@ -357,6 +402,98 @@ def compute_indicators(df, idx_df):
                 s_df.at[idx, 'breakout_age'] = 0
                 prev_age = 0
             prev_state = curr_state
+
+        # ── Decision 103 V2 ADD_SECOND_TRANCHE gate inputs ──────────────
+        # G3 (weekly breakout above resistance) + G4 (volume-confirmed
+        # breakout). All 10 new columns live on `daily_prices` (migration 010)
+        # and are persisted via the updates.append() loop below.
+        add_gate_cfg = _get_add_gate_config()
+        min_history_weeks = int(add_gate_cfg.get("weekly_breakout_min_history_weeks", 52))
+        window_weeks = int(add_gate_cfg.get("weekly_breakout_window_weeks", 52))
+        volume_ratio_threshold = float(add_gate_cfg.get("breakout_volume_ratio", 1.3))
+
+        # The new indicator functions require a DatetimeIndex on their
+        # inputs. s_df has been reset_index(drop=True), so we build
+        # DatetimeIndexed views of the columns we need.
+        date_series = pd.to_datetime(s_df["date"])
+        high_idx = pd.Series(s_df["high"].values, index=date_series)
+        close_idx = pd.Series(s_df["close"].values, index=date_series)
+        volume_idx = pd.Series(s_df["volume"].values, index=date_series)
+        avg_vol_idx = pd.Series(s_df["avg_volume_20d"].values, index=date_series)
+
+        # G3a: compute BOTH prior_52w_high and ATH before-current-week (cheap,
+        # idempotent, both stored for auditability even if only one is
+        # "selected" via resistance_source).
+        prior_52w = compute_prior_52w_high(high_idx, window_weeks=window_weeks)
+        ath = compute_all_time_high_before_current_week(high_idx)
+        s_df["prior_52w_high"] = prior_52w.reindex(date_series).values
+        s_df["all_time_high_before_current_week"] = ath.reindex(date_series).values
+
+        # G3b: pick the resistance source by history_weeks (C1 fallback).
+        # C9: store as enum value (TEXT). Default = PRIOR_52W_HIGH.
+        history_weeks = int(date_series.dt.to_period("W-FRI").nunique())
+        if history_weeks >= min_history_weeks:
+            s_df["resistance_source"] = ResistanceSource.PRIOR_52W_HIGH.value
+            resistance_series = prior_52w
+        else:
+            s_df["resistance_source"] = ResistanceSource.ALL_TIME_HIGH.value
+            resistance_series = ath
+
+        # G3c: weekly close > resistance (strict > per Decision 103 spec).
+        s_df["weekly_close_above_resistance"] = (
+            compute_weekly_close_above_resistance(close_idx, resistance_series)
+            .reindex(date_series)
+            .values
+        )
+
+        # G4: breakout-day volume metrics (C2 versioned metadata). Populated
+        # only on the breakout day (breakout_age == 0 AND state == BROKEN_OUT).
+        # For all other rows the 6 columns stay NULL.
+        #
+        # Critical: iterate over ALL breakout days, not just the first. With
+        # symbols that have long price histories (WELCORP = 26 years / 6493
+        # rows / 130+ breakout events), the first breakout day might be in year
+        # 2000 — but persistence only writes the LAST 60 rows (2026), so the
+        # bdv value would never reach the DB if we only handled iloc[0].
+        breakout_mask = (
+            (s_df["breakout_age"] == 0) & (s_df["breakout_state"] == "BROKEN_OUT")
+        )
+        if breakout_mask.any():
+            # Initialize all 6 G4 columns to empty/NaN/False for every row.
+            s_df["breakout_day_volume"]       = np.nan
+            s_df["breakout_day_avg20_volume"] = np.nan
+            s_df["breakout_day_volume_ratio"] = np.nan
+            s_df["volume_threshold_used"]     = np.nan
+            s_df["breakout_date_for_volume"]  = pd.array([pd.NaT] * len(s_df), dtype="datetime64[ns]")
+            s_df["volume_confirmed_breakout"] = False
+            # Iterate every breakout day and write its metrics to the matching row.
+            for bd_date in pd.to_datetime(s_df.loc[breakout_mask, "date"]):
+                if bd_date not in volume_idx.index:
+                    continue  # safety: data window doesn't include this date
+                vol_metrics = compute_breakout_day_volume_metrics(
+                    volume_idx,
+                    breakout_date=bd_date,
+                    avg20_volume=avg_vol_idx,
+                    threshold=volume_ratio_threshold,
+                )
+                row_mask = s_df["date"] == bd_date
+                s_df.loc[row_mask, "breakout_day_volume"]       = vol_metrics.loc[bd_date, "breakout_day_volume"]
+                s_df.loc[row_mask, "breakout_day_avg20_volume"] = vol_metrics.loc[bd_date, "breakout_day_avg20_volume"]
+                s_df.loc[row_mask, "breakout_day_volume_ratio"] = vol_metrics.loc[bd_date, "breakout_day_volume_ratio"]
+                s_df.loc[row_mask, "volume_threshold_used"]     = vol_metrics.loc[bd_date, "volume_threshold_used"]
+                s_df.loc[row_mask, "breakout_date_for_volume"]  = vol_metrics.loc[bd_date, "breakout_date_for_volume"]
+                s_df.loc[row_mask, "volume_confirmed_breakout"] = vol_metrics.loc[bd_date, "volume_confirmed_breakout"]
+
+        # Convert datetime NaT → None for psycopg2 binding. The dict-based
+        # `s_df.replace({pd.NaT: None})` lower in this function doesn't reliably
+        # match NaT inside datetime64 columns, so we do an explicit per-column
+        # conversion here (before any updates.append() row iteration).
+        if "breakout_date_for_volume" in s_df.columns:
+            s_df["breakout_date_for_volume"] = (
+                s_df["breakout_date_for_volume"]
+                .astype(object)
+                .where(s_df["breakout_date_for_volume"].notna(), None)
+            )
 
         for _, row in s_df.tail(PERSIST_ROWS).iterrows():
             updates.append(
@@ -388,7 +525,24 @@ def compute_indicators(df, idx_df):
                     "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
                     "condition_price_quality": row.get("price_quality"),
                     "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
-                    "breakout_age": row.get("breakout_age")
+                    "breakout_age": row.get("breakout_age"),
+                    # Decision 103 V2 ADD_SECOND_TRANCHE gate inputs
+                    "prior_52w_high": row.get("prior_52w_high"),
+                    "all_time_high_before_current_week": row.get("all_time_high_before_current_week"),
+                    "resistance_source": row.get("resistance_source"),
+                    "weekly_close_above_resistance": (
+                        bool(row.get("weekly_close_above_resistance"))
+                        if row.get("weekly_close_above_resistance") is not None else None
+                    ),
+                    "breakout_day_volume": row.get("breakout_day_volume"),
+                    "breakout_day_avg20_volume": row.get("breakout_day_avg20_volume"),
+                    "breakout_day_volume_ratio": row.get("breakout_day_volume_ratio"),
+                    "volume_threshold_used": row.get("volume_threshold_used"),
+                    "breakout_date_for_volume": row.get("breakout_date_for_volume"),
+                    "volume_confirmed_breakout": (
+                        bool(row.get("volume_confirmed_breakout"))
+                        if row.get("volume_confirmed_breakout") is not None else None
+                    ),
                 }
             )
             merged = pd.merge(
@@ -414,7 +568,11 @@ def compute_indicators(df, idx_df):
                     merged[merge_cols], on="date", how="left"
                 )
 
-        s_df = s_df.replace({np.nan: None})
+        # Replace NaN/NaT with None for psycopg2 binding. The V2 ADD gate inputs
+        # include `breakout_date_for_volume` (date column), which uses pd.NaT
+        # as its missing-value sentinel — psycopg2 can't bind the string "NaT"
+        # to a TIMESTAMP, so it must be converted to None explicitly.
+        s_df = s_df.replace({np.nan: None, pd.NaT: None})
 
         for _, row in s_df.tail(PERSIST_ROWS).iterrows():
             updates.append(
@@ -446,7 +604,24 @@ def compute_indicators(df, idx_df):
                     "condition_breakout_10d": bool(row.get("condition_breakout_10d", False)),
                     "condition_price_quality": row.get("price_quality"),
                     "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
-                    "breakout_age": row.get("breakout_age")
+                    "breakout_age": row.get("breakout_age"),
+                    # Decision 103 V2 ADD_SECOND_TRANCHE gate inputs
+                    "prior_52w_high": row.get("prior_52w_high"),
+                    "all_time_high_before_current_week": row.get("all_time_high_before_current_week"),
+                    "resistance_source": row.get("resistance_source"),
+                    "weekly_close_above_resistance": (
+                        bool(row.get("weekly_close_above_resistance"))
+                        if row.get("weekly_close_above_resistance") is not None else None
+                    ),
+                    "breakout_day_volume": row.get("breakout_day_volume"),
+                    "breakout_day_avg20_volume": row.get("breakout_day_avg20_volume"),
+                    "breakout_day_volume_ratio": row.get("breakout_day_volume_ratio"),
+                    "volume_threshold_used": row.get("volume_threshold_used"),
+                    "breakout_date_for_volume": row.get("breakout_date_for_volume"),
+                    "volume_confirmed_breakout": (
+                        bool(row.get("volume_confirmed_breakout"))
+                        if row.get("volume_confirmed_breakout") is not None else None
+                    ),
                 }
             )
 
@@ -543,7 +718,18 @@ def update_db_with_indicators(updates, max_retries=3):
                         condition_breakout_10d = %(condition_breakout_10d)s,
                         condition_price_quality = %(condition_price_quality)s,
                         breakout_state = %(breakout_state)s,
-                        breakout_age = %(breakout_age)s
+                        breakout_age = %(breakout_age)s,
+                        -- Decision 103 V2 ADD_SECOND_TRANCHE gate inputs
+                        prior_52w_high = %(prior_52w_high)s,
+                        all_time_high_before_current_week = %(all_time_high_before_current_week)s,
+                        resistance_source = %(resistance_source)s,
+                        weekly_close_above_resistance = %(weekly_close_above_resistance)s,
+                        breakout_day_volume = %(breakout_day_volume)s,
+                        breakout_day_avg20_volume = %(breakout_day_avg20_volume)s,
+                        breakout_day_volume_ratio = %(breakout_day_volume_ratio)s,
+                        volume_threshold_used = %(volume_threshold_used)s,
+                        breakout_date_for_volume = %(breakout_date_for_volume)s,
+                        volume_confirmed_breakout = %(volume_confirmed_breakout)s
                     WHERE symbol = %(symbol)s AND date = %(date)s
                 """
                 execute_batch(cur, sql, updates, page_size=2000)

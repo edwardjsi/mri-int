@@ -1,5 +1,6 @@
 """
-engine_core.cas_indicators — Pure indicator computations for CAS V1.0 (Decision 100, rev 3).
+engine_core.cas_indicators — Pure indicator computations for CAS V1.0 (Decision 100, rev 3)
+and V2 ADD_SECOND_TRANCHE gates (Decision 103).
 
 This module provides the four new columns on `daily_prices` required by the
 Capital Allocation Score. Each function is PURE — takes pandas Series, returns
@@ -12,6 +13,19 @@ pandas Series. No DB, no I/O.
     overhead_supply_score — Distinct high values in last 126 days that exceed
                              the current close, normalized 0–100 by max_count=20
                              (Decision 102: raised from 10 for better discriminatory power)
+
+Decision 103 (V2 Pyramiding Discipline Gates, 2026-07-13) — ADD_SECOND_TRANCHE
+gate inputs G3 (weekly breakout) + G4 (volume-confirmed breakout):
+
+    ResistanceSource            — str enum: PRIOR_52W_HIGH | ALL_TIME_HIGH (C9)
+    compute_prior_52w_high      — max of weekly highs in the prior 52 weeks,
+                                  excluding current week (G3 primary)
+    compute_all_time_high_before_current_week — cumulative weekly high before
+                                  current week (G3 fallback for thin history)
+    compute_weekly_close_above_resistance     — bool per row: most recent
+                                  Friday close > selected resistance level
+    compute_breakout_day_volume_ratio         — DataFrame of 6 columns frozen
+                                  at the breakout day (G4 versioned metadata)
 
 These functions are called from `engine_core/indicator_engine.py` inside the
 `compute_indicators()` pipeline and are wired into the DB write path via the
@@ -26,16 +40,51 @@ Rev 3 (2026-07-07):
     - All functions return pd.Series indexed identically to the input so the
       caller can assign back to s_df directly.
 
+Rev 4 (2026-07-13, Decision 103 P2):
+    - Added ResistanceSource enum + 4 gate-input functions for ADD_SECOND_TRANCHE.
+    - All gate-input functions are pure; the `ResistanceSource` enum value for a
+      symbol is determined by history_weeks at the symbol level (constant per
+      symbol, stored on every row for query convenience).
+    - Threshold values (52 weeks, 1.3 ratio) are parameters with sensible
+      defaults — production code reads them from `config/capital_allocation.yaml`
+      → `add_gate.*` and passes them at call time. The defaults here match the
+      YAML as of Decision 103 so unit tests stay deterministic.
+
 Run:
     venv/bin/pytest engine_core/test_cas_indicators.py -v
 """
 
 import logging
+from enum import Enum
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+# ── Decision 103 enum: resistance source ────────────────────────────────────
+
+
+class ResistanceSource(str, Enum):
+    """Enum of valid resistance-source values for the G3 weekly breakout gate.
+
+    C9: stored as TEXT in the DB (`daily_prices.resistance_source`), but the
+    application code MUST use this enum. Migration 010 adds a CHECK constraint
+    at the DB level as defense in depth.
+
+    Inherits from `str` so values serialize naturally to JSON and Postgres TEXT.
+
+    Members:
+        PRIOR_52W_HIGH  — symbol has ≥ `min_history_weeks` of weekly history;
+                           resistance = max of the prior 52 weekly highs.
+        ALL_TIME_HIGH   — symbol has < `min_history_weeks` of weekly history;
+                           resistance = all-time high (cumulative weekly high
+                           before current week).
+    """
+
+    PRIOR_52W_HIGH = "PRIOR_52W_HIGH"
+    ALL_TIME_HIGH = "ALL_TIME_HIGH"
 
 # Default parameters — canonical math definition. Override only at the call
 # site if you need to deviate (e.g., for sensitivity analysis).
@@ -291,3 +340,210 @@ def compute_overhead_supply_score(
         scores[i] = min(len(distinct) / max_count * 100.0, 100.0)
 
     return pd.Series(scores, index=high.index)
+
+
+# ── Decision 103 V2 ADD gate inputs ─────────────────────────────────────────
+#
+# G3 (weekly breakout above resistance) + G4 (volume-confirmed breakout).
+# All four functions below are PURE: take pandas Series, return pandas
+# Series/DataFrame. No DB calls. The weekly resample pipeline
+# (WEEKLY_RESAMPLE_FREQ = "W-FRI") is reused from the CAS V1.0 machinery
+# above so that "what is a week" is defined in exactly one place.
+#
+# Threshold defaults (52 weeks, 1.3 ratio) match `config/capital_allocation.yaml`
+# `add_gate.*` as of Decision 103. Production callers should read the YAML and
+# pass the values explicitly; defaults exist so unit tests stay deterministic
+# without YAML plumbing.
+
+
+# ── prior_52w_high (G3 primary) ─────────────────────────────────────────────
+
+
+def compute_prior_52w_high(
+    high: pd.Series,
+    window_weeks: int = 52,
+) -> pd.Series:
+    """For each daily row, max of weekly `high` in the prior `window_weeks` weeks,
+    excluding the current week. Forward-filled to the daily index.
+
+    Args:
+        high:         pd.Series of daily high prices, MUST have a DatetimeIndex.
+        window_weeks: Lookback in weeks (default 52). The function uses
+                      `shift(1).rolling(window_weeks).max()` so that exactly
+                      `window_weeks` prior weeks are considered.
+
+    Returns:
+        pd.Series of resistance levels, same daily index as `high`. Rows in
+        the current week carry the most recent completed week's prior-N max;
+        rows before the first completed week carry NaN.
+
+    Notes:
+        Convention: a row's "current week" is the W-FRI bucket containing that
+        row's date. The row's value is the max of the prior `window_weeks`
+        weekly highs — the current week's high is excluded (`shift(1)`).
+    """
+    if not isinstance(high.index, pd.DatetimeIndex):
+        raise ValueError("`high` must have a DatetimeIndex")
+
+    weekly_high = high.resample(WEEKLY_RESAMPLE_FREQ).max()
+    prior_max = (
+        weekly_high.shift(1).rolling(window=window_weeks, min_periods=1).max()
+    )
+    return prior_max.reindex(high.index, method="ffill")
+
+
+# ── all_time_high_before_current_week (G3 fallback) ─────────────────────────
+
+
+def compute_all_time_high_before_current_week(high: pd.Series) -> pd.Series:
+    """For each daily row, max of weekly `high` since the start of the series,
+    strictly before the current week. Forward-filled to the daily index.
+
+    Used as the G3 fallback when the symbol has fewer than 52 weeks of weekly
+    history (per Decision 103 C1). The caller is responsible for selecting
+    between `prior_52w_high` and this function based on `history_weeks`.
+
+    Args:
+        high: pd.Series of daily high prices, MUST have a DatetimeIndex.
+
+    Returns:
+        pd.Series of all-time-high-before-current-week values, same daily index.
+    """
+    if not isinstance(high.index, pd.DatetimeIndex):
+        raise ValueError("`high` must have a DatetimeIndex")
+
+    weekly_high = high.resample(WEEKLY_RESAMPLE_FREQ).max()
+    prior_max = weekly_high.shift(1).expanding().max()
+    return prior_max.reindex(high.index, method="ffill")
+
+
+# ── weekly_close_above_resistance (G3 boolean) ──────────────────────────────
+
+
+def compute_weekly_close_above_resistance(
+    close: pd.Series,
+    resistance_level: pd.Series,
+) -> pd.Series:
+    """For each daily row, True if the most recent weekly close (W-FRI) is
+    strictly greater than `resistance_level` for that row.
+
+    Both inputs must be daily-indexed and aligned. The resistance level for
+    each daily row is typically `prior_52w_high` or `all_time_high_before_current_week`
+    computed by the sibling functions above; the caller selects which one based
+    on the symbol's `history_weeks`.
+
+    Args:
+        close:            pd.Series of daily close prices, DatetimeIndex.
+        resistance_level: pd.Series of resistance levels, same index as `close`.
+
+    Returns:
+        pd.Series of bool, same index as `close`. NaN → False.
+
+    Notes:
+        The comparison is strict (`>`), matching Decision 103 G3: a weekly
+        close that merely ties the resistance does NOT count as a breakout.
+        This avoids the ambiguous "kissed the high" case from triggering an ADD.
+    """
+    if not isinstance(close.index, pd.DatetimeIndex):
+        raise ValueError("`close` must have a DatetimeIndex")
+
+    weekly_close = close.resample(WEEKLY_RESAMPLE_FREQ).last()
+    weekly_close_daily = weekly_close.reindex(close.index, method="ffill")
+
+    # Align resistance_level to the daily index just in case.
+    res_aligned = resistance_level.reindex(close.index)
+
+    return (weekly_close_daily > res_aligned).fillna(False).astype(bool)
+
+
+# ── breakout_day_volume_ratio (G4 versioned metadata) ──────────────────────
+
+
+def compute_breakout_day_volume_metrics(
+    volume: pd.Series,
+    breakout_date: pd.Timestamp | None,
+    avg20_volume: pd.Series | None = None,
+    threshold: float = 1.3,
+    avg_window: int = 20,
+) -> pd.DataFrame:
+    """Compute the six G4 volume-confirmation columns, frozen at the breakout day.
+
+    C2 (Decision 103): volume metadata is versioned. We persist the ratio, the
+    threshold USED at the time, the raw breakout-day volume, the raw 20-day
+    average, and the breakout date itself — not just the boolean. This lets us
+    reproduce historical gate decisions when the threshold changes later.
+
+    Returns a DataFrame of the same length and index as `volume`, with all six
+    columns NaN/NaT/False EXCEPT on the breakout-date row. The caller writes
+    these columns to `daily_prices` (or wherever) with `df[cols] = result`.
+
+    Args:
+        volume:        pd.Series of daily volume, MUST have DatetimeIndex.
+        breakout_date: The breakout day's date. Pass None to populate every
+                       row (treats the entire series as one breakout event —
+                       useful for unit tests).
+        avg20_volume:  Pre-computed 20-day rolling mean of `volume`. If None,
+                       it is computed here with `rolling(avg_window).mean()`.
+        threshold:     The ratio threshold (default 1.3 = 1.3× avg). Persisted
+                       to `volume_threshold_used` for auditability.
+        avg_window:    Window for the fallback 20-day avg (default 20).
+
+    Returns:
+        pd.DataFrame with columns (in this order):
+            breakout_day_volume       — float, NaN except on breakout day
+            breakout_day_avg20_volume — float, NaN except on breakout day
+            breakout_day_volume_ratio — float, NaN except on breakout day
+            volume_threshold_used     — float, NaN except on breakout day
+            breakout_date_for_volume  — date,  NaT except on breakout day
+            volume_confirmed_breakout — bool,  False except on breakout day
+    """
+    if not isinstance(volume.index, pd.DatetimeIndex):
+        raise ValueError("`volume` must have a DatetimeIndex")
+
+    n = len(volume)
+    idx = volume.index
+
+    out = pd.DataFrame(
+        {
+            "breakout_day_volume":       np.full(n, np.nan, dtype=float),
+            "breakout_day_avg20_volume": np.full(n, np.nan, dtype=float),
+            "breakout_day_volume_ratio": np.full(n, np.nan, dtype=float),
+            "volume_threshold_used":     np.full(n, np.nan, dtype=float),
+            "breakout_date_for_volume":  pd.array([pd.NaT] * n, dtype="datetime64[ns]"),
+            "volume_confirmed_breakout": np.full(n, False, dtype=bool),
+        },
+        index=idx,
+    )
+
+    # Which rows to fill. None = entire series (test mode).
+    if breakout_date is not None:
+        mask = volume.index == breakout_date
+        if not mask.any():
+            logger.warning(
+                "compute_breakout_day_volume_metrics: breakout_date=%s not found in index",
+                breakout_date,
+            )
+            return out
+    else:
+        mask = pd.Series(True, index=idx)
+
+    # Compute / fetch avg20_volume.
+    if avg20_volume is None:
+        avg = volume.rolling(window=avg_window, min_periods=avg_window).mean()
+    else:
+        avg = avg20_volume
+
+    bd_vol = volume[mask].to_numpy(dtype=float)
+    bd_avg = avg[mask].to_numpy(dtype=float)
+
+    # Safe ratio: NaN where avg is 0 or NaN (avoid div-by-zero).
+    ratios = np.where(bd_avg > 0, bd_vol / bd_avg, np.nan)
+
+    out.loc[mask, "breakout_day_volume"]       = bd_vol
+    out.loc[mask, "breakout_day_avg20_volume"] = bd_avg
+    out.loc[mask, "breakout_day_volume_ratio"] = ratios
+    out.loc[mask, "volume_threshold_used"]     = float(threshold)
+    out.loc[mask, "breakout_date_for_volume"]  = breakout_date if breakout_date is not None else idx[mask]
+    out.loc[mask, "volume_confirmed_breakout"] = (ratios >= threshold)
+
+    return out
