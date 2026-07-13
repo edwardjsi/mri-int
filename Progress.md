@@ -2865,3 +2865,58 @@ b777156 docs(cas): Session V1.1d entry
 e5c2171 docs(cas): V1.1d validation report
 6bc173b feat(tools): distribution + top20 tools
 ```
+
+---
+
+## 🚧 Day 75: V2 Pyramiding Discipline Gates (Decision 103) — P1 (Documentation)
+
+Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-only (≥85 + 4★) to a 5-condition layered check (decision_score, mri_technical_score, weekly breakout above resistance, breakout-day volume, breakout age) + confidence stars. All thresholds live in YAML; spec is frozen before any engine code is written.
+
+### P1 sub-tasks (all complete)
+
+- [x] **Decision 103** added to `Decisions.md` (full rationale, 9 refinements C1–C9, 7-phase plan, calibration freeze).
+- [x] **`docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` §14** added (full gate spec, G3 resistance selection with C1 fallback, G4 versioned metadata, 4-state model, `evaluate_add_gates()` output shape, P6 success metrics, schema delta, alternatives rejected).
+- [x] **`config/capital_allocation.yaml`** — appended `add_gate` (version 2.0.0) and `approaching_add` sections. All 7 gate parameters + 4 surface-cap parameters YAML-driven.
+- [x] **`config/calibration_registry.yaml`** — 5 new `hypothesis` entries (G1–G5 + version stamp). All marked `validated_after: null` pending P6 backtest.
+- [x] **`Calibration.md`** — 6 new journal entries (1 overview + 5 per-gate). Each follows the `Reason / Expected effect / Measured effect pending` template.
+- [x] **`docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md`** (NEW, 9.9 KB) — full multi-round design discussion record (C1–C4 round 1, C5–C9 round 2, alternatives considered). Read BEFORE resuming work on this branch.
+- [x] **`Sessions.md`** — full P1 session entry with multi-session handoff notes for P2–P7 (resume-cold pointers, critical reminders, backward-compat requirements).
+
+### 📦 Deliverable (P1)
+
+- **Decision 103**: full rationale + 7-phase plan, frozen.
+- **Spec**: §14 of plan doc, canonical gate/state/schema/source-of-truth definition.
+- **Config**: `add_gate` + `approaching_add` sections, 11 new parameters, all YAML-driven.
+- **Calibration registry**: 5 `hypothesis` entries with status, intro date, rationale, journal cross-ref.
+- **Calibration journal**: 6 entries (1 overview + 5 per-gate) with expected effects; measured effects pending P6.
+- **Discussion record**: 9.9 KB institutional memory of the design rationale.
+- **Session log**: today's entry + multi-session handoff notes.
+
+### ⏭️ Next (P2, gated on owner P1 review)
+
+- [ ] `migrations/010_add_second_tranche_gates.sql` — 11 new columns on `daily_prices` (G3: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`; G4: `breakout_day_volume`, `breakout_day_avg20_volume`, `breakout_day_volume_ratio`, `volume_threshold_used`, `breakout_date_for_volume`, `volume_confirmed_breakout`) + 2 partial indexes.
+- [ ] `engine_core/cas_indicators.py` — 4 new pure functions: `compute_prior_52w_high`, `compute_all_time_high_before_current_week`, `compute_weekly_close_above_resistance`, `compute_breakout_day_volume_ratio`.
+- [ ] `engine_core/test_cas_indicators.py` (NEW) — ≥ 12 test cases (boundary at 52w, exact 52w, <52w fallback, ratio boundary at 1.3, history_weeks resolver).
+- [ ] Manual backfill smoke test on 5 hand-picked symbols (e.g. TITAN, ALKEM, INOXINDIA — V1.1d Top-9 leaders) — verify columns populate for last 60 trading days.
+- [ ] Commit + push: `feat(cas-v2): migration + indicator computations for ADD gate`.
+
+### 🚧 P3–P7 backlog
+
+- **P3 (3 hr)** — `evaluate_add_gates()` + extended `compute_action()` + `compute_layered_state()` + `compute_factor_snapshot()` extension (gates, gate_score_pct, config_snapshot, resistance_source). ≥ 18 new tests.
+- **P4 (1.5 hr)** — API: extend `/api/breakout/radar` + `/api/cas/recommendations`; new `GET /api/cas/add-eligibility`. Smoke test + golden cases.
+- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar column integration.
+- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`.
+- **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push.
+
+### 📌 Decisions.md State After This Session
+
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs) shipped; P2–P7 pending owner P1 diff review**.
+- **Decision 102** still VALIDATED — no change.
+- **Decision 101** still APPROVED — no change.
+- **Decision 100** still APPROVED — no change.
+
+### 📌 Next
+
+- (a) **Owner reviews P1 diff**: ~14 KB across 7 files (1 new: discussion doc; 6 modified: Decisions.md, plan §14, capital_allocation.yaml, calibration_registry.yaml, Calibration.md, Sessions.md). Authorize P2 to begin.
+- (b) **P2 starts at `migrations/010_add_second_tranche_gates.sql`**. See Sessions.md "Multi-session handoff notes for P2" for resume-cold pointers, backward-compat requirement, and YAML-as-only-source-of-truth invariant.
+- (c) P2 is mechanical (migration + 4 pure functions + tests). P3 is the architecturally significant phase (gate evaluator + decision layer).

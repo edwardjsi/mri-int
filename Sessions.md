@@ -2397,3 +2397,76 @@ b47cd97 docs(cas): Decision 102 — V1.1d release candidate scope + V1.2 priorit
 - Saturation: 35.5% (was 83%)
 - Calibration debt: 11 (1 validated, 11 hypothesis)
 - Files: 0 modified, ready to merge
+
+---
+
+## **July 13, 2026: V2 Pyramiding Discipline Gates — P1 (Documentation Only)**
+
+**Objective**: Ship Decision 103 (V2 ADD_SECOND_TRANCHE refinement) as docs only. Zero code in P1 — this freezes the spec, gates, config, calibration registry, and discussion record so the engine work in P2 onward has a stable target.
+
+**Why docs first**: Per owner ("P1 right first commit: documentation first is the right sequence — Decision 103, CAS spec, YAML, calibration registry, sessions, progress. Then freeze the docs before writing code."). Catching design ambiguity in docs costs minutes; catching it in code costs days.
+
+**Actions**:
+
+- **`docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md`** (NEW, 9.9 KB) — Full multi-round design discussion record. Captures both rounds of owner feedback (C1–C4 architectural refinements, C5–C8 final recommendations, C9 enum clarification) with rationale, alternatives considered, and final state. **Read this file BEFORE reading CAS_SPEC.md when resuming work on this branch.**
+- **`Decisions.md` → Decision 103** (NEW entry) — Full rationale: 9 refinements (C1–C9) integrated; gate spec (G1–G5 + confidence_stars); 4-state decision model (`OBSERVE / APPROACHING_ADD / READY_FOR_ADD / ADD_SECOND_TRANCHE`); 6 architectural invariants (YAML-driven thresholds, versioned snapshot, enum resistance, score single-responsibility, backward compat, surface cap); P6 backtest success metrics; alternatives considered; 7-phase implementation plan; calibration freeze policy.
+- **`docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` → §14** (NEW) — Full V2 Pyramiding Discipline Gates spec section: gate spec (table), G3 resistance selection (C1 fallback), G4 versioned metadata (C2 schema), 4-state model, architectural invariants, `evaluate_add_gates()` output shape, P6 success metrics (6 measurable targets), schema delta, alternatives rejected, 7-phase plan, cross-references, calibration freeze.
+- **`config/capital_allocation.yaml`** — Appended `add_gate` (version 2.0.0) and `approaching_add` sections:
+  ```yaml
+  add_gate:
+    version: "2.0.0"
+    decision_score_min: 85      # G1
+    mri_technical_min: 80       # G2
+    breakout_age_max: 15        # G5
+    breakout_volume_ratio: 1.3  # G4
+    weekly_breakout_mode: prior_52w
+    weekly_breakout_min_history_weeks: 52
+    confidence_stars_min: 4
+  approaching_add:
+    cas_min: 80.0
+    cas_max: 84.99
+    radar_top_n: 20
+    send_notifications: false
+    surface_on: [radar_page]
+  ```
+- **`config/calibration_registry.yaml`** — 5 NEW `hypothesis` entries (G1–G5 + version stamp). All marked `validated_after: null` — move to `validated` only after P6 backtest + 100 ADD recommendations per Decision 102 calibration freeze.
+- **`Calibration.md`** — 6 NEW journal entries (1 overview + 5 per-gate) following the existing template (`Reason` / `Expected effect` / `Measured effect pending`). All entries cross-reference the corresponding calibration registry ID.
+
+**Verification**:
+
+- `git diff --stat` shows 7 files modified, 1 file added, ~14 KB total doc delta.
+- All YAML parses cleanly (sections appended, not nested into existing structure).
+- All new calibration registry entries follow the existing schema (value/status/introduced/last_reviewed/validated_after/rationale/journal_entry).
+- Zero Python code touched. Zero API changes. Zero frontend changes. Zero DB migrations.
+- Decision 103, plan §14, discussion doc, YAML, registry, and journal are mutually consistent (verified by cross-references in each).
+
+**Result**: P1 ships. Spec is frozen. Engine implementation (P2 onward) has an unambiguous target. **No code work authorized until owner reviews P1 diff.**
+
+### Multi-session handoff notes for P2
+
+When resuming after owner P1 sign-off:
+
+1. **P2 (2 hr)**: Migration `migrations/010_add_second_tranche_gates.sql` + 4 new pure functions in `engine_core/cas_indicators.py`:
+   - `compute_prior_52w_high(df, current_date)` — max of last 52 weekly highs, excluding current week, fwd-filled to daily index.
+   - `compute_all_time_high_before_current_week(df, current_date)` — fallback for thin-history names.
+   - `compute_weekly_close_above_resistance(df)` — daily series of bool, per-row selects prior_52w or ATH by history_weeks (C9 enum).
+   - `compute_breakout_day_volume_ratio(df, breakout_date)` — called once when `breakout_state == 'BROKEN_OUT'`; persists ratio + threshold_used + supporting columns.
+   - Plus `tests/test_cas_indicators.py` (NEW) ≥ 12 test cases (boundary at 52w, exact 52w, <52w fallback, ratio boundary at 1.3).
+
+2. **P3 (3 hr)**: Engine integration. `evaluate_add_gates(gate_inputs, config)` pure helper in `engine_core/cas_recommendations.py`. Extended `compute_action()` with backward-compatible `gate_inputs=None` fallback. `compute_layered_state()` in `engine_core/cas_decision_layer.py` replacing `cas_to_tier()`. Extend `compute_factor_snapshot()` to include `gates`, `gate_score_pct`, `config_snapshot.version`, `resistance_source`. ≥ 18 new tests.
+
+3. **P4 (1.5 hr)**: API. Extend `GET /api/breakout/radar` to include `add_state`, `blocked_gates`, `gate_results`, `resistance_mode`. Extend `GET /api/cas/recommendations` to surface 4-state enum. New `GET /api/cas/add-eligibility?symbol=X&client_id=Y`.
+
+4. **P5 (1.5 hr)**: Frontend. New `AddStatusChip` component (4-state, hover popover listing all 6 gate results). Add "ADD Status" column to `BreakoutRadar.tsx`.
+
+5. **P6 (2 hr)**: Backtest validation against trailing 6 months. Hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration registry entries to `validated`.
+
+6. **P7 (30 min)**: Wrap-up Sessions.md, Progress.md, commit, push.
+
+### Critical reminders for future sessions
+
+- **Backward compatibility**: `evaluate_add_gates()` MUST accept `gate_inputs=None` and fall back to legacy CAS+stars-only behavior. This keeps the existing 259 tests green and lets V2 ship incrementally.
+- **YAML is the only source of truth**: NO hardcoded thresholds in `engine_core/*.py`. Every gate threshold reads from `config['add_gate']`. If a constant needs to change, change it in YAML + calibration registry + Calibration.md, never in Python.
+- **`config_snapshot.version`**: When persisting recommendations, ALWAYS include the full `add_gate` config + `version` in `factor_snapshot.config_snapshot`. This is what makes C5 (historical reproducibility) real.
+- **Resistance source enum**: Use `ResistanceSource.PRIOR_52W_HIGH` / `ResistanceSource.ALL_TIME_HIGH`, not strings. The enum is the validation contract.
+- **Calibration freeze**: After V2 ships, NO weight/gate tweaks for 100 ADD recommendations. Re-validate at 100 / 250 / 500. Same pattern as Decision 102.

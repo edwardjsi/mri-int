@@ -468,3 +468,175 @@ Branch strategy: 3 PRs (engine → indicators → API/UI). PR1 is `feature/capit
 - Confidence stars added
 - Why-checklist restructured (multi-line, not single sentence)
 
+---
+
+## 14. V2 Pyramiding Discipline Gates (Decision 103, 2026-07-13)
+
+### 14.1 Why this exists
+
+The current `ADD_SECOND_TRANCHE` path (`compute_action` in `engine_core/cas_recommendations.py`) only checks three conditions: `CAS ≥ 85`, `confidence_stars ≥ 4`, and `has_existing_position=True`. After BreakoutRadar adoption, owner judged this too loose — the second ₹20k should be **earned** through layered checks, not just because CAS crossed 85.
+
+This section defines the V2 gate model that protects capital deployment while preserving the existing CAS ≥ 85 / 5-star discipline.
+
+### 14.2 Gate spec (canonical)
+
+All five gates must pass for an action to upgrade from `READY_FOR_ADD` to `ADD_SECOND_TRANCHE`.
+
+| # | Gate | Threshold | Source | Purpose |
+|---|------|-----------|--------|---------|
+| G1 | `decision_score ≥ 85` | `add_gate.decision_score_min` | YAML | Capital allocation quality |
+| G2 | `mri_technical_score ≥ 80` | `add_gate.mri_technical_min` | YAML | Technical structure still strong |
+| G3 | `weekly_close > resistance` | computed; enum source | enum | True breakout — price discovery |
+| G4 | `volume_confirmed_breakout == True` | `add_gate.breakout_volume_ratio` (default 1.3) | YAML + DB | Institutional sponsorship |
+| G5 | `breakout_age ≤ 15 trading days` | `add_gate.breakout_age_max` | YAML | Opportunity still fresh |
+
+Plus the existing precondition `confidence_stars ≥ add_gate.confidence_stars_min` (default 4) — now also YAML-driven.
+
+### 14.3 G3 resistance selection (C1 thin-history fallback)
+
+```text
+history_weeks = floor((today - earliest_price_date) / 7)
+mode = "PRIOR_52W_HIGH"     if history_weeks ≥ add_gate.weekly_breakout_min_history_weeks (default 52)
+       "ALL_TIME_HIGH"       otherwise
+resistance = prior_52w_high                       if mode == "PRIOR_52W_HIGH"
+             all_time_high_before_current_week    if mode == "ALL_TIME_HIGH"
+gate passed iff weekly_close > resistance
+```
+
+Both columns precomputed on `daily_prices`. `resistance_source` stored as enum per row for auditability.
+
+Rationale (owner): "The system already favours emerging rerating candidates. A stock listed 8–10 months ago shouldn't be permanently excluded just because it lacks a full year of history."
+
+### 14.4 G4 versioned metadata (C2)
+
+`volume_confirmed_breakout` is computed **once** on the breakout day and frozen. To support future calibration audits, the following columns are persisted alongside the boolean:
+
+| Column | Purpose |
+|--------|---------|
+| `breakout_day_volume` | Raw volume on breakout day |
+| `breakout_day_avg20_volume` | 20-day average volume at breakout day |
+| `breakout_day_volume_ratio` | Computed ratio (e.g. 2.4) |
+| `volume_threshold_used` | The actual threshold applied (e.g. 1.3) — so 6 months later, if we change the threshold to 1.5, we still know which historical recommendations were generated under the 1.3 rule |
+| `breakout_date_for_volume` | Date the ratio was computed |
+| `volume_confirmed_breakout` | Boolean: `ratio is not None AND ratio ≥ volume_threshold_used` |
+
+### 14.5 Decision state model (4 layers)
+
+| CAS | Gates | Final state | UI | Action |
+|-----|-------|-------------|-----|--------|
+| < 80 | — | `OBSERVE` | ⚪ Observe | None |
+| 80–84 | — | `APPROACHING_ADD` | 🟡 Approaching ADD | WATCH |
+| ≥ 85 | some fail | `READY_FOR_ADD` | 🟢 Ready for ADD (n/N gates passed) | WATCH |
+| ≥ 85 | all pass + position + stars | `ADD_SECOND_TRANCHE` | 🚀 ADD SECOND TRANCHE | ADD |
+
+`READY_FOR_ADD` was renamed from `ELIGIBLE_ADD_BLOCKED` (C6) — the stock is fundamentally ready; the user should see exactly what is still missing.
+
+`READY_FOR_ADD` surfaces `gates_passed / gates_total` and a list of specific missing gates (C7 gate confidence metric). Binary passed/blocked was rejected as too lossy.
+
+### 14.6 Architectural invariants
+
+1. **No hardcoded gate constants in Python.** Every threshold reads from `config/capital_allocation.yaml` under `add_gate.*` (C3).
+2. **Calibration version persisted.** `add_gate.version: "2.0.0"` is snapshotted into `cas_recommendations.factor_snapshot.config_snapshot.version` on every recommendation (C5). Historical recommendations remain reproducible even if the YAML evolves.
+3. **Resistance source is a Python enum** (`ResistanceSource.{PRIOR_52W_HIGH, ALL_TIME_HIGH}`), not free text (C9). Validated, testable, queryable.
+4. **Score single-responsibility.** `radar_priority` ranks the radar; `decision_score` is the capital allocation gate (G1); `mri_technical_score` is technical confirmation (G2). These are intentionally separate — overlap of `decision_score` × `mri_technical_score` is acceptable per owner (different questions). Revisit only if backtest correlation ρ > 0.9.
+5. **Backward compatible.** If `evaluate_add_gates()` is called with `gate_inputs=None`, `compute_action()` falls back to the legacy CAS+stars-only behavior. Existing 259 tests stay green; V2 ships incrementally.
+6. **`approaching_add` surface cap.** CAS 80–84, top 20 by `radar_priority`, radar page only, no notifications (C4). Tunable via `approaching_add.radar_top_n`.
+
+### 14.7 `evaluate_add_gates()` output shape
+
+```python
+{
+    "all_passed": bool,
+    "gates_passed": int,                                  # C7
+    "gates_total": int,                                   # C7
+    "gate_score_pct": float,                              # C7 — gates_passed / gates_total × 100
+    "blocked_gates": list[str],
+    "gate_results": {
+        "G1_decision_score":      {"value": float, "threshold": 85, "passed": bool},
+        "G2_mri_technical_score": {"value": float, "threshold": 80, "passed": bool},
+        "G3_weekly_breakout":     {"value": bool, "weekly_close": float, "resistance": float, "resistance_source": "PRIOR_52W_HIGH" | "ALL_TIME_HIGH", "passed": bool},
+        "G4_volume_confirmed":    {"value": bool, "ratio": float, "threshold_used": float, "passed": bool},
+        "G5_breakout_age":        {"value": int, "max": 15, "passed": bool},
+        "confidence_stars":       {"value": int, "min": 4, "passed": bool},
+    },
+    "resistance_source": "PRIOR_52W_HIGH" | "ALL_TIME_HIGH",   # C9 enum
+    "final_state": "ADD_SECOND_TRANCHE" | "READY_FOR_ADD",
+    "config_snapshot": {                                    # C5 audit
+        "version": "2.0.0",
+        "add_gate": {...},
+    },
+}
+```
+
+### 14.8 P6 backtest success metrics (C8)
+
+Before the 5 `PROPOSED` gate thresholds move to `VALIDATED`, the following must hold on trailing 6 months of data:
+
+| Metric | Definition | Target |
+|--------|-----------|--------|
+| ADD signals/month | Count of new ADD recommendations in trailing 30d | ≤ 5 |
+| % outperform benchmark @ 20d | `(return_pct_20d - benchmark_return_pct_20d) > 0` | ≥ 60% |
+| % outperform benchmark @ 60d | Same at 60 trading days | ≥ 60% |
+| % outperform benchmark @ 120d | Same at 120 trading days | ≥ 55% |
+| Win rate vs CAS-only model | 5-gate ADD wins / CAS-only ADD signals in same period | ≥ CAS-only win rate |
+| Avg max drawdown after ADD | Mean of (lowest close in 60d post-ADD) / entry − 1 | < −12% |
+
+If any target missed → write `Calibration.md` journal entry; tighten before validation. Do NOT silently adjust thresholds.
+
+### 14.9 Schema delta
+
+```sql
+-- G3
+ALTER TABLE daily_prices
+  ADD COLUMN IF NOT EXISTS prior_52w_high NUMERIC,
+  ADD COLUMN IF NOT EXISTS all_time_high_before_current_week NUMERIC,
+  ADD COLUMN IF NOT EXISTS resistance_source TEXT,
+  ADD COLUMN IF NOT EXISTS weekly_close_above_resistance BOOLEAN;
+
+-- G4 (versioned metadata, not just boolean)
+ALTER TABLE daily_prices
+  ADD COLUMN IF NOT EXISTS breakout_day_volume NUMERIC,
+  ADD COLUMN IF NOT EXISTS breakout_day_avg20_volume NUMERIC,
+  ADD COLUMN IF NOT EXISTS breakout_day_volume_ratio NUMERIC,
+  ADD COLUMN IF NOT EXISTS volume_threshold_used NUMERIC,
+  ADD COLUMN IF NOT EXISTS breakout_date_for_volume DATE,
+  ADD COLUMN IF NOT EXISTS volume_confirmed_breakout BOOLEAN;
+```
+
+Full migration: `migrations/010_add_second_tranche_gates.sql` (P2).
+
+### 14.10 Alternatives considered (rejected)
+
+| Choice | Picked | Rejected | Why rejected |
+|--------|--------|----------|--------------|
+| Resistance | 52w high + ATH fallback | Daily pivot / weekly EMA-13 / prior swing high | 52w high aligns with Decision 029/081; alternatives tie strategic rule to tactical pattern or measure trend not breakout |
+| Volume threshold | Breakout-day ratio ≥ 1.3× | Today's ratio / 1.5× / weekly aggregate | Captures institutional sponsorship at the moment that matters; doesn't penalize healthy post-breakout consolidation |
+| ADD floor | Keep CAS ≥ 85 + 5 gates | Lower ADD to CAS ≥ 80 | Owner: "the second ₹20k is earned" — lowering without backtest is intuition not evidence |
+| Score overlap | Keep both `decision_score` + `mri_technical_score` | Drop one | Each answers a different question; revisit only after backtest ρ > 0.9 |
+| Surface noise | Top-20 cap, radar page only | Email notifications for CAS 80+ | Alert fatigue; tighten later if still noisy |
+
+### 14.11 Implementation phases (P1 → P7)
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **P1** | Decision 103 + §14 + YAML `add_gate`/`approaching_add` + calibration registry + Sessions.md + Progress.md | **In progress (docs only)** |
+| P2 | Migration `010_*.sql` + 4 new indicator functions + unit tests | Pending |
+| P3 | `evaluate_add_gates()` + extended `compute_action()` + `compute_layered_state()` + tests | Pending |
+| P4 | API enrichment + new `GET /api/cas/add-eligibility` | Pending |
+| P5 | Frontend `AddStatusChip` + BreakoutRadar column integration | Pending |
+| P6 | Backtest validation against 6 trailing months (6 success metrics) | Pending |
+| P7 | Final: Sessions.md, Progress.md, Decisions.md final entry, push | Pending |
+
+### 14.12 Cross-references
+
+- Discussion record: `docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md`
+- Calibration journal: `Calibration.md` (5 new entries)
+- Calibration registry: `config/calibration_registry.yaml` (5 new `PROPOSED` entries)
+- Spec: `docs/CAS_SPEC.md` §6
+- Implementation: `engine_core/cas_recommendations.py` (`evaluate_add_gates`), `engine_core/cas_decision_layer.py` (`compute_layered_state`), `engine_core/cas_indicators.py` (4 new pure functions)
+- Migration: `migrations/010_add_second_tranche_gates.sql`
+
+### 14.13 Calibration freeze
+
+All 5 new gate thresholds are `PROPOSED`. Move to `VALIDATED` only after P6 hits all 6 success metric targets. **No weight/gate tweaks for 100 ADD recommendations post-merge** — re-validate at 100 / 250 / 500 ADD signals, same as CAS V1.1 freeze (Decision 102).
+

@@ -340,3 +340,42 @@ decision_layer:
 regression_tolerance:
   cas_points: 2.0   # ±2 points CAS drift acceptable when tuning
   stars: 0          # stars must be exact (no drift allowed)
+
+
+# ----------------------------------------------------------------------------
+# Stage 7: ADD_SECOND_TRANCHE Discipline Gates (V2, Decision 103)
+# ----------------------------------------------------------------------------
+# ALL thresholds live here, NOT in Python code (per owner refinement C3).
+# `evaluate_add_gates()` in engine_core/cas_recommendations.py reads these
+# via load_config()['add_gate']. Any change to this section requires:
+#   1. Calibration.md journal entry
+#   2. Decision log update if architectural
+#   3. After P6 backtest hits all 6 success metric targets → status VALIDATED
+#
+# Versioning: `version` is persisted in every cas_recommendation's
+# factor_snapshot.config_snapshot.version so historical recommendations
+# remain reproducible even if this YAML evolves.
+add_gate:
+  version: "2.0.0"            # Bump on ANY threshold change (C5)
+  decision_score_min: 85      # G1 — capital allocation quality
+  mri_technical_min: 80       # G2 — technical structure strength
+  breakout_age_max: 15        # G5 — opportunity freshness (trading days)
+  breakout_volume_ratio: 1.3  # G4 — breakout_day_volume / 20d avg
+  weekly_breakout_mode: prior_52w   # 'prior_52w' | 'all_time_high' (resolved per-row by history)
+  weekly_breakout_min_history_weeks: 52  # fallback threshold (C1: ATH if history < this)
+  confidence_stars_min: 4     # existing precondition, now config-driven
+
+
+# ----------------------------------------------------------------------------
+# Stage 8: Approaching ADD Surface Cap (C4)
+# ----------------------------------------------------------------------------
+# CAS 80–84 surfaces candidates for active watch but does NOT trigger alerts.
+# Top-N by radar_priority keeps the radar page focused. Tighten
+# radar_top_n if users still find this noisy.
+approaching_add:
+  cas_min: 80.0
+  cas_max: 84.99
+  radar_top_n: 20             # only top N by radar_priority
+  send_notifications: false   # no email / push (radar page only)
+  surface_on:
+    - radar_page

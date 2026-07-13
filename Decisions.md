@@ -2526,3 +2526,88 @@ Trigger: Post-V1.1c expert review of 4 design questions + golden case tolerance 
 This marks a transition: V1.x focused on **scoring infrastructure**; V2.x should focus on **outcomes-driven calibration** (validation of assumptions, regime-aware decision making, ML only after outcome data is mature).
 
 **Status:** APPROVED — V1.1d execution authorized with 4-gate scope.
+
+---
+
+## Decision 103 — V2 Pyramiding Discipline Gates (ADD_SECOND_TRANCHE Refinement)
+Date: 2026-07-13
+Decision-maker: Owner (domain expert) + AI engineer (implementer)
+Trigger: Owner requested a more disciplined ADD gate after BreakoutRadar adoption. Current ADD path (`compute_action` in `engine_core/cas_recommendations.py`) only checks `CAS ≥ 85` + `confidence_stars ≥ 4` + `has_existing_position=True`. Owner wanted the second ₹20k to be "earned" through layered checks, not just because CAS crossed 85.
+
+### Final design (9 refinements across 2 rounds of review)
+
+**Gates (all must pass for `ADD_SECOND_TRANCHE`):**
+1. `decision_score ≥ add_gate.decision_score_min` (default 85) — G1 capital allocation quality
+2. `mri_technical_score ≥ add_gate.mri_technical_min` (default 80) — G2 technical structure
+3. `weekly_close > resistance` — G3 price discovery; `resistance` = `PRIOR_52W_HIGH` if history ≥ 52 weeks, else `ALL_TIME_HIGH` (C1 ATH fallback for emerging rerating candidates)
+4. `volume_confirmed_breakout == True` — G4 institutional sponsorship; frozen at breakout day, versioned metadata (C2)
+5. `breakout_age ≤ add_gate.breakout_age_max` (default 15 trading days) — G5 freshness
+
+Plus the existing precondition `confidence_stars ≥ add_gate.confidence_stars_min` (default 4).
+
+**State model (4 layers):**
+
+| CAS | Gates | Final state | UI | Action |
+|-----|-------|-------------|-----|--------|
+| < 80 | — | OBSERVE | ⚪ Observe | None |
+| 80–84 | — | APPROACHING_ADD | 🟡 Approaching ADD | WATCH |
+| ≥ 85 | some fail | READY_FOR_ADD (was `ELIGIBLE_ADD_BLOCKED`, renamed C6) | 🟢 Ready for ADD (n/N gates) | WATCH |
+| ≥ 85 | all pass | ADD_SECOND_TRANCHE | 🚀 ADD SECOND TRANCHE | ADD |
+
+`READY_FOR_ADD` surfaces `gates_passed / gates_total` and the specific missing gates (C7 gate confidence metric) — binary passed/blocked was rejected as too lossy.
+
+**Architectural invariants (all YAML-driven, no hardcoded Python constants):**
+- Every threshold in `config/capital_allocation.yaml` under `add_gate.*` (C3)
+- `add_gate.version: "2.0.0"` persisted in `cas_recommendations.factor_snapshot.config_snapshot.version` for historical reproducibility (C5)
+- Resistance source as Python enum `ResistanceSource.{PRIOR_52W_HIGH, ALL_TIME_HIGH}` — not free text (C9)
+- `volume_confirmed_breakout` backed by versioned metadata columns: `breakout_day_volume`, `breakout_day_avg20_volume`, `breakout_day_volume_ratio`, `volume_threshold_used`, `breakout_date_for_volume`
+- `approaching_add` surface cap: CAS 80–84, top 20 by `radar_priority`, radar page only, no notifications (C4)
+
+**Single-responsibility score model (per owner Q1):**
+- `radar_priority` — radar ranking (freshness + urgency)
+- `decision_score` — capital allocation gate (G1) — the only "score" gate
+- `decision_score` × `mri_technical_score` overlap is INTENTIONAL — `decision_score` = "should I own more of this business?", `mri_technical_score` = "is this chart still healthy?" Revisit only if backtest correlation ρ > 0.9.
+
+**P6 backtest success metrics (C8):**
+1. ADD signals/month ≤ 5
+2. % outperform benchmark at 20 trading days ≥ 60%
+3. % outperform benchmark at 60 trading days ≥ 60%
+4. % outperform benchmark at 120 trading days ≥ 55%
+5. Win rate vs CAS-only model ≥ CAS-only win rate
+6. Avg max drawdown after ADD signal < −12%
+
+If any target missed → Calibration.md journal entry + tighten; do NOT silently adjust.
+
+**Alternatives considered (rejected with rationale):**
+- Resistance = daily breakout pivot (ties strategic rule to tactical pattern)
+- Resistance = weekly EMA-13 (measures trend, not breakout)
+- Resistance = prior weekly swing high (too noisy inside consolidations)
+- Volume = today's ratio (penalizes healthy post-breakout consolidation)
+- Volume = weekly aggregate (adds complexity without clear edge)
+- Lower ADD floor to CAS 80 (increases exposure based on intuition, not evidence — owner: "the second ₹20k is earned")
+- Drop one of decision/mri_technical (revisit only after backtest)
+- Surface Approaching ADD via email (alert fatigue; C4 cap instead)
+
+**Implementation:** 7 phases (P1 docs → P2 indicators → P3 engine → P4 API → P5 frontend → P6 backtest → P7 wrap-up). P1 = docs only, no code. P2 onward proceeds only after P1 diff reviewed by owner.
+
+**Files this decision touches (cumulative through P7):**
+- `migrations/010_add_second_tranche_gates.sql` (NEW)
+- `engine_core/cas_indicators.py` (extend — 4 new pure functions)
+- `engine_core/cas_recommendations.py` (extend — `evaluate_add_gates`)
+- `engine_core/cas_decision_layer.py` (extend — `compute_layered_state`)
+- `config/capital_allocation.yaml` (NEW `add_gate` + `approaching_add` sections)
+- `config/calibration_registry.yaml` (5 NEW `PROPOSED` entries)
+- `Calibration.md` (5 NEW journal entries)
+- `api/breakout_status.py` (extend — enriched `/api/breakout/radar` rows)
+- `frontend/src/AddStatusChip.tsx` (NEW)
+- `frontend/src/BreakoutRadar.tsx` (extend — ADD Status column)
+- `docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md` (NEW — full discussion record)
+- `docs/CAPITAL_ALLOCATION_SCORE_PLAN_2026-07-06.md` §14 (NEW)
+- `docs/CAS_SPEC.md` §6 (update)
+- `Sessions.md`, `Progress.md` (P1 entries; ongoing through P7)
+
+**Discussion record:** `docs/CAS_V2_PYRAMIDING_DISCUSSION_2026-07-13.md` — full Q&A transcript across both review rounds. Read before resuming work on this branch.
+
+**Calibration freeze:** All 5 new gate thresholds are `PROPOSED`. Move to `VALIDATED` only after P6 backtest hits all 6 success metric targets. No weight/gate tweaks for 100 ADD recommendations post-merge.
+
+**Status:** APPROVED (2026-07-13) — P1 (docs only) authorized to begin.

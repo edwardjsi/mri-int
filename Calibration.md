@@ -147,6 +147,166 @@ values decreased 5.79 mean / 5.50 median. Top-9 leaderboard preserved
 
 ---
 
+### 2026-07-13 — Add Gate V2 introduced (ADD_SECOND_TRANCHE discipline)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.version` | (not present) | `"2.0.0"` |
+| `add_gate.decision_score_min` | (CAS+stars only, in `action.add_cas_min`) | `85` (explicit gate) |
+| `add_gate.mri_technical_min` | (not present) | `80` |
+| `add_gate.breakout_volume_ratio` | (not present) | `1.3` |
+| `add_gate.breakout_age_max` | (not present) | `15` |
+| `add_gate.weekly_breakout_mode` | (not present) | `prior_52w` |
+| `add_gate.weekly_breakout_min_history_weeks` | (not present) | `52` |
+| `add_gate.confidence_stars_min` | `4` (hardcoded) | `4` (config-driven) |
+
+**Reason:** Per Decision 103. The legacy `compute_action()` ADD path
+required only `CAS ≥ 85` + `confidence_stars ≥ 4` + `has_existing_position=True`.
+After BreakoutRadar adoption, owner judged this too loose — the second
+₹20k should be **earned** through layered checks, not just because CAS
+crossed 85. This entry introduces the V2 gate model with five conditions
+(decision score, mri technical, weekly breakout, breakout-day volume,
+breakout age) plus the config-driven confidence-stars precondition. All
+seven new parameters are YAML-driven (no hardcoded Python constants,
+owner refinement C3) and versioned (`add_gate.version: 2.0.0` snapshotted
+into every `cas_recommendations.factor_snapshot.config_snapshot.version`,
+owner refinement C5).
+
+**Expected effect:** Reduce false-positive ADD signals — only candidates
+that pass ALL five gates (plus confidence stars) earn the second tranche.
+Real-world effect size: see G1–G5 individual entries below.
+
+**Measured effect:** *(pending — requires P6 backtest, then ≥100 ADD
+recommendations with m6 outcomes to flip add_gate.* status to validated
+per Decision 102 calibration freeze)*
+
+---
+
+### 2026-07-13 — G1 decision_score_min introduced (85)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.decision_score_min` | (not a separate gate) | `85` |
+
+**Reason:** Per Decision 103, G1. `decision_score` is the capital
+allocation gate — the only "score" gate. Single-responsibility principle
+(owner Q1): `radar_priority` ranks the radar, `decision_score` answers
+"should I own more of this business?", `mri_technical_score` answers
+"is this chart still healthy?". Threshold matches the existing
+`action.add_cas_min: 85` so legacy ADD-eligible stocks don't suddenly
+disappear — they now need to also clear G2–G5.
+
+**Expected effect:** No change in the set of CAS-85+ candidates reaching
+the gate; the G1 floor anchors the layered check.
+
+**Measured effect:** *(pending P6 backtest)*
+
+---
+
+### 2026-07-13 — G2 mri_technical_min introduced (80)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.mri_technical_min` | (not present) | `80` |
+
+**Reason:** Per Decision 103, G2. Adds explicit technical-structure
+filter alongside G1's quality filter. Owner explicitly chose to keep
+both gates despite partial overlap (Q1 follow-up): "decision_score =
+'Should I own more of this business?' mri_technical_score = 'Is this
+chart still healthy?' If you later find a correlation of 0.9+ in
+backtests, then revisit it. Until then, I'd keep both."
+
+**Expected effect:** Filters out stocks with strong fundamentals
+(high decision_score) but broken technical structure (e.g. breakdown,
+EMA stack violation). Tightens ADD signal without disturbing CAS
+scoring itself.
+
+**Measured effect:** *(pending P6 backtest; will revisit if ρ(decision_score,
+mri_technical_score) > 0.9)*
+
+---
+
+### 2026-07-13 — G4 breakout_volume_ratio introduced (1.3)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.breakout_volume_ratio` | (not present) | `1.3` |
+| `daily_prices.breakout_day_volume` | (not present) | (NUMERIC, populated on breakout day) |
+| `daily_prices.breakout_day_avg20_volume` | (not present) | (NUMERIC) |
+| `daily_prices.breakout_day_volume_ratio` | (not present) | (NUMERIC) |
+| `daily_prices.volume_threshold_used` | (not present) | (NUMERIC, frozen) |
+| `daily_prices.breakout_date_for_volume` | (not present) | (DATE, frozen) |
+| `daily_prices.volume_confirmed_breakout` | (not present) | (BOOLEAN, frozen) |
+
+**Reason:** Per Decision 103, G4 + owner refinement C2. Volume on the
+actual breakout day is the canonical institutional-sponsorship signal —
+it captures whether the breakout itself was sponsored. Threshold 1.3×
+matches the existing STEE Step-5 entry rule (volume ≥ 1.3× 20d avg),
+so we stay internally consistent. Critically, the ratio and the threshold
+USED at computation time are both persisted: six months from now, if we
+retune the threshold to 1.5×, we can still reconstruct exactly which
+historical recommendations were generated under the 1.3× rule.
+
+**Expected effect:** Eliminates breakouts that "drifted through"
+resistance without institutional commitment. Reduces false positives
+without adding daily recomputation overhead (computed once, frozen).
+
+**Measured effect:** *(pending P6 backtest)*
+
+---
+
+### 2026-07-13 — G5 breakout_age_max introduced (15)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.breakout_age_max` | (not present) | `15` (trading days) |
+
+**Reason:** Per Decision 103, G5. Broader than the V1.1 eligibility
+filter (`breakout_max_age_days: 5`) and the V1.1 market sub-gate
+(`max_breakout_age_days: 3`). 15 trading days ≈ 3 weeks — wide enough
+to allow pyramiding into a confirmed breakout that took a couple of
+weeks to validate, tight enough that the opportunity hasn't matured.
+
+**Expected effect:** Filters out matured breakouts (Day 30+) where
+institutions have already distributed; preserves recently-broken-out
+stocks still in price-discovery phase.
+
+**Measured effect:** *(pending P6 backtest)*
+
+---
+
+### 2026-07-13 — G3 weekly breakout mode (PRIOR_52W_HIGH + ATH fallback)
+
+| Field | Before | After |
+|-------|--------|-------|
+| `add_gate.weekly_breakout_mode` | (not present) | `prior_52w` |
+| `add_gate.weekly_breakout_min_history_weeks` | (not present) | `52` |
+| `daily_prices.prior_52w_high` | (not present) | (NUMERIC) |
+| `daily_prices.all_time_high_before_current_week` | (not present) | (NUMERIC) |
+| `daily_prices.resistance_source` | (not present) | (TEXT enum: `PRIOR_52W_HIGH` \| `ALL_TIME_HIGH`) |
+| `daily_prices.weekly_close_above_resistance` | (not present) | (BOOLEAN) |
+
+**Reason:** Per Decision 103, G3 + owner refinement C1 (ATH fallback) +
+C9 (enum resistance source). Weekly close > prior 52-week high is the
+"price discovery" signal; aligns with Decision 029/081 (Golden Setup
+framework). Fallback to all-time-high for stocks with < 52 weeks of
+history prevents emerging rerating candidates (listed 8–10 months ago)
+from being permanently excluded — owner: "the system already favours
+emerging rerating candidates. A company listed 8–10 months ago
+shouldn't be permanently excluded just because it lacks a full year's
+history." Both branches preserve the price-discovery intent. The
+resistance source is a Python enum (`ResistanceSource.{PRIOR_52W_HIGH,
+ALL_TIME_HIGH}`) not free text (owner refinement C9): "enums are easier
+to validate, test, and query than arbitrary strings."
+
+**Expected effect:** Thin-history rerating candidates are no longer
+disqualified by G3; mature names still require genuine 52w-high break.
+
+**Measured effect:** *(pending P6 backtest; track coverage of <1y
+listings separately)*
+
+---
+
 ## Calibration Debt
 
 Run `venv/bin/python tools/calibration_debt.py` to see current count.

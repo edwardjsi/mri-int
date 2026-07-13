@@ -139,3 +139,53 @@ action.watch_cas_min:
   validated_after: null
   rationale: "CAS >= 60 → WATCH (eligible but no action yet)."
   journal_entry: null
+
+# === V2 Pyramiding Discipline Gates (Decision 103, 2026-07-13) ===
+# All 5 thresholds are PROPOSED until P6 backtest hits all 6 success metrics.
+# Status flips to validated after P6 + 100 ADD recommendations (Calibration freeze).
+# Decision 103 owner refinement: every gate must be YAML-driven, no hardcoded Python.
+
+add_gate.version:
+  value: "2.0.0"
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "Calibration version stamp. Persisted in cas_recommendations.factor_snapshot.config_snapshot.version (C5) so historical recommendations remain reproducible."
+  journal_entry: "Calibration.md#2026-07-13-add-gate-v2-introduced"
+
+add_gate.decision_score_min:
+  value: 85
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G1 — capital allocation quality gate. decision_score is the ONLY score gate; mri_technical_score is separate (single-responsibility per owner)."
+  journal_entry: "Calibration.md#2026-07-13-g1-decision-score-min-85"
+
+add_gate.mri_technical_min:
+  value: 80
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G2 — technical structure confirmation. Answers 'is this chart still healthy?' Distinct from G1 (ownership quality). Revisit only if backtest correlation with decision_score exceeds 0.9."
+  journal_entry: "Calibration.md#2026-07-13-g2-mri-technical-min-80"
+
+add_gate.breakout_volume_ratio:
+  value: 1.3
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G4 — institutional sponsorship confirmation. breakout_day_volume / 20d_avg, computed ONCE on breakout day, frozen, metadata versioned (C2). If calibration changes later, volume_threshold_used preserves historical reproducibility."
+  journal_entry: "Calibration.md#2026-07-13-g4-breakout-volume-ratio-13"
+
+add_gate.breakout_age_max:
+  value: 15
+  status: hypothesis
+  introduced: 2026-07-13
+  last_reviewed: 2026-07-13
+  validated_after: null
+  rationale: "G5 — pyramiding discipline: opportunity must still be fresh. 15 trading days = ~3 weeks; broader than V1.1 eligibility (5d) but tighter than mature (30d+)."
+  journal_entry: "Calibration.md#2026-07-13-g5-breakout-age-max-15"
