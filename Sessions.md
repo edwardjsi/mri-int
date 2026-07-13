@@ -2544,3 +2544,71 @@ When resuming after owner P3 sign-off:
 - **Gate evaluation lives in the engine, not the API**: API should read precomputed indicators from `daily_prices` + the persisted `factor_snapshot.gates` block, then call `evaluate_add_gates()` only when constructing a fresh evaluation. Do NOT duplicate gate logic in the API layer.
 - **C9 enum stringification**: When emitting `resistance_source` to JSON, use `.value` (`"PRIOR_52W_HIGH"` / `"ALL_TIME_HIGH"`), not the enum repr.
 - **C7 gate confidence metric**: API must return `gates_passed`, `gates_total`, `gate_score_pct` for the UI to display "5/6 gates passed".
+
+---
+
+## Session: P4 — API layer (Decision 103) [2026-07-13]
+
+**Goal**: Surface V2 4-state decision layer + per-gate breakdown over HTTP. Three endpoints (one extended, two new). No engine changes (P3 shipped those). No frontend changes (P5 next). No DB migrations (P2 shipped those columns).
+
+**Built**:
+
+- **`api/breakout_status.py`** (P4b, +10 lines) — `GET /api/breakout/radar`
+  - Extended both SELECT branches (watchlist + full-universe) with 7 V2 columns from `daily_prices`: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`, `breakout_day_volume_ratio`, `volume_confirmed_breakout`, `breakout_date_for_volume`.
+  - Backward compat: existing fields preserved. New fields default to `NULL` until indicator pipeline rolls out to each symbol (data coverage gap noted in P2 smoke test; WELCORP sample confirms columns populate correctly when indicator engine has run).
+
+- **`api/cas.py`** (NEW, P4c + P4d, +341 lines) — 2 new endpoints + 1 helper
+  - `_expand_factor_snapshot(row)`: hoists V2 keys (`final_state`, `gates`, `gate_score_pct`, `resistance_source`, `config_snapshot`) from `factor_snapshot` JSONB to top-level for the UI. Gracefully returns `None` for V1.1d rows (no V2 keys in snapshot).
+  - `GET /api/cas/recommendations?symbol=X&days=N&limit=N`: queries `cas_recommendations`, expands V2 keys, supports symbol + days + limit filters. ORDER BY recommendation_date DESC, symbol ASC. Returns JSON list.
+  - `GET /api/cas/add-eligibility?symbol=X&client_id=Y`: per-(symbol, client) V2 gate evaluation. Reads `daily_prices` (V2 cols + breakout state), `cas_recommendations` (confidence_stars + cas + action), `client_portfolio` (has_existing_position via `EXISTS` subquery). Reuses `_enrich_with_mosi_lite` from `api/breakout_status.py` for `decision_score` + `mri_technical_score` (same code path as radar — no duplication). Calls engine's `evaluate_add_gates()` + `compute_layered_state()`. Module-level YAML config cache (matches `indicator_engine` pattern; process restart required for threshold changes to apply).
+  - Returns explicit error codes for graceful frontend handling: `no_market_data`, `no_cas_recommendation`, `internal_error`.
+
+- **`api/main.py`** (+2 lines) — Import + `include_router` for `api.cas`.
+
+**Verification**:
+
+- `git diff --stat` shows 3 files modified, 1 file added, 353 insertions (54ef6e6).
+- `ast.parse` OK on all 3 files.
+- Direct DB smoke tests (14/14 pass):
+  - P4c (7): V1.1d backward compat (None for V2 keys), V2 row key-hoisting (final_state, gates, gate_score_pct, resistance_source, config_snapshot), blocked-gates serialization, symbol/days/limit filters, JSON serialization (2688 chars round-trip).
+  - P4d (7): 4 real-DB symbols (ADANIENSOL/ALKEM/GLAND/PAYTM) returned V2 evaluations; 2 edge cases (WELCORP→no_cas_recommendation, NONEXISTENT→no_market_data) handled cleanly.
+- Golden cases via direct engine calls: 3/4 V2 states confirmed (OBSERVE, APPROACHING_ADD, READY_FOR_ADD). ADD_SECOND_TRANCHE case revealed G4 requires `volume_confirmed_breakout` flag (engine nuance — already covered by 26 P3 tests; noted for P6 backtest when measuring real gate pass rates).
+- TestClient unavailable due to starlette/httpx version mismatch (`Client.__init__() got unexpected kwarg app`). Direct function-call validates same code path; user can verify in running uvicorn process.
+
+**One design bug caught+fixed during P4d smoke test**:
+- Endpoint initially used `gate_result.blocked` / `gate_result.score_pct` but `GateResult` NamedTuple (`engine_core/cas_recommendations.py` L55-66) actually exposes `gates_passed` / `gates_total` / `blocked_gates` / `gate_score_pct`. Fixed all 5 occurrences; re-tested 7/7 pass.
+
+**Backward compatibility**:
+
+- `/api/breakout/radar`: existing fields preserved; V2 fields additive (NULL until indicator pipeline rolls out).
+- `/api/cas/recommendations`: new endpoint, no impact on existing 14 routers.
+- `/api/cas/add-eligibility`: new endpoint, explicit error codes for graceful frontend handling.
+- `_expand_factor_snapshot`: V1.1d rows (no V2 keys in snapshot) return `None` for V2 fields rather than crashing.
+
+**Result**: P4 ships. API layer V2 ready. **Pausing for owner approval before P5 (frontend).**
+
+### Multi-session handoff notes for P5
+
+When resuming after owner P4 sign-off:
+
+1. **P5 (1.5 hr)**: Frontend.
+   - New `AddStatusChip` React component in `frontend/src/components/AddStatusChip.tsx` (or wherever the existing chip components live — check `frontend/src/` for similar patterns). 4 states, color-coded:
+     - `OBSERVE` → gray
+     - `APPROACHING_ADD` → blue
+     - `READY_FOR_ADD` → amber
+     - `ADD_SECOND_TRANCHE` → green
+   - Hover popover lists all 6 gate results (`G1`–`G5` + `CONFIDENCE_STARS`), plus score_pct and resistance_source.
+   - Add "ADD Status" column to `frontend/src/BreakoutRadar.tsx`. Wire to `GET /api/cas/add-eligibility?symbol=X&client_id=Y` (client_id from auth context).
+   - Optional: also surface the raw V2 indicator columns from `/api/breakout/radar` response in a tooltip or expandable row section.
+
+2. **P6 (2 hr)**: Backtest validation against trailing 6 months. Hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration registry entries to `validated`.
+
+3. **P7 (30 min)**: Final Sessions.md, Progress.md, Decisions 103 final entry + push.
+
+### Critical reminders for P5
+
+- **AddStatusChip data source**: The chip MUST call `/api/cas/add-eligibility?symbol=X&client_id=Y`, NOT `/api/cas/recommendations`. The former is per-(symbol, client) and includes `has_existing_position`; the latter is global recommendation history.
+- **Client ID**: Get `client_id` from the auth/user context (likely `useAuth()` or similar hook — check existing patterns in `frontend/src/`). Do NOT hardcode.
+- **Loading states**: `/api/cas/add-eligibility` involves 3 SQL queries + a MOSI Lite enrichment call (~50-200ms per symbol). Show a loading spinner on the chip while waiting; cache results for the radar page lifetime to avoid re-fetching on every row hover.
+- **Error handling**: API returns `error: "no_cas_recommendation"` when the symbol has no CAS rec yet. Render the chip as `OBSERVE` with a tooltip "CAS recommendation not yet generated — run indicator engine first." Do NOT show "—" or a broken state.
+- **Backwards compat for V1.1d radar rows**: The V2 columns from `/api/breakout/radar` will be `null` for symbols that haven't been through the indicator pipeline yet. Render as "—" (em dash) in the tooltip, not "undefined" or "null".

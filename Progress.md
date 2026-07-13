@@ -2901,23 +2901,34 @@ Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-o
 - [x] Smoke test passed on 5 hand-picked symbols (WELCORP, ADANIENSOL, NEULANDLAB, TITAN, ALKEM) — 600 updates written, all 10 V2 columns populate in DB.
 - [x] Commit + push: `feat(cas-v2): G3+G4 indicator computations for ADD_SECOND_TRANCHE gates (P2)`. Tests 277/277 pass.
 
-### 🚧 P3–P7 backlog
+### ✅ P4 SHIPPED (commit 54ef6e6, 2026-07-13)
 
-- ✅ **P3 (3 hr)** — SHIPPED (commit 3b68f97). `evaluate_add_gates()` + extended `compute_action()` + `compute_layered_state()` + `compute_factor_snapshot()` extension (gates, gate_score_pct, config_snapshot, resistance_source). 26 new tests added (target ≥18). Tests 303/303 pass.
-- **P4 (1.5 hr)** — API: extend `/api/breakout/radar` + `/api/cas/recommendations`; new `GET /api/cas/add-eligibility`. Smoke test + golden cases. **Blocked on owner P3 diff review.**
-- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar column integration. Blocked on P4.
+- [x] `api/breakout_status.py` — extended `GET /api/breakout/radar` SELECT with 7 V2 columns on both watchlist + full-universe branches (`prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`, `breakout_day_volume_ratio`, `volume_confirmed_breakout`, `breakout_date_for_volume`). Backward compat: existing fields preserved.
+- [x] `api/cas.py` (NEW, 341 lines) — 2 new endpoints + 1 helper:
+  - `GET /api/cas/recommendations?symbol=X&days=N&limit=N` — queries `cas_recommendations`, expands V2 keys from `factor_snapshot` JSONB to top-level. Supports symbol/days/limit filters. V1.1d rows return `None` for V2 fields (graceful backward compat).
+  - `GET /api/cas/add-eligibility?symbol=X&client_id=Y` — per-(symbol, client) V2 gate evaluation. Reads `daily_prices` + `cas_recommendations` + `client_portfolio`. Reuses `_enrich_with_mosi_lite` for `decision_score` + `mri_technical_score`. Calls `evaluate_add_gates()` + `compute_layered_state()`. Module-level YAML config cache. Explicit error codes (`no_market_data`, `no_cas_recommendation`, `internal_error`).
+  - `_expand_factor_snapshot(row)` helper — hoists V2 keys to top-level.
+- [x] `api/main.py` — import + `include_router` for `api.cas`.
+- [x] Direct DB smoke tests 14/14 pass (7 P4c + 7 P4d).
+- [x] Golden cases via direct engine calls: 3/4 V2 states confirmed (OBSERVE, APPROACHING_ADD, READY_FOR_ADD); ADD_SECOND_TRANCHE revealed G4 needs `volume_confirmed_breakout` flag (engine nuance noted for P6 backtest).
+- [x] One design bug caught+fixed: `GateResult` field names (`blocked`→`blocked_gates`, `score_pct`→`gate_score_pct`, `passed`→`gates_passed`, `total`→`gates_total`) per `engine_core/cas_recommendations.py` L55-66 NamedTuple.
+- [x] Commit + push: `feat(cas-v2): API layer for Decision 103 — /api/cas/recommendations + /api/cas/add-eligibility + /api/breakout/radar V2 cols (P4)`. 353 insertions across 3 files.
+
+### 🚧 P5–P7 backlog
+
+- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar ADD Status column integration. 4 states color-coded (gray/blue/amber/green); hover popover lists all 6 gate results. **Blocked on owner P4 diff review.**
 - **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`. Blocked on P5.
 - **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push. Blocked on P6.
 
 ### 📌 Decisions.md State After This Session
 
-- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), and P3 (engine integration) all shipped. P4–P7 pending owner P3 diff review**.
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), P3 (engine integration), and P4 (API layer) all shipped. P5–P7 pending owner P4 diff review**.
 - **Decision 102** still VALIDATED — no change.
 - **Decision 101** still APPROVED — no change.
 - **Decision 100** still APPROVED — no change.
 
 ### 📌 Next
 
-- (a) **Owner reviews P3 diff**: ~654 insertions across 4 files (`cas_recommendations.py`, `cas_decision_layer.py`, `test_cas_recommendations.py`, `test_cas_decision_layer.py`). Commit `3b68f97`. Test suite 303/303 pass. Authorize P4 to begin.
-- (b) **P4 starts at the API layer**. See Sessions.md "Multi-session handoff notes for P4" for resume-cold pointers, gate-eval-lives-in-engine-not-API invariant, and C9 enum stringification reminder.
-- (c) P4 is mechanical (3 endpoint extensions). P5 (frontend) is the user-visible payoff. P6 (backtest) is the validation gate before flipping 5 calibration entries.
+- (a) **Owner reviews P4 diff**: 353 insertions across 3 files (`api/breakout_status.py` +10, `api/cas.py` +341 NEW, `api/main.py` +2). Commit `54ef6e6`. Direct DB smoke tests 14/14 pass. Authorize P5 to begin.
+- (b) **P5 starts at the frontend**. See Sessions.md "Multi-session handoff notes for P5" for resume-cold pointers, AddStatusChip data source requirement (`/api/cas/add-eligibility` NOT `/api/cas/recommendations`), client_id sourcing, loading state UX, and error handling for `no_cas_recommendation`.
+- (c) P5 is user-visible (frontend). P6 (backtest) is the validation gate before flipping 5 calibration entries to `validated`.
