@@ -2892,31 +2892,32 @@ Implements Decision 103 — refines the ADD_SECOND_TRANCHE gate model from CAS-o
 - **Discussion record**: 9.9 KB institutional memory of the design rationale.
 - **Session log**: today's entry + multi-session handoff notes.
 
-### ⏭️ Next (P2, gated on owner P1 review)
+### ✅ P2 SHIPPED (commit c1052d0, 2026-07-13)
 
-- [ ] `migrations/010_add_second_tranche_gates.sql` — 11 new columns on `daily_prices` (G3: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`; G4: `breakout_day_volume`, `breakout_day_avg20_volume`, `breakout_day_volume_ratio`, `volume_threshold_used`, `breakout_date_for_volume`, `volume_confirmed_breakout`) + 2 partial indexes.
-- [ ] `engine_core/cas_indicators.py` — 4 new pure functions: `compute_prior_52w_high`, `compute_all_time_high_before_current_week`, `compute_weekly_close_above_resistance`, `compute_breakout_day_volume_ratio`.
-- [ ] `engine_core/test_cas_indicators.py` (NEW) — ≥ 12 test cases (boundary at 52w, exact 52w, <52w fallback, ratio boundary at 1.3, history_weeks resolver).
-- [ ] Manual backfill smoke test on 5 hand-picked symbols (e.g. TITAN, ALKEM, INOXINDIA — V1.1d Top-9 leaders) — verify columns populate for last 60 trading days.
-- [ ] Commit + push: `feat(cas-v2): migration + indicator computations for ADD gate`.
+- [x] `migrations/010_add_second_tranche_gates.sql` — 10 new columns on `daily_prices` (G3: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`; G4: `breakout_day_volume`, `breakout_day_avg20_volume`, `breakout_day_volume_ratio`, `volume_threshold_used`, `breakout_date_for_volume`, `volume_confirmed_breakout`) + 2 partial indexes + CHECK constraint.
+- [x] `engine_core/cas_indicators.py` — 4 new pure functions: `compute_prior_52w_high`, `compute_all_time_high_before_current_week`, `compute_weekly_close_above_resistance`, `compute_breakout_day_volume_ratio`. Plus `ResistanceSource` enum.
+- [x] `engine_core/test_cas_indicators.py` — 17 new test cases (43/43 pass total).
+- [x] G3+G4 wired into `engine_core/indicator_engine.py` (`compute_indicators`).
+- [x] Smoke test passed on 5 hand-picked symbols (WELCORP, ADANIENSOL, NEULANDLAB, TITAN, ALKEM) — 600 updates written, all 10 V2 columns populate in DB.
+- [x] Commit + push: `feat(cas-v2): G3+G4 indicator computations for ADD_SECOND_TRANCHE gates (P2)`. Tests 277/277 pass.
 
 ### 🚧 P3–P7 backlog
 
-- **P3 (3 hr)** — `evaluate_add_gates()` + extended `compute_action()` + `compute_layered_state()` + `compute_factor_snapshot()` extension (gates, gate_score_pct, config_snapshot, resistance_source). ≥ 18 new tests.
-- **P4 (1.5 hr)** — API: extend `/api/breakout/radar` + `/api/cas/recommendations`; new `GET /api/cas/add-eligibility`. Smoke test + golden cases.
-- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar column integration.
-- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`.
-- **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push.
+- ✅ **P3 (3 hr)** — SHIPPED (commit 3b68f97). `evaluate_add_gates()` + extended `compute_action()` + `compute_layered_state()` + `compute_factor_snapshot()` extension (gates, gate_score_pct, config_snapshot, resistance_source). 26 new tests added (target ≥18). Tests 303/303 pass.
+- **P4 (1.5 hr)** — API: extend `/api/breakout/radar` + `/api/cas/recommendations`; new `GET /api/cas/add-eligibility`. Smoke test + golden cases. **Blocked on owner P3 diff review.**
+- **P5 (1.5 hr)** — Frontend: new `AddStatusChip` component + BreakoutRadar column integration. Blocked on P4.
+- **P6 (2 hr)** — Backtest validation against trailing 6 months; hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration entries to `validated`. Blocked on P5.
+- **P7 (30 min)** — Wrap-up Sessions.md, Progress.md, Decisions.md final entry, push. Blocked on P6.
 
 ### 📌 Decisions.md State After This Session
 
-- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs) shipped; P2–P7 pending owner P1 diff review**.
+- **Decision 103** added: V2 Pyramiding Discipline Gates. Status: **APPROVED — P1 (docs), P2 (migration + indicators), and P3 (engine integration) all shipped. P4–P7 pending owner P3 diff review**.
 - **Decision 102** still VALIDATED — no change.
 - **Decision 101** still APPROVED — no change.
 - **Decision 100** still APPROVED — no change.
 
 ### 📌 Next
 
-- (a) **Owner reviews P1 diff**: ~14 KB across 7 files (1 new: discussion doc; 6 modified: Decisions.md, plan §14, capital_allocation.yaml, calibration_registry.yaml, Calibration.md, Sessions.md). Authorize P2 to begin.
-- (b) **P2 starts at `migrations/010_add_second_tranche_gates.sql`**. See Sessions.md "Multi-session handoff notes for P2" for resume-cold pointers, backward-compat requirement, and YAML-as-only-source-of-truth invariant.
-- (c) P2 is mechanical (migration + 4 pure functions + tests). P3 is the architecturally significant phase (gate evaluator + decision layer).
+- (a) **Owner reviews P3 diff**: ~654 insertions across 4 files (`cas_recommendations.py`, `cas_decision_layer.py`, `test_cas_recommendations.py`, `test_cas_decision_layer.py`). Commit `3b68f97`. Test suite 303/303 pass. Authorize P4 to begin.
+- (b) **P4 starts at the API layer**. See Sessions.md "Multi-session handoff notes for P4" for resume-cold pointers, gate-eval-lives-in-engine-not-API invariant, and C9 enum stringification reminder.
+- (c) P4 is mechanical (3 endpoint extensions). P5 (frontend) is the user-visible payoff. P6 (backtest) is the validation gate before flipping 5 calibration entries.

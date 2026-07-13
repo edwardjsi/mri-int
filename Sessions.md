@@ -2470,3 +2470,77 @@ When resuming after owner P1 sign-off:
 - **`config_snapshot.version`**: When persisting recommendations, ALWAYS include the full `add_gate` config + `version` in `factor_snapshot.config_snapshot`. This is what makes C5 (historical reproducibility) real.
 - **Resistance source enum**: Use `ResistanceSource.PRIOR_52W_HIGH` / `ResistanceSource.ALL_TIME_HIGH`, not strings. The enum is the validation contract.
 - **Calibration freeze**: After V2 ships, NO weight/gate tweaks for 100 ADD recommendations. Re-validate at 100 / 250 / 500. Same pattern as Decision 102.
+
+---
+
+## Session: P3 — Engine integration (Decision 103) [2026-07-13]
+
+**Goal**: Wire the V2 5-gate ADD_SECOND_TRANCHE model into the CAS engine. No migration (P2 shipped those columns); no API; no UI. Pure engine layer + tests.
+
+**Built**:
+
+- **`engine_core/cas_recommendations.py`** — P3b/P3c/P3e
+  - `GateResult` and `ActionResult` NamedTuples
+  - `GATE_BLOCK_CODES` exported constant (machine-readable failure codes: `G1_DECISION_SCORE_BELOW_MIN`, `G2_MRI_TECHNICAL_BELOW_MIN`, `G3_WEEKLY_CLOSE_BELOW_RESISTANCE`, `G4_VOLUME_NOT_CONFIRMED`, `G5_BREAKOUT_AGE_TOO_OLD`, `CONFIDENCE_STARS_BELOW_MIN`)
+  - `evaluate_add_gates(gate_inputs, config) -> GateResult` pure helper. `gate_inputs=None` → legacy all-pass (backward compat preserved).
+  - `compute_action()` extended: now returns `ActionResult(action, final_state, blocked_gates)` instead of `str`. V1.1d callers get `action == "BUY" / "ADD" / "WATCH"` from `.action`. When `gate_inputs` is provided, `final_state` is derived by calling `compute_layered_state()` (single source of truth).
+  - `compute_factor_snapshot()` extended with keyword-only kwargs: `gate_result`, `final_state`, `resistance_source`, `add_gate_config`. When provided, the snapshot records `gates.{passed,total,blocked}`, `gate_score_pct`, `final_state`, `resistance_source`, and `config_snapshot.{version,decision_score_min,mri_technical_min,breakout_age_max,breakout_volume_ratio,confidence_stars_min}` for C5 historical reproducibility.
+  - `record_cas_recommendation()` extended: now accepts `gate_inputs: dict | None = None`. Evaluates gates, derives `final_state`, reads `resistance_source` from the row, and passes everything to `compute_factor_snapshot`. Two internal callers (`record_cas_recommendation`, `scan_and_record_eligible_recommendations`) updated to use `.action`.
+
+- **`engine_core/cas_decision_layer.py`** — P3d
+  - `compute_layered_state(cas_score, blocked_gates, has_existing_position, config) -> str` — V2 4-state model. States: `OBSERVE` / `APPROACHING_ADD` / `READY_FOR_ADD` / `ADD_SECOND_TRANCHE`.
+  - `LAYERED_STATE_ORDER` exported constant.
+  - `cas_to_tier()` kept unchanged for V1.1d callers (verified by `test_cas_to_tier_still_works_for_v1_backward_compat`).
+
+- **26 new tests** (target ≥18; over-delivered):
+  - `TestEvaluateAddGates` (11 cases): per-gate pass/fail, missing keys = fail, `GATE_BLOCK_CODES` set equality.
+  - `TestActionResultWithGates` (6 cases): action×state combos across CAS ranges; `final_state=None` when `gate_inputs=None`; HAS_POSITION vs no-position branches.
+  - `TestComputeLayeredState` (9 cases): all 4 state boundaries, `None` CAS, `config.add_cas_min` override, V1.1d `cas_to_tier` compat.
+
+**Verification**:
+
+- `git diff --stat` shows 4 files modified, 654 insertions, 32 deletions (3b68f97).
+- `pytest engine_core/` → **303 passed** (was 277 at end of P2; net +26).
+- AST parse OK on all modified files.
+- 5 design bugs caught+fixed during testing:
+  1. `test_buy_with_all_gates_pass_is_ready_for_add` exposed missing READY_FOR_ADD branch in inline V2 state derivation. Fixed by delegating to `compute_layered_state()` (DRY).
+  2. `test_gate_block_codes_constant_matches_emitted_codes` initial inputs had `breakout_age=0` (which PASSES G5). Fixed test to use `breakout_age=999`.
+  3. `test_cas_82_with_all_gates_is_approaching_add` initial expectation had `action=WATCH` then corrected to `BUY` then back to `WATCH` (V1.1d verb logic uses `max(buy_min, add_min)` when has_position=True — so CAS=82 < 85 → WATCH even though CAS ≥ buy_min=80).
+  4. `_v2_config()` initially missing `min_confidence_stars_for_buy`. Added 4 to match V1.1d spec.
+  5. `test_cas_to_tier_still_works_for_v1_backward_compat` initial expectation had `cas_to_tier(70.0) == "NO_ACTION"` (actually WATCH). Fixed to use CAS=50 for NO_ACTION.
+
+**Backward compatibility**:
+
+- `evaluate_add_gates(None, cfg)` returns `GateResult(6, 6, [], 100.0)` — V1.1d callers see no change.
+- `cas_to_tier()` unchanged — V1.1d callers see no change.
+- `compute_action().action` replaces legacy `str` return — all 2 internal callers updated.
+- `compute_factor_snapshot()` adds only keyword-only kwargs with `None` defaults — V1.1d callers see no change.
+- Scanner still passes `gate_inputs=None` to `compute_action()` and `record_cas_recommendation()`. P5 frontend work will pass real gate_inputs from the new `daily_prices` columns.
+
+**Result**: P3 ships. Engine layer V2 ready. **Pausing for owner approval before P4 (API).**
+
+### Multi-session handoff notes for P4
+
+When resuming after owner P3 sign-off:
+
+1. **P4 (1.5 hr)**: API layer.
+   - Extend `GET /api/breakout/radar` (likely in `api/breakout_status.py` or `api/breakout_radar.py`) to include V2 fields: `add_state`, `blocked_gates`, `gate_results.{passed,total,score_pct}`, `resistance_source`, `config_snapshot.version`.
+   - Extend `GET /api/cas/recommendations` to surface the 4-state `final_state` and `gates` block from `factor_snapshot`.
+   - New `GET /api/cas/add-eligibility?symbol=X&client_id=Y` returning the V2 gate evaluation for a single symbol, used by the P5 frontend AddStatusChip hover popover.
+   - Smoke test + golden cases: at least one symbol in each of the 4 V2 states.
+
+2. **P5 (1.5 hr)**: Frontend.
+   - New `AddStatusChip` React component (4 states, color-coded, hover popover listing all 6 gate results).
+   - Add "ADD Status" column to `frontend/src/BreakoutRadar.tsx`.
+   - Color scheme: OBSERVE=gray, APPROACHING_ADD=blue, READY_FOR_ADD=amber, ADD_SECOND_TRANCHE=green.
+
+3. **P6 (2 hr)**: Backtest validation against trailing 6 months. Hit all 6 success metrics (§14.8 of plan) before flipping 5 calibration registry entries to `validated`.
+
+4. **P7 (30 min)**: Final Sessions.md, Progress.md, Decisions 103 final entry + push.
+
+### Critical reminders for P4
+
+- **Read daily_prices V2 columns**: `prior_52w_high`, `all_time_high_before_current_week`, `resistance_source`, `weekly_close_above_resistance`, `breakout_day_volume_ratio`, `volume_confirmed_breakout`, `breakout_age`, `decision_score`, `mri_technical_score`, `confidence_stars`. All 10 columns exist (P2 migration 010).
+- **Gate evaluation lives in the engine, not the API**: API should read precomputed indicators from `daily_prices` + the persisted `factor_snapshot.gates` block, then call `evaluate_add_gates()` only when constructing a fresh evaluation. Do NOT duplicate gate logic in the API layer.
+- **C9 enum stringification**: When emitting `resistance_source` to JSON, use `.value` (`"PRIOR_52W_HIGH"` / `"ALL_TIME_HIGH"`), not the enum repr.
+- **C7 gate confidence metric**: API must return `gates_passed`, `gates_total`, `gate_score_pct` for the UI to display "5/6 gates passed".
