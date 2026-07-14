@@ -75,11 +75,23 @@ def on_startup():
         # Auto-trigger indicator engine for any symbols needing computation
         try:
             cur3 = conn.cursor()
+            cur3.execute("SELECT COUNT(*) FROM daily_prices")
+            total_rows = cur3.fetchone()[0]
             cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
             null_count = cur3.fetchone()[0]
             cur3.close()
-            if null_count > 0:
-                import threading
+            import threading
+            if total_rows == 0:
+                def _run_full_pipeline():
+                    from engine_core.orchestrator import run_full_mri_pipeline
+                    try:
+                        logger.info("🏃 daily_prices empty — auto-triggering full MRI pipeline (ingestion + indicators)...")
+                        run_full_mri_pipeline()
+                        logger.info("✅ Full MRI pipeline auto-trigger complete")
+                    except Exception as e2:
+                        logger.warning(f"Full pipeline auto-trigger failed: {e2}")
+                threading.Thread(target=_run_full_pipeline, daemon=True).start()
+            elif null_count > 0:
                 def _run_indicators():
                     from engine_core.indicator_engine import compute_indicators_all
                     try:
@@ -89,6 +101,8 @@ def on_startup():
                     except Exception as e2:
                         logger.warning(f"Indicator engine auto-trigger failed: {e2}")
                 threading.Thread(target=_run_indicators, daemon=True).start()
+            else:
+                logger.info(f"✅ daily_prices has {total_rows} rows, all indicators computed — no auto-trigger needed")
         except Exception as e:
             logger.warning(f"Indicator engine auto-trigger check skipped: {e}")
     except Exception as e:
