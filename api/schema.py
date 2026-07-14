@@ -660,6 +660,46 @@ def ensure_required_tables(conn) -> None:
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_symbol_date ON public.aae_scan_history(symbol, scanned_at DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_aae_history_score ON public.aae_scan_history(master_score DESC);")
+
+    # CAS Recommendations table (Decision 101 / migration 009)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS cas_recommendations (
+            id                    BIGSERIAL PRIMARY KEY,
+            recommendation_id     TEXT        UNIQUE NOT NULL,
+            recommendation_date   DATE        NOT NULL,
+            symbol                TEXT        NOT NULL,
+            regime                TEXT        NOT NULL,
+            market_score          NUMERIC     NOT NULL,
+            cas                   NUMERIC     NOT NULL,
+            confidence_stars      INTEGER     NOT NULL,
+            action                TEXT        NOT NULL,
+            price_at_recommendation NUMERIC   NOT NULL,
+            factor_snapshot       JSONB      NOT NULL,
+            cas_version           TEXT        NOT NULL,
+            config_hash           TEXT        NOT NULL,
+            commit_sha            TEXT        NOT NULL,
+            engine_signature      TEXT        NOT NULL,
+            created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT cas_recommendations_unique UNIQUE (symbol, recommendation_date)
+        );
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_cas_recommendations_date ON cas_recommendations (recommendation_date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_cas_recommendations_symbol_date ON cas_recommendations (symbol, recommendation_date DESC);")
+
+    # CAS Recommendation Outcomes table (Decision 101 — outcome tracking)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS cas_recommendation_outcomes (
+            id                    BIGSERIAL PRIMARY KEY,
+            recommendation_id     TEXT        NOT NULL REFERENCES cas_recommendations(recommendation_id),
+            milestone_days        INTEGER     NOT NULL,
+            milestone_price       NUMERIC,
+            milestone_date        DATE,
+            outcome_state         TEXT        DEFAULT 'PENDING',
+            is_complete           BOOLEAN     DEFAULT FALSE,
+            updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT cas_outcomes_unique UNIQUE (recommendation_id, milestone_days)
+        );
+    """)
     
     ensure_prde_tables(cur)
     ensure_aae_event_tables(cur)
