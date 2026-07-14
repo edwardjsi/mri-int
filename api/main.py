@@ -74,14 +74,38 @@ def on_startup():
 
         # Auto-trigger indicator engine for any symbols needing computation
         try:
+            import traceback
             cur3 = conn.cursor()
-            cur3.execute("SELECT COUNT(*) FROM daily_prices")
-            total_rows = cur3.fetchone()[0]
-            cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
-            null_count = cur3.fetchone()[0]
-            cur3.execute("SELECT COUNT(*) FROM cas_recommendations")
-            cas_rec_count = cur3.fetchone()[0]
+
+            # Step 1 — total rows in daily_prices
+            try:
+                cur3.execute("SELECT COUNT(*) FROM daily_prices")
+                total_rows = cur3.fetchone()[0]
+            except Exception as e1:
+                logger.warning(f"Auto-trigger: daily_prices count failed: {e1}")
+                logger.warning(traceback.format_exc())
+                total_rows = 0
+
+            # Step 2 — NULL breakout_state count
+            try:
+                cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
+                null_count = cur3.fetchone()[0]
+            except Exception as e2:
+                logger.warning(f"Auto-trigger: null count failed: {e2}")
+                logger.warning(traceback.format_exc())
+                null_count = 0
+
+            # Step 3 — cas_recommendations row count
+            try:
+                cur3.execute("SELECT COUNT(*) FROM cas_recommendations")
+                cas_rec_count = cur3.fetchone()[0]
+            except Exception as e3:
+                logger.warning(f"Auto-trigger: cas_recommendations count failed: {e3}")
+                logger.warning(traceback.format_exc())
+                cas_rec_count = 0
+
             cur3.close()
+            logger.info(f"Auto-trigger stats: daily_prices={total_rows}, null_indicator={null_count}, cas_recs={cas_rec_count}")
             import threading
             from datetime import date
 
@@ -128,6 +152,7 @@ def on_startup():
                 logger.info(f"✅ daily_prices has {total_rows} rows, all indicators + CAS recommendations ready")
         except Exception as e:
             logger.warning(f"Indicator engine/ CAS scanner auto-trigger check skipped: {e}")
+            logger.warning(traceback.format_exc())
     except Exception as e:
         logger.error(f"❌ Database Schema Sync FAILED: {e}")
     finally:
