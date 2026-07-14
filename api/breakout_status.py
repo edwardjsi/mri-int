@@ -239,6 +239,8 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     Decision 104 (N+3 — Browser Visibility) — this is the endpoint that
     makes Decision 100's CAS output visible in the browser.
     """
+    log.info(f"CAS top-by-cas called with limit={limit}")
+
     # ── Fetch latest regime ──
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
@@ -273,7 +275,9 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     finally:
         cur.close()
 
+    log.info(f"CAS top-by-cas: fetched {len(rows)} rows from daily_prices")
     if not rows:
+        log.info("CAS top-by-cas: no rows returned, returning []")
         return []
 
     config = _cas_config
@@ -339,7 +343,9 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
 
     # Sort by CAS DESC, take top N
     results.sort(key=lambda r: r["cas"], reverse=True)
-    return results[:min(limit, len(results))]
+    top_n = results[:min(limit, len(results))]
+    log.info(f"CAS top-by-cas: {len(top_n)} stocks passed all gates (out of {len(rows)} total rows)")
+    return top_n
 
 
 @router.get("/map")
