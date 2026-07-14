@@ -124,7 +124,7 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
       </p>
 
       {/* ── Decision 104 — Capital Allocation Score Banner (N+3, visible in browser) ── */}
-      {!casLoading && casData.length > 0 && (
+      {!casLoading && (
         <div className="cas-banner" style={{
           padding: '16px',
           border: '1px solid #facc15',
@@ -138,20 +138,39 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
           <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>
             "Which breakout deserves fresh capital today?" — ranked by CAS (Decision 104)
           </p>
-          <div className="cas-top-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-            {casData.map((item) => (
-              <CapitalAllocationCard
-                key={item.symbol}
-                symbol={item.symbol}
-                cas={item.cas}
-                confidenceStars={item.confidence_stars}
-                actionChip={item.cas >= 85 ? 'ADD' : item.cas >= 70 ? 'BUY' : 'WATCH'}
-                whyChecklist={item.why_checklist || []}
-                breakoutAge={item.breakout_age || 0}
-                breakoutAgeEmoji={item.breakout_age_emoji || '⚫'}
-              />
-            ))}
-          </div>
+          {casData.length > 0 ? (
+            <div className="cas-top-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+              {casData.map((item) => (
+                <CapitalAllocationCard
+                  key={item.symbol}
+                  symbol={item.symbol}
+                  cas={item.cas}
+                  confidenceStars={item.confidence_stars}
+                  actionChip={item.cas >= 85 ? 'ADD' : item.cas >= 70 ? 'BUY' : 'WATCH'}
+                  whyChecklist={item.why_checklist || []}
+                  breakoutAge={item.breakout_age || 0}
+                  breakoutAgeEmoji={item.breakout_age_emoji || '⚫'}
+                />
+              ))}
+            </div>
+          ) : (
+            <div style={{
+              padding: '24px',
+              textAlign: 'center',
+              color: '#94a3b8',
+              fontSize: '14px',
+              border: '1px dashed #334155',
+              borderRadius: '8px',
+              background: 'rgba(15,23,42,0.5)'
+            }}>
+              <span style={{ fontSize: '28px', display: 'block', marginBottom: '8px' }}>📊</span>
+              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>No breakout stocks available yet</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>
+                The indicator engine pipeline needs to run to compute breakout states and capital allocation scores.
+                Once it completes, the top 5 breakouts ranked by CAS will appear here.
+              </div>
+            </div>
+          )}
         </div>
       )}
 
