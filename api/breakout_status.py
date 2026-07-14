@@ -279,6 +279,11 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     config = _cas_config
     results = []
     for row in rows:
+        # 0. Enrich: proxy qif_score when missing (same fallback as CAS scanner)
+        if row.get("qif_score") is None:
+            proxy_q = config.get("market_subgates", {}).get("quality", {}).get("min_quality", 75)
+            row["qif_score"] = proxy_q
+
         # 1. Eligibility (now includes regime)
         passed, _ = check_eligibility(row, regime, config)
         if not passed:
