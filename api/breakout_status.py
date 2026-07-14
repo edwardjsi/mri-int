@@ -10,7 +10,9 @@ from engine_mosi.mosi_lite import analyze_stock
 from engine_core.capital_allocation import (
     load_config, check_eligibility, compute_market_structure,
     compute_market_score, compute_portfolio_allocation_score,
-    compute_confidence_stars, render_why_checklist
+    compute_confidence_stars, render_why_checklist,
+    _regime_score, _weekly_score, _breakout_score,
+    _rs_score, _volume_score, _sector_score
 )
 
 router = APIRouter(prefix="/api/breakout", tags=["Breakout Status"])
@@ -237,15 +239,28 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     Decision 104 (N+3 — Browser Visibility) — this is the endpoint that
     makes Decision 100's CAS output visible in the browser.
     """
+    # ── Fetch latest regime ──
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("SELECT classification FROM market_regime ORDER BY date DESC LIMIT 1")
+        regime_row = cur.fetchone()
+        regime = (regime_row["classification"] or "NEUTRAL") if regime_row else "NEUTRAL"
+    except Exception as e:
+        log.warning(f"Could not fetch regime, defaulting to NEUTRAL: {e}")
+        regime = "NEUTRAL"
+    finally:
+        cur.close()
+
     query = """
         SELECT
-            symbol, close, volume, breakout_state, breakout_age, ema_50, ema_200,
-            ema_20, weekly_trend_score, overhead_supply_score, rs_90d,
+            symbol, close, volume, breakout_state, breakout_age,
+            ema_50, ema_200, ema_20, ema_100_slope_5d,
+            weekly_trend_score, overhead_supply_score, rs_90d,
             qif_score, data_completeness_pct, data_age_days,
+            avg_volume_20d, rolling_high_52w,
             winner_profit_pct, concentration_weight_pct
         FROM daily_prices
         WHERE date = (SELECT MAX(date) FROM daily_prices)
-          AND breakout_state = 'BROKEN_OUT'
         ORDER BY symbol
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -264,8 +279,8 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     config = _cas_config
     results = []
     for row in rows:
-        # 1. Eligibility
-        passed, _ = check_eligibility(row, config)
+        # 1. Eligibility (now includes regime)
+        passed, _ = check_eligibility(row, regime, config)
         if not passed:
             continue
 
@@ -274,8 +289,17 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
         if not passed:
             continue
 
-        # 3. Market Score (weighted sum of 7 factors)
-        market_score = compute_market_score(row, config)
+        # 3. Build sub-scores and compute Market Score
+        sub_scores = {
+            "regime":          _regime_score(regime, config),
+            "weekly":          _weekly_score(row, config),
+            "breakout":        _breakout_score(row, config),
+            "overhead_supply": row.get("overhead_supply_score") or 0,
+            "rs":              _rs_score(row, config),
+            "volume":          _volume_score(row, config),
+            "sector":          _sector_score(row, config),
+        }
+        market_score = compute_market_score(sub_scores, config)
 
         # 4. Portfolio Allocation Score
         cas = compute_portfolio_allocation_score(
@@ -286,7 +310,7 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
         )
 
         # 5. Confidence stars
-        stars = compute_confidence_stars(row, None, {}, config)
+        stars = compute_confidence_stars(row, sub_scores, {}, config)
 
         # 6. Why checklist
         why = render_why_checklist(row, config)
