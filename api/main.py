@@ -77,10 +77,10 @@ def on_startup():
             import traceback
             cur3 = conn.cursor()
 
-            # Step 1 — total rows in daily_prices
+            # Step 1 — total rows in daily_prices (connection uses RealDictCursor)
             try:
-                cur3.execute("SELECT COUNT(*) FROM daily_prices")
-                total_rows = cur3.fetchone()[0]
+                cur3.execute("SELECT COUNT(*) AS cnt FROM daily_prices")
+                total_rows = cur3.fetchone()["cnt"]
             except Exception as e1:
                 logger.warning(f"Auto-trigger: daily_prices count failed: {e1}")
                 logger.warning(traceback.format_exc())
@@ -88,8 +88,8 @@ def on_startup():
 
             # Step 2 — NULL breakout_state count
             try:
-                cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
-                null_count = cur3.fetchone()[0]
+                cur3.execute("SELECT COUNT(*) AS cnt FROM daily_prices WHERE breakout_state IS NULL")
+                null_count = cur3.fetchone()["cnt"]
             except Exception as e2:
                 logger.warning(f"Auto-trigger: null count failed: {e2}")
                 logger.warning(traceback.format_exc())
@@ -97,8 +97,8 @@ def on_startup():
 
             # Step 3 — cas_recommendations row count
             try:
-                cur3.execute("SELECT COUNT(*) FROM cas_recommendations")
-                cas_rec_count = cur3.fetchone()[0]
+                cur3.execute("SELECT COUNT(*) AS cnt FROM cas_recommendations")
+                cas_rec_count = cur3.fetchone()["cnt"]
             except Exception as e3:
                 logger.warning(f"Auto-trigger: cas_recommendations count failed: {e3}")
                 logger.warning(traceback.format_exc())
