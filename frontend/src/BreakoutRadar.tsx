@@ -2,11 +2,21 @@ import { useState, useEffect } from 'react';
 import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
 import AddStatusChip from './AddStatusChip';  // Decision 103 V2 — ADD_SECOND_TRANCHE gate chip
+import CapitalAllocationCard from './CapitalAllocationCard';  // Decision 104 (N+3 — Browser Visibility)
 
 export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
   const [radarData, setRadarData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
+  const [casData, setCasData] = useState<any[]>([]);
+  const [casLoading, setCasLoading] = useState(true);
+
+  useEffect(() => {
+    api.getTopByCAS(5)
+      .then(data => setCasData(data || []))
+      .catch(err => console.error('Failed to fetch CAS data', err))
+      .finally(() => setCasLoading(false));
+  }, []);
 
   useEffect(() => {
     api.getBreakoutRadar()
@@ -112,6 +122,38 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
       <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
         All tracked stocks with breakout classification, sorted by freshness and radar priority.
       </p>
+
+      {/* ── Decision 104 — Capital Allocation Score Banner (N+3, visible in browser) ── */}
+      {!casLoading && casData.length > 0 && (
+        <div className="cas-banner" style={{
+          padding: '16px',
+          border: '1px solid #facc15',
+          borderRadius: '8px',
+          background: 'linear-gradient(135deg, rgba(250,204,21,0.05) 0%, rgba(250,204,21,0) 100%)',
+          marginBottom: '16px'
+        }}>
+          <h3 style={{ color: '#facc15', marginBottom: '16px', fontSize: '1.2em' }}>
+            📊 Capital Allocation Score — Top Breakouts by CAS
+          </h3>
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>
+            "Which breakout deserves fresh capital today?" — ranked by CAS (Decision 104)
+          </p>
+          <div className="cas-top-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+            {casData.map((item, i) => (
+              <CapitalAllocationCard
+                key={item.symbol}
+                symbol={item.symbol}
+                cas={item.cas}
+                confidenceStars={item.confidence_stars}
+                actionChip={item.cas >= 85 ? 'ADD' : item.cas >= 70 ? 'BUY' : 'WATCH'}
+                whyChecklist={item.why_checklist || []}
+                breakoutAge={item.breakout_age || 0}
+                breakoutAgeEmoji={item.breakout_age_emoji || '⚫'}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {radarData.length === 0 ? (
         <div className="empty-state">No stocks in watchlist or portfolio.</div>

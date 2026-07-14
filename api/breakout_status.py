@@ -7,9 +7,17 @@ from typing import Any
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from engine_mosi.mosi_lite import analyze_stock
+from engine_core.capital_allocation import (
+    load_config, check_eligibility, check_market_subgates,
+    compute_market_score, compute_portfolio_allocation_score,
+    compute_confidence_stars, render_why_checklist
+)
 
 router = APIRouter(prefix="/api/breakout", tags=["Breakout Status"])
 log = logging.getLogger(__name__)
+
+# Load CAS configuration once on import
+_cas_config = load_config()
 
 
 # ── Helper: enrich radar rows with MOSI Lite data ────────────────────────
@@ -217,6 +225,88 @@ def _age_label(state: str, age: int | None) -> dict:
             return {"label": "MATURE SETUP", "emoji": "⏳", "zone": "mature"}
 
     return {"label": state, "emoji": "", "zone": "unknown"}
+
+
+@router.get("/top-by-cas")
+def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
+    """
+    Return the top N breakouts by Capital Allocation Score (CAS).
+    Reads daily_prices, applies 6 eligibility + 3 sub-gates, computes CAS
+    for survivors, ranks by CAS DESC, returns the top `limit`.
+
+    Decision 104 (N+3 — Browser Visibility) — this is the endpoint that
+    makes Decision 100's CAS output visible in the browser.
+    """
+    query = """
+        SELECT
+            symbol, close, volume, breakout_state, breakout_age, ema_50, ema_200,
+            ema_20, weekly_trend_score, overhead_supply_score, rs_90d,
+            qif_score, data_completeness_pct, data_age_days,
+            winner_profit_pct, concentration_weight_pct
+        FROM daily_prices
+        WHERE date = (SELECT MAX(date) FROM daily_prices)
+          AND breakout_state = 'BROKEN_OUT'
+        ORDER BY symbol
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(query)
+        rows = cur.fetchall()
+    except Exception as e:
+        log.error(f"Top-by-CAS query failed: {e}")
+        return []
+    finally:
+        cur.close()
+
+    if not rows:
+        return []
+
+    config = _cas_config
+    results = []
+    for row in rows:
+        # 1. Eligibility
+        passed, _ = check_eligibility(row, config)
+        if not passed:
+            continue
+
+        # 2. Market sub-gates
+        passed, _ = check_market_subgates(row, config)
+        if not passed:
+            continue
+
+        # 3. Market Score (weighted sum of 7 factors)
+        market_score = compute_market_score(row, config)
+
+        # 4. Portfolio Allocation Score
+        cas = compute_portfolio_allocation_score(
+            market_score,
+            row.get("winner_profit_pct"),
+            row.get("concentration_weight_pct"),
+            config
+        )
+
+        # 5. Confidence stars
+        stars = compute_confidence_stars(row, None, {}, config)
+
+        # 6. Why checklist
+        why = render_why_checklist(row, config)
+
+        results.append({
+            "symbol": row["symbol"],
+            "cas": round(cas, 1),
+            "confidence_stars": stars,
+            "why_checklist": why,
+            "breakout_age": row.get("breakout_age"),
+            "breakout_age_emoji": "🔥" if row.get("breakout_age") == 0
+                                 else "🟢" if row.get("breakout_age") <= 1
+                                 else "🟡" if row.get("breakout_age") <= 3
+                                 else "⚪" if row.get("breakout_age") <= 5
+                                 else "⚫"
+        })
+
+    # Sort by CAS DESC, take top N
+    results.sort(key=lambda r: r["cas"], reverse=True)
+    return results[:min(limit, len(results))]
 
 
 @router.get("/map")

@@ -255,6 +255,14 @@ def ensure_required_tables(conn) -> None:
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS rolling_high_52w NUMERIC DEFAULT NULL;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS weekly_trend_score NUMERIC DEFAULT NULL;")
     cur.execute("ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS overhead_supply_score NUMERIC DEFAULT NULL;")
+
+    # Decision 104 (N+3 — CAS Browser Visibility) — auto-heal the CAS columns
+    # that the /api/breakout/top-by-cas endpoint reads. `cas_score` is the
+    # only NEW column (the other 4 already exist above). Loop is idempotent
+    # thanks to ADD COLUMN IF NOT EXISTS.
+    for col in ['cas_score', 'weekly_trend_score', 'overhead_supply_score', 'ema_100', 'rolling_high_52w']:
+        cur.execute(f"ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS {col} NUMERIC DEFAULT NULL")
+
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_daily_prices_weekly_trend_score "
         "ON daily_prices (date, weekly_trend_score) "
