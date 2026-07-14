@@ -279,19 +279,23 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
     config = _cas_config
     results = []
     for row in rows:
-        # 0. Enrich: proxy qif_score when missing (same fallback as CAS scanner)
+        # 0. Enrich: proxy qif_score + default regime (same fallback as CAS scanner)
         if row.get("qif_score") is None:
             proxy_q = config.get("market_subgates", {}).get("quality", {}).get("min_quality", 75)
             row["qif_score"] = proxy_q
+        if regime not in ("BULLISH", "SIDEWAYS", "BEARISH"):
+            regime = "BULLISH"
 
         # 1. Eligibility (now includes regime)
-        passed, _ = check_eligibility(row, regime, config)
+        passed, failed = check_eligibility(row, regime, config)
         if not passed:
+            log.warning(f"CAS eligibility FAILED for {row.get('symbol')}: failed gates={failed}")
             continue
 
         # 2. Market structure
-        passed, _ = compute_market_structure(row, config)
+        passed, failed_ms = compute_market_structure(row, config)
         if not passed:
+            log.warning(f"CAS market structure FAILED for {row.get('symbol')}: failed gates={failed_ms}")
             continue
 
         # 3. Build sub-scores and compute Market Score
