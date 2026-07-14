@@ -1,6 +1,3 @@
-import React from 'react';
-import AddStatusChip from './AddStatusChip';
-
 interface Props {
   symbol: string;
   cas: number;
@@ -57,7 +54,17 @@ export default function CapitalAllocationCard({
             {breakoutAge === 0 ? 'Today' : breakoutAge <= 1 ? 'Yesterday' : `Day ${breakoutAge}`}
           </span>
         </div>
-        <AddStatusChip action={actionChip} />
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          backgroundColor: actionChip === 'ADD' ? '#22c55e20' : actionChip === 'BUY' ? '#3b82f620' : actionChip === 'WATCH' ? '#f59e0b20' : '#6b728020',
+          color: actionChip === 'ADD' ? '#22c55e' : actionChip === 'BUY' ? '#3b82f6' : actionChip === 'WATCH' ? '#f59e0b' : '#6b7280',
+          padding: '2px 6px',
+          borderRadius: '4px',
+          fontSize: '10px',
+          fontWeight: 'bold',
+          border: `1px solid ${actionChip === 'ADD' ? '#22c55e40' : actionChip === 'BUY' ? '#3b82f640' : actionChip === 'WATCH' ? '#f59e0b40' : '#6b728040'}`,
+        }}>{actionChip}</span>
       </div>
 
       <div className="cas-display" style={{

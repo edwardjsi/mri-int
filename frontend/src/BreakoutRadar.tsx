@@ -13,8 +13,8 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
 
   useEffect(() => {
     api.getTopByCAS(5)
-      .then(data => setCasData(data || []))
-      .catch(err => console.error('Failed to fetch CAS data', err))
+      .then((data: any[]) => setCasData(data || []))
+      .catch((err: any) => console.error('Failed to fetch CAS data', err))
       .finally(() => setCasLoading(false));
   }, []);
 
@@ -139,7 +139,7 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
             "Which breakout deserves fresh capital today?" — ranked by CAS (Decision 104)
           </p>
           <div className="cas-top-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-            {casData.map((item, i) => (
+            {casData.map((item) => (
               <CapitalAllocationCard
                 key={item.symbol}
                 symbol={item.symbol}
