@@ -38,6 +38,7 @@ COPY engine_guidance/ ./engine_guidance/
 COPY engine_debate/ ./engine_debate/
 COPY engine_mosi/ ./engine_mosi/
 COPY api/ ./api/
+COPY config/ ./config/
 COPY scripts/ ./scripts/
 
 # Copy built frontend from Stage 1 into the api/static directory
