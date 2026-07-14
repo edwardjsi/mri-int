@@ -8,7 +8,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from engine_mosi.mosi_lite import analyze_stock
 from engine_core.capital_allocation import (
-    load_config, check_eligibility, check_market_subgates,
+    load_config, check_eligibility, compute_market_structure,
     compute_market_score, compute_portfolio_allocation_score,
     compute_confidence_stars, render_why_checklist
 )
@@ -269,8 +269,8 @@ def get_top_by_cas(limit: int = 5, conn=Depends(get_db)):
         if not passed:
             continue
 
-        # 2. Market sub-gates
-        passed, _ = check_market_subgates(row, config)
+        # 2. Market structure
+        passed, _ = compute_market_structure(row, config)
         if not passed:
             continue
 
