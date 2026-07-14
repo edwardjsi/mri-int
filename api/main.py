@@ -71,6 +71,26 @@ def on_startup():
                     logger.info(f"🔍 Background priming started for {len(all_syms)} stocks")
         except Exception as e:
             logger.warning(f"Auto-prime check skipped: {e}")
+
+        # Auto-trigger indicator engine for any symbols needing computation
+        try:
+            cur3 = conn.cursor()
+            cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
+            null_count = cur3.fetchone()[0]
+            cur3.close()
+            if null_count > 0:
+                import threading
+                def _run_indicators():
+                    from engine_core.indicator_engine import compute_indicators_all
+                    try:
+                        logger.info(f"🏃 Auto-triggering indicator engine for {null_count} stocks with NULL breakout_state...")
+                        compute_indicators_all()
+                        logger.info("✅ Indicator engine auto-trigger complete")
+                    except Exception as e2:
+                        logger.warning(f"Indicator engine auto-trigger failed: {e2}")
+                threading.Thread(target=_run_indicators, daemon=True).start()
+        except Exception as e:
+            logger.warning(f"Indicator engine auto-trigger check skipped: {e}")
     except Exception as e:
         logger.error(f"❌ Database Schema Sync FAILED: {e}")
     finally:
