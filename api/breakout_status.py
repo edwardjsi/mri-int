@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/breakout", tags=["Breakout Status"])
 log = logging.getLogger(__name__)
 
 # Load CAS configuration once on import
-_cas_config = load_config()
+_cas_config = load_config("config/capital_allocation.yaml")
 
 
 # ── Helper: enrich radar rows with MOSI Lite data ────────────────────────
