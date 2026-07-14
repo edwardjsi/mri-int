@@ -79,8 +79,24 @@ def on_startup():
             total_rows = cur3.fetchone()[0]
             cur3.execute("SELECT COUNT(*) FROM daily_prices WHERE breakout_state IS NULL")
             null_count = cur3.fetchone()[0]
+            cur3.execute("SELECT COUNT(*) FROM cas_recommendations")
+            cas_rec_count = cur3.fetchone()[0]
             cur3.close()
             import threading
+            from datetime import date
+
+            def _run_cas_scanner():
+                """Run CAS scanner to populate cas_recommendations table."""
+                from engine_core.capital_allocation import load_config
+                from engine_core.cas_recommendations import scan_and_record_eligible_recommendations
+                try:
+                    cfg = load_config("config/capital_allocation.yaml")
+                    logger.info("🏃 Running CAS scanner to seed cas_recommendations...")
+                    stats = scan_and_record_eligible_recommendations(date.today(), cfg)
+                    logger.info(f"✅ CAS scanner complete — {stats}")
+                except Exception as e3:
+                    logger.warning(f"CAS scanner auto-trigger failed: {e3}")
+
             if total_rows == 0:
                 def _run_full_pipeline():
                     from engine_core.orchestrator import run_full_mri_pipeline
@@ -90,6 +106,8 @@ def on_startup():
                         logger.info("✅ Full MRI pipeline auto-trigger complete")
                     except Exception as e2:
                         logger.warning(f"Full pipeline auto-trigger failed: {e2}")
+                    else:
+                        _run_cas_scanner()
                 threading.Thread(target=_run_full_pipeline, daemon=True).start()
             elif null_count > 0:
                 def _run_indicators():
@@ -100,11 +118,16 @@ def on_startup():
                         logger.info("✅ Indicator engine auto-trigger complete")
                     except Exception as e2:
                         logger.warning(f"Indicator engine auto-trigger failed: {e2}")
+                    else:
+                        _run_cas_scanner()
                 threading.Thread(target=_run_indicators, daemon=True).start()
+            elif cas_rec_count == 0:
+                logger.info("🏃 Indicators already computed — running CAS scanner only...")
+                threading.Thread(target=_run_cas_scanner, daemon=True).start()
             else:
-                logger.info(f"✅ daily_prices has {total_rows} rows, all indicators computed — no auto-trigger needed")
+                logger.info(f"✅ daily_prices has {total_rows} rows, all indicators + CAS recommendations ready")
         except Exception as e:
-            logger.warning(f"Indicator engine auto-trigger check skipped: {e}")
+            logger.warning(f"Indicator engine/ CAS scanner auto-trigger check skipped: {e}")
     except Exception as e:
         logger.error(f"❌ Database Schema Sync FAILED: {e}")
     finally:
