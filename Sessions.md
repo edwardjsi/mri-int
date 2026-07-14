@@ -2894,3 +2894,36 @@ G3/G4 indicators could influence the outcome. This is a market/universe
 | `Calibration.md` | modified | +35 (P6.5 validation verdict entry) |
 | `Sessions.md` | modified | +70 (this entry) |
 | `Progress.md` | modified | +25/-8 (P6.5 shipped, P7 next) |
+
+---
+
+## **July 14, 2026: Frontend Build Fixes + CAS API Debug — Session N+4**
+
+**Objective**: Fix frontend build errors, debug backend CAS endpoint, and make CAS banner visible on Breakout Radar page.
+
+**Actions**:
+
+1. **Frontend build fixes** (`8c07cec`):
+   - Added `getTopByCAS()` to `frontend/src/api.ts`
+   - Fixed implicit `any` types and unused imports in `BreakoutRadar.tsx`
+   - Replaced `AddStatusChip` (wrong prop name) with inline action chip in `CapitalAllocationCard.tsx`
+
+2. **Backend import fix** (`3e66967`): Renamed `check_market_subgates` → `compute_market_structure` in `api/breakout_status.py`
+
+3. **Config path fix** (`f9187d5`): Passed `config/capital_allocation.yaml` to `load_config()` in `breakout_status.py`
+
+4. **Docker fix** (`c107f9b`): Added `COPY config/ ./config/` to Dockerfile (config/ directory was not included in the image)
+
+5. **CAS endpoint rewrite** (`4478787`): Fixed 4 bugs in `/breakout/top-by-cas`:
+   - Removed `breakout_state = 'BROKEN_OUT'` query filter (eligibility handles it)
+   - Added missing columns (`avg_volume_20d`, `rolling_high_52w`, `ema_100_slope_5d`) to SELECT
+   - Fetched regime and passed to `check_eligibility()`
+   - Built proper `sub_scores` dict for `compute_market_score()` instead of passing raw row
+
+6. **CAS banner always visible** (`37a21db`): Changed frontend to always render the CAS section — shows cards or a "no data yet" message
+
+7. **Auto-trigger indicator engine** (`b360a95`): Added background auto-trigger of `compute_indicators_all()` on server startup for stocks with NULL `breakout_state`
+
+**Current state**: Server running at `mri-api.up.railway.app`. CAS banner visible on Breakout Radar page but showing "no data yet" — indicator engine needs to run to populate breakout states and scores. Auto-trigger will process on next deploy/restart.
+
+**Next**: Re-deploy and wait for indicator engine to complete, then refresh the Breakout Radar page to see CAS cards.
