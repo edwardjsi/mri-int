@@ -417,17 +417,6 @@ export const api = {
     apiFetch(`/unified/scan/${encodeURIComponent(symbol)}`, { method: 'POST' }),
   scanUnifiedWithEmail: (symbol: string) =>
     apiFetch(`/unified/scan/${encodeURIComponent(symbol)}?include_email=true`, { method: 'POST' }),
-  // Decisions
-  getDecisions: (params?: { limit?: number; offset?: number; search?: string }) => {
-    const qs = new URLSearchParams();
-    if (params?.limit != null) qs.set('limit', String(params.limit));
-    if (params?.offset != null) qs.set('offset', String(params.offset));
-    if (params?.search) qs.set('search', params.search);
-    const q = qs.toString();
-    return apiFetch(`/decisions${q ? '?' + q : ''}`);
-  },
-  getDecision: (decisionNumber: number) => apiFetch(`/decisions/${decisionNumber}`),
-  getRawDecisions: () => apiFetch('/decisions/raw'),
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
