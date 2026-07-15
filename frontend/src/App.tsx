@@ -13,6 +13,7 @@ import ManagementIntegrityPanel from './ManagementIntegrityPanel';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import PeExpansionReport from './PeExpansionReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
+import DecisionsPage from './DecisionsPage';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2647,7 +2648,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'decisions'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2736,6 +2737,9 @@ function App() {
           <button className={`nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')}>
             <span className="nav-icon">🧠</span> Conviction Engine
           </button>
+          <button className={`nav-link ${page === 'decisions' ? 'active' : ''}`} onClick={() => setPage('decisions')}>
+            <span className="nav-icon">📋</span> Decisions Log
+          </button>
           {isAdmin() && (
             <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
               <span className="nav-icon">🛡️</span> Platform Intelligence
@@ -2760,7 +2764,8 @@ function App() {
                       page === 'perx' ? 'PERX Institutional Scan' :
 page === 'unified' ? 'Unified Institutional Scan' :
                       page === 'guidance' ? 'Management Credibility' :
-                      page === 'admin' ? 'Platform Intelligence' : 'My Performance'}
+                      page === 'admin' ? 'Platform Intelligence' :
+                      page === 'decisions' ? 'Architectural Decisions' : 'My Performance'}
           </h1>
         </header>
         <div className="content-body">
@@ -2777,6 +2782,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
           {page === 'conviction' && <ConvictionEngine onSelectStock={setSelectedStock} />}
           {page === 'unified' && <div />}
           {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
+          {page === 'decisions' && <DecisionsPage onBack={() => setPage('dashboard')} />}
         </div>
       </main>
 
@@ -2800,6 +2806,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
         <button className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')} title="Unified Scan">🧠</button>
         <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
         <button className={`mobile-nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')} title="Conviction Engine">🧠</button>
+        <button className={`mobile-nav-link ${page === 'decisions' ? 'active' : ''}`} onClick={() => setPage('decisions')} title="Decisions Log">📋</button>
         {isAdmin() && (
           <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
         )}
