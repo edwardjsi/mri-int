@@ -62,7 +62,7 @@ def parse_decisions(content: str) -> list:
     return decisions
 
 
-@router.get("/")
+@router.get("")
 async def get_all_decisions(
     limit: Optional[int] = Query(None, ge=1, le=200),
     offset: int = Query(0, ge=0),
