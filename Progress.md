@@ -2986,3 +2986,61 @@ cause, so P7 is now unblocked.
   finalise `Sessions.md` + `Progress.md`, commit + push.
 - **Decision 104** (Earn the Tranche Policy) remains deferred until after
   Decision 103 closes.
+
+---
+
+## 📅 Session: July 15, 2026 — Decisions Log Deployment Fix
+
+**Duration**: ~30 min, afternoon IST
+**Status: ✅ Complete — verified live on Railway**
+
+### What Was Done
+
+#### 1. Diagnosis — `Decisions.md` missing from Docker image ✅
+
+- The `/api/decisions` router at `api/decisions.py` reads `Decisions.md` from
+  the container's `/app` directory via `os.path.exists()`. Neither `Dockerfile`
+  nor `Dockerfile.api` copied the file in, so the early-exit returned
+  `{"decisions": [], "total": 0}` — the "big fat 0" the user saw.
+- Verified the regex parser works correctly: all 212 decision blocks parse,
+  Decision 100 included.
+
+#### 2. Fix — `COPY Decisions.md ./Decisions.md` ✅
+
+- Added the COPY instruction to both `Dockerfile` (line 43) and
+  `Dockerfile.api` (line 22) in commit `f9d58a9`.
+- The API endpoint and frontend page were already wired in commit `d20bfc7`
+  (added `api/decisions.py` + `DecisionsPage.tsx` + wiring).
+
+#### 3. Verification — deployed API returns 212 decisions ✅
+
+- ```
+  GET https://mri-api.up.railway.app/api/decisions/?limit=3 → total: 212
+  Decisions: #103 V2 Pyramiding, #102 V1.1d Scope, #101 Expert Review
+  GET https://mri-api.up.railway.app/api/decisions/100 → found
+    number=100, title="Capital Allocation Score V1.0 (rev 3)"
+  ```
+
+#### 4. Documentation ✅
+
+- `docs/DECISIONS_API_DEPLOYMENT_FIX_2026-07-15.md` — full incident report with
+  root cause, resolution, and verification checklist.
+
+### Files Changed
+
+```
+Dockerfile              | 3 ++-
+Dockerfile.api          | 1 +
+api/decisions.py        | 124 ++++++++++++++++++++
+api/main.py             |   2 +
+frontend/src/App.tsx    |  11 ++-
+frontend/src/DecisionsPage.tsx | 208 ++++++++++++++++++++++++++
+frontend/src/api.ts     |  13 ++-
+7 files changed, 358 insertions(+), 4 deletions(-)
+```
+
+### Decision Status
+
+- **Decision 100** — Capital Allocation Score V1.0 — unchanged, still APPROVED.
+- **Decision 101** — unchanged.
+- **Decision 103** — unchanged.

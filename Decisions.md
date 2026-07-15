@@ -2610,7 +2610,7 @@ If any target missed → Calibration.md journal entry + tighten; do NOT silently
 
 **Calibration freeze:** All 5 new gate thresholds are `PROPOSED`. Move to `VALIDATED` only after P6 backtest hits all 6 success metric targets. No weight/gate tweaks for 100 ADD recommendations post-merge.
 
-**Status:** APPROVED (2026-07-13) — P1 (docs), P2 (migration + indicators), P3 (engine integration), P4 (API layer), P5 (frontend), P6 (backtest script + doc wrap-up), and P6.5 (validation verdict) all shipped. P6d (calibration flip) remains blocked until ≥100 live ADD recommendations exist. P7 (final doc wrap-up + push) is the only remaining phase.
+**Status:** FINAL — executed (2026-07-15). All 7 phases shipped. P6d (calibration flip) remains blocked until ≥100 live ADD recommendations exist; this is a data-natural blocker, not an implementation gap.
 
 **Implementation log:**
 - 2026-07-13 — P1 shipped (commit `ffb3c32`): design docs, YAML config, calibration registry, journal entries.
@@ -2620,5 +2620,6 @@ If any target missed → Calibration.md journal entry + tighten; do NOT silently
 - 2026-07-13 — P5 shipped (commit `ade1c28`): `AddStatusChip.tsx`, `BreakoutRadar.tsx` ADD Status column, API helpers.
 - 2026-07-13 — P6 shipped (commit `b86f0c5`): `engine_core/backtest_v2_pyramiding.py` + doc wrap-up; 0 ADD signals due to data-coverage gap.
 - 2026-07-13 — P6.5 shipped: validation verdict documented. Root cause of zero ADDs confirmed: max CAS 78.45 (< 85), all rows 3 stars (< 4), engine mechanically sound.
+- 2026-07-15 — **P7 shipped**: `Sessions.md` + `Progress.md` finalised, `docs/DECISIONS_API_DEPLOYMENT_FIX_2026-07-15.md` archived. All Decision 103 phases closed. Status flipped from APPROVED → FINAL.
 
 **Calibration debt:** G1–G5 entries in `config/calibration_registry.yaml` remain `hypothesis` / `validated_after: null`. They can flip to `validated` only after the P6 backtest succeeds on a meaningful sample of ADD signals (owner threshold: 100 ADD recommendations observed live).

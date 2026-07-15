@@ -2927,3 +2927,33 @@ G3/G4 indicators could influence the outcome. This is a market/universe
 **Current state**: Server running at `mri-api.up.railway.app`. CAS banner visible on Breakout Radar page but showing "no data yet" — indicator engine needs to run to populate breakout states and scores. Auto-trigger will process on next deploy/restart.
 
 **Next**: Re-deploy and wait for indicator engine to complete, then refresh the Breakout Radar page to see CAS cards.
+
+---
+
+## **July 15, 2026: Decisions Log API — Deployment Fix**
+
+**Objective**: Make the Decisions Log page (`/decisions`) serve the full 212-entry
+architectural decisions log instead of returning `total: 0`.
+
+**Diagnosis**: `Decisions.md` was not copied into the Docker image. The
+`api/decisions.py` router resolved the path to `/app/Decisions.md`, but neither
+`Dockerfile` nor `Dockerfile.api` included `COPY Decisions.md ./Decisions.md`,
+so `os.path.exists()` returned `False` and the handler returned the early-exit
+`{"decisions": [], "total": 0}`.
+
+**Actions**:
+
+- **Commit `d20bfc7`**: Added `api/decisions.py` (regex parser, 3 endpoints) +
+  `frontend/src/DecisionsPage.tsx` (search, pagination, detail modal) + wiring.
+- **Commit `f9d58a9`**: Added `COPY Decisions.md ./Decisions.md` to both
+  `Dockerfile` (line 43) and `Dockerfile.api` (line 22).
+- **Verification**: Deployed API confirmed `total: 212`, Decision 100 returns
+  full data:
+  ```
+  GET /api/decisions/?limit=3 → 212 decisions, top = #103, #102, #101
+  GET /api/decisions/100 → number=100, title="Capital Allocation Score V1.0 (rev 3)"
+  ```
+
+**Files changed**: `Dockerfile`, `Dockerfile.api`, `api/decisions.py`,
+`api/main.py`, `frontend/src/App.tsx`, `frontend/src/DecisionsPage.tsx`,
+`frontend/src/api.ts` — 7 files, +358/-4 lines.
