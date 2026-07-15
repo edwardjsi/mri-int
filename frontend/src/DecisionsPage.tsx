@@ -27,7 +27,7 @@ export default function DecisionsPage({ onBack }: { onBack?: () => void }) {
   const loadDecisions = async () => {
     try {
       setLoading(true);
-      const res = await api.getDecisions({ limit: 200 });
+      const res = await api.getDecisions({ limit: 300 });
       setDecisions(res.decisions || []);
       setError(null);
     } catch (err: any) {

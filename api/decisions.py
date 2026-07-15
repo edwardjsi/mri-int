@@ -59,12 +59,21 @@ def parse_decisions(content: str) -> list:
     
     # Sort by number descending (newest first)
     decisions.sort(key=lambda x: x["number"], reverse=True)
-    return decisions
+    
+    # Deduplicate by number, keeping the longest raw entry per decision
+    # (duplicates exist in Decisions.md for #095 and #096)
+    seen: set[int] = set()
+    unique: list[dict] = []
+    for d in decisions:
+        if d["number"] not in seen:
+            seen.add(d["number"])
+            unique.append(d)
+    return unique
 
 
 @router.get("")
 async def get_all_decisions(
-    limit: Optional[int] = Query(None, ge=1, le=200),
+    limit: Optional[int] = Query(None, ge=1, le=500),
     offset: int = Query(0, ge=0),
     search: Optional[str] = Query(None)
 ):
