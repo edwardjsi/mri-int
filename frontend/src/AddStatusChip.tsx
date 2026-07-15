@@ -198,57 +198,140 @@ const AddStatusChip: React.FC<Props> = ({ symbol, clientId }) => {
             zIndex: 1000,
             backgroundColor: '#1f2937',
             color: '#f3f4f6',
-            padding: '12px',
-            borderRadius: '6px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            minWidth: '280px',
-            fontSize: '11px',
-            lineHeight: '1.4',
+            padding: '14px',
+            borderRadius: '8px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            minWidth: '300px',
+            maxWidth: '360px',
+            fontSize: '13px',
+            lineHeight: '1.5',
+            border: '1px solid #374151',
           }}
         >
-          <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '6px', color: meta.color }}>
+          {/* State header */}
+          <div style={{
+            fontWeight: 'bold',
+            fontSize: '14px',
+            marginBottom: '10px',
+            color: meta.color,
+            padding: '4px 10px',
+            backgroundColor: `${meta.color}15`,
+            borderRadius: '6px',
+            display: 'inline-block',
+          }}>
             {meta.emoji} {meta.label}
           </div>
-          {eligibility.cas_score != null && (
-            <div style={{ color: '#9ca3af' }}>
-              CAS: <span style={{ color: '#f3f4f6' }}>{Number(eligibility.cas_score).toFixed(1)}</span>
-              {eligibility.cas_action && <> · Action: <span style={{ color: '#f3f4f6' }}>{eligibility.cas_action}</span></>}
-            </div>
-          )}
-          {eligibility.breakout_state && (
-            <div style={{ color: '#9ca3af' }}>
-              Breakout: <span style={{ color: '#f3f4f6' }}>{eligibility.breakout_state}</span>
-            </div>
-          )}
-          {eligibility.resistance_source && (
-            <div style={{ color: '#9ca3af' }}>
-              Resistance: <span style={{ color: '#f3f4f6' }}>{eligibility.resistance_source}</span>
-            </div>
-          )}
-          {eligibility.has_existing_position !== undefined && (
-            <div style={{ color: '#9ca3af' }}>
-              Existing Position: <span style={{ color: eligibility.has_existing_position ? '#22c55e' : '#f3f4f6' }}>
-                {eligibility.has_existing_position ? 'YES' : 'NO'}
-              </span>
-            </div>
-          )}
+
+          {/* Key metrics row — compact cards */}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+            marginBottom: '10px',
+          }}>
+            {eligibility.cas_score != null && (
+              <div style={{ background: '#111827', padding: '4px 10px', borderRadius: '6px', minWidth: '60px' }}>
+                <span style={{ color: '#6b7280', fontSize: '11px', display: 'block' }}>CAS</span>
+                <span style={{ color: '#f3f4f6', fontWeight: 'bold', fontSize: '16px' }}>
+                  {Number(eligibility.cas_score).toFixed(1)}
+                </span>
+              </div>
+            )}
+            {eligibility.cas_action && (
+              <div style={{ background: '#111827', padding: '4px 10px', borderRadius: '6px' }}>
+                <span style={{ color: '#6b7280', fontSize: '11px', display: 'block' }}>Action</span>
+                <span style={{ color: '#f3f4f6', fontWeight: 'bold' }}>{eligibility.cas_action}</span>
+              </div>
+            )}
+            {eligibility.has_existing_position !== undefined && (
+              <div style={{ background: '#111827', padding: '4px 10px', borderRadius: '6px' }}>
+                <span style={{ color: '#6b7280', fontSize: '11px', display: 'block' }}>Position</span>
+                <span style={{
+                  color: eligibility.has_existing_position ? '#22c55e' : '#ef4444',
+                  fontWeight: 'bold',
+                }}>
+                  {eligibility.has_existing_position ? '✅ YES' : '⛔ NO'}
+                </span>
+              </div>
+            )}
+            {eligibility.breakout_state && (
+              <div style={{ background: '#111827', padding: '4px 10px', borderRadius: '6px' }}>
+                <span style={{ color: '#6b7280', fontSize: '11px', display: 'block' }}>Breakout</span>
+                <span style={{ color: '#f3f4f6', fontWeight: 'bold', fontSize: '11px' }}>
+                  {eligibility.breakout_state === 'BROKEN_OUT' ? '✅ Active' : eligibility.breakout_state}
+                </span>
+              </div>
+            )}
+          </div>
 
           {gr && (
             <>
-              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #374151' }}>
-                <div style={{ color: '#9ca3af', marginBottom: '4px' }}>
-                  Gates: <span style={{ color: meta.color, fontWeight: 'bold' }}>
-                    {gr.passed}/{gr.total} passed ({gr.score_pct}%)
-                  </span>
+              {/* Gate progress bar */}
+              <div style={{
+                display: 'flex',
+                gap: '6px',
+                marginBottom: '10px',
+                padding: '6px 10px',
+                backgroundColor: '#111827',
+                borderRadius: '6px',
+                alignItems: 'center',
+              }}>
+                <div style={{
+                  flex: 1,
+                  height: '8px',
+                  backgroundColor: '#374151',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: `${(gr.passed / gr.total) * 100}%`,
+                    height: '100%',
+                    backgroundColor: gr.passed === gr.total ? '#22c55e' : '#f59e0b',
+                    borderRadius: '4px',
+                    transition: 'width 0.3s',
+                  }} />
                 </div>
+                <span style={{ color: '#9ca3af', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                  {gr.passed}/{gr.total} gates
+                  <span style={{ color: meta.color, marginLeft: '4px' }}>({gr.score_pct}%)</span>
+                </span>
+              </div>
+
+              {/* Gate rows with colored backgrounds */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {gateOrder.map((code) => {
                   const blocked = gr.blocked?.includes(code);
                   const passed = !blocked;
                   return (
-                    <div key={code} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                      <span style={{ color: '#9ca3af' }}>{gateLabels[code] || code}</span>
-                      <span style={{ color: passed ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
-                        {passed ? '✓' : '✗'}
+                    <div
+                      key={code}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '5px 8px',
+                        borderRadius: '5px',
+                        backgroundColor: passed ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                        border: `1px solid ${passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                      }}
+                    >
+                      <span style={{
+                        color: passed ? '#4ade80' : '#fca5a5',
+                        fontSize: '12px',
+                        fontWeight: passed ? 'normal' : 'bold',
+                      }}>
+                        {passed ? '✓' : '✗'} {gateLabels[code] || code}
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 8px',
+                        borderRadius: '4px',
+                        color: passed ? '#22c55e' : '#ef4444',
+                        backgroundColor: passed ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                      }}>
+                        {passed ? 'PASS' : 'FAIL'}
                       </span>
                     </div>
                   );
