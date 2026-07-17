@@ -18,10 +18,11 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
   useEffect(() => {
     if (!symbol) return;
     setAaeLoading(true);
+    const timer = setTimeout(() => setAaeLoading(false), 5000);
     api.getAaeScan(symbol)
       .then((r: any) => { if (r && !r.error) setAaeData(r); })
       .catch(() => {})
-      .finally(() => setAaeLoading(false));
+      .finally(() => { clearTimeout(timer); setAaeLoading(false); });
   }, [symbol]);
 
   if (!symbol) {
@@ -98,7 +99,10 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           )}
 
           {/* AAE */}
-          {aaeLoading && <div className="card" style={{ padding: '16px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading AAE data...</div>}
+          {aaeLoading && <div className="card" style={{ padding: '16px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading AAE institutional scan... (requires login)</div>}
+          {!aaeLoading && !aaeData && <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', fontSize: '11px', color: '#64748b', border: '1px dashed #334155' }}>
+            🧠 AAE data not available. Log in and click again to trigger the institutional scan.
+          </div>}
           {aaeData && (
             <div className="card" style={{ padding: '16px', marginBottom: '16px', border: '1px solid #4338ca', background: '#1e1b4b' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -181,6 +185,58 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Primer / Guide */}
+      <div className="card" style={{ padding: '20px', marginTop: '24px', border: '1px solid #334155', background: '#0f172a' }}>
+        <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📖 Understanding This Report</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px', color: '#cbd5e1' }}>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>⚡ MRI Score Breakdown</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              7 technical gates measuring momentum. Gates 1-5 are weighted (total 100%), gates 6-7 are bonus. 
+              Score ≥ 80 = strong momentum. All 7 pass = 🚀 Golden Setup.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>🛒 Breakout Decision</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              6 gates answering "should I buy this breakout?" 4+ passed = actionable. 
+              Checks decision score, technicals, weekly resistance, volume, breakout age, and conviction.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>🗣️ Management Credibility</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              Tracks what management promised in concall transcripts vs what they delivered. 
+              Verdict zones: ADD ZONE (trustworthy), HOLD ZONE, THESIS BROKEN (consistently miss).
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>📊 PE Expansion Signal</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              Institutional re-rating score. High score + Growth/Expansion lifecycle = company 
+              moving from value to growth phase. Derived from narrative analysis of transcripts.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>📊 Quality Fundamentals</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              7-agent fundamental analysis from financial statements. Categories: Explosive Improver, 
+              Stable Compounder, Turnaround, Value Trap, Distressed.
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: '#60a5fa' }}>🧠 AAE Institutional Scan</strong>
+            <p style={{ margin: '4px 0', fontSize: '11px', color: '#64748b' }}>
+              10-layer forensic audit covering governance, structural signals, macro alignment, 
+              and management integrity. Master score ≥ 80 = institutional-grade opportunity.
+              <em style={{ display: 'block', marginTop: '4px', color: '#f59e0b' }}>
+                Requires login. If blank, log in and click again.
+              </em>
+            </p>
+          </div>
         </div>
       </div>
 
