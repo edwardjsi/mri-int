@@ -312,6 +312,7 @@ export const api = {
     search112co: (q: string) => apiFetch(`/112co/search?q=${q}`),
     add112co: (symbol: string) => apiFetch(`/112co/add?symbol=${symbol}`, { method: 'POST' }),
     remove112co: (symbol: string) => apiFetch(`/112co/remove?symbol=${symbol}`, { method: 'POST' }),
+    email112coReport: (symbol: string) => apiFetch(`/112co/email/${symbol}`, { method: 'POST' }),
 
     // Decision 103 V2 — CAS Recommendations API (P4c + P4d)
     listCasRecommendations: (params?: { symbol?: string; days?: number; limit?: number }) => {
