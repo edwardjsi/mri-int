@@ -61,3 +61,34 @@ Allow the user to add and delete stocks from the 112Co universe directly from th
 2. Frontend API client
 3. Frontend UI: search, add, remove, toasts
 4. Build + commit + push
+
+
+---
+
+## ✅ Post-Plan Addition: Email Report (2026-07-17)
+
+**Status:** Implemented and pushed (`a45e1385`)
+
+### What was added
+
+- **`POST /api/112co/email/{symbol}`** — sends a formatted HTML research report email to the authenticated user
+- **📧 Email Report button** in StockDetailsModal (alongside existing AAE audit button)
+
+### Email contents
+
+| Section | Data |
+|---------|------|
+| ⚡ Technical Summary | Price, MRI Score (color-coded), Breakout State, Quality Verdict, EMA 50/200 |
+| 📊 PE Expansion Signal | PE Expansion Score, Lifecycle Stage |
+
+### Cost
+
+- **No LLM cost** — all data pulled from existing database tables (`daily_prices`, `stock_scores`, `quality_verdicts`, `perx_pe_scores`)
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `api/one12co.py` | +65/-21 lines — enhanced email endpoint with PE + quality data |
+| `frontend/src/App.tsx` | +📧 Email Report button in StockDetailsModal |
+| `frontend/src/api.ts` | +`email112coReport()` API call |
