@@ -23,11 +23,11 @@ function ScoreBreakdown({ conditions, score }: { conditions: any, score: number 
   const items = [
     { label: '1. Trend Integrity (EMA 50 > 200)', value: conditions.ema_50_above_200, weight: '25%' },
     { label: '2. Long-term Bias (200 EMA Slope > 0)', value: conditions.ema_200_slope_positive, weight: '25%' },
-    { label: '3. Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '15%' },
-    { label: '4. Alpha-Strength (Near 6m High)', value: conditions.at_6m_high, weight: '15%' },
-    { label: '5. Breakout Confirmation (10d High)', value: conditions.breakout_10d, weight: '10%' },
-    { label: '6. Liquidity Gate (Volume Surge)', value: conditions.volume_surge, weight: '5%' },
-    { label: '7. Price Quality (Day Range %)', value: conditions.price_quality, weight: '5%' },
+    { label: '3. Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '20%' },
+    { label: '4. Near 6-Month High', value: conditions.at_6m_high, weight: '20%' },
+    { label: '5. Volume Surge (≥ 1.3x Avg)', value: conditions.volume_surge, weight: '10%' },
+    { label: '6. Breakout Confirmation (10d High)', value: conditions.breakout_10d, weight: '\uD83D\uDE80 Bonus' },
+    { label: '7. Price Quality (Top 30% of Range)', value: conditions.price_quality, weight: '\u2728 Bonus' },
   ];
 
   const isGoldenSetup = score === 100;
