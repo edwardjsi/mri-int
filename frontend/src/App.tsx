@@ -2736,7 +2736,8 @@ function App() {
 
   if (page === 'research') {
     const rSymbol = selectedStock ? (selectedStock.symbol || selectedStock) : '';
-    return <ResearchReport symbol={rSymbol} onBack={() => setPage('dashboard')} />;
+    if (!rSymbol) return <div className="loading">Loading research report...</div>;
+    return <ResearchReport symbol={rSymbol} onBack={() => { setPage('dashboard'); setSelectedStock(null); }} />;
   }
   if (page === 'peexpansion') {
     // Symbol can come from URL param (?symbol=POLYCAB) or from selectedStock.
