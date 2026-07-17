@@ -2831,7 +2831,7 @@ page === 'unified' ? 'Unified Institutional Scan' :
           {page === 'performance' && <PerformancePage />}
           {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
-          {page === '112co' && <One12CoDashboard onSelectStock={setSelectedStock} />}
+          {page === '112co' && <One12CoDashboard onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
           {page === 'breakout' && <BreakoutRadarPage onSelectStock={setSelectedStock} />}
           {page === 'perx' && <PerxPage />}
           {page === 'guidance' && <GuidanceCheck />}

@@ -89,7 +89,7 @@ function sortItems(items: One12CoStock[], col: SortCol, dir: 'asc' | 'desc'): On
   });
 }
 
-export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+export default function One12CoDashboard({ onViewResearch }: { onViewResearch: (stock: any) => void }) {
   const [stocks, setStocks] = useState<One12CoStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +206,7 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
         </thead>
         <tbody>
           {items.map(item => (
-            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(enrichStock(item))}>
+            <tr key={item.symbol} className="clickable-row" onClick={() => onViewResearch(item)}>
               <td className="font-bold">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>{item.symbol}</span>
