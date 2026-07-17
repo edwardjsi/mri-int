@@ -280,7 +280,7 @@ def email_112co_report(
         pe_score = pe_data.get('score', 'N/A')
         pe_lifecycle = pe_data.get('lifecycle_stage', 'N/A')
         
-                close_fmt = f"{close:,.2f}" if close else 'N/A'
+        close_fmt = f"{close:,.2f}" if close else 'N/A'
         ema50_fmt = f"{ema50:,.2f}" if ema50 else 'N/A'
         ema200_fmt = f"{ema200:,.2f}" if ema200 else 'N/A'
         
