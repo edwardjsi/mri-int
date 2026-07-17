@@ -229,7 +229,7 @@ def email_112co_report(
         pe_data = {}
         try:
             cur.execute("""
-                SELECT score, lifecycle_stage, narrative_intensity, fragility_level
+                SELECT pe_score AS score, generated_at
                 FROM perx_pe_scores
                 WHERE symbol = %s
                 ORDER BY generated_at DESC
@@ -380,9 +380,9 @@ def get_research_report(symbol: str, conn=Depends(get_db)):
         quality = {}
         try:
             cur.execute("""
-                SELECT category, total_score, revenue_score, margin_score,
+                SELECT category, score, revenue_score, margin_score,
                        leverage_score, wc_score, roce_score, evolution_score
-                FROM quality_verdicts WHERE symbol = %s ORDER BY date DESC LIMIT 1
+                FROM quality_verdicts WHERE symbol = %s ORDER BY updated_at DESC LIMIT 1
             """, (sym,))
             r = cur.fetchone()
             if r: quality = dict(r)
@@ -392,7 +392,7 @@ def get_research_report(symbol: str, conn=Depends(get_db)):
         pe = {}
         try:
             cur.execute("""
-                SELECT score, lifecycle_stage, narrative_intensity, fragility_level
+                SELECT pe_score AS score, generated_at
                 FROM perx_pe_scores WHERE symbol = %s ORDER BY generated_at DESC LIMIT 1
             """, (sym,))
             r = cur.fetchone()

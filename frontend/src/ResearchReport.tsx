@@ -163,8 +163,8 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
                   <div style={{ fontSize: '14px', fontWeight: 700, color: pe.score >= 70 ? '#22c55e' : '#f59e0b' }}>{pe.score}</div>
                 </div>
                 <div style={{ padding: '8px', border: '1px solid #334155', borderRadius: '4px', background: '#0f172a' }}>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>Lifecycle</div>
-                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{pe.lifecycle_stage || 'N/A'}</div>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>Generated</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{pe.generated_at ? new Date(pe.generated_at).toLocaleDateString() : 'N/A'}</div>
                 </div>
               </div>
             </div>
