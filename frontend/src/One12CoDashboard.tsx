@@ -42,30 +42,9 @@ const COL_DEFS: { key: SortCol; label: string }[] = [
   { key: 'mri_score', label: 'MRI' },
 ];
 
-/** Build the conditions object that ScoreBreakdown expects from our gate fields. */
-function buildConditions(stock: One12CoStock) {
-  return {
-    ema_50_above_200:      stock.gate_ema_50_200,
-    ema_200_slope_positive: stock.gate_ema_200_slope,
-    relative_strength:     stock.gate_rs,
-    at_6m_high:            stock.gate_6m_high,
-    volume_surge:          stock.gate_volume,
-    breakout_10d:          stock.gate_breakout_10d,
-    price_quality:         stock.gate_price_quality,
-  };
-}
 
-/** Gateway for the modal — attaches conditions + correct field names. */
-function enrichStock(stock: One12CoStock) {
-  return {
-    ...stock,
-    conditions: buildConditions(stock),
-    total_score: stock.mri_score,
-    score: stock.mri_score,
-    current_price: stock.close,
-    price: stock.close,
-  };
-}
+
+
 
 function sortItems(items: One12CoStock[], col: SortCol, dir: 'asc' | 'desc'): One12CoStock[] {
   return [...items].sort((a, b) => {
