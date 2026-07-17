@@ -334,3 +334,138 @@ def email_112co_report(
         return {"status": "ERROR", "message": str(e)}
     finally:
         cur.close()
+
+
+@router.get("/research/{symbol}")
+def get_research_report(symbol: str, conn=Depends(get_db)):
+    """Return ALL research data for a symbol in one shot."""
+    sym = symbol.upper().strip()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # 1. Technical + Gates from daily_prices + stock_scores
+        cur.execute("""
+            SELECT dp.close, dp.volume, dp.avg_volume_20d, dp.breakout_state, dp.breakout_age,
+                   dp.weekly_close_above_resistance, dp.ema_50, dp.ema_200, dp.rs_90d,
+                   dp.rsi_14, dp.atr_14, dp.rolling_high_6m,
+                   COALESCE(ss.total_score, 0) AS mri_score,
+                   COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
+                   COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
+                   COALESCE(ss.condition_rs, FALSE) AS gate_rs,
+                   COALESCE(ss.condition_6m_high, FALSE) AS gate_6m_high,
+                   COALESCE(ss.condition_volume, FALSE) AS gate_volume,
+                   COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
+                   COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality
+            FROM daily_prices dp
+            LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol
+                AND ss.date = (SELECT MAX(date) FROM stock_scores)
+            WHERE dp.symbol = %s
+              AND dp.date = (SELECT MAX(date) FROM daily_prices)
+            LIMIT 1
+        """, (sym,))
+        tech = cur.fetchone()
+        
+        # 2. Management Credibility
+        mgmt = {}
+        try:
+            cur.execute("""
+                SELECT total_promises, achieved_count, missed_count, accuracy_pct,
+                       current_verdict, trend
+                FROM management_credibility_scores WHERE symbol = %s LIMIT 1
+            """, (sym,))
+            r = cur.fetchone()
+            if r: mgmt = dict(r)
+        except: pass
+        
+        # 3. Quality Verdict
+        quality = {}
+        try:
+            cur.execute("""
+                SELECT category, total_score, revenue_score, margin_score,
+                       leverage_score, wc_score, roce_score, evolution_score
+                FROM quality_verdicts WHERE symbol = %s ORDER BY date DESC LIMIT 1
+            """, (sym,))
+            r = cur.fetchone()
+            if r: quality = dict(r)
+        except: pass
+        
+        # 4. PE Expansion
+        pe = {}
+        try:
+            cur.execute("""
+                SELECT score, lifecycle_stage, narrative_intensity, fragility_level
+                FROM perx_pe_scores WHERE symbol = %s ORDER BY generated_at DESC LIMIT 1
+            """, (sym,))
+            r = cur.fetchone()
+            if r: pe = dict(r)
+        except: pass
+        
+        # 5. Stock name from universe
+        stock_name = ""
+        try:
+            cur.execute("SELECT stock_name FROM universe_112co WHERE symbol = %s", (sym,))
+            r = cur.fetchone()
+            if r: stock_name = r['stock_name'] or ""
+        except: pass
+        
+        # Build response
+        result = {"symbol": sym, "stock_name": stock_name}
+        
+        if tech:
+            close = float(tech['close']) if tech['close'] else None
+            vol_mul = (tech['volume'] / tech['avg_volume_20d']) if tech.get('avg_volume_20d', 0) > 0 else 0
+            mri = tech['mri_score'] or 0
+            age = tech.get('breakout_age')
+            
+            result['technical'] = {
+                "close": close,
+                "volume": tech['volume'],
+                "avg_volume_20d": tech['avg_volume_20d'],
+                "volume_multiplier": round(vol_mul, 2),
+                "breakout_state": tech.get('breakout_state', 'MISSING'),
+                "breakout_age": age,
+                "weekly_close_above_resistance": bool(tech['weekly_close_above_resistance']),
+                "ema_50": float(tech['ema_50']) if tech['ema_50'] else None,
+                "ema_200": float(tech['ema_200']) if tech['ema_200'] else None,
+                "rs_90d": float(tech['rs_90d']) if tech['rs_90d'] else None,
+                "rsi_14": float(tech['rsi_14']) if tech['rsi_14'] else None,
+                "atr_14": float(tech['atr_14']) if tech['atr_14'] else None,
+                "mri_score": mri,
+                "gates": {
+                    "ema_50_200": bool(tech['gate_ema_50_200']),
+                    "ema_200_slope": bool(tech['gate_ema_200_slope']),
+                    "rs": bool(tech['gate_rs']),
+                    "six_m_high": bool(tech['gate_6m_high']),
+                    "volume": bool(tech['gate_volume']),
+                    "breakout_10d": bool(tech['gate_breakout_10d']),
+                    "price_quality": bool(tech['gate_price_quality']),
+                }
+            }
+            
+            # CAS 6 gates
+            cas_gates = [
+                {"label": "1. Decision Score \u2265 85",  "pass": mri >= 85,  "detail": f"{mri}/85"},
+                {"label": "2. MRI Technical \u2265 80",    "pass": mri >= 80,  "detail": f"{mri}/80"},
+                {"label": "3. Weekly Close > Resistance",  "pass": bool(tech['weekly_close_above_resistance'])},
+                {"label": "4. Volume \u2265 1.3\u00d7 Avg", "pass": vol_mul >= 1.3, "detail": f"{vol_mul:.2f}\u00d7"},
+                {"label": "5. Breakout Age \u2264 15d",     "pass": age is not None and age <= 15, "detail": f"{age}d" if age is not None else "--"},
+                {"label": "6. Overall Conviction \u2265 80%", "pass": mri >= 80, "detail": f"{mri}%"},
+            ]
+            result['cas'] = {
+                "gates": cas_gates,
+                "passed": sum(1 for g in cas_gates if g['pass']),
+                "total": 6,
+            }
+        
+        if mgmt:
+            result['management'] = mgmt
+        if quality:
+            result['quality'] = quality
+        if pe:
+            result['pe_expansion'] = pe
+        
+        return result
+    except Exception as e:
+        log.error(f"Research report error for {sym}: {e}")
+        return {"symbol": sym, "error": str(e)}
+    finally:
+        cur.close()
