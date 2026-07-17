@@ -15,6 +15,13 @@ interface One12CoStock {
   proximity_to_6m_high: number | null;
   breakout_state: string;
   mri_score: number;
+  gate_ema_50_200: boolean;
+  gate_ema_200_slope: boolean;
+  gate_rs: boolean;
+  gate_6m_high: boolean;
+  gate_volume: boolean;
+  gate_breakout_10d: boolean;
+  gate_price_quality: boolean;
   condition_breakout_10d: boolean;
   ema_50: number;
   ema_200: number;
@@ -33,6 +40,31 @@ const COL_DEFS: { key: SortCol; label: string }[] = [
   { key: 'proximity', label: '6m Prox' },
   { key: 'mri_score', label: 'MRI' },
 ];
+
+/** Build the conditions object that ScoreBreakdown expects from our gate fields. */
+function buildConditions(stock: One12CoStock) {
+  return {
+    ema_50_above_200:      stock.gate_ema_50_200,
+    ema_200_slope_positive: stock.gate_ema_200_slope,
+    relative_strength:     stock.gate_rs,
+    at_6m_high:            stock.gate_6m_high,
+    volume_surge:          stock.gate_volume,
+    breakout_10d:          stock.gate_breakout_10d,
+    price_quality:         stock.gate_price_quality,
+  };
+}
+
+/** Gateway for the modal — attaches conditions + correct field names. */
+function enrichStock(stock: One12CoStock) {
+  return {
+    ...stock,
+    conditions: buildConditions(stock),
+    total_score: stock.mri_score,
+    score: stock.mri_score,
+    current_price: stock.close,
+    price: stock.close,
+  };
+}
 
 function sortItems(items: One12CoStock[], col: SortCol, dir: 'asc' | 'desc'): One12CoStock[] {
   return [...items].sort((a, b) => {
@@ -98,6 +130,10 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
     return sortItems(filtered, sortCol, sortDir);
   }, [stocks, sortCol, sortDir]);
 
+  const noData = useMemo(() => {
+    return stocks.filter(d => d.breakout_state === 'MISSING');
+  }, [stocks]);
+
   if (loading) return <div className="loading">Scanning 112Co universe…</div>;
   if (error) return <div className="error-state">⚠️ Failed to load: {error}</div>;
 
@@ -121,7 +157,7 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
         </thead>
         <tbody>
           {items.map(item => (
-            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(item)}>
+            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(enrichStock(item))}>
               <td className="font-bold">
                 <div>{item.symbol}</div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>{item.stock_name}</div>
@@ -159,8 +195,8 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
     <div className="watchlist">
       <h2 className="section-title">🔬 112Co Breakout Radar</h2>
       <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
-        Custom 112-company universe — PE expansion watchlist with MRI breakout detection.
-        Click column headers to sort.
+        Custom {stocks.length}-company universe — PE expansion watchlist with MRI breakout detection.
+        Click any stock for the full 7-gate breakdown + fundamentals.
       </p>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
         <span>🟢 BROKEN: {brokenOut.length}</span>
@@ -203,6 +239,17 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
             </div>
           )}
 
+          {noData.length > 0 && (
+            <div>
+              <h3 style={{ color: '#64748b', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
+                ❌ No Data ({noData.length})
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>
+                These symbols don't have price data on Yahoo Finance.
+              </p>
+              {renderTable(noData)}
+            </div>
+          )}
         </div>
       )}
     </div>

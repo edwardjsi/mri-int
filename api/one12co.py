@@ -15,6 +15,7 @@ def get_112co_breakouts(conn=Depends(get_db)):
     """
     Return breakout radar for 112Co universe only.
     Sorted: BROKEN_OUT first, then READY_TO_BREAKOUT, then CONSOLIDATING.
+    Includes all 7 MRI gate conditions from stock_scores.
     """
     query = """
         SELECT
@@ -36,6 +37,13 @@ def get_112co_breakouts(conn=Depends(get_db)):
                  ELSE NULL END AS proximity_to_6m_high,
             COALESCE(dp.breakout_state, 'CONSOLIDATING') AS breakout_state,
             COALESCE(ss.total_score, 0) AS mri_score,
+            COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
+            COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
+            COALESCE(ss.condition_rs, FALSE) AS gate_rs,
+            COALESCE(ss.condition_6m_high, FALSE) AS gate_6m_high,
+            COALESCE(ss.condition_volume, FALSE) AS gate_volume,
+            COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
+            COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality,
             dp.condition_breakout_10d,
             dp.ema_50,
             dp.ema_200,
