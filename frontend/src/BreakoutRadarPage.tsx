@@ -6,8 +6,8 @@ import BreakoutRadar from './BreakoutRadar';
  * `BreakoutRadar` component, allowing the App to render it as a
  * dedicated page while keeping navigation logic unchanged.
  */
-function BreakoutRadarPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  return <BreakoutRadar onSelectStock={onSelectStock} />;
+function BreakoutRadarPage({ onViewResearch }: { onViewResearch: (stock: any) => void }) {
+  return <BreakoutRadar onViewResearch={onViewResearch} />;
 }
 
 export default BreakoutRadarPage;

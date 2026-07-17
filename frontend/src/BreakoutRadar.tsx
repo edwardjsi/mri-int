@@ -32,29 +32,9 @@ function sortItems(items: any[], col: SortCol, dir: 'asc' | 'desc'): any[] {
   });
 }
 
-function enrichForModal(s: any) {
-  return {
-    symbol: s.symbol,
-    close: s.close,
-    current_price: s.close,
-    price: s.close,
-    breakout_state: s.breakout_state,
-    total_score: s.mri_score ?? 0,
-    score: s.mri_score ?? 0,
-    mri_score: s.mri_score ?? 0,
-    conditions: {
-      ema_50_above_200: !!s.gate_ema_50_200,
-      ema_200_slope_positive: !!s.gate_ema_200_slope,
-      relative_strength: !!s.gate_rs,
-      at_6m_high: !!s.gate_6m_high,
-      volume_surge: !!s.gate_volume,
-      breakout_10d: !!s.gate_breakout_10d,
-      price_quality: !!s.gate_price_quality,
-    },
-  };
-}
 
-export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+
+export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (stock: any) => void }) {
   const [stocks, setStocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortCol, setSortCol] = useState<SortCol>('mri_score');
@@ -115,7 +95,7 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
         </thead>
         <tbody>
           {items.map(item => (
-            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(enrichForModal(item))}>
+            <tr key={item.symbol} className="clickable-row" onClick={() => onViewResearch(item)}>
               <td className="font-bold"><div>{item.symbol}</div></td>
               <td>\u20b9{parseFloat(String(item.close)).toLocaleString()}</td>
               <td style={{ color: item.volume_multiplier >= 1.3 ? '#22c55e' : '#94a3b8' }}>

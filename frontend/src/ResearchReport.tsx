@@ -36,9 +36,9 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
   if (!symbol) {
     return (
       <div className="watchlist">
-        <h2 className="section-title">\ud83d\udcca Research Report</h2>
+        <h2 className="section-title">📊 Research Report</h2>
         <p style={{ color: '#94a3b8' }}>Click any stock and select "View Full Report" to see the complete analysis here.</p>
-        <button className="btn-secondary" onClick={onBack}>\u2190 Back</button>
+        <button className="btn-secondary" onClick={onBack}>← Back</button>
       </div>
     );
   }
@@ -51,16 +51,16 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
     { l: 'Long-term Bias (200 EMA Slope)', v: tech?.gate_ema_200_slope, w: '25%' },
     { l: 'Outperformance (90d RS > 0)', v: tech?.gate_rs, w: '20%' },
     { l: 'Near 6-Month High', v: tech?.gate_6m_high, w: '20%' },
-    { l: 'Volume Surge (\u2265 1.3\u00d7 Avg)', v: tech?.gate_volume, w: '10%' },
-    { l: 'Breakout Confirmation', v: tech?.gate_breakout_10d, w: '\ud83d\ude80 Bonus' },
-    { l: 'Price Quality', v: tech?.gate_price_quality, w: '\u2728 Bonus' },
+    { l: 'Volume Surge (≥ 1.3× Avg)', v: tech?.gate_volume, w: '10%' },
+    { l: 'Breakout Confirmation', v: tech?.gate_breakout_10d, w: '🚀 Bonus' },
+    { l: 'Price Quality', v: tech?.gate_price_quality, w: '✨ Bonus' },
   ];
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1000px', margin: '0 auto' }}>
       {/* Back button */}
       <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '13px', marginBottom: '16px' }}>
-        \u2190 Back to Dashboard
+        ← Back to Dashboard
       </button>
 
       {/* Header */}
@@ -68,7 +68,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
         <div>
           <h1 style={{ margin: 0, fontSize: '28px', color: '#e2e8f0' }}>{symbol}</h1>
           <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13px' }}>
-            {tech?.stock_name || ''} {tech?.close ? `| \u20b9${parseFloat(String(tech.close)).toLocaleString()}` : ''}
+            {tech?.stock_name || ''} {tech?.close ? `| ₹${parseFloat(String(tech.close)).toLocaleString()}` : ''}
             {tech?.breakout_state ? ` | ${tech.breakout_state}` : ''}
           </p>
         </div>
@@ -87,14 +87,14 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
         <div>
           {/* MRI 7 Gates */}
           <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
-            <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>\u26a1 MRI Score Breakdown</h3>
+            <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>⚡ MRI Score Breakdown</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {gateItems.map((g, i) => (
                 <div key={i} style={{ padding: '8px', border: '1px solid #334155', borderRadius: '6px', background: '#0f172a' }}>
                   <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>{g.l}</div>
                   <div style={{ fontSize: '9px', color: '#475569' }}>Weight: {g.w}</div>
                   <div style={{ fontSize: '11px', marginTop: '4px', fontWeight: 700, color: g.v ? '#22c55e' : '#ef4444' }}>
-                    {g.v ? '\u2705 PASS' : '\u274c FAIL'}
+                    {g.v ? '✅ PASS' : '❌ FAIL'}
                   </div>
                 </div>
               ))}
@@ -108,14 +108,14 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           {cas && cas.gates && cas.gates.length > 0 && (
             <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                \ud83d\uded2 Breakout Decision ({cas.passed}/{cas.total} passed)
+                🛒 Breakout Decision ({cas.passed}/{cas.total} passed)
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 {cas.gates.map((g: any, i: number) => (
                   <div key={i} style={{ padding: '6px 8px', border: '1px solid #334155', borderRadius: '4px', fontSize: '10px', background: '#0f172a' }}>
                     <div style={{ color: '#64748b', marginBottom: '2px' }}>{g.label}</div>
                     {g.detail && <div style={{ fontSize: '9px', color: '#475569' }}>{g.detail}</div>}
-                    <div style={{ fontWeight: 700, color: g.pass ? '#22c55e' : '#ef4444' }}>{g.pass ? '\u2705' : '\u274c'}</div>
+                    <div style={{ fontWeight: 700, color: g.pass ? '#22c55e' : '#ef4444' }}>{g.pass ? '✅' : '❌'}</div>
                   </div>
                 ))}
               </div>
@@ -125,7 +125,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           {/* Management Credibility */}
           {mgmt && (
             <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>\ud83d\udde3\ufe0f Management Credibility</h3>
+              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🗣️ Management Credibility</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div style={{ padding: '8px', border: '1px solid #334155', borderRadius: '4px', background: '#0f172a' }}>
                   <div style={{ fontSize: '10px', color: '#64748b' }}>Verdict</div>
@@ -150,7 +150,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           {/* PE Expansion */}
           {pe && pe.score !== undefined && (
             <div className="card" style={{ padding: '16px' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>\ud83d\udcca PE Expansion Signal</h3>
+              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📊 PE Expansion Signal</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div style={{ padding: '8px', border: '1px solid #334155', borderRadius: '4px', background: '#0f172a' }}>
                   <div style={{ fontSize: '10px', color: '#64748b' }}>Score</div>
@@ -167,7 +167,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           {/* Quality Verdict */}
           {quality && quality.category && (
             <div className="card" style={{ padding: '16px', marginTop: '16px' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>\ud83d\udcca Quality Fundamentals</h3>
+              <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📊 Quality Fundamentals</h3>
               <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>{quality.category}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                 {[{l:'Revenue',v:quality.revenue_score},{l:'Margins',v:quality.margin_score},{l:'Leverage',v:quality.leverage_score},{l:'Working Cap',v:quality.wc_score},{l:'ROCE',v:quality.roce_score},{l:'Evolution',v:quality.evolution_score}].map((s,i) => (
@@ -192,7 +192,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
             .then((r: any) => alert(r.message || 'Report queued!'))
             .catch(() => alert('Failed to send email.'));
         }} style={{ padding: '10px 24px', fontSize: '14px' }}>
-          \ud83d\udce7 Email Full Report
+          📧 Email Full Report
         </button>
       </div>
     </div>
@@ -218,12 +218,12 @@ function AaeSection({ symbol }: { symbol: string }) {
   return (
     <div className="card" style={{ padding: '16px', marginTop: '16px', border: '1px solid #4338ca', background: '#1e1b4b' }}>
       <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        \ud83e\udde0 AAE Institutional Scan
+        🧠 AAE Institutional Scan
         <span style={{ float: 'right', fontSize: '20px', fontWeight: 900, color: data.master_score >= 80 ? '#22c55e' : '#60a5fa' }}>{data.master_score}</span>
       </h3>
       {data.bull_case && (
         <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(34,197,94,0.1)', borderRadius: '6px', fontSize: '11px', color: '#4ade80' }}>
-          <strong>\ud83d\udc02 Bull:</strong> {(data.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('\u2022'))[0] || (data.bull_case || '').split('\n')[0]}
+          <strong>🐂 Bull:</strong> {(data.bull_case || '').split('\n').filter((l: string) => l.trim().startsWith('-') || l.trim().startsWith('•'))[0] || (data.bull_case || '').split('\n')[0]}
         </div>
       )}
     </div>
