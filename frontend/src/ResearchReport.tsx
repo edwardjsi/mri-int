@@ -101,7 +101,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           {/* AAE */}
           {aaeLoading && <div className="card" style={{ padding: '16px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading AAE institutional scan... (requires login)</div>}
           {!aaeLoading && !aaeData && <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', fontSize: '11px', color: '#64748b', border: '1px dashed #334155' }}>
-            🧠 AAE data not available. Log in and click again to trigger the institutional scan.
+            🧠 AAE institutional scan requires login. Log in and click the stock again.
           </div>}
           {aaeData && (
             <div className="card" style={{ padding: '16px', marginBottom: '16px', border: '1px solid #4338ca', background: '#1e1b4b' }}>
@@ -243,10 +243,20 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
       {/* Email button */}
       {data && (
         <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <button className="btn-secondary" onClick={() => {
-            api.email112coReport(symbol)
-              .then((r: any) => alert(r.message || 'Report queued!'))
-              .catch(() => alert('Failed to send email.'));
+          <button className="btn-secondary" onClick={async () => {
+            const token = localStorage.getItem('mri_token');
+            if (!token) { alert('Please log in first to receive the email report.'); return; }
+            try {
+              const r = await api.email112coReport(symbol);
+              alert(r.message || 'Report queued! Check your inbox.');
+            } catch (e: any) {
+              const msg = e?.message || '';
+              if (msg.includes('401') || msg.includes('unauthorized')) {
+                alert('Session expired. Please log in again.');
+              } else {
+                alert('Failed to send email: ' + msg);
+              }
+            }
           }} style={{ padding: '10px 24px', fontSize: '14px' }}>
             📧 Email Full Report
           </button>
