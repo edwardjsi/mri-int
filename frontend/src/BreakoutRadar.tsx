@@ -1,114 +1,162 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
-import AddStatusChip from './AddStatusChip';  // Decision 103 V2 — ADD_SECOND_TRANCHE gate chip
-import CapitalAllocationCard from './CapitalAllocationCard';  // Decision 104 (N+3 — Browser Visibility)
+
+/** Map gate fields to the conditions object that ScoreBreakdown expects. */
+function buildConditions(stock: any) {
+  return {
+    ema_50_above_200:      !!stock.gate_ema_50_200,
+    ema_200_slope_positive: !!stock.gate_ema_200_slope,
+    relative_strength:     !!stock.gate_rs,
+    at_6m_high:            !!stock.gate_6m_high,
+    volume_surge:          !!stock.gate_volume,
+    breakout_10d:          !!stock.gate_breakout_10d,
+    price_quality:         !!stock.gate_price_quality,
+  };
+}
+
+/** Attach conditions + score so StockDetailsModal shows the 7-gate breakdown. */
+function enrichStock(stock: any) {
+  return {
+    ...stock,
+    conditions: buildConditions(stock),
+    total_score: stock.mri_score ?? stock.total_score ?? 0,
+    score: stock.mri_score ?? stock.total_score ?? 0,
+    current_price: stock.close,
+    price: stock.close,
+  };
+}
+
+type SortCol = 'symbol' | 'close' | 'volume_multiplier' | 'rsi' | 'atr_pct' | 'proximity' | 'mri_score';
+
+const COL_DEFS: { key: SortCol; label: string }[] = [
+  { key: 'symbol', label: 'Stock' },
+  { key: 'close', label: '\u20b9' },
+  { key: 'volume_multiplier', label: 'Vol\u00d7' },
+  { key: 'rsi', label: 'RSI' },
+  { key: 'atr_pct', label: 'ATR%' },
+  { key: 'proximity', label: '6m Prox' },
+  { key: 'mri_score', label: 'MRI' },
+];
+
+function sortItems(items: any[], col: SortCol, dir: 'asc' | 'desc'): any[] {
+  return [...items].sort((a, b) => {
+    let va: number | string = 0;
+    let vb: number | string = 0;
+
+    if (col === 'proximity') {
+      va = a.proximity_to_6m_high ?? -999;
+      vb = b.proximity_to_6m_high ?? -999;
+    } else if (col === 'symbol') {
+      va = a.symbol;
+      vb = b.symbol;
+    } else if (col === 'volume_multiplier') {
+      va = a.volume_multiplier ?? 0;
+      vb = b.volume_multiplier ?? 0;
+    } else {
+      va = (a as any)[col] ?? 0;
+      vb = (b as any)[col] ?? 0;
+    }
+
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
 
 export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  const [radarData, setRadarData] = useState<any[]>([]);
+  const [stocks, setStocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
-  const [casData, setCasData] = useState<any[]>([]);
-  const [casLoading, setCasLoading] = useState(true);
-
-  useEffect(() => {
-    api.getTopByCAS(5)
-      .then((data: any[]) => setCasData(data || []))
-      .catch((err: any) => console.error('Failed to fetch CAS data', err))
-      .finally(() => setCasLoading(false));
-  }, []);
+  const [sortCol, setSortCol] = useState<SortCol>('mri_score');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     api.getBreakoutRadar()
-      .then(data => setRadarData(data || []))
-      .catch(err => console.error('Failed to fetch radar data', err))
+      .then((data: any[]) => {
+        const enriched = (data || []).map((s: any) => ({
+          ...s,
+          volume_multiplier: s.avg_volume_20d > 0
+            ? Math.round((s.volume / s.avg_volume_20d) * 100) / 100
+            : 0,
+          proximity_to_6m_high: s.rolling_high_6m > 0
+            ? Math.round(((s.close / s.rolling_high_6m) - 1) * 10000) / 100
+            : null,
+          atr_pct: s.close > 0
+            ? Math.round((s.atr / s.close) * 10000) / 100
+            : 0,
+          mri_score: s.mri_score ?? 0,
+        }));
+        setStocks(enriched);
+      })
+      .catch((err: any) => console.error('Radar fetch error:', err))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="loading">Scanning universe…</div>;
-
-  const freshBreakouts = radarData.filter(d => d.breakout_state === 'BROKEN_OUT' && d.age_info?.zone === 'fresh');
-  const earlyBreakouts = radarData.filter(d => d.breakout_state === 'BROKEN_OUT' && d.age_info?.zone === 'early');
-  const lateBreakouts = radarData.filter(d => d.breakout_state === 'BROKEN_OUT' && d.age_info?.zone === 'late');
-  const matureBreakouts = radarData.filter(d => d.breakout_state === 'BROKEN_OUT' && d.age_info?.zone === 'mature');
-  const unknownBreakouts = radarData.filter(d => d.breakout_state === 'BROKEN_OUT' && !['fresh', 'early', 'late', 'mature'].includes(d.age_info?.zone));
-  
-  const ready = radarData.filter(d => d.breakout_state === 'READY_TO_BREAKOUT');
-  const consolidating = radarData.filter(d => d.breakout_state === 'CONSOLIDATING');
-
-  const requestSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc'; // toggle back
-    } else if (sortConfig && sortConfig.key === key) {
-      direction = 'desc';
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     } else {
-      direction = 'desc'; // default to desc for metrics
+      setSortCol(col);
+      setSortDir('desc');
     }
-    setSortConfig({ key, direction });
   };
 
-  const getSortedItems = (items: any[]) => {
-    if (!sortConfig) return items;
-    return [...items].sort((a, b) => {
-      let aVal = a[sortConfig.key];
-      let bVal = b[sortConfig.key];
-      
-      if (sortConfig.key === 'price') {
-         aVal = parseFloat(a.close || '0');
-         bVal = parseFloat(b.close || '0');
-      } else if (sortConfig.key === 'volume') {
-         aVal = parseInt(a.volume || '0');
-         bVal = parseInt(b.volume || '0');
-      } else if (sortConfig.key === 'interest') {
-         aVal = (a.holders || 0) + (a.watchers || 0);
-         bVal = (b.holders || 0) + (b.watchers || 0);
-      }
-      
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-      
-      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+  if (loading) return <div className="loading">Scanning breakout radar\u2026</div>;
+
+  const brokenOut = useMemo(() => stocks.filter(d => d.breakout_state === 'BROKEN_OUT'), [stocks]);
+  const ready = useMemo(() => stocks.filter(d => d.breakout_state === 'READY_TO_BREAKOUT'), [stocks]);
+  const consolidating = useMemo(() => stocks.filter(d => d.breakout_state === 'CONSOLIDATING'), [stocks]);
+
+  const sortedBroken = useMemo(() => sortItems(brokenOut, sortCol, sortDir), [brokenOut, sortCol, sortDir]);
+  const sortedReady = useMemo(() => sortItems(ready, sortCol, sortDir), [ready, sortCol, sortDir]);
+  const sortedConsolidating = useMemo(() => sortItems(consolidating, sortCol, sortDir), [consolidating, sortCol, sortDir]);
+
+  const sortIndicator = (col: SortCol) => {
+    if (sortCol !== col) return '';
+    return sortDir === 'asc' ? ' \u25b2' : ' \u25bc';
   };
 
-  const SortIcon = ({ columnKey }: { columnKey: string }) => {
-    if (!sortConfig || sortConfig.key !== columnKey) return <span style={{ opacity: 0.3, marginLeft: '4px', fontSize: '0.8em' }}>↕</span>;
-    return <span style={{ marginLeft: '4px', color: '#60a5fa', fontSize: '0.8em' }}>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>;
-  };
-
-  const renderTable = (items: any[], showAge: boolean = true) => (
+  const renderTable = (items: any[]) => (
     <div className="table-container">
       <table className="data-table">
         <thead>
           <tr>
-            <th onClick={() => requestSort('symbol')} style={{ cursor: 'pointer', userSelect: 'none' }}>Symbol <SortIcon columnKey="symbol" /></th>
-            <th onClick={() => requestSort('price')} style={{ cursor: 'pointer', userSelect: 'none' }}>Price <SortIcon columnKey="price" /></th>
-            <th onClick={() => requestSort('volume')} style={{ cursor: 'pointer', userSelect: 'none' }}>Volume <SortIcon columnKey="volume" /></th>
-            <th>Trend</th>
-            <th onClick={() => requestSort('interest')} style={{ cursor: 'pointer', userSelect: 'none' }}>Platform Interest <SortIcon columnKey="interest" /></th>
-            {showAge && <th onClick={() => requestSort('breakout_age')} style={{ cursor: 'pointer', userSelect: 'none' }}>Age <SortIcon columnKey="breakout_age" /></th>}
-            <th onClick={() => requestSort('radar_priority')} style={{ cursor: 'pointer', userSelect: 'none' }}>Radar Priority <SortIcon columnKey="radar_priority" /></th>
+            {COL_DEFS.map(c => (
+              <th key={c.key} onClick={() => handleSort(c.key)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {c.label}{sortIndicator(c.key)}
+              </th>
+            ))}
             <th>Status</th>
-            <th title="Decision 103 V2 — 4-state ADD_SECOND_TRANCHE gate evaluation (hover chip for detail)">ADD Status</th>
           </tr>
         </thead>
         <tbody>
-          {getSortedItems(items).map(item => (
-            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(item)}>
-              <td className="font-bold">{item.symbol}</td>
-              <td>₹{parseFloat(item.close).toLocaleString()}</td>
-              <td>{parseInt(item.volume).toLocaleString()}</td>
-              <td style={{ color: '#22c55e' }}>{item.ema_50 > item.ema_200 ? 'Bullish Stack' : 'Neutral'}</td>
-              <td style={{ color: '#60a5fa' }}>{item.holders} Holders / {item.watchers} Watchers</td>
-              {showAge && <td>{item.breakout_age !== null && item.breakout_age !== undefined ? item.breakout_age : '-'}</td>}
-              <td style={{ fontWeight: 'bold', color: item.radar_priority > 70 ? '#22c55e' : item.radar_priority > 50 ? '#f59e0b' : '#94a3b8' }}>
-                {item.radar_priority ? item.radar_priority.toFixed(1) : '-'}
+          {items.map(item => (
+            <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(enrichStock(item))}>
+              <td className="font-bold">
+                <div>{item.symbol}</div>
               </td>
-              <td><BreakoutBadge state={item.breakout_state} ageInfo={item.age_info} /></td>
-              <td><AddStatusChip symbol={item.symbol} /></td>
+              <td>\u20b9{parseFloat(String(item.close)).toLocaleString()}</td>
+              <td style={{ color: item.volume_multiplier >= 1.3 ? '#22c55e' : '#94a3b8' }}>
+                {item.volume_multiplier}x
+              </td>
+              <td style={{
+                color: item.rsi > 75 ? '#ef4444' : item.rsi >= 55 ? '#22c55e' : '#f59e0b'
+              }}>
+                {item.rsi?.toFixed(1)}
+              </td>
+              <td>{item.atr_pct?.toFixed(1)}%</td>
+              <td style={{
+                color: item.proximity_to_6m_high !== null && item.proximity_to_6m_high >= -3
+                  ? '#22c55e' : '#94a3b8'
+              }}>
+                {item.proximity_to_6m_high !== null ? `${item.proximity_to_6m_high}%` : '—'}
+              </td>
+              <td style={{
+                color: item.mri_score >= 80 ? '#22c55e' : item.mri_score >= 60 ? '#f59e0b' : '#ef4444'
+              }}>
+                {item.mri_score}
+              </td>
+              <td><BreakoutBadge state={item.breakout_state} /></td>
             </tr>
           ))}
         </tbody>
@@ -118,121 +166,46 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
 
   return (
     <div className="watchlist">
-      <h2 className="section-title">🚀 Breakout Radar</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
-        All tracked stocks with breakout classification, sorted by freshness and radar priority.
+      <h2 className="section-title">\ud83d\ude80 Breakout Radar</h2>
+      <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
+        All watchlist, portfolio, and breakout-discovery stocks \u2014 sorted by breakout status.
+        Click any stock for the full 7-gate breakdown.
       </p>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
+        <span>\ud83d\udfe2 BROKEN: {brokenOut.length}</span>
+        <span>\ud83d\udfe1 READY: {ready.length}</span>
+        <span>\u26aa CONSOLIDATING: {consolidating.length}</span>
+        <span>\ud83d\udcca Total: {stocks.length}</span>
+      </div>
 
-      {/* ── Decision 104 — Capital Allocation Score Banner (N+3, visible in browser) ── */}
-      {!casLoading && (
-        <div className="cas-banner" style={{
-          padding: '16px',
-          border: '1px solid #facc15',
-          borderRadius: '8px',
-          background: 'linear-gradient(135deg, rgba(250,204,21,0.05) 0%, rgba(250,204,21,0) 100%)',
-          marginBottom: '16px'
-        }}>
-          <h3 style={{ color: '#facc15', marginBottom: '16px', fontSize: '1.2em' }}>
-            📊 Capital Allocation Score — Top Breakouts by CAS
-          </h3>
-          <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>
-            "Which breakout deserves fresh capital today?" — ranked by CAS (Decision 104)
-          </p>
-          {casData.length > 0 ? (
-            <div className="cas-top-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-              {casData.map((item) => (
-                <CapitalAllocationCard
-                  key={item.symbol}
-                  symbol={item.symbol}
-                  cas={item.cas}
-                  confidenceStars={item.confidence_stars}
-                  actionChip={item.cas >= 85 ? 'ADD' : item.cas >= 70 ? 'BUY' : 'WATCH'}
-                  whyChecklist={item.why_checklist || []}
-                  breakoutAge={item.breakout_age || 0}
-                  breakoutAgeEmoji={item.breakout_age_emoji || '⚫'}
-                />
-              ))}
-            </div>
-          ) : (
-            <div style={{
-              padding: '24px',
-              textAlign: 'center',
-              color: '#94a3b8',
-              fontSize: '14px',
-              border: '1px dashed #334155',
-              borderRadius: '8px',
-              background: 'rgba(15,23,42,0.5)'
-            }}>
-              <span style={{ fontSize: '28px', display: 'block', marginBottom: '8px' }}>📊</span>
-              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>No breakout stocks available yet</div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>
-                The indicator engine pipeline needs to run to compute breakout states and capital allocation scores.
-                Once it completes, the top 5 breakouts ranked by CAS will appear here.
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {radarData.length === 0 ? (
-        <div className="empty-state">No stocks in watchlist or portfolio.</div>
+      {stocks.length === 0 ? (
+        <div className="empty-state">No breakout stocks found. Add stocks to your watchlist or portfolio.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-        
-          {freshBreakouts.length > 0 && (
-            <div style={{ padding: '16px', border: '1px solid #22c55e', borderRadius: '8px', background: 'linear-gradient(180deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0) 100%)' }}>
-              <h3 style={{ color: '#22c55e', marginBottom: '16px', paddingBottom: '8px', fontSize: '1.2em' }}>
-                🔥 Fresh Today (Day 0-1) ({freshBreakouts.length})
-              </h3>
-              {renderTable(freshBreakouts)}
-            </div>
-          )}
-
-          {earlyBreakouts.length > 0 && (
+          {brokenOut.length > 0 && (
             <div>
-              <h3 style={{ color: '#10b981', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                📈 Early Continuation (Day 2-3) ({earlyBreakouts.length})
+              <h3 style={{ color: '#22c55e', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
+                \ud83d\ude80 Active Breakouts ({brokenOut.length})
               </h3>
-              {renderTable(earlyBreakouts)}
+              {renderTable(sortedBroken)}
             </div>
           )}
-
-          {lateBreakouts.length > 0 && (
-            <div style={{ opacity: 0.8 }}>
-              <h3 style={{ color: '#f59e0b', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                ⚠️ Late Entry Zone (Day 4-5) ({lateBreakouts.length})
-              </h3>
-              {renderTable(lateBreakouts)}
-            </div>
-          )}
-
-          {(matureBreakouts.length > 0 || unknownBreakouts.length > 0) && (
-            <div style={{ opacity: 0.6 }}>
-              <h3 style={{ color: '#64748b', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                💤 Mature Breakouts (Day 6+) ({matureBreakouts.length + unknownBreakouts.length})
-              </h3>
-              {renderTable([...matureBreakouts, ...unknownBreakouts])}
-            </div>
-          )}
-
           {ready.length > 0 && (
             <div>
-              <h3 style={{ color: '#3b82f6', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                ⚡ Coiled Springs — Ready To Breakout ({ready.length})
+              <h3 style={{ color: '#f59e0b', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
+                \u26a1 Ready To Breakout ({ready.length})
               </h3>
-              {renderTable(ready)}
+              {renderTable(sortedReady)}
             </div>
           )}
-
           {consolidating.length > 0 && (
             <div>
-              <h3 style={{ color: '#6b7280', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                ⏳ Consolidating ({consolidating.length})
+              <h3 style={{ color: '#94a3b8', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
+                \ud83d\udcca Consolidating ({consolidating.length})
               </h3>
-              {renderTable(consolidating, false)}
+              {renderTable(sortedConsolidating)}
             </div>
           )}
-
         </div>
       )}
     </div>

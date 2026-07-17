@@ -391,10 +391,19 @@ def get_breakout_radar(conn=Depends(get_db)):
     engine_mosi.mosi_lite.
     """
     query = """
-        SELECT symbol, close, volume, ema_50, ema_200, breakout_state, breakout_age, watchers, holders
+        SELECT combined.*, 
+               COALESCE(ss.total_score, 0) AS mri_score,
+               COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
+               COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
+               COALESCE(ss.condition_rs, FALSE) AS gate_rs,
+               COALESCE(ss.condition_6m_high, FALSE) AS gate_6m_high,
+               COALESCE(ss.condition_volume, FALSE) AS gate_volume,
+               COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
+               COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality
         FROM (
             SELECT 
                 dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
+                dp.rsi_14 AS rsi, dp.atr_14 AS atr, dp.avg_volume_20d, dp.rolling_high_6m, dp.rs_90d,
                 -- Decision 103 V2 ADD_SECOND_TRANCHE gate indicators (P4b)
                 dp.prior_52w_high, dp.all_time_high_before_current_week,
                 dp.resistance_source, dp.weekly_close_above_resistance,
@@ -412,6 +421,7 @@ def get_breakout_radar(conn=Depends(get_db)):
 
             SELECT 
                 dp.symbol, dp.close, dp.volume, dp.ema_50, dp.ema_200, dp.breakout_state, dp.breakout_age,
+                dp.rsi_14 AS rsi, dp.atr_14 AS atr, dp.avg_volume_20d, dp.rolling_high_6m, dp.rs_90d,
                 -- Decision 103 V2 ADD_SECOND_TRANCHE gate indicators (P4b)
                 dp.prior_52w_high, dp.all_time_high_before_current_week,
                 dp.resistance_source, dp.weekly_close_above_resistance,
@@ -426,15 +436,16 @@ def get_breakout_radar(conn=Depends(get_db)):
               AND NOT (EXISTS (SELECT 1 FROM client_watchlist WHERE symbol = dp.symbol)
                        OR EXISTS (SELECT 1 FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true))
         ) combined
+        LEFT JOIN stock_scores ss ON ss.symbol = combined.symbol AND ss.date = (SELECT MAX(date) FROM stock_scores)
         ORDER BY 
             sort_grp,
-            CASE breakout_state
+            CASE combined.breakout_state
                 WHEN 'BROKEN_OUT' THEN 1
                 WHEN 'READY_TO_BREAKOUT' THEN 2
                 ELSE 3
             END,
             COALESCE(breakout_age, 999) ASC,
-            symbol;
+            combined.symbol;
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
