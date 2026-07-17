@@ -280,6 +280,10 @@ def email_112co_report(
         pe_score = pe_data.get('score', 'N/A')
         pe_lifecycle = pe_data.get('lifecycle_stage', 'N/A')
         
+                close_fmt = f"{close:,.2f}" if close else 'N/A'
+        ema50_fmt = f"{ema50:,.2f}" if ema50 else 'N/A'
+        ema200_fmt = f"{ema200:,.2f}" if ema200 else 'N/A'
+        
         html = f"""<html>
 <body style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; max-width: 600px; margin: 0 auto;">
     <div style="border-bottom: 3px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px;">
@@ -289,12 +293,12 @@ def email_112co_report(
 
     <h3 style="font-size: 14px; color: #2563eb; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.05em;">\u26a1 Technical Summary</h3>
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Price</td><td style="padding: 8px; font-weight: 700;">\u20b9{close:,.2f if close else 'N/A'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Price</td><td style="padding: 8px; font-weight: 700;">\u20b9{close_fmt}</td></tr>
         <tr style="background: #f8fafc;"><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">MRI Score</td><td style="padding: 8px; font-weight: 700; color: {'#22c55e' if (score or 0) >= 80 else '#f59e0b' if (score or 0) >= 60 else '#ef4444'};">{score}/100</td></tr>
         <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Breakout</td><td style="padding: 8px; font-weight: 700;">{state}</td></tr>
         <tr style="background: #f8fafc;"><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Quality</td><td style="padding: 8px; font-weight: 700;">{quality_label or 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">EMA 50</td><td style="padding: 8px; font-weight: 700;">\u20b9{ema50:,.2f if ema50 else 'N/A'}</td></tr>
-        <tr style="background: #f8fafc;"><td style="padding: 8px; color: #64748b;">EMA 200</td><td style="padding: 8px; font-weight: 700;">\u20b9{ema200:,.2f if ema200 else 'N/A'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">EMA 50</td><td style="padding: 8px; font-weight: 700;">\u20b9{ema50_fmt}</td></tr>
+        <tr style="background: #f8fafc;"><td style="padding: 8px; color: #64748b;">EMA 200</td><td style="padding: 8px; font-weight: 700;">\u20b9{ema200_fmt}</td></tr>
     </table>
 
     <h3 style="font-size: 14px; color: #2563eb; margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 0.05em;">\ud83d\udcca PE Expansion Signal</h3>
