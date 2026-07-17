@@ -6,6 +6,7 @@ from api.deps import get_db, get_current_client
 import psycopg2.extras
 import logging
 from datetime import datetime
+import os
 
 router = APIRouter(prefix="/api/112co", tags=["112Co Universe"])
 log = logging.getLogger(__name__)
@@ -532,7 +533,7 @@ def trigger_fundamental_analysis(
                 <h2>Analysis Complete: {sym}</h2>
                 <p>The following analyses were completed:</p>
                 <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px;">{summary}</pre>
-                <p><a href="https://mri-api.up.railway.app/?page=research&symbol={sym}">View the full report</a></p>
+                <p><a href="{os.getenv("FRONTEND_URL", "https://mri-api.up.railway.app")}/?page=research&symbol={sym}">View the full report</a></p>
             </body></html>"""
             ok = send_email_custom(client['email'], f"Analysis Complete: {sym}", html)
             if ok:
