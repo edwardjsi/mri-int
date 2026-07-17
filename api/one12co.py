@@ -14,12 +14,13 @@ log = logging.getLogger(__name__)
 def get_112co_breakouts(conn=Depends(get_db)):
     """
     Return breakout radar for 112Co universe only.
-    Sorted: BROKEN_OUT first, then READY_TO_BREAKOUT, then CONSOLIDATING.
+    Sorted: BROKEN_OUT first, then READY_TO_BREAKOUT, then CONSOLIDATING, then MISSING.
+    LEFT JOIN ensures stocks without Yahoo data still appear.
     Includes all 7 MRI gate conditions from stock_scores.
     """
     query = """
         SELECT
-            dp.symbol,
+            COALESCE(dp.symbol, u.symbol) AS symbol,
             u.stock_name,
             dp.close,
             dp.volume,
@@ -35,7 +36,7 @@ def get_112co_breakouts(conn=Depends(get_db)):
             CASE WHEN dp.rolling_high_6m > 0
                  THEN ROUND(((dp.close::numeric / dp.rolling_high_6m) - 1) * 100, 2)
                  ELSE NULL END AS proximity_to_6m_high,
-            COALESCE(dp.breakout_state, 'CONSOLIDATING') AS breakout_state,
+            COALESCE(dp.breakout_state, 'MISSING') AS breakout_state,
             COALESCE(ss.total_score, 0) AS mri_score,
             COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
             COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
@@ -50,18 +51,19 @@ def get_112co_breakouts(conn=Depends(get_db)):
             dp.rs_90d,
             dp.date AS last_date
         FROM universe_112co u
-        JOIN daily_prices dp ON dp.symbol = u.symbol
+        LEFT JOIN daily_prices dp ON dp.symbol = u.symbol
+            AND dp.date = (SELECT MAX(date) FROM daily_prices)
         LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol AND ss.date = dp.date
         WHERE u.is_active = TRUE
-          AND dp.date = (SELECT MAX(date) FROM daily_prices)
         ORDER BY
-            CASE dp.breakout_state
+            CASE COALESCE(dp.breakout_state, 'MISSING')
                 WHEN 'BROKEN_OUT' THEN 1
                 WHEN 'READY_TO_BREAKOUT' THEN 2
-                ELSE 3
+                WHEN 'CONSOLIDATING' THEN 3
+                ELSE 4
             END,
             COALESCE(ss.total_score, 0) DESC,
-            dp.symbol
+            u.symbol
     """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
