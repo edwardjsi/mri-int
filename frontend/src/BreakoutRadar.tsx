@@ -101,8 +101,6 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
     }
   };
 
-  if (loading) return <div className="loading">Scanning breakout radar\u2026</div>;
-
   const brokenOut = useMemo(() => stocks.filter(d => d.breakout_state === 'BROKEN_OUT'), [stocks]);
   const ready = useMemo(() => stocks.filter(d => d.breakout_state === 'READY_TO_BREAKOUT'), [stocks]);
   const consolidating = useMemo(() => stocks.filter(d => d.breakout_state === 'CONSOLIDATING'), [stocks]);
@@ -110,6 +108,8 @@ export default function BreakoutRadar({ onSelectStock }: { onSelectStock: (stock
   const sortedBroken = useMemo(() => sortItems(brokenOut, sortCol, sortDir), [brokenOut, sortCol, sortDir]);
   const sortedReady = useMemo(() => sortItems(ready, sortCol, sortDir), [ready, sortCol, sortDir]);
   const sortedConsolidating = useMemo(() => sortItems(consolidating, sortCol, sortDir), [consolidating, sortCol, sortDir]);
+
+  if (loading) return <div className="loading">Scanning breakout radar\u2026</div>;
 
   const sortIndicator = (col: SortCol) => {
     if (sortCol !== col) return '';
