@@ -15,15 +15,15 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
       .finally(() => setLoading(false));
   }, [symbol]);
 
-  useEffect(() => {
+  const loadAae = async () => {
     if (!symbol) return;
     setAaeLoading(true);
-    const timer = setTimeout(() => setAaeLoading(false), 5000);
-    api.getAaeScan(symbol)
-      .then((r: any) => { if (r && !r.error) setAaeData(r); })
-      .catch(() => {})
-      .finally(() => { clearTimeout(timer); setAaeLoading(false); });
-  }, [symbol]);
+    try {
+      const r = await api.getAaeScan(symbol);
+      if (r && !r.error) setAaeData(r);
+    } catch {}
+    setAaeLoading(false);
+  };
 
   if (!symbol) {
     return (
@@ -117,10 +117,16 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           )}
 
           {/* AAE */}
-          {aaeLoading && <div className="card" style={{ padding: '16px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Loading AAE institutional scan... (requires login)</div>}
-          {!aaeLoading && !aaeData && <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', fontSize: '11px', color: '#64748b', border: '1px dashed #334155' }}>
-            🧠 AAE institutional scan requires login. Log in and click the stock again.
-          </div>}
+          {aaeLoading && <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>Running AAE institutional scan...</div>}
+          {!aaeLoading && !aaeData && (
+            <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px dashed #334155' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px' }}>🧠 AAE Institutional Scan</div>
+              <button className="btn-secondary" onClick={loadAae} style={{ padding: '6px 16px', fontSize: '11px' }}>
+                🔄 Run AAE Scan
+              </button>
+              <div style={{ fontSize: '10px', color: '#475569', marginTop: '6px' }}>10-layer forensic audit. Takes ~30s.</div>
+            </div>
+          )}
           {aaeData && (
             <div className="card" style={{ padding: '16px', marginBottom: '16px', border: '1px solid #4338ca', background: '#1e1b4b' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
