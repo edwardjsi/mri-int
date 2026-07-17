@@ -487,7 +487,14 @@ def get_cas_data(symbol: str, conn=Depends(get_db)):
                 dp.symbol, dp.close, dp.volume, dp.avg_volume_20d,
                 dp.breakout_state, dp.breakout_age,
                 dp.weekly_close_above_resistance,
-                COALESCE(ss.total_score, 0) AS mri_score
+                COALESCE(ss.total_score, 0) AS mri_score,
+                COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
+                COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
+                COALESCE(ss.condition_rs, FALSE) AS gate_rs,
+                COALESCE(ss.condition_6m_high, FALSE) AS gate_6m_high,
+                COALESCE(ss.condition_volume, FALSE) AS gate_volume,
+                COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
+                COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality
             FROM daily_prices dp
             LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol
                 AND ss.date = (SELECT MAX(date) FROM stock_scores)
@@ -519,6 +526,13 @@ def get_cas_data(symbol: str, conn=Depends(get_db)):
             "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
             "volume_multiplier": round(vol_mul, 2),
             "mri_score": mri,
+            "gate_ema_50_200": bool(row["gate_ema_50_200"]),
+            "gate_ema_200_slope": bool(row["gate_ema_200_slope"]),
+            "gate_rs": bool(row["gate_rs"]),
+            "gate_6m_high": bool(row["gate_6m_high"]),
+            "gate_volume": bool(row["gate_volume"]),
+            "gate_breakout_10d": bool(row["gate_breakout_10d"]),
+            "gate_price_quality": bool(row["gate_price_quality"]),
             "gates": gates,
             "passed": passed,
             "total": 6,
