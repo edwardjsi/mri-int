@@ -474,3 +474,58 @@ def get_breakout_radar(conn=Depends(get_db)):
         return []
     finally:
         cur.close()
+@router.get("/cas-data")
+def get_cas_data(symbol: str, conn=Depends(get_db)):
+    """
+    Return CAS breakout decision data for a single symbol.
+    Used by StockDetailsModal to show 6-gate breakout decision on any page.
+    """
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT
+                dp.symbol, dp.close, dp.volume, dp.avg_volume_20d,
+                dp.breakout_state, dp.breakout_age,
+                dp.weekly_close_above_resistance,
+                COALESCE(ss.total_score, 0) AS mri_score
+            FROM daily_prices dp
+            LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol
+                AND ss.date = (SELECT MAX(date) FROM stock_scores)
+            WHERE dp.symbol = %s
+              AND dp.date = (SELECT MAX(date) FROM daily_prices)
+            LIMIT 1
+        """, (symbol,))
+        row = cur.fetchone()
+        if not row:
+            return {"symbol": symbol, "gates": [], "passed": 0, "total": 6}
+
+        vol_mul = (row["volume"] / row["avg_volume_20d"]) if row.get("avg_volume_20d", 0) > 0 else 0
+        mri = row.get("mri_score", 0) or 0
+        age = row.get("breakout_age")
+
+        gates = [
+            {"label": "1. Decision Score \u2265 85",  "pass": mri >= 85,  "detail": f"{mri}/85"},
+            {"label": "2. MRI Technical \u2265 80",    "pass": mri >= 80,  "detail": f"{mri}/80"},
+            {"label": "3. Weekly Close > Resistance",  "pass": bool(row.get("weekly_close_above_resistance"))},
+            {"label": "4. Volume \u2265 1.3\u00d7 Avg", "pass": vol_mul >= 1.3, "detail": f"{vol_mul:.2f}\u00d7"},
+            {"label": "5. Breakout Age \u2264 15d",     "pass": age is not None and age <= 15, "detail": f"{age}d" if age is not None else "--"},
+            {"label": "6. Overall Conviction \u2265 80%", "pass": mri >= 80, "detail": f"{mri}%"},
+        ]
+        passed = sum(1 for g in gates if g["pass"])
+
+        return {
+            "symbol": symbol,
+            "close": float(row["close"]) if row["close"] else None,
+            "breakout_state": row.get("breakout_state", "CONSOLIDATING"),
+            "volume_multiplier": round(vol_mul, 2),
+            "mri_score": mri,
+            "gates": gates,
+            "passed": passed,
+            "total": 6,
+        }
+    except Exception as e:
+        log.error(f"CAS data error for {symbol}: {e}")
+        return {"symbol": symbol, "error": str(e), "gates": [], "passed": 0, "total": 6}
+    finally:
+        cur.close()
+

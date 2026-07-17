@@ -154,6 +154,59 @@ function QualityVerdict({ symbol }: { symbol: string }) {
 }
 
 /* ─── Stock Details Modal ────────────────────────────────── */
+function CasDecisionPanel({ symbol }: { symbol: string }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!symbol) return;
+    setLoading(true);
+    api.getCasData(symbol)
+      .then((res: any) => setData(res))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [symbol]);
+
+  if (loading) return <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>Loading CAS breakout data...</div>;
+  if (!data || !data.gates || data.gates.length === 0) return null;
+  if (data.error) return null;
+
+  return (
+    <div style={{ marginTop: '1.5rem', padding: '16px', borderRadius: '8px', background: '#0f172a', border: '1px solid #334155' }}>
+      <h4 style={{ marginBottom: '12px', color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        🛒 Breakout Decision — 6 Gates
+      </h4>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: '#64748b' }}>Passed:</span>
+        <span style={{ fontSize: '20px', fontWeight: 900, color: data.passed >= 4 ? '#22c55e' : '#ef4444' }}>
+          {data.passed}/{data.total}
+        </span>
+      </div>
+      <div className="conditions-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        {data.gates.map((g: any, i: number) => (
+          <div key={i} className="condition-item" style={{ padding: '8px', border: '1px solid #334155', borderRadius: '4px' }}>
+            <div className="condition-label" style={{ fontSize: '11px' }}>
+              {g.label}
+              {g.detail && <div style={{ fontSize: '9px', color: '#64748b' }}>{g.detail}</div>}
+            </div>
+            <div className={'condition-value ' + (g.pass ? 'condition-pass' : 'condition-fail')} style={{ fontSize: '10px', marginTop: '4px' }}>
+              {g.pass ? '✅ PASS' : '❌ FAIL'}
+            </div>
+          </div>
+        ))}
+      </div>
+      {data.passed < 4 && data.gates && (
+        <div style={{ marginTop: '12px', padding: '8px', borderRadius: '6px', background: '#1e293b', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: 700, marginBottom: '4px' }}>💡 Needs improvement</div>
+          {data.gates.filter((g: any) => !g.pass).map((g: any, i: number) => (
+            <div key={i} style={{ fontSize: '10px', color: '#94a3b8' }}>• {g.label}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
   const [aaeData, setAaeData] = useState<any>(null);
   const [aaeLoading, setAaeLoading] = useState(false);
@@ -270,6 +323,8 @@ function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void
             {reportStatus}
           </div>
         )}
+
+        <CasDecisionPanel symbol={stock.symbol} />
 
         <div className="modal-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
           <button

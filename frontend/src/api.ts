@@ -304,6 +304,7 @@ export const api = {
 
     // Breakout Radar
     getBreakoutRadar: () => apiFetch('/breakout/radar'),
+    getCasData: (symbol: string) => apiFetch(`/breakout/cas-data?symbol=${symbol}`),
     getTopByCAS: (limit: number = 5) => apiFetch(`/breakout/top-by-cas?limit=${limit}`),
 
     // Decision 103 V2 — CAS Recommendations API (P4c + P4d)
