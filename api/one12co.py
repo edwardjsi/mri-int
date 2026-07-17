@@ -321,11 +321,18 @@ def email_112co_report(
         
         def _send():
             from engine_core.email_service import send_email_custom
-            send_email_custom(
-                client['email'],
-                f"MRI Research Report: {sym}",
-                html
-            )
+            try:
+                result = send_email_custom(
+                    client['email'],
+                    f"MRI Research Report: {sym}",
+                    html
+                )
+                if result:
+                    log.info(f"Email sent for {sym} to {client['email']}")
+                else:
+                    log.warning(f"Email send returned False for {sym} to {client['email']}")
+            except Exception as e:
+                log.error(f"Email send failed for {sym}: {e}")
         
         background_tasks.add_task(_send)
         return {"status": "QUEUED", "message": f"Research report for {sym} queued for email to {client['email']}."}
@@ -527,7 +534,11 @@ def trigger_fundamental_analysis(
                 <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px;">{summary}</pre>
                 <p><a href="https://mri-api.up.railway.app/?page=research&symbol={sym}">View the full report</a></p>
             </body></html>"""
-            send_email_custom(client['email'], f"Analysis Complete: {sym}", html)
+            ok = send_email_custom(client['email'], f"Analysis Complete: {sym}", html)
+            if ok:
+                log.info(f"Analysis email sent to {client['email']} for {sym}")
+            else:
+                log.warning(f"Analysis email failed for {sym}")
         except Exception as e:
             log.warning(f"Email notification failed: {e}")
     
