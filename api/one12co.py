@@ -257,6 +257,26 @@ def email_112co_report(
         except Exception:
             pass
         
+        # 4. Management Credibility
+        mgmt_label = ""
+        mgmt_detail = ""
+        try:
+            cur.execute("""
+                SELECT total_promises, achieved_count, missed_count, accuracy_pct,
+                       current_verdict, trend
+                FROM management_credibility_scores
+                WHERE symbol = %s
+                LIMIT 1
+            """, (sym,))
+            m_row = cur.fetchone()
+            if m_row:
+                acc = m_row['accuracy_pct']
+                acc_str = f"{acc:.0f}%" if acc else "N/A"
+                mgmt_label = m_row['current_verdict'] or 'N/A'
+                mgmt_detail = f"Promises: {m_row['total_promises']} total, Achieved: {m_row['achieved_count']}, Missed: {m_row['missed_count']}, Accuracy: {acc_str}, Trend: {m_row['trend']}"
+        except Exception:
+            pass
+        
         pe_score = pe_data.get('score', 'N/A')
         pe_lifecycle = pe_data.get('lifecycle_stage', 'N/A')
         
@@ -281,6 +301,12 @@ def email_112co_report(
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
         <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">PE Expansion Score</td><td style="padding: 8px; font-weight: 700;">{pe_score}</td></tr>
         <tr style="background: #f8fafc;"><td style="padding: 8px; color: #64748b;">Lifecycle Stage</td><td style="padding: 8px; font-weight: 700;">{pe_lifecycle}</td></tr>
+    </table>
+
+    <h3 style="font-size: 14px; color: #2563eb; margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 0.05em;">\ud83d\udde3\ufe0f Management Credibility</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <tr><td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">Verdict</td><td style="padding: 8px; font-weight: 700;">{mgmt_label}</td></tr>
+        <tr style="background: #f8fafc;"><td style="padding: 8px; color: #64748b;">Details</td><td style="padding: 8px; font-weight: 700;">{mgmt_detail}</td></tr>
     </table>
 
     <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 12px;">
