@@ -12,6 +12,7 @@ import ConvictionEngine from './ConvictionEngine';
 import ManagementIntegrityPanel from './ManagementIntegrityPanel';
 import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import PeExpansionReport from './PeExpansionReport';
+import ResearchReport from './ResearchReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
@@ -2702,7 +2703,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2733,6 +2734,10 @@ function App() {
     return <UnifiedAnalysis onBack={() => setPage('dashboard')} />;
   }
 
+  if (page === 'research') {
+    const rSymbol = urlParams.get('symbol') || (selectedStock && (selectedStock.symbol || selectedStock)) || '';
+    return <ResearchReport symbol={rSymbol} onBack={() => setPage('dashboard')} />;
+  }
   if (page === 'peexpansion') {
     // Symbol can come from URL param (?symbol=POLYCAB) or from selectedStock.
     // PeExpansionReport handles empty symbols internally — its search + Top 10 panel
