@@ -208,7 +208,7 @@ function CasDecisionPanel({ symbol }: { symbol: string }) {
   );
 }
 
-function StockDetailsModal({ stock, onClose }: { stock: any, onClose: () => void }) {
+function StockDetailsModal({ stock, onClose, onNavigate }: { stock: any, onClose: () => void, onNavigate?: (page: string) => void }) {
   const [aaeData, setAaeData] = useState<any>(null);
   const [aaeLoading, setAaeLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
@@ -2735,7 +2735,7 @@ function App() {
   }
 
   if (page === 'research') {
-    const rSymbol = urlParams.get('symbol') || (selectedStock && (selectedStock.symbol || selectedStock)) || '';
+    const rSymbol = selectedStock ? (selectedStock.symbol || selectedStock) : '';
     return <ResearchReport symbol={rSymbol} onBack={() => setPage('dashboard')} />;
   }
   if (page === 'peexpansion') {
