@@ -469,3 +469,70 @@ def get_research_report(symbol: str, conn=Depends(get_db)):
         return {"symbol": sym, "error": str(e)}
     finally:
         cur.close()
+
+
+@router.post("/analyze/{symbol}")
+def trigger_fundamental_analysis(
+    symbol: str,
+    background_tasks: BackgroundTasks,
+    client=Depends(get_current_client),
+    conn=Depends(get_db)
+):
+    """Trigger on-demand fundamental analysis for a symbol. Runs QIF, Guidance, and AAE. Emails results."""
+    sym = symbol.upper().strip()
+    
+    def _run_analysis():
+        import logging
+        log = logging.getLogger("mri_api.analyze")
+        results = []
+        
+        try:
+            # 1. Prime guidance (concall transcripts + management promises)
+            from engine_guidance.guidance_primer import prime_guidance_data
+            prime_guidance_data(sym)
+            results.append("Management guidance primed")
+            log.info(f"Guidance primed for {sym}")
+        except Exception as e:
+            results.append(f"Guidance skipped: {e}")
+            log.warning(f"Guidance prime failed for {sym}: {e}")
+        
+        try:
+            # 2. AAE data (fundamental financials + governance)
+            from engine_fundamental.aae_data_primer import prime_aae_data
+            prime_aae_data(sym)
+            results.append("AAE data primed")
+            log.info(f"AAE primed for {sym}")
+        except Exception as e:
+            results.append(f"AAE skipped: {e}")
+            log.warning(f"AAE prime failed for {sym}: {e}")
+        
+        try:
+            # 3. Quality pipeline (QIF scores)
+            from engine_fundamental.pipeline import run_quality_pipeline
+            yf_sym = f"{sym}.NS" if not sym.endswith(".NS") and not sym.endswith(".BO") else sym
+            run_quality_pipeline(yf_sym)
+            results.append("Quality analysis complete")
+            log.info(f"Quality pipeline done for {sym}")
+        except Exception as e:
+            results.append(f"Quality skipped: {e}")
+            log.warning(f"Quality failed for {sym}: {e}")
+        
+        # Send email notification
+        try:
+            from engine_core.email_service import send_email_custom
+            summary = "\n".join(f"- {r}" for r in results)
+            html = f"""<html><body style="font-family: Arial; padding: 20px;">
+                <h2>Analysis Complete: {sym}</h2>
+                <p>The following analyses were completed:</p>
+                <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px;">{summary}</pre>
+                <p><a href="https://mri-api.up.railway.app/?page=research&symbol={sym}">View the full report</a></p>
+            </body></html>"""
+            send_email_custom(client['email'], f"Analysis Complete: {sym}", html)
+        except Exception as e:
+            log.warning(f"Email notification failed: {e}")
+    
+    background_tasks.add_task(_run_analysis)
+    return {
+        "status": "QUEUED",
+        "message": f"Analysis for {sym} has started. You will receive an email at {client['email']} when complete."
+    }

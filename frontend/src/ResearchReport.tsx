@@ -60,6 +60,24 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
         ← Back to Dashboard
       </button>
 
+      {/* Analyze trigger */}
+      <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '8px', background: '#1e293b', border: '1px solid #334155', fontSize: '12px', color: '#94a3b8' }}>
+        This report shows available data. Missing sections can be generated on demand.
+        <button className="btn-secondary" style={{ marginLeft: '12px', padding: '6px 16px', fontSize: '11px' }}
+          onClick={async () => {
+            const token = localStorage.getItem('mri_token');
+            if (!token) { alert('Please log in first.'); return; }
+            try {
+              const r = await api.triggerFundamentalAnalysis(symbol);
+              alert(r.message || 'Analysis queued! You will receive an email when ready.');
+            } catch (e: any) {
+              alert('Failed to trigger: ' + (e?.message || 'unknown error'));
+            }
+          }}>
+          🔄 Fetch Full Analysis
+        </button>
+      </div>
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
@@ -139,7 +157,7 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
           )}
 
           {/* Management Credibility */}
-          {mgmt && (
+          {mgmt ? (
             <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🗣️ Management Credibility</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -151,10 +169,15 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
                 ))}
               </div>
             </div>
+          ) : (
+            <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px dashed #334155' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px' }}>🗣️ Management credibility data not yet processed</div>
+              <div style={{ fontSize: '10px', color: '#475569' }}>Click "Fetch Full Analysis" above to analyze concall transcripts.</div>
+            </div>
           )}
 
           {/* PE Expansion */}
-          {pe && (
+          {pe ? (
             <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📊 PE Expansion Signal</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -168,10 +191,15 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px dashed #334155' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px' }}>📊 PE Expansion data not yet processed</div>
+              <div style={{ fontSize: '10px', color: '#475569' }}>Click "Fetch Full Analysis" above to run institutional re-rating scan.</div>
+            </div>
           )}
 
           {/* Quality Fundamentals */}
-          {quality && quality.category && (
+          {quality && quality.category ? (
             <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📊 Quality Fundamentals</h3>
               <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>{quality.category}</div>
@@ -183,6 +211,11 @@ export default function ResearchReport({ symbol, onBack }: { symbol: string; onB
                   </div>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="card" style={{ padding: '16px', marginBottom: '16px', textAlign: 'center', border: '1px dashed #334155' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px' }}>📊 Quality fundamentals not yet analyzed</div>
+              <div style={{ fontSize: '10px', color: '#475569' }}>Click "Fetch Full Analysis" above to run QIF quality pipeline.</div>
             </div>
           )}
         </div>
