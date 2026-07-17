@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -94,8 +95,16 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
   const [error, setError] = useState<string | null>(null);
   const [sortCol, setSortCol] = useState<SortCol>('mri_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [searchQ, setSearchQ] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [toast, setToast] = useState<{msg: string; type: string} | null>(null);
 
-  useEffect(() => {
+  const showToast = useCallback((msg: string, type: string = 'info') => {
+    setToast({msg, type});
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  const fetchStocks = useCallback(() => {
     fetch(`${API_BASE}/api/112co/breakouts`)
       .then(res => res.json())
       .then(data => setStocks(data || []))
@@ -106,6 +115,8 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => { fetchStocks(); }, [fetchStocks]);
+
   const handleSort = (col: SortCol) => {
     if (sortCol === col) {
       setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -113,6 +124,44 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
       setSortCol(col);
       setSortDir('desc');
     }
+  };
+
+  const handleSearch = async (q: string) => {
+    setSearchQ(q);
+    if (q.length < 2) { setSearchResults([]); return; }
+        try {
+      const res = await api.search112co(q);
+      setSearchResults(res || []);
+    } catch { setSearchResults([]); }
+    ;  };
+
+  const handleAdd = async (symbol: string) => {
+    try {
+      const res = await api.add112co(symbol);
+      if (res.status === 'already_present') {
+        showToast(`${symbol} is already in your list`, 'info');
+      } else if (res.status === 'added_with_data') {
+        showToast(`${symbol} added to 112Co`, 'success');
+        fetchStocks();
+      } else if (res.status === 'added_no_data') {
+        showToast(`${symbol} added - no price data found`, 'warning');
+        fetchStocks();
+      } else if (res.status === 'reactivated') {
+        showToast(`${symbol} reactivated`, 'success');
+        fetchStocks();
+      }
+    } catch { showToast(`Failed to add ${symbol}`, 'error'); }
+    setSearchQ('');
+    setSearchResults([]);
+  };
+
+  const handleRemove = async (symbol: string) => {
+    if (!confirm(`Remove ${symbol} from your 112Co list?`)) return;
+    try {
+      await api.remove112co(symbol);
+      showToast(`${symbol} removed from 112Co`, 'info');
+      setStocks(prev => prev.filter(s => s.symbol !== symbol));
+    } catch { showToast(`Failed to remove ${symbol}`, 'error'); }
   };
 
   const brokenOut = useMemo(() => {
@@ -159,7 +208,12 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
           {items.map(item => (
             <tr key={item.symbol} className="clickable-row" onClick={() => onSelectStock(enrichStock(item))}>
               <td className="font-bold">
-                <div>{item.symbol}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{item.symbol}</span>
+                  <button onClick={e => { e.stopPropagation(); handleRemove(item.symbol); }}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: '0', opacity: '0.5' }}
+                    title="Remove from 112Co">×</button>
+                </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>{item.stock_name}</div>
               </td>
               <td>₹{parseFloat(String(item.close)).toLocaleString()}</td>
@@ -193,10 +247,61 @@ export default function One12CoDashboard({ onSelectStock }: { onSelectStock: (st
 
   return (
     <div className="watchlist">
-      <h2 className="section-title">🔬 112Co Breakout Radar</h2>
+      {toast && (
+        <div style={{
+          position: 'fixed', top: '20px', right: '20px', zIndex: 10000,
+          padding: '12px 20px', borderRadius: '8px', fontSize: '13px',
+          background: toast.type === 'success' ? '#22c55e' : toast.type === 'warning' ? '#f59e0b' : toast.type === 'error' ? '#ef4444' : '#334155',
+          color: 'white', fontWeight: 600, boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>{toast.msg}</div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>🔬 112Co Breakout Radar</h2>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="+ Add stock by symbol..."
+            value={searchQ}
+            onChange={e => handleSearch(e.target.value)}
+            style={{
+              padding: '8px 12px', borderRadius: '6px', border: '1px solid #334155',
+              background: '#1e293b', color: '#e2e8f0', fontSize: '13px',
+              width: '220px', outline: 'none'
+            }}
+          />
+          {searchResults.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', right: 0, zIndex: 999,
+              background: '#1e293b', border: '1px solid #334155', borderRadius: '6px',
+              width: '300px', maxHeight: '300px', overflowY: 'auto', marginTop: '4px'
+            }}>
+              {searchResults.map((r: any) => (
+                <div key={r.symbol}
+                  style={{
+                    padding: '8px 12px', cursor: 'pointer', fontSize: '12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    borderBottom: '1px solid #1e293b'
+                  }}
+                  onClick={() => handleAdd(r.symbol)}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#e2e8f0' }}>{r.symbol}</div>
+                    {r.stock_name && <div style={{ fontSize: '10px', color: '#64748b' }}>{r.stock_name}</div>}
+                  </div>
+                  <div style={{
+                    fontSize: '10px', padding: '2px 8px', borderRadius: '4px',
+                    background: r.in_universe ? '#22c55e20' : '#3b82f620',
+                    color: r.in_universe ? '#22c55e' : '#3b82f6'
+                  }}>{r.in_universe ? '✓ In list' : '+ Add'}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
-        Custom {stocks.length}-company universe — PE expansion watchlist with MRI breakout detection.
-        Click any stock for the full 7-gate breakdown + fundamentals.
+        Click any stock for the full 7-gate breakdown + fundamentals. Hover the × to remove.
       </p>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
         <span>🟢 BROKEN: {brokenOut.length}</span>

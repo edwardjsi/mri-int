@@ -307,6 +307,12 @@ export const api = {
     getCasData: (symbol: string) => apiFetch(`/breakout/cas-data?symbol=${symbol}`),
     getTopByCAS: (limit: number = 5) => apiFetch(`/breakout/top-by-cas?limit=${limit}`),
 
+    // 112Co Universe Management
+    get112coBreakouts: () => apiFetch('/112co/breakouts'),
+    search112co: (q: string) => apiFetch(`/112co/search?q=${q}`),
+    add112co: (symbol: string) => apiFetch(`/112co/add?symbol=${symbol}`, { method: 'POST' }),
+    remove112co: (symbol: string) => apiFetch(`/112co/remove?symbol=${symbol}`, { method: 'POST' }),
+
     // Decision 103 V2 — CAS Recommendations API (P4c + P4d)
     listCasRecommendations: (params?: { symbol?: string; days?: number; limit?: number }) => {
         const qs = new URLSearchParams();

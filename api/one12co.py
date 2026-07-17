@@ -105,3 +105,89 @@ def get_112co_summary(conn=Depends(get_db)):
         return {"error": str(e)}
     finally:
         cur.close()
+
+
+@router.post("/add")
+def add_112co_symbol(symbol: str, conn=Depends(get_db)):
+    """Add a symbol to the 112Co universe."""
+    sym = symbol.upper().strip()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT is_active FROM universe_112co WHERE symbol = %s", (sym,))
+        row = cur.fetchone()
+        if row:
+            if row['is_active']:
+                return {"status": "already_present", "symbol": sym}
+            cur.execute("UPDATE universe_112co SET is_active = TRUE WHERE symbol = %s", (sym,))
+            conn.commit()
+            return {"status": "reactivated", "symbol": sym}
+        cur.execute("INSERT INTO universe_112co (symbol, is_active) VALUES (%s, TRUE) ON CONFLICT DO NOTHING", (sym,))
+        conn.commit()
+        cur.execute("SELECT COUNT(*) AS c FROM daily_prices WHERE symbol = %s", (sym,))
+        has_data = cur.fetchone()['c'] > 0
+        if not has_data:
+            try:
+                from engine_core.ingestion_engine import load_stocks
+                load_stocks([sym])
+                cur.execute("SELECT COUNT(*) AS c FROM daily_prices WHERE symbol = %s", (sym,))
+                has_data = cur.fetchone()['c'] > 0
+            except Exception:
+                pass
+        status = "added_with_data" if has_data else "added_no_data"
+        return {"status": status, "symbol": sym, "has_data": has_data}
+    except Exception as e:
+        log.error(f"112Co add error: {e}")
+        return {"status": "error", "error": str(e)}
+    finally:
+        cur.close()
+
+
+@router.post("/remove")
+def remove_112co_symbol(symbol: str, conn=Depends(get_db)):
+    sym = symbol.upper().strip()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE universe_112co SET is_active = FALSE WHERE symbol = %s", (sym,))
+        conn.commit()
+        return {"status": "removed", "symbol": sym}
+    except Exception as e:
+        log.error(f"112Co remove error: {e}")
+        return {"status": "error", "error": str(e)}
+    finally:
+        cur.close()
+
+
+@router.get("/search")
+def search_112co_symbols(q: str = "", limit: int = 20, conn=Depends(get_db)):
+    if not q or len(q.strip()) < 2:
+        return []
+    query = q.strip().upper()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        sql = """
+            SELECT DISTINCT dp.symbol, NULL AS stock_name,
+                   EXISTS (SELECT 1 FROM universe_112co u WHERE u.symbol = dp.symbol AND u.is_active = TRUE) AS in_universe
+            FROM daily_prices dp
+            WHERE dp.symbol ILIKE %s
+            LIMIT %s
+        """
+        cur.execute(sql, (f'%{query}%', limit))
+        results = cur.fetchall()
+        if len(results) < limit:
+            sql2 = """
+                SELECT symbol, stock_name, TRUE AS in_universe
+                FROM universe_112co
+                WHERE stock_name ILIKE %s AND is_active = TRUE
+                LIMIT %s
+            """
+            cur.execute(sql2, (f'%{query}%', limit - len(results)))
+            existing = {r['symbol'] for r in results}
+            for r in cur.fetchall():
+                if r['symbol'] not in existing:
+                    results.append(r)
+        return results
+    except Exception as e:
+        log.error(f"112Co search error: {e}")
+        return []
+    finally:
+        cur.close()
