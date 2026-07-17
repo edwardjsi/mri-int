@@ -2957,3 +2957,34 @@ so `os.path.exists()` returned `False` and the handler returned the early-exit
 **Files changed**: `Dockerfile`, `Dockerfile.api`, `api/decisions.py`,
 `api/main.py`, `frontend/src/App.tsx`, `frontend/src/DecisionsPage.tsx`,
 `frontend/src/api.ts` — 7 files, +358/-4 lines.
+
+
+---
+
+## **July 17, 2026: 112Co Universe Expansion + Unified Modal System**
+
+**Objective**: Expand the 112Co universe to include user-specified companies, unify the stock detail modal across all pages (MRI 7-gates + CAS 6-gates), clean up stale tickers, and map alternate tickers to working Yahoo equivalents.
+
+**Why this is incremental work**: The 112Co universe was the primary watchlist but had stale/duplicate entries, and each page (112co, Breakout Radar, Swing Momentum) had its own click behavior. This session consolidated everything into a single consistent experience.
+
+**Actions**:
+
+- **Restored original 172-stock universe** after accidental overreach during ticker cleanup, then carefully added user's lists with Yahoo validation.
+- **Added 12 ticker fixes** — mapped old alternates to working equivalents (ASHOKABUILD → ASHOKA, BAJAJCONSUM → BAJAJCON, CIGNITI → CIGNITITEC, ENGINEERSIND → ENGINERSIN, GEVERNOVA → GVTD, GRMOVERSEAS → GRMOVER, HERITAGEFOOD → HERITGFOOD, HPLELEC → HPL, KPENERGY → KPEL, RAMRATNA → RAMRAT, WEBSOLAR → WEBELSOLAR, FREDUN → FREDUN.BO).
+- **Added new symbols**: ARIES, AXISBANK, MANINDS, SCHNEIDER, VALIANTORG — all verified with Yahoo data.
+- **Removed 42 stale alternate tickers** where the working equivalent already existed in the universe.
+- **Kept 29 tickers with no Yahoo match** for user to fix later.
+- **Final universe**: 186 active, 157 with data, 29 without data.
+- **Updated ScoreBreakdown** to match Readme — steps 1–5 weighted (25/25/20/20/10), steps 6–7 marked as 🚀/✨ Bonus.
+- **New API endpoint** `GET /api/breakout/cas-data?symbol=XYZ` — returns 6 CAS gates for any single stock.
+- **Unified StockDetailsModal** — now renders on all pages (112co, Breakout Radar, Swing Momentum, Dashboard) showing:
+  - MRI 7-gate score breakdown
+  - CAS 6-gate breakout decision panel (fetched on-demand)
+  - QualityVerdict fundamentals
+  - Embedded debate section
+  - AAE institutional data
+- **BreakoutRadar simplified** — removed standalone `CasBreakoutModal`, now uses the same unified modal.
+
+**Files changed**: `api/breakout_status.py`, `api/one12co.py`, `frontend/src/App.tsx`, `frontend/src/BreakoutRadar.tsx`, `frontend/src/One12CoDashboard.tsx`, `frontend/src/api.ts`, `Progress.md`, `Sessions.md`, `api/static/` rebuilt bundles — 9 files, ~800+ lines changed.
+
+**Pending**: The MRI 7 technical gates are working correctly (computed from daily price data). The user wants deeper fundamental analysis (annual reports, quarterly results, concall transcripts) applied to the 112co universe — this is a new initiative that builds on existing QIF, AAE, and Management Credibility systems.

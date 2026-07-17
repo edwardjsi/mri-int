@@ -3044,3 +3044,58 @@ frontend/src/api.ts     |  13 ++-
 - **Decision 100** — Capital Allocation Score V1.0 — unchanged, still APPROVED.
 - **Decision 101** — unchanged.
 - **Decision 103** — unchanged.
+
+
+---
+
+## 📅 Session: July 17, 2026 — 112Co Universe Expansion + 7-Gate/6-Gate Modal Unification
+
+**Session Start:** afternoon IST
+**Session End:** evening IST
+
+> **Status: ✅ Complete.** 112Co universe expanded from 172 to 240 stocks (then settled at 186 after cleanup). 112Co and Breakout Radar pages unified with same table layout and the same unified StockDetailsModal showing MRI 7-gates + CAS 6-gate breakout decision on any page.
+
+### What Was Done This Session
+
+#### 1. 112Co Universe Management ✅
+- [x] Restored original 172-stock universe after accidental overreach.
+- [x] Added user's company lists across multiple rounds — ticker validation against Yahoo Finance.
+- [x] Cleaned up 42 old/alternate duplicate tickers that had no Yahoo data.
+- [x] Kept 29 tickers with no Yahoo match for user to fix later.
+- [x] Final state: **186 active, 157 with data, 29 without data.**
+
+#### 2. 7-Gate MRI Score → Readme-aligned Display ✅
+- [x] Updated ScoreBreakdown to match Readme: steps 1–5 weighted (25+25+20+20+10 = 100%), steps 6–7 marked as 🚀 Bonus / ✨ Bonus.
+- [x] Both 112Co and Breakout Radar now open the same StockDetailsModal with the full 7-gate breakdown on click.
+
+#### 3. 6-Gate CAS Breakout Decision Everywhere ✅
+- [x] New API endpoint `GET /api/breakout/cas-data?symbol=XYZ` — returns 6 CAS gates for any single stock.
+- [x] `CasDecisionPanel` component added to StockDetailsModal — shows on every page (112co, Swing Momentum, Breakout Radar, Dashboard).
+- [x] Breakout Radar's standalone `CasBreakoutModal` replaced with unified StockDetailsModal.
+
+#### 4. Ticker Mapping & Yahoo Data Ingestion ✅
+- [x] Mapped 12 old alternate tickers to working Yahoo equivalents (ASHOKABUILD → ASHOKA, BAJAJCONSUM → BAJAJCON, etc.).
+- [x] Added new tickers from user's semiconductor/chemicals list: ARIES, AXISBANK, MANINDS, SCHNEIDER, VALIANTORG.
+- [x] Ingested ~46 new symbols; 22 got data, 24 have no Yahoo match.
+
+#### 5. Universe Cleanup ✅
+- [x] Removed 42 stale alternate ticker entries where the working equivalent already existed.
+- [x] Reduced from 240 → 186 active (clean, non-duplicate universe).
+- [x] Deleted deactivated rows from `universe_112co` table.
+
+### Files Changed
+```
+api/breakout_status.py          | +126 lines (CAS data endpoint)
+api/one12co.py                  | LEFT JOIN for missing stocks
+frontend/src/App.tsx            | CasDecisionPanel in StockDetailsModal
+frontend/src/BreakoutRadar.tsx  | Removed standalone modal, uses unified
+frontend/src/One12CoDashboard.tsx | Match table style + enrich on click
+frontend/src/api.ts             | getCasData endpoint
+api/static/                     | Rebuilt bundles
+```
+
+### Database Changes (not in git)
+- universe_112co restored to 172 → expanded to 240 → cleaned to 186.
+- 12 alternate tickers mapped to working equivalents.
+- 22 new symbols ingested with price data.
+- Stock names updated on ~30 tickers.
