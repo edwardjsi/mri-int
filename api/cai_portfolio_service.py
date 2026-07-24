@@ -40,17 +40,19 @@ def get_or_create_portfolio(cur, client):
     client_id = str(client["id"])
     email = client.get("email", "unknown")
     
-    cur.execute("SELECT id, owner, cash, health FROM cai_portfolio WHERE id = %s", (client_id,))
+    # Check by owner (client UUID) first. Legacy code might have set owner=email, so check both.
+    cur.execute("SELECT id, owner, cash, health FROM cai_portfolio WHERE owner = %s OR owner = %s LIMIT 1", (client_id, email))
     portfolio = cur.fetchone()
     
     if not portfolio:
+        new_id = str(uuid.uuid4())
         cur.execute(
             """
             INSERT INTO cai_portfolio (id, owner, cash, health)
             VALUES (%s, %s, 0.00, NULL)
             RETURNING id, owner, cash, health
             """,
-            (client_id, email)
+            (new_id, client_id)
         )
         portfolio = cur.fetchone()
         
