@@ -13,11 +13,16 @@ from engine_core.cai_health_engine import compute_position_health
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def import_portfolio(csv_path: str, dry_run: bool = False):
+def import_portfolio(csv_path: str, email: str, dry_run: bool = False):
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            client_id = "default_user" 
+            cur.execute("SELECT id FROM clients WHERE email = %s", (email,))
+            client_row = cur.fetchone()
+            if not client_row:
+                logger.error(f"Client with email {email} not found.")
+                return
+            client_id = str(client_row[0])
             
             cur.execute("SELECT id FROM cai_portfolio WHERE owner = %s LIMIT 1", (client_id,))
             row = cur.fetchone()
@@ -154,10 +159,11 @@ def import_portfolio(csv_path: str, dry_run: bool = False):
         conn.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python import_cai_holdings.py <csv_file> [--dry-run]")
+    if len(sys.argv) < 3:
+        print("Usage: python import_cai_holdings.py <csv_file> <email> [--dry-run]")
         sys.exit(1)
         
     csv_file = sys.argv[1]
+    email = sys.argv[2]
     is_dry_run = "--dry-run" in sys.argv
-    import_portfolio(csv_file, dry_run=is_dry_run)
+    import_portfolio(csv_file, email, dry_run=is_dry_run)
