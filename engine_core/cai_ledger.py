@@ -79,7 +79,8 @@ def get_ledger_history(portfolio_id: str):
                 FROM cai_decision_ledger l
                 JOIN cai_committee_decision d ON l.decision_report_id = d.report_id AND l.decision_position_id = d.position_id
                 JOIN cai_position p ON l.decision_position_id = p.id
-                WHERE p.portfolio_id = %s
+                JOIN cai_portfolio port ON p.portfolio_id = port.id
+                WHERE port.owner = %s
                 ORDER BY l.execution_date DESC NULLS LAST
                 """,
                 (portfolio_id,)
