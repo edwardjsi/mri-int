@@ -28,10 +28,10 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
             if not pos:
                 return {"recommendation": "ERROR", "reason": "Active position not found"}
                 
-            symbol = pos[0]
-            qty = pos[1]
-            avg_price = pos[2]
-            tranche = pos[3]
+            symbol = pos['symbol']
+            qty = pos['quantity']
+            avg_price = float(pos['average_price'])
+            tranche = pos['tranche']
             
             # 2. Fetch live price and health
             cur.execute("SELECT close, ema_50, ema_200 FROM daily_prices WHERE symbol = %s ORDER BY date DESC LIMIT 1", (symbol,))
@@ -39,9 +39,9 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
             if not price_data:
                 return {"recommendation": "HOLD", "reason": "Missing live data"}
                 
-            close_price = price_data[0]
-            ema_50 = price_data[1]
-            ema_200 = price_data[2]
+            close_price = float(price_data['close'])
+            ema_50 = float(price_data['ema_50']) if price_data['ema_50'] else close_price
+            ema_200 = float(price_data['ema_200']) if price_data['ema_200'] else close_price
             
             health_score = compute_position_health(symbol)
             

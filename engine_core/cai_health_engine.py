@@ -51,7 +51,7 @@ def compute_position_health(symbol: str) -> float:
                 )
                 recent_days = cur.fetchall()
                 if recent_days:
-                    latest_rs = recent_days[0][0]
+                    latest_rs = recent_days[0]['rs_90d']
                     if latest_rs and latest_rs > 0:
                         rs_score = 20
                     elif latest_rs and latest_rs > -2.0:
@@ -60,10 +60,10 @@ def compute_position_health(symbol: str) -> float:
                     # Distribution check: count down days with volume > avg
                     dist_days = 0
                     for day in recent_days:
-                        vol = day[1]
-                        avg_vol = day[2]
-                        day_close = day[3]
-                        day_open = day[4]
+                        vol = day['volume']
+                        avg_vol = day['avg_volume_20d']
+                        day_close = day['close']
+                        day_open = day['open']
                         if day_close and day_open and day_close < day_open and vol and avg_vol and vol > avg_vol:
                             dist_days += 1
                             

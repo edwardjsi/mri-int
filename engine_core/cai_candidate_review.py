@@ -16,7 +16,7 @@ def evaluate_candidate(symbol: str) -> Dict[str, Any]:
             # 1. Fetch MRI Score
             cur.execute("SELECT total_score FROM stock_scores WHERE symbol = %s ORDER BY date DESC LIMIT 1", (symbol,))
             row = cur.fetchone()
-            mri_score = row[0] if row else 0
+            mri_score = row['total_score'] if row else 0
             
             # 2. Fetch Breakout state & Indicators
             cur.execute(
@@ -32,12 +32,12 @@ def evaluate_candidate(symbol: str) -> Dict[str, Any]:
             if not price_data:
                 return {"recommendation": "REJECT", "reason": "No price data available"}
                 
-            close = price_data[0]
-            ema_50 = price_data[1]
-            ema_200 = price_data[2]
-            breakout_state = price_data[3]
-            rs_90d = price_data[4]
-            volume_confirmed = price_data[5]
+            close = price_data['close']
+            ema_50 = price_data['ema_50']
+            ema_200 = price_data['ema_200']
+            breakout_state = price_data['breakout_state']
+            rs_90d = price_data['rs_90d']
+            volume_confirmed = price_data['volume_confirmed_breakout']
             
             # 3. Simple Candidate Logic based on PRD requirements
             # Need high score and strong technicals to risk the First Tranche
