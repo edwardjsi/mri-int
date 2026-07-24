@@ -122,12 +122,26 @@ def import_portfolio(csv_path: str, email: str, dry_run: bool = False):
                 
                 review_id = str(uuid.uuid4())
                 
+                # Compute profit pct to check for underwater positions
+                try:
+                    conn2 = get_connection()
+                    with conn2.cursor() as cur2:
+                        cur2.execute("SELECT close FROM daily_prices WHERE symbol = %s ORDER BY date DESC LIMIT 1", (h["symbol"],))
+                        px_row = cur2.fetchone()
+                        live_price = float(px_row['close']) if px_row else h["avg_cost"]
+                    conn2.close()
+                except:
+                    live_price = h["avg_cost"]
+                
+                profit_pct = ((live_price - h["avg_cost"]) / h["avg_cost"]) * 100 if h["avg_cost"] > 0 else 0
+                is_under_water = profit_pct <= 0
+
                 # PRD logic approximation
                 if health_score < 30:
                     rec = "EXIT"
                 elif health_score < 40:
                     rec = "REDUCE"
-                elif health_score < 60:
+                elif is_under_water:
                     rec = "WAIT"
                 elif health_score < 75:
                     rec = "HOLD"
