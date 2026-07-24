@@ -2758,9 +2758,8 @@ function App() {
           <button className={`nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
             <span className="nav-icon">🏠</span> Dashboard
           </button>
-          <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
-            <span className="nav-icon">🔄</span> Swing Momentum
-          </button>
+
+          <div className="nav-section-label">Portfolio</div>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
             <span className="nav-icon">📋</span> History
           </button>
@@ -2773,12 +2772,19 @@ function App() {
           <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
             <span className="nav-icon">👀</span> Watchlist
           </button>
+
+          <div className="nav-section-label">Signals</div>
+          <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
+            <span className="nav-icon">🔄</span> Swing Momentum
+          </button>
           <button className={`nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>
             <span className="nav-icon">🚀</span> Breakout Radar
           </button>
           <button className={`nav-link ${page === '112co' ? 'active' : ''}`} onClick={() => setPage('112co')}>
             <span className="nav-icon">🔬</span> 112Co Watchlist
           </button>
+
+          <div className="nav-section-label">Research</div>
           <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
             <span className="nav-icon">🏛️</span> PERX
           </button>
