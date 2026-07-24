@@ -430,3 +430,8 @@ export const api = {
 };
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
+export const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('mri_token');
+    if (!token) return {};
+    return { 'Authorization': `Bearer ${token}` };
+};

@@ -15,6 +15,10 @@ from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_ba
 from engine_guidance.guidance_primer import prime_guidance_data, prime_guidance_data_batch
 from engine_core.cai_weekly_chart_engine import generate_weekly_candles
 from engine_core.cai_health_engine import compute_position_health
+from engine_core.cai_candidate_review import evaluate_candidate
+from engine_core.cai_position_review import evaluate_position
+from engine_core.cai_committee import generate_committee_report, approve_committee_report
+from engine_core.cai_ledger import get_ledger_history, execute_ledger_decisions
 from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
 import json
@@ -400,6 +404,22 @@ async def get_weekly_chart(symbol: str, years: int = 3, client=Depends(get_curre
         raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
     return {"symbol": symbol.upper(), "data": candles}
 
+@router.get("/candidate/{symbol}")
+async def get_candidate_review(symbol: str, client=Depends(get_current_client)):
+    """Evaluate a candidate for the first tranche."""
+    res = evaluate_candidate(symbol.upper().strip())
+    if res.get("recommendation") == "ERROR":
+        raise HTTPException(status_code=400, detail=res.get("reason"))
+    return res
+
+@router.get("/position/{position_id}")
+async def get_position_review(position_id: str, client=Depends(get_current_client)):
+    """Evaluate an existing position for subsequent tranches/exit."""
+    res = evaluate_position(position_id, str(client["id"]))
+    if res.get("recommendation") == "ERROR":
+        raise HTTPException(status_code=400, detail=res.get("reason"))
+    return res
+
 class ReviewSubmitRequest(BaseModel):
     position_id: str
     trigger: Optional[str] = None
@@ -477,3 +497,32 @@ async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_curr
         raise HTTPException(status_code=500, detail="Failed to save review")
     finally:
         cur.close()
+
+@router.post("/committee/generate")
+async def generate_committee(client=Depends(get_current_client)):
+    """Generate a weekly committee report for the portfolio."""
+    res = generate_committee_report(str(client["id"]))
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
+
+@router.post("/committee/approve/{report_id}")
+async def approve_committee(report_id: str, client=Depends(get_current_client)):
+    """Approve a committee report and push decisions to the ledger."""
+    res = approve_committee_report(report_id)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
+
+@router.get("/ledger")
+async def get_ledger(client=Depends(get_current_client)):
+    """Get the immutable decision ledger."""
+    return get_ledger_history(str(client["id"]))
+
+@router.post("/ledger/execute")
+async def execute_ledger(client=Depends(get_current_client)):
+    """Execute pending ledger decisions."""
+    res = execute_ledger_decisions()
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res

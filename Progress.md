@@ -3114,3 +3114,16 @@ api/static/                     | Rebuilt bundles
 
 **Status:** Phase 1 (Backend Foundation) is 100% Complete. 
 **Next Steps:** Phase 2 (Frontend Charting & Canvas UI).
+
+## 📅 Session: July 24, 2026 — CAI V2.0 Phase 2 & Phase 3 Complete
+
+**Objective:** Implement the CAI V2.0 Frontend UI (Phase 2) and Investment Committee/Ledger (Phase 3).
+
+### Key Accomplishments
+1. **Phase 2 (Frontend Charting & Canvas UI):** Built `CaiWeeklyChart.tsx` using `lightweight-charts` for institutional-grade visual review with EMA 10/40 overlays.
+2. **Candidate Review:** Embedded `CaiCandidateReview.tsx` into the `BreakoutRadar.tsx` for pre-ownership tranche evaluation.
+3. **CAI Workspace:** Created `CaiPortfolioPage.tsx` and linked it in `App.tsx` navigation.
+4. **Phase 3 (Investment Committee):** Built `engine_core/cai_committee.py` to aggregate pending reviews into weekly Friday reports. Built `CaiCommittee.tsx` to review and approve these batches.
+5. **Phase 3 (Decision Ledger):** Built `engine_core/cai_ledger.py` to immutably log committee decisions and execute them on Monday morning. Built `CaiLedger.tsx` UI to execute pending actions and track the history.
+
+**Status:** Phase 2 and Phase 3 are 100% Complete. 

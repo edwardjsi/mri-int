@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from './api';
 import BreakoutBadge from './BreakoutBadge';
+import { CaiCandidateReview } from './CaiCandidateReview';
 
 /** Compute the 6 CAS breakout decision gates from radar data. */
 
@@ -39,6 +40,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
   const [loading, setLoading] = useState(true);
   const [sortCol, setSortCol] = useState<SortCol>('mri_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [reviewSymbol, setReviewSymbol] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -91,6 +93,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
               </th>
             ))}
             <th>Status</th>
+            <th>CAI</th>
           </tr>
         </thead>
         <tbody>
@@ -112,6 +115,14 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
                 {item.mri_score}
               </td>
               <td><BreakoutBadge state={item.breakout_state} /></td>
+              <td>
+                <button
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded"
+                  onClick={(e) => { e.stopPropagation(); setReviewSymbol(item.symbol); }}
+                >
+                  Review
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -163,7 +174,13 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
         </div>
       )}
 
-
+      {reviewSymbol && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setReviewSymbol(null)}>
+          <div className="bg-gray-900 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <CaiCandidateReview symbol={reviewSymbol} onClose={() => setReviewSymbol(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

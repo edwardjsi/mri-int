@@ -14,6 +14,7 @@ import UnifiedAnalysis from './UnifiedAnalysis'; // Build: 2026-05-29T17:45Z
 import PeExpansionReport from './PeExpansionReport';
 import ResearchReport from './ResearchReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
+import { CaiPortfolioPage } from './CaiPortfolioPage';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2760,6 +2761,9 @@ function App() {
           </button>
 
           <div className="nav-section-label">Portfolio</div>
+          <button className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`} onClick={() => setPage('caiportfolio')}>
+            <span className="nav-icon">💼</span> CAI Workspace
+          </button>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
             <span className="nav-icon">📋</span> History
           </button>
@@ -2825,13 +2829,15 @@ function App() {
                       page === '112co' ? '112Co Watchlist' :
                       page === 'breakout' ? 'Breakout Radar' :
                       page === 'perx' ? 'PERX Institutional Scan' :
-page === 'unified' ? 'Unified Institutional Scan' :
+                      page === 'caiportfolio' ? 'CAI Portfolio Workspace' :
+                      page === 'unified' ? 'Unified Institutional Scan' :
                       page === 'guidance' ? 'Management Credibility' :
                       page === 'admin' ? 'Platform Intelligence' :'My Performance'}
           </h1>
         </header>
         <div className="content-body">
           {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
+          {page === 'caiportfolio' && <CaiPortfolioPage />}
           {page === 'shadow' && <ShadowMomentumPage onSelectStock={setSelectedStock} />}
           {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}
           {page === 'performance' && <PerformancePage />}
