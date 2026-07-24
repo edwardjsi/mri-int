@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAuthHeaders } from './api';
 import { CaiPositionReview } from './CaiPositionReview';
-import { Briefcase, FileText, Database } from 'lucide-react';
+import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
 import { CaiLedger } from './CaiLedger';
 
@@ -11,6 +11,9 @@ export const CaiPortfolioPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [reviewPositionId, setReviewPositionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'committee' | 'ledger'>('portfolio');
+
+  const [sortField, setSortField] = useState<string>('symbol');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const fetchPortfolio = async () => {
     try {
@@ -31,6 +34,31 @@ export const CaiPortfolioPage: React.FC = () => {
   useEffect(() => {
     fetchPortfolio();
   }, []);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedPositions = portfolio?.positions ? [...portfolio.positions].sort((a: any, b: any) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+    
+    if (typeof aVal === 'string') {
+      aVal = aVal.toLowerCase();
+      bVal = bVal.toLowerCase();
+    }
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  }) : [];
+
+  const totalInvested = portfolio?.positions?.reduce((sum: number, pos: any) => sum + (pos.quantity * pos.average_price), 0) || 0;
 
   if (loading && !portfolio) {
     return <div className="p-8 text-center text-gray-400">Loading CAI Portfolio...</div>;
@@ -94,26 +122,36 @@ export const CaiPortfolioPage: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-800/50 border-b border-gray-800">
-              <th className="p-4 text-gray-400 font-semibold">Symbol</th>
-              <th className="p-4 text-gray-400 font-semibold text-right">Avg Price</th>
-              <th className="p-4 text-gray-400 font-semibold text-right">Qty</th>
-              <th className="p-4 text-gray-400 font-semibold text-center">Allocation</th>
-              <th className="p-4 text-gray-400 font-semibold text-center">Tranches</th>
+              <th className="p-4 text-gray-400 font-semibold cursor-pointer hover:text-white" onClick={() => handleSort('symbol')}>
+                <div className="flex items-center">Symbol <ArrowUpDown className="w-3 h-3 ml-2 opacity-50"/></div>
+              </th>
+              <th className="p-4 text-gray-400 font-semibold text-right cursor-pointer hover:text-white" onClick={() => handleSort('average_price')}>
+                <div className="flex items-center justify-end">Avg Price <ArrowUpDown className="w-3 h-3 ml-2 opacity-50"/></div>
+              </th>
+              <th className="p-4 text-gray-400 font-semibold text-right cursor-pointer hover:text-white" onClick={() => handleSort('quantity')}>
+                <div className="flex items-center justify-end">Qty <ArrowUpDown className="w-3 h-3 ml-2 opacity-50"/></div>
+              </th>
+              <th className="p-4 text-gray-400 font-semibold text-center cursor-pointer hover:text-white" onClick={() => handleSort('allocation')}>
+                <div className="flex items-center justify-center">Allocation <ArrowUpDown className="w-3 h-3 ml-2 opacity-50"/></div>
+              </th>
+              <th className="p-4 text-gray-400 font-semibold text-center cursor-pointer hover:text-white" onClick={() => handleSort('tranche')}>
+                <div className="flex items-center justify-center">Tranches <ArrowUpDown className="w-3 h-3 ml-2 opacity-50"/></div>
+              </th>
               <th className="p-4 text-gray-400 font-semibold text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {!portfolio?.positions || portfolio.positions.length === 0 ? (
+            {!sortedPositions || sortedPositions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-gray-500">
                   No active positions found. Use Candidate Review in discovery screens to add your first tranche.
                 </td>
               </tr>
             ) : (
-              portfolio.positions.map((pos: any) => (
+              sortedPositions.map((pos: any) => (
                 <tr key={pos.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                   <td className="p-4 font-bold text-white">{pos.symbol}</td>
-                  <td className="p-4 text-right font-mono text-gray-300">₹{pos.average_price.toFixed(2)}</td>
+                  <td className="p-4 text-right font-mono text-gray-300">₹{pos.average_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                   <td className="p-4 text-right text-gray-300">{pos.quantity}</td>
                   <td className="p-4 text-center">
                     <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-sm font-medium">
@@ -143,6 +181,17 @@ export const CaiPortfolioPage: React.FC = () => {
               ))
             )}
           </tbody>
+          {sortedPositions && sortedPositions.length > 0 && (
+            <tfoot className="bg-gray-800/80 border-t-2 border-gray-700">
+              <tr>
+                <td className="p-4 font-bold text-white">Total</td>
+                <td className="p-4 text-right font-mono font-bold text-blue-400">
+                  ₹{totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </td>
+                <td colSpan={4}></td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       )}

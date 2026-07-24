@@ -20,7 +20,7 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
                 SELECT p.symbol, p.quantity, p.average_price, p.tranche, p.status, port.id as portfolio_id
                 FROM cai_position p
                 JOIN cai_portfolio port ON p.portfolio_id = port.id
-                WHERE p.id = %s AND port.id = %s AND p.status = 'ACTIVE'
+                WHERE p.id = %s AND port.owner = %s AND p.status = 'ACTIVE'
                 """,
                 (position_id, client_id)
             )
