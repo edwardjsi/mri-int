@@ -12,6 +12,8 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [qty, setQty] = useState(10);
+  const [price, setPrice] = useState(0);
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -26,6 +28,7 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
         }
         const json = await res.json();
         setData(json);
+        if (json.current_price) setPrice(json.current_price);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -34,6 +37,28 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
     };
     fetchCandidate();
   }, [symbol]);
+
+  const handleExecute = async () => {
+    try {
+      const res = await fetch('/api/cai/portfolio/positions', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          symbol: symbol,
+          quantity: Number(qty),
+          average_price: Number(price)
+        })
+      });
+      if (!res.ok) {
+         const err = await res.json();
+         throw new Error(err.detail || 'Failed to add position');
+      }
+      alert(`Successfully added ${symbol} to CAI Portfolio`);
+      if (onClose) onClose();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
 
   const getRecommendationColor = (rec: string) => {
     switch (rec) {
@@ -99,12 +124,24 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
             </div>
             
             {data.recommendation === 'BUY FIRST TRANCHE' && (
-              <button 
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-                onClick={() => alert(`Adding ${symbol} to Portfolio`)}
-              >
-                Execute First Tranche
-              </button>
+              <div className="space-y-3 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 block mb-1">Qty</label>
+                    <input type="number" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white" value={qty} onChange={e => setQty(Number(e.target.value))} />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 block mb-1">Avg Price (₹)</label>
+                    <input type="number" className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white" value={price} onChange={e => setPrice(Number(e.target.value))} />
+                  </div>
+                </div>
+                <button 
+                  className="w-full py-2 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                  onClick={handleExecute}
+                >
+                  Execute First Tranche
+                </button>
+              </div>
             )}
           </div>
         </div>

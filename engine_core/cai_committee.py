@@ -23,7 +23,7 @@ def generate_committee_report(portfolio_id: str) -> dict:
             )
             existing = cur.fetchone()
             if existing:
-                return {"status": "error", "message": "Unapproved report already exists for this week.", "report_id": existing[0]}
+                return {"status": "error", "message": "Unapproved report already exists for this week.", "report_id": existing['id'] if isinstance(existing, dict) else existing[0]}
 
             # Find all latest reviews for active positions in this portfolio
             cur.execute(
@@ -31,11 +31,12 @@ def generate_committee_report(portfolio_id: str) -> dict:
                 SELECT p.id, p.symbol, r.recommendation, r.position_health, r.notes
                 FROM cai_position p
                 JOIN cai_position_review r ON p.id = r.position_id
-                WHERE p.portfolio_id = %s AND p.status = 'ACTIVE'
+                JOIN cai_portfolio port ON p.portfolio_id = port.id
+                WHERE port.owner = %s AND p.status = 'ACTIVE'
                   AND r.review_date >= CURRENT_DATE - INTERVAL '7 days'
                 ORDER BY r.review_date DESC
                 """,
-                (portfolio_id,)
+                (portfolio_id,) # Here portfolio_id is actually client_id
             )
             reviews = cur.fetchall()
             
@@ -54,14 +55,16 @@ def generate_committee_report(portfolio_id: str) -> dict:
             decisions = []
             
             for row in reviews:
-                pos_id = row[0]
+                pos_id = row['id'] if isinstance(row, dict) else row[0]
                 if pos_id in processed_positions:
                     continue
                 processed_positions.add(pos_id)
                 
-                symbol = row[1]
-                rec = row[2]
-                reason = f"Based on review. Health: {row[3]}. Notes: {row[4] or 'None'}"
+                symbol = row['symbol'] if isinstance(row, dict) else row[1]
+                rec = row['recommendation'] if isinstance(row, dict) else row[2]
+                health = row['position_health'] if isinstance(row, dict) else row[3]
+                notes = row['notes'] if isinstance(row, dict) else row[4]
+                reason = f"Based on review. Health: {health}. Notes: {notes or 'None'}"
                 
                 cur.execute(
                     """
@@ -107,7 +110,7 @@ def approve_committee_report(report_id: str) -> dict:
             decisions = cur.fetchall()
             
             for d in decisions:
-                pos_id = d[0]
+                pos_id = d['position_id'] if isinstance(d, dict) else d[0]
                 ledger_id = str(uuid.uuid4())
                 cur.execute(
                     """

@@ -5,6 +5,7 @@ import psycopg2.extras
 import logging
 import uuid
 from api.deps import get_db, get_current_client
+from engine_core.cai_replay import fetch_replay_data
 
 logger = logging.getLogger(__name__)
 
@@ -182,3 +183,12 @@ def add_tranche(position_id: str, req: TrancheAdd, client=Depends(get_current_cl
         raise HTTPException(status_code=500, detail="Failed to add tranche")
     finally:
         cur.close()
+
+@router.get("/reviews/{review_id}/replay")
+def get_replay(review_id: str, client=Depends(get_current_client)):
+    """Fetch replay data for a past position review to reconstruct the chart."""
+    client_id = str(client["id"])
+    data = fetch_replay_data(review_id, client_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Review not found or access denied")
+    return data

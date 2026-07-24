@@ -58,7 +58,8 @@ def evaluate_candidate(symbol: str) -> Dict[str, Any]:
                 "rs_90d": float(rs_90d) if rs_90d else None,
                 "volume_confirmed": volume_confirmed,
                 "recommendation": recommendation,
-                "reason": reason
+                "reason": reason,
+                "current_price": float(close) if close else 0.0
             }
     except Exception as e:
         logger.error(f"Error evaluating candidate {symbol}: {e}")

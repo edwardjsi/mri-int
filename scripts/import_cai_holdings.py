@@ -22,12 +22,12 @@ def import_portfolio(csv_path: str, email: str, dry_run: bool = False):
             if not client_row:
                 logger.error(f"Client with email {email} not found.")
                 return
-            client_id = str(client_row[0])
+            client_id = str(client_row['id'])
             
             cur.execute("SELECT id FROM cai_portfolio WHERE owner = %s LIMIT 1", (client_id,))
             row = cur.fetchone()
             if row:
-                portfolio_id = row[0]
+                portfolio_id = row['id']
             else:
                 portfolio_id = str(uuid.uuid4())
                 if not dry_run:

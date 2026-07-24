@@ -15,6 +15,8 @@ import PeExpansionReport from './PeExpansionReport';
 import ResearchReport from './ResearchReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { CaiPortfolioPage } from './CaiPortfolioPage';
+import { CaiDashboard } from './CaiDashboard';
+import { CaiCandidateReview } from './CaiCandidateReview';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -214,6 +216,7 @@ function StockDetailsModal({ stock, onClose, onNavigate }: { stock: any, onClose
   const [aaeLoading, setAaeLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [reportStatus, setReportStatus] = useState<string | null>(null);
+  const [showCaiReview, setShowCaiReview] = useState(false);
 
   useEffect(() => {
     setAaeLoading(true);
@@ -243,6 +246,12 @@ function StockDetailsModal({ stock, onClose, onNavigate }: { stock: any, onClose
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
+        {showCaiReview ? (
+          <div className="cai-review-wrapper">
+            <CaiCandidateReview symbol={stock.symbol} onClose={() => setShowCaiReview(false)} />
+          </div>
+        ) : (
+          <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h3 className="modal-title" style={{ marginBottom: '4px' }}>{stock.symbol}</h3>
@@ -344,8 +353,17 @@ function StockDetailsModal({ stock, onClose, onNavigate }: { stock: any, onClose
           >
             {emailing ? '📨 Queuing Audit...' : '🤖 Run 10-Layer AAE Audit'}
           </button>
-          <button className="btn-primary" onClick={onClose} style={{ flex: 1 }}>Close Report</button>
+          <button
+            className="btn-primary"
+            onClick={() => setShowCaiReview(true)}
+            style={{ flex: 1, background: '#10b981', border: 'none' }}
+          >
+            CAI Review
+          </button>
+          <button className="btn-secondary" onClick={onClose} style={{ flex: 1 }}>Close</button>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
@@ -2760,9 +2778,12 @@ function App() {
             <span className="nav-icon">🏠</span> Dashboard
           </button>
 
-          <div className="nav-section-label">Portfolio</div>
+          <div className="nav-section-label">CAI Workspace</div>
+          <button className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`} onClick={() => setPage('caidashboard')}>
+            <span className="nav-icon">🏦</span> CAI Hub
+          </button>
           <button className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`} onClick={() => setPage('caiportfolio')}>
-            <span className="nav-icon">💼</span> CAI Workspace
+            <span className="nav-icon">💼</span> Portfolio
           </button>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
             <span className="nav-icon">📋</span> History
@@ -2829,6 +2850,7 @@ function App() {
                       page === '112co' ? '112Co Watchlist' :
                       page === 'breakout' ? 'Breakout Radar' :
                       page === 'perx' ? 'PERX Institutional Scan' :
+                      page === 'caidashboard' ? 'Capital Allocation Intelligence' :
                       page === 'caiportfolio' ? 'CAI Portfolio Workspace' :
                       page === 'unified' ? 'Unified Institutional Scan' :
                       page === 'guidance' ? 'Management Credibility' :
@@ -2837,6 +2859,7 @@ function App() {
         </header>
         <div className="content-body">
           {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
+          {page === 'caidashboard' && <CaiDashboard onNavigate={setPage} />}
           {page === 'caiportfolio' && <CaiPortfolioPage />}
           {page === 'shadow' && <ShadowMomentumPage onSelectStock={setSelectedStock} />}
           {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}
