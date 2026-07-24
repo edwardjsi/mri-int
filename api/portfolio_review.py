@@ -438,12 +438,12 @@ async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_curr
     try:
         # 1. Verify position belongs to user's portfolio and get symbol
         cur.execute(
-            \"\"\"
+            """
             SELECT p.id, p.symbol, port.id as portfolio_id 
             FROM cai_position p
             JOIN cai_portfolio port ON p.portfolio_id = port.id
             WHERE p.id = %s AND port.id = %s
-            \"\"\",
+            """,
             (req.position_id, str(client["id"]))
         )
         pos = cur.fetchone()
@@ -456,7 +456,7 @@ async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_curr
         # 3. Save the review
         review_id = str(uuid.uuid4())
         cur.execute(
-            \"\"\"
+            """
             INSERT INTO cai_position_review (
                 id, position_id, trigger, weekly_candle, swing_low, 
                 structure_break, story_status, trend_status, position_health, 
@@ -464,7 +464,7 @@ async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_curr
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id, review_date
-            \"\"\",
+            """,
             (
                 review_id, req.position_id, req.trigger, 
                 json.dumps(req.weekly_candle) if req.weekly_candle else None,
