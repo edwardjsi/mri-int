@@ -7,12 +7,11 @@ import psycopg2.extras
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from engine_core.db import get_connection
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
-from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
-from engine_guidance.guidance_primer import prime_guidance_data, prime_guidance_data_batch
+from engine_fundamental.aae_data_primer import prime_aae_data_batch
+from engine_guidance.guidance_primer import prime_guidance_data_batch
 from engine_core.cai_weekly_chart_engine import generate_weekly_candles
 from engine_core.cai_health_engine import compute_position_health
 from engine_core.cai_candidate_review import evaluate_candidate
@@ -26,10 +25,7 @@ import json
 router = APIRouter(prefix="/api/portfolio-review", tags=["Portfolio Review"])
 logger = logging.getLogger(__name__)
 
-@router.get("/holdings-status")
-@router.get("/holdings_status")
-@router.get("/holdings") 
-@router.get("")
+@router.get("/holdings")
 async def get_holdings(
     client=Depends(get_current_client),
     conn=Depends(get_db)
@@ -58,10 +54,9 @@ async def get_holdings(
                         "quantity": 0,
                         "avg_cost": 0
                     })
-            except Exception:
+            except Exception as e:
                 conn.rollback()
-            finally:
-                pass
+                logger.warning(f"Fallback fetch failed: {e}")
 
         # Enrich with analysis if we have holdings
         enriched_holdings = []
@@ -120,86 +115,42 @@ async def add_single_holding(
     conn=Depends(get_db)
 ):
     """Save a single stock holding (Watchlist-style functionality for Portfolio)."""
+    cur = conn.cursor()
     try:
-        cur = conn.cursor()
-        processed_symbols = []
-        skipped_symbols = []
-        # WISE GUARD: Pre-fetch universe for bulk check
-        cur.execute("SELECT symbol FROM market_index_prices")
-        rows = cur.fetchall()
-        universe_map = set()
-        for r in rows:
-            if isinstance(r, dict):
-                universe_map.add(r.get('symbol'))
-            elif len(r) > 0:
-                universe_map.add(r[0])
-        universe_map.discard(None)
-
-        processed_holdings = []
-
-        for _, row in df.iterrows():
-            sym = str(row[sym_col]).upper().strip()
-            if not sym or sym == 'NAN': continue
-            
-            # Wise Filtering: We want to accept most stocks during bulk upload for 'Trust & Track'
-            # Only skip if it's truly broken or empty.
-            if universe_map and sym not in universe_map and sym not in universe_map:
-                # Check price DB as secondary validation
-                cur.execute("SELECT 1 FROM daily_prices WHERE symbol = %s LIMIT 1", (sym,))
-                if not cur.fetchone():
-                    # GRACE RULE: We'll accept it anyway but it will stay 'Unknown' until background fetch finishes
-                    pass
-
-            qty = 0.0
-            try: qty = float(row[qty_col]) if qty_col and pd.notna(row[qty_col]) else 0.0
-            except: pass
-            
-            cost = 0.0
-            try: cost = float(row[cst_col]) if cst_col and pd.notna(row[cst_col]) else 0.0
-            except: pass
-            
-            processed_holdings.append({"symbol": sym, "quantity": qty, "avg_cost": cost})
-            processed_symbols.append(sym)
-            cur.execute("""
-                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
-                VALUES (%s::uuid, %s, %s, %s)
-                ON CONFLICT (client_id, symbol) 
-                DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
-            """, (str(client_id), sym, qty, cost))
+        sym = req.symbol.upper().strip()
+        qty = req.quantity
+        cost = req.avg_cost
+        
+        cur.execute("""
+            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
+            VALUES (%s::uuid, %s, %s, %s)
+            ON CONFLICT (client_id, symbol) 
+            DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
+        """, (str(client["id"]), sym, qty, cost))
         
         conn.commit()
-        if skipped_symbols:
-            logger.warning(f"Skipped {len(skipped_symbols)} stocks not found in universe: {skipped_symbols[:5]}...")
-
-        cur.close()
 
         # Trigger on-demand sync
         background_tasks.add_task(
             ingest_missing_symbols_sync, 
-            processed_symbols, 
-            client_id, 
+            [sym], 
+            str(client["id"]), 
             client.get("email"), 
             client.get("name")
         )
-        # Trigger AAE fundamental data backfill (quarterly financials + governance)
-        background_tasks.add_task(prime_aae_data_batch, processed_symbols)
-        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
-        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
-        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
-        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
+        # Trigger AAE fundamental data backfill
+        background_tasks.add_task(prime_aae_data_batch, [sym])
+        # Trigger GuidanceCheck data prime
+        background_tasks.add_task(prime_guidance_data_batch, [sym])
         
-        # Analyze and return instantly
-        from engine_core.portfolio_review_engine import analyze_portfolio
-        analysis = analyze_portfolio(processed_holdings, conn)
-        analysis["storage_ready"] = True
-        analysis["digital_twin_saved"] = True
-        analysis["digital_twin_row_count"] = len(processed_symbols)
-        analysis["skipped_symbols"] = skipped_symbols
-        return analysis
+        return {"status": "success", "symbol": sym}
 
     except Exception as e:
-        logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
+        conn.rollback()
+        logger.exception(f"ADD HOLDING ERROR: {repr(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
 
 @router.post("/save-bulk")
 @router.post("/save_bulk")
@@ -307,6 +258,9 @@ async def upload_csv(
         cur_rls.close()
 
         contents = await file.read()
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Max 5MB.")
+            
         sep = ','
         try:
             snippet = contents.decode('utf-8', errors='ignore')[:1024]
@@ -324,6 +278,8 @@ async def upload_csv(
                 continue
         if df is None:
             raise HTTPException(status_code=400, detail="Invalid CSV format.")
+        if len(df) > 1000:
+            raise HTTPException(status_code=400, detail="Too many rows. Max 1000.")
 
         df.columns = [c.lower().strip() for c in df.columns]
         symbol_aliases = ('symbol','ticker','instrument','stock','isin','tradingsymbol','trading symbol','holding','asset','script')
@@ -375,13 +331,9 @@ async def upload_csv(
                 (client_id, sym, qty, cost),
             )
         conn.commit()
-        cur.close()
-
-        background_tasks.add_task(ingest_missing_symbols_sync, processed_symbols, client_id, client.get("email"), client.get("name"))
+        
         # Trigger AAE fundamental data backfill (quarterly financials + governance)
         background_tasks.add_task(prime_aae_data_batch, processed_symbols)
-        # Trigger GuidanceCheck data prime (concalls + guidance extraction)
-        background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
         # Trigger GuidanceCheck data prime (concalls + guidance extraction)
         background_tasks.add_task(prime_guidance_data_batch, processed_symbols)
 
@@ -392,12 +344,17 @@ async def upload_csv(
         analysis["digital_twin_row_count"] = len(processed_symbols)
         analysis["skipped_symbols"] = skipped_symbols
         return analysis
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'cur' in locals():
+            cur.close()
 
 @router.get("/chart/{symbol}")
-async def get_weekly_chart(symbol: str, years: int = 3, client=Depends(get_current_client)):
+async def get_weekly_chart(symbol: str, years: int = 3):
     """Fetch weekly candlestick data for CAI Review UI charts."""
     candles = generate_weekly_candles(symbol.upper().strip(), years)
     if not candles:
@@ -442,7 +399,7 @@ async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_curr
             SELECT p.id, p.symbol, port.id as portfolio_id 
             FROM cai_position p
             JOIN cai_portfolio port ON p.portfolio_id = port.id
-            WHERE p.id = %s AND port.id = %s
+            WHERE p.id = %s AND port.owner = %s
             """,
             (req.position_id, str(client["id"]))
         )
