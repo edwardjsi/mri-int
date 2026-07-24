@@ -2623,3 +2623,11 @@ If any target missed → Calibration.md journal entry + tighten; do NOT silently
 - 2026-07-15 — **P7 shipped**: `Sessions.md` + `Progress.md` finalised, `docs/DECISIONS_API_DEPLOYMENT_FIX_2026-07-15.md` archived. All Decision 103 phases closed. Status flipped from APPROVED → FINAL.
 
 **Calibration debt:** G1–G5 entries in `config/calibration_registry.yaml` remain `hypothesis` / `validated_after: null`. They can flip to `validated` only after the P6 backtest succeeds on a meaningful sample of ADD signals (owner threshold: 100 ADD recommendations observed live).
+
+---
+
+## Decision 104 — CAI V2.0 Charting Library
+Date: 2026-07-24
+Decision: Use TradingView's `lightweight-charts` for the CAI Weekly Review UI instead of trying to force `recharts` to render candlesticks.
+Reason: The CAI V2 PRD requires interactive selection of swing lows and structure breaks on a weekly OHLCV chart. Canvas-based `lightweight-charts` is natively built for financial data, high-performance, open-source (Apache 2.0, completely free), and supports the required overlays/drawing tools out of the box. This mitigates a major frontend architectural risk before any backend API payload formats are locked in.
+Status: FINAL.

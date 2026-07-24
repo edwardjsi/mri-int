@@ -3099,3 +3099,18 @@ api/static/                     | Rebuilt bundles
 - 12 alternate tickers mapped to working equivalents.
 - 22 new symbols ingested with price data.
 - Stock names updated on ~30 tickers.
+
+## 📅 Session: July 24, 2026 — CAI V2.0 Phase 1 Complete
+
+**Objective:** Implement the CAI V2.0 Backend Foundation (Phase 1).
+
+### Key Accomplishments
+1. **Decision 104 Locked:** Formally adopted `lightweight-charts` as the charting library for CAI V2.
+2. **Phase 1a (Database Foundation):** Created `migrations/011_cai_v2_foundation.sql` establishing the core tables: `cai_portfolio`, `cai_position`, `cai_position_review`, `cai_committee_report`, `cai_committee_decision`, `cai_decision_ledger`.
+3. **Phase 1b (Portfolio Service):** Built `api/cai_portfolio_service.py` with strict CRUD operations, enforcing the "No Averaging Down" rule and the 10-tranche system.
+4. **Phase 1c (Weekly Chart Engine):** Implemented `engine_core/cai_weekly_chart_engine.py` to aggregate daily OHLCV into standard Mon-Fri weekly candles, with EMA10 and EMA40 calculations. Exposed via `GET /api/portfolio-review/chart/{symbol}`.
+5. **Phase 1d (Position Health Engine):** Built `engine_core/cai_health_engine.py` to dynamically score a position post-ownership (0-100 scale) based on trend riding, relative strength maintenance, and institutional distribution.
+6. **Phase 1e (Review Endpoints):** Implemented `POST /api/portfolio-review/reviews` to accept manual chart annotations, capture decision recommendations, save to the database, and return the live health score.
+
+**Status:** Phase 1 (Backend Foundation) is 100% Complete. 
+**Next Steps:** Phase 2 (Frontend Charting & Canvas UI).

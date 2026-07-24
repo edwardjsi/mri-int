@@ -13,8 +13,11 @@ from engine_core.db import get_connection
 from engine_core.on_demand_ingest import ingest_missing_symbols_sync
 from engine_fundamental.aae_data_primer import prime_aae_data, prime_aae_data_batch
 from engine_guidance.guidance_primer import prime_guidance_data, prime_guidance_data_batch
+from engine_core.cai_weekly_chart_engine import generate_weekly_candles
+from engine_core.cai_health_engine import compute_position_health
 from api.schema import ensure_required_tables
 from api.deps import get_db, get_current_client
+import json
 
 router = APIRouter(prefix="/api/portfolio-review", tags=["Portfolio Review"])
 logger = logging.getLogger(__name__)
@@ -388,3 +391,89 @@ async def upload_csv(
     except Exception as e:
         logger.exception(f"UPLOAD ERROR: {repr(e)} ({type(e).__name__})")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/chart/{symbol}")
+async def get_weekly_chart(symbol: str, years: int = 3, client=Depends(get_current_client)):
+    """Fetch weekly candlestick data for CAI Review UI charts."""
+    candles = generate_weekly_candles(symbol.upper().strip(), years)
+    if not candles:
+        raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+    return {"symbol": symbol.upper(), "data": candles}
+
+class ReviewSubmitRequest(BaseModel):
+    position_id: str
+    trigger: Optional[str] = None
+    weekly_candle: Optional[dict] = None
+    swing_low: Optional[dict] = None
+    structure_break: Optional[dict] = None
+    story_status: Optional[str] = None
+    trend_status: Optional[str] = None
+    recommendation: str
+    notes: Optional[str] = None
+
+@router.post("/reviews")
+async def save_position_review(req: ReviewSubmitRequest, client=Depends(get_current_client), conn=Depends(get_db)):
+    """Save a CAI Position Review, calculate post-ownership health, and record the decision."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # 1. Verify position belongs to user's portfolio and get symbol
+        cur.execute(
+            \"\"\"
+            SELECT p.id, p.symbol, port.id as portfolio_id 
+            FROM cai_position p
+            JOIN cai_portfolio port ON p.portfolio_id = port.id
+            WHERE p.id = %s AND port.id = %s
+            \"\"\",
+            (req.position_id, str(client["id"]))
+        )
+        pos = cur.fetchone()
+        if not pos:
+            raise HTTPException(status_code=404, detail="Position not found in your portfolio")
+            
+        # 2. Compute live position health
+        health_score = compute_position_health(pos["symbol"])
+        
+        # 3. Save the review
+        review_id = str(uuid.uuid4())
+        cur.execute(
+            \"\"\"
+            INSERT INTO cai_position_review (
+                id, position_id, trigger, weekly_candle, swing_low, 
+                structure_break, story_status, trend_status, position_health, 
+                recommendation, notes
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, review_date
+            \"\"\",
+            (
+                review_id, req.position_id, req.trigger, 
+                json.dumps(req.weekly_candle) if req.weekly_candle else None,
+                json.dumps(req.swing_low) if req.swing_low else None,
+                json.dumps(req.structure_break) if req.structure_break else None,
+                req.story_status, req.trend_status, health_score,
+                req.recommendation, req.notes
+            )
+        )
+        new_review = cur.fetchone()
+        
+        # 4. Update the position status/health if needed
+        if req.recommendation.upper() == 'EXIT':
+            cur.execute("UPDATE cai_position SET status = 'CLOSED' WHERE id = %s", (req.position_id,))
+            
+        conn.commit()
+        return {
+            "status": "success",
+            "review_id": new_review["id"],
+            "review_date": new_review["review_date"],
+            "health_score": health_score
+        }
+        
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Failed to save review: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save review")
+    finally:
+        cur.close()
