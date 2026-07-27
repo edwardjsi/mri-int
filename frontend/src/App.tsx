@@ -30,8 +30,8 @@ function ScoreBreakdown({ conditions, score }: { conditions: any, score: number 
     { label: '3. Outperformance (90d RS > 0)', value: conditions.relative_strength, weight: '20%' },
     { label: '4. Near 6-Month High', value: conditions.at_6m_high, weight: '20%' },
     { label: '5. Volume Surge (≥ 1.3x Avg)', value: conditions.volume_surge, weight: '10%' },
-    { label: '6. Breakout Confirmation (10d High)', value: conditions.breakout_10d, weight: '\uD83D\uDE80 Bonus' },
-    { label: '7. Price Quality (Top 30% of Range)', value: conditions.price_quality, weight: '\u2728 Bonus' },
+    { label: '6. Breakout Confirmation (10d High)', value: conditions.breakout_10d, weight: '🚀 Bonus' },
+    { label: '7. Price Quality (Top 30% of Range)', value: conditions.price_quality, weight: '✨ Bonus' },
   ];
 
   const isGoldenSetup = score === 100;

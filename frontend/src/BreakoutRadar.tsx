@@ -137,10 +137,10 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
         All tracked stocks with breakout status. Click any stock for the 6-gate breakout decision report.
       </p>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
-        <span>\ud83d\udfe2 BROKEN: {brokenOut.length}</span>
-        <span>\ud83d\udfe1 READY: {ready.length}</span>
-        <span>\u26aa CONSOLIDATING: {consolidating.length}</span>
-        <span>\ud83d\udcca Total: {stocks.length}</span>
+        <span>🟢 BROKEN: {brokenOut.length}</span>
+        <span>🟡 READY: {ready.length}</span>
+        <span>⚪ CONSOLIDATING: {consolidating.length}</span>
+        <span>📊 Total: {stocks.length}</span>
       </div>
 
       {stocks.length === 0 ? (
@@ -166,7 +166,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
           {consolidating.length > 0 && (
             <div>
               <h3 style={{ color: '#94a3b8', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                \ud83d\udcca Consolidating ({consolidating.length})
+                📊 Consolidating ({consolidating.length})
               </h3>
               {renderTable(sortedConsolidating)}
             </div>
