@@ -546,6 +546,16 @@ def get_cas_data(symbol: str, conn=Depends(get_db)):
 
 @router.get("/trend-screen")
 def get_trend_screen(conn=Depends(get_db)):
+    # Fastest possible diagnostic: return immediately if we can't even run
+    try:
+        c2 = conn.cursor()
+        c2.execute("SELECT MAX(date) FROM daily_prices")
+        _ = c2.fetchone()
+        c2.close()
+    except Exception as e:
+        return {"screen": "trend-screen", "count": 0, "results": [], "error": f"canary: {e}",
+                "filters": ["canary query failed"]}
+
     """
     Return stocks in the cash segment that pass ALL of these filters:
       1. Market Cap > 1,000 Cr
