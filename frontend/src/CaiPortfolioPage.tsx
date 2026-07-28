@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthHeaders } from './api';
+import { getAuthHeaders, apiFetch } from './api';
 import { CaiPositionReview } from './CaiPositionReview';
 import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
@@ -24,25 +24,15 @@ export const CaiPortfolioPage: React.FC = () => {
   const handleManualTrade = async () => {
     try {
       if (tradeType === 'NEW') {
-        const res = await fetch('/api/cai/portfolio/positions', {
+        await apiFetch('/cai/portfolio/positions', {
           method: 'POST',
-          headers: getAuthHeaders(),
           body: JSON.stringify({ symbol: tradeSymbol, quantity: Number(tradeQty), average_price: Number(tradePrice) })
         });
-        if (!res.ok) {
-           const err = await res.json();
-           throw new Error(err.detail || 'Failed to add position');
-        }
       } else {
-        const res = await fetch(`/api/cai/portfolio/positions/${tradePosId}/tranches`, {
+        await apiFetch(`/cai/portfolio/positions/${tradePosId}/tranches`, {
           method: 'POST',
-          headers: getAuthHeaders(),
           body: JSON.stringify({ quantity: Number(tradeQty), entry_price: Number(tradePrice) })
         });
-        if (!res.ok) {
-           const err = await res.json();
-           throw new Error(err.detail || 'Failed to add tranche');
-        }
       }
       setShowManualTrade(false);
       setTradeSymbol(''); setTradeQty(''); setTradePrice(''); setTradePosId('');
@@ -55,11 +45,7 @@ export const CaiPortfolioPage: React.FC = () => {
   const fetchPortfolio = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/cai/portfolio', {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error('Failed to fetch CAI portfolio');
-      const data = await res.json();
+      const data = await apiFetch('/cai/portfolio');
       setPortfolio(data);
     } catch (err: any) {
       setError(err.message);

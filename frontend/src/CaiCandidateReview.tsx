@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthHeaders } from './api';
+import { getAuthHeaders, apiFetch } from './api';
 import { CaiWeeklyChart } from './CaiWeeklyChart';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
@@ -19,16 +19,9 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
     const fetchCandidate = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/portfolio-review/candidate/${symbol}`, {
-          headers: getAuthHeaders(),
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || 'Failed to evaluate candidate');
-        }
-        const json = await res.json();
-        setData(json);
-        if (json.current_price) setPrice(json.current_price);
+        const data = await apiFetch(`/portfolio-review/candidate/${symbol}`);
+        setData(data);
+        if (data.current_price) setPrice(data.current_price);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -40,19 +33,14 @@ export const CaiCandidateReview: React.FC<CaiCandidateReviewProps> = ({ symbol, 
 
   const handleExecute = async () => {
     try {
-      const res = await fetch('/api/cai/portfolio/positions', {
+      await apiFetch('/cai/portfolio/positions', {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify({
           symbol: symbol,
           quantity: Number(qty),
           average_price: Number(price)
         })
       });
-      if (!res.ok) {
-         const err = await res.json();
-         throw new Error(err.detail || 'Failed to add position');
-      }
       alert(`Successfully added ${symbol} to CAI Portfolio`);
       if (onClose) onClose();
     } catch (e: any) {
