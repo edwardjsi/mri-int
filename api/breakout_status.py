@@ -178,6 +178,15 @@ def _enrich_with_mosi_lite(
         row["s_structural_score"] = mosi_output["s_structural_score"]
         row["i_institutional_score"] = mosi_output["i_institutional_score"]
 
+    import math
+    from decimal import Decimal
+    for row in rows:
+        for k, v in list(row.items()):
+            if isinstance(v, Decimal) and v.is_nan():
+                row[k] = None
+            elif isinstance(v, float) and math.isnan(v):
+                row[k] = None
+
     return rows
 
 
