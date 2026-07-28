@@ -3031,3 +3031,11 @@ so `os.path.exists()` returned `False` and the handler returned the early-exit
 
 **Status:** Complete.
 **Next Steps:** Sort options, frontend tab in Breakout Radar UI, pagination.
+
+
+**Objective**: Fix Trend Screen UI - Sorting, Emojis, and Modals.
+
+**Actions**:
+- Fixed Unicode hex literals in `TrendScreen.tsx` that were displaying raw characters instead of emojis.
+- Enhanced table sorting in `TrendScreen.tsx` to cover all columns including State and MOSI.
+- Wired up two modals for the Trend Screen table rows: the 7-step Breakout popup and the standard Research/Details modal.

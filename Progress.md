@@ -3160,3 +3160,11 @@ api/static/                     | Rebuilt bundles
 - Add sort options (`?sort_by=mri_score`, `?sort_by=decision_score`) to the endpoint
 - Consider frontend tab in Breakout Radar UI to display trend screen results
 - Add pagination if result set grows large
+
+
+**Objective**: Fix Trend Screen UI - Sorting, Emojis, and Modals.
+
+**Actions**:
+- Fixed Unicode hex literals in `TrendScreen.tsx` that were displaying raw characters instead of emojis.
+- Enhanced table sorting in `TrendScreen.tsx` to cover all columns including State and MOSI.
+- Wired up two modals for the Trend Screen table rows: the 7-step Breakout popup and the standard Research/Details modal.

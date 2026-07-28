@@ -1,17 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from './api';
+import { CaiCandidateReview } from './CaiCandidateReview';
 
-type SortCol = 'symbol' | 'close' | 'ema_10' | 'ema_50' | 'ema_200' | 'rolling_high_52w' | 'market_cap_cr' | 'mri_score';
+type SortCol = 'symbol' | 'close' | 'ema_10' | 'ema_50' | 'ema_200' | 'rolling_high_52w' | 'market_cap_cr' | 'mri_score' | 'breakout_state' | 'mosi_lite_score';
 
 const COL_DEFS: { key: SortCol; label: string }[] = [
   { key: 'symbol', label: 'Stock' },
-  { key: 'close', label: '\u20b9' },
+  { key: 'close', label: '₹' },
   { key: 'ema_10', label: 'EMA10' },
   { key: 'ema_50', label: 'EMA50' },
   { key: 'ema_200', label: 'EMA200' },
   { key: 'rolling_high_52w', label: '52w High' },
   { key: 'market_cap_cr', label: 'Mkt Cap (Cr)' },
   { key: 'mri_score', label: 'MRI' },
+  { key: 'breakout_state', label: 'State' },
+  { key: 'mosi_lite_score', label: 'MOSI' },
 ];
 
 function sortItems(items: any[], col: SortCol, dir: 'asc' | 'desc'): any[] {
@@ -32,6 +35,7 @@ export default function TrendScreen({ onViewResearch }: { onViewResearch: (stock
   const [error, setError] = useState<string | null>(null);
   const [sortCol, setSortCol] = useState<SortCol>('mri_score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [reviewSymbol, setReviewSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     api.getTrendScreen()
@@ -57,23 +61,23 @@ export default function TrendScreen({ onViewResearch }: { onViewResearch: (stock
 
   const sortIndicator = (col: SortCol) => {
     if (sortCol !== col) return '';
-    return sortDir === 'asc' ? ' \u25b2' : ' \u25bc';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
   };
 
-  if (loading) return <div className="loading">Scanning trend screen\u2026</div>;
+  if (loading) return <div className="loading">Scanning trend screen…</div>;
   if (error) return <div className="error-state">Error: {error}</div>;
   if (!data) return <div className="empty-state">No data returned from trend screen.</div>;
 
   return (
     <div className="watchlist">
-      <h2 className="section-title">\ud83d\udcca Trend Screen</h2>
+      <h2 className="section-title">📊 Trend Screen</h2>
       <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
-        Stocks passing all 7 filters: multi-EMA uptrend alignment, market cap 1,000\u201375,000 Cr, within 25% of 52-week high.
+        Stocks passing all 7 filters: multi-EMA uptrend alignment, market cap 1,000–75,000 Cr, within 25% of 52-week high.
       </p>
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', fontSize: '13px', color: '#64748b' }}>
-        <span>\ud83c\udfaf Matches: {data.count}</span>
+        <span>🎯 Matches: {data.count}</span>
         {!data.results?.[0]?.market_cap_cr && (
-          <span style={{ color: '#f59e0b' }}>\u26a0\ufe0f Market cap data unavailable \u2014 excluding cap filters</span>
+          <span style={{ color: '#f59e0b' }}>⚠️ Market cap data unavailable — excluding cap filters</span>
         )}
       </div>
 
@@ -87,8 +91,7 @@ export default function TrendScreen({ onViewResearch }: { onViewResearch: (stock
                     {c.label}{sortIndicator(c.key)}
                   </th>
                 ))}
-                <th>State</th>
-                <th>MOSI</th>
+                <th>CAI</th>
               </tr>
             </thead>
             <tbody>
@@ -97,26 +100,34 @@ export default function TrendScreen({ onViewResearch }: { onViewResearch: (stock
                 return (
                   <tr key={item.symbol} className="clickable-row" onClick={() => onViewResearch(item)}>
                     <td className="font-bold"><div>{item.symbol}</div></td>
-                    <td>\u20b9{parseFloat(String(item.close)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                    <td>₹{parseFloat(String(item.close)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
                     <td style={{ color: item.ema_10 && item.close > item.ema_10 ? '#22c55e' : '#ef4444' }}>
-                      {item.ema_10 ? `\u20b9${parseFloat(String(item.ema_10)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '\u2014'}
+                      {item.ema_10 ? `₹${parseFloat(String(item.ema_10)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}
                     </td>
                     <td style={{ color: item.ema_50 && item.close > item.ema_50 ? '#22c55e' : '#ef4444' }}>
-                      {item.ema_50 ? `\u20b9${parseFloat(String(item.ema_50)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '\u2014'}
+                      {item.ema_50 ? `₹${parseFloat(String(item.ema_50)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}
                     </td>
                     <td style={{ color: item.ema_200 && item.close > item.ema_200 ? '#22c55e' : '#ef4444' }}>
-                      {item.ema_200 ? `\u20b9${parseFloat(String(item.ema_200)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '\u2014'}
+                      {item.ema_200 ? `₹${parseFloat(String(item.ema_200)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}
                     </td>
-                    <td>{item.rolling_high_52w ? `\u20b9${parseFloat(String(item.rolling_high_52w)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '\u2014'}</td>
-                    <td>{item.market_cap_cr ? `\u20b9${parseFloat(String(item.market_cap_cr)).toLocaleString('en-IN')}` : '\u2014'}</td>
+                    <td>{item.rolling_high_52w ? `₹${parseFloat(String(item.rolling_high_52w)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                    <td>{item.market_cap_cr ? `₹${parseFloat(String(item.market_cap_cr)).toLocaleString('en-IN')}` : '—'}</td>
                     <td style={{ color: item.mri_score >= 80 ? '#22c55e' : item.mri_score >= 60 ? '#f59e0b' : '#ef4444' }}>
                       {item.mri_score}
                     </td>
-                    <td style={{ fontSize: '12px' }}>{item.breakout_state || '\u2014'}</td>
+                    <td style={{ fontSize: '12px' }}>{item.breakout_state || '—'}</td>
                     <td>
                       <span style={{ color: mosi >= 70 ? '#22c55e' : mosi >= 50 ? '#f59e0b' : '#94a3b8', fontSize: '13px' }}>
                         {mosi.toFixed(1)}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded"
+                        onClick={(e) => { e.stopPropagation(); setReviewSymbol(item.symbol); }}
+                      >
+                        Review
+                      </button>
                     </td>
                   </tr>
                 );
@@ -127,6 +138,15 @@ export default function TrendScreen({ onViewResearch }: { onViewResearch: (stock
       ) : (
         <div className="empty-state">No stocks passed all 7 filters today.</div>
       )}
+
+      {reviewSymbol && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setReviewSymbol(null)}>
+          <div className="bg-gray-900 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <CaiCandidateReview symbol={reviewSymbol} onClose={() => setReviewSymbol(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
