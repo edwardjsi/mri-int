@@ -3016,3 +3016,18 @@ so `os.path.exists()` returned `False` and the handler returned the early-exit
 5. **Phase 3 (Decision Ledger):** Built `engine_core/cai_ledger.py` to immutably log committee decisions and execute them on Monday morning. Built `CaiLedger.tsx` UI to execute pending actions and track the history.
 
 **Status:** Phase 2 and Phase 3 are 100% Complete. 
+
+## 📅 Session: July 28, 2026 — Trend Screen (7-Filter Cash Segment Screen)
+
+**Objective:** Add a new screen alongside the existing breakout radar that filters stocks by 7 strict criteria — multi-timeframe EMA alignment, market cap range, and 52-week high proximity.
+
+### Key Accomplishments
+
+1. **Decision 105 Locked:** Formally adopted the Trend Screen as a pure pass/fail filter, distinct from the breakout state classification.
+2. **New API Endpoint:** `GET /api/breakout/trend-screen` in `api/breakout_status.py` (~145 lines).
+3. **7 Filters:** Market Cap 1,000–75,000 Cr, Close > EMA(200/50/20/10), Close > 0.75 x rolling_high_52w.
+4. **Graceful Schema Handling:** Checks `information_schema.columns` for `market_cap` at query time; applies the filter only if available.
+5. **MOSI Lite Enrichment:** Reuses existing `_enrich_with_mosi_lite()` so results include mosi_lite_score, decision_score, QIF data, and fundamental growth metrics.
+
+**Status:** Complete.
+**Next Steps:** Sort options, frontend tab in Breakout Radar UI, pagination.

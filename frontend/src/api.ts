@@ -306,6 +306,7 @@ export const api = {
     getBreakoutRadar: () => apiFetch('/breakout/radar'),
     getCasData: (symbol: string) => apiFetch(`/breakout/cas-data?symbol=${symbol}`),
     getTopByCAS: (limit: number = 5) => apiFetch(`/breakout/top-by-cas?limit=${limit}`),
+    getTrendScreen: () => apiFetch('/breakout/trend-screen'),
 
     // 112Co Universe Management
     get112coBreakouts: () => apiFetch('/112co/breakouts'),

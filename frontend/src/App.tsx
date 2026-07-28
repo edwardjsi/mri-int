@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import BreakoutBadge from './BreakoutBadge';
 import BreakoutRadarPage from './BreakoutRadarPage';
+import TrendScreen from './TrendScreen';
 import One12CoDashboard from './One12CoDashboard';
 import AdminDashboard from './AdminDashboard';
 import AaeDashboard from './AaeDashboard';
@@ -2722,7 +2723,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'trend' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2805,6 +2806,9 @@ function App() {
           <button className={`nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>
             <span className="nav-icon">🚀</span> Breakout Radar
           </button>
+          <button className={`nav-link ${page === 'trend' ? 'active' : ''}`} onClick={() => setPage('trend')}>
+            <span className="nav-icon">📊</span> Trend Screen
+          </button>
           <button className={`nav-link ${page === '112co' ? 'active' : ''}`} onClick={() => setPage('112co')}>
             <span className="nav-icon">🔬</span> 112Co Watchlist
           </button>
@@ -2849,6 +2853,7 @@ function App() {
                     page === 'watchlist' ? 'Stock Watchlist' :
                       page === '112co' ? '112Co Watchlist' :
                       page === 'breakout' ? 'Breakout Radar' :
+                      page === 'trend' ? 'Trend Screen' :
                       page === 'perx' ? 'PERX Institutional Scan' :
                       page === 'caidashboard' ? 'Capital Allocation Intelligence' :
                       page === 'caiportfolio' ? 'CAI Portfolio Workspace' :
@@ -2868,6 +2873,7 @@ function App() {
           {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
           {page === '112co' && <One12CoDashboard onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
           {page === 'breakout' && <BreakoutRadarPage onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
+          {page === 'trend' && <TrendScreen onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
           {page === 'perx' && <PerxPage />}
           {page === 'guidance' && <GuidanceCheck />}
           {page === 'conviction' && <ConvictionEngine onSelectStock={setSelectedStock} />}
@@ -2890,6 +2896,7 @@ function App() {
         <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')} title="Risk Audit">🛡️</button>
         <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')} title="Watchlist">👀</button>
         <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
+        <button className={`mobile-nav-link ${page === 'trend' ? 'active' : ''}`} onClick={() => setPage('trend')} title="Trend Screen">📊</button>
         <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
         <button className={`mobile-nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')} title="Expansion Lens">📈</button>
         <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>

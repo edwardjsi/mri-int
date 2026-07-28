@@ -2631,3 +2631,18 @@ Date: 2026-07-24
 Decision: Use TradingView's `lightweight-charts` for the CAI Weekly Review UI instead of trying to force `recharts` to render candlesticks.
 Reason: The CAI V2 PRD requires interactive selection of swing lows and structure breaks on a weekly OHLCV chart. Canvas-based `lightweight-charts` is natively built for financial data, high-performance, open-source (Apache 2.0, completely free), and supports the required overlays/drawing tools out of the box. This mitigates a major frontend architectural risk before any backend API payload formats are locked in.
 Status: FINAL.
+
+---
+
+## Decision 105 — Trend Screen (7-Filter Cash Segment Screen)
+Date: 2026-07-28
+Decision: Add a new deterministic screen endpoint `GET /api/breakout/trend-screen` that applies 7 simultaneous filters to identify quality mid-cap cash-segment stocks with multi-timeframe uptrend alignment.
+Reason: The existing breakout radar classifies stocks by breakout state (BROKEN_OUT / READY_TO_BREAKOUT / CONSOLIDATING) but doesn't answer "which stocks have a clean multi-EMA stack + reasonable market cap + are not in deep drawdown?" A separate pure-filter endpoint fills this gap without complicating the breakout classification logic. Market cap range (1,000–75,000 Cr) targets the mid-cap band where asymmetric upside is highest. The 4 EMA filters (10/20/50/200) ensure trend alignment across all timeframes. The 52w high proximity filter (> 0.75x) excludes stocks in deep drawdowns.
+Status: FINAL.
+
+**Implementation details:**
+- Endpoint: `GET /api/breakout/trend-screen` in `api/breakout_status.py`
+- 7 filters: Market Cap 1,000–75,000 Cr, Close > EMA(200/50/20/10), Close > 0.75 x 52w High
+- Graceful fallback: market_cap column detected via `information_schema.columns`; filter skipped if column missing
+- Enrichment: Reuses `_enrich_with_mosi_lite()` for MOSI Lite scores and QIF data
+- Pure pass/fail — no breakout state classification; all matching stocks returned

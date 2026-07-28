@@ -3127,3 +3127,36 @@ api/static/                     | Rebuilt bundles
 5. **Phase 3 (Decision Ledger):** Built `engine_core/cai_ledger.py` to immutably log committee decisions and execute them on Monday morning. Built `CaiLedger.tsx` UI to execute pending actions and track the history.
 
 **Status:** Phase 2 and Phase 3 are 100% Complete. 
+
+## 📅 Session: July 28, 2026 — Trend Screen (7-Filter Cash Segment Screen)
+
+**Objective:** Add a new deterministic screen alongside the existing breakout radar that filters Nifty 500 stocks by 7 strict technical + fundamental criteria for quality mid-cap trend-aligned stocks.
+
+### What Was Done
+
+- **Decision 105 approved & implemented** — Trend Screen as a pure pass/fail filter, distinct from the breakout state classification.
+- **New endpoint:** `GET /api/breakout/trend-screen` added to `api/breakout_status.py` (~145 lines).
+- **7 filters implemented:**
+  - Market Cap > 1,000 Cr and < 75,000 Cr (from `fundamental_financials.market_cap`, latest year, with graceful fallback if column missing)
+  - Close > EMA(200), EMA(50), EMA(20), EMA(10) — multi-timeframe uptrend alignment
+  - Close > 0.75 × rolling_high_52w — not in deep drawdown
+- **Graceful schema detection:** Checks `information_schema.columns` at query time for `market_cap` column; applies the filter only if available, returns `NULL` otherwise.
+- **Market cap unit handling:** Uses same raw-₹-vs-crores heuristic as `investor_context.py` to avoid double-conversion.
+- **MOSI Lite enrichment:** Reuses `_enrich_with_mosi_lite()` for consistency with the breakout radar response.
+- **Response format:** Includes screen metadata (filter list, count) alongside enriched result rows.
+
+### Files Changed
+
+| File | Status | Lines |
+|------|--------|-------|
+| `api/breakout_status.py` | modified | +145 (new endpoint `/trend-screen`) |
+| `docs/TREND_SCREEN_PLAN_2026-07-28.md` | NEW | ~127 |
+| `Decisions.md` | modified | +1 decision (Decision 105) |
+| `Progress.md` | modified | +session entry (this block) |
+| `Sessions.md` | modified | +session entry |
+
+### Next Steps
+
+- Add sort options (`?sort_by=mri_score`, `?sort_by=decision_score`) to the endpoint
+- Consider frontend tab in Breakout Radar UI to display trend screen results
+- Add pagination if result set grows large
