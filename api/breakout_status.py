@@ -546,154 +546,63 @@ def get_cas_data(symbol: str, conn=Depends(get_db)):
 
 @router.get("/trend-screen")
 def get_trend_screen(conn=Depends(get_db)):
-    # Fastest possible diagnostic: return immediately if we can't even run
-    try:
-        c2 = conn.cursor()
-        c2.execute("SELECT MAX(date) FROM daily_prices")
-        _ = c2.fetchone()
-        c2.close()
-    except Exception as e:
-        return {"screen": "trend-screen", "count": 0, "results": [], "error": f"canary: {e}",
-                "filters": ["canary query failed"]}
-
     """
-    Return stocks in the cash segment that pass ALL of these filters:
-      1. Market Cap > 1,000 Cr
-      2. Market Cap < 75,000 Cr
-      3. Close > EMA(200)
-      4. Close > EMA(50)
-      5. Close > EMA(20)
-      6. Close > EMA(10)
-      7. Close > 0.75 × 52-week High (252-day rolling high)
-
-    Fields returned per stock: symbol, close, ema_10/20/50/200,
-    rolling_high_52w, market_cap_cr, breakout_state, breakout_age,
-    mri_score + MOSI Lite enrichment.
+    Return stocks that pass multi-EMA + 52w-high proximity filters.
+    Market cap filter applied only if column exists in fundamental_financials.
     """
     try:
-        # ── Check whether market_cap column exists in fundamental_financials ──
-        has_market_cap = False
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # ── Check market_cap column availability ──
+        has_mc = False
         try:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur.execute("""
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'fundamental_financials'
-                  AND column_name = 'market_cap'
-            """)
-            has_market_cap = cur.fetchone() is not None
-            cur.close()
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='fundamental_financials' AND column_name='market_cap'")
+            has_mc = cur.fetchone() is not None
         except Exception:
-            has_market_cap = False
+            has_mc = False
 
-        market_cap_join = ""
-        market_cap_filter = ""
-        if has_market_cap:
-            market_cap_join = """
-                LEFT JOIN LATERAL (
-                    SELECT market_cap
-                    FROM fundamental_financials ff
-                    WHERE ff.symbol = dp.symbol
-                      AND ff.market_cap IS NOT NULL
-                      AND ff.market_cap > 0
-                    ORDER BY ff.year DESC
-                    LIMIT 1
-                ) mc ON true
-            """
-            market_cap_filter = """
-                AND (
-                    CASE
-                        WHEN mc.market_cap > 1000000000000
-                            THEN mc.market_cap / 10000000
-                        ELSE mc.market_cap
-                    END
-                ) > 1000
-                AND (
-                    CASE
-                        WHEN mc.market_cap > 1000000000000
-                            THEN mc.market_cap / 10000000
-                        ELSE mc.market_cap
-                    END
-                ) < 75000
-            """
+        mc_col = ("CASE WHEN mc.market_cap > 1000000000000 THEN ROUND(mc.market_cap/10000000,2) ELSE ROUND(mc.market_cap,2) END AS market_cap_cr" if has_mc else "NULL::NUMERIC AS market_cap_cr")
+        mc_join = (
+            "LEFT JOIN LATERAL (SELECT market_cap FROM fundamental_financials ff WHERE ff.symbol=dp.symbol AND ff.market_cap>0 ORDER BY ff.year DESC LIMIT 1) mc ON true"
+            if has_mc else "")
+        mc_where = (
+            "AND (CASE WHEN mc.market_cap>1000000000000 THEN mc.market_cap/10000000 ELSE mc.market_cap END)>1000 "
+            "AND (CASE WHEN mc.market_cap>1000000000000 THEN mc.market_cap/10000000 ELSE mc.market_cap END)<75000"
+            if has_mc else "")
 
-        query = f"""
-            SELECT
-                dp.symbol,
-                dp.close,
-                dp.volume,
-                dp.ema_10,
-                dp.ema_20,
-                dp.ema_50,
-                dp.ema_200,
-                dp.rolling_high_52w,
-                dp.breakout_state,
-                dp.breakout_age,
-                dp.rsi_14 AS rsi,
-                dp.atr_14 AS atr,
-                dp.avg_volume_20d,
-                dp.rs_90d,
-                dp.rolling_high_6m,
-                {('CASE WHEN mc.market_cap > 1000000000000 '
-                  'THEN ROUND(mc.market_cap / 10000000, 2) '
-                  'ELSE ROUND(mc.market_cap, 2) END AS market_cap_cr') if has_market_cap else 'NULL::NUMERIC AS market_cap_cr'},
-                COALESCE(ss.total_score, 0) AS mri_score,
-                COALESCE(ss.condition_ema_50_200, FALSE) AS gate_ema_50_200,
-                COALESCE(ss.condition_ema_200_slope, FALSE) AS gate_ema_200_slope,
-                COALESCE(ss.condition_rs, FALSE) AS gate_rs,
-                COALESCE(ss.condition_6m_high, FALSE) AS gate_6m_high,
-                COALESCE(ss.condition_volume, FALSE) AS gate_volume,
-                COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
-                COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality,
-                (SELECT COUNT(DISTINCT client_id) FROM client_watchlist WHERE symbol = dp.symbol) AS watchers,
-                (SELECT COUNT(DISTINCT client_id) FROM client_portfolio WHERE symbol = dp.symbol AND is_open = true) AS holders
+        sql = f"""
+            SELECT dp.symbol, dp.close, dp.volume,
+                   dp.ema_10, dp.ema_20, dp.ema_50, dp.ema_200,
+                   dp.rolling_high_52w, dp.breakout_state, dp.breakout_age,
+                   dp.rsi_14 AS rsi, dp.rs_90d,
+                   COALESCE(ss.total_score,0) AS mri_score,
+                   {mc_col}
             FROM daily_prices dp
-            {market_cap_join}
-            LEFT JOIN stock_scores ss
-                ON ss.symbol = dp.symbol
-                AND ss.date = (SELECT MAX(date) FROM stock_scores)
-            WHERE dp.date = (SELECT MAX(date) FROM daily_prices)
-              AND dp.close > dp.ema_200
-              AND dp.close > dp.ema_50
-              AND dp.close > dp.ema_20
-              AND dp.close > dp.ema_10
-              AND dp.close > dp.rolling_high_52w * 0.75
-              {market_cap_filter}
+            {mc_join}
+            LEFT JOIN stock_scores ss ON ss.symbol=dp.symbol AND ss.date=(SELECT MAX(date) FROM stock_scores)
+            WHERE dp.date=(SELECT MAX(date) FROM daily_prices)
+              AND dp.close>dp.ema_200 AND dp.close>dp.ema_50
+              AND dp.close>dp.ema_20 AND dp.close>dp.ema_10
+              AND dp.close>dp.rolling_high_52w*0.75
+              {mc_where}
             ORDER BY dp.symbol
         """
 
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(query)
+        log.info("Trend screen executing query")
+        cur.execute(sql)
         rows = cur.fetchall()
         cur.close()
+        log.info(f"Trend screen: {len(rows)} rows from query")
 
-        log.info(f"Trend screen query returned {len(rows)} rows")
+        # ── Enrich with MOSI Lite ──
+        try:
+            rows = _enrich_with_mosi_lite(conn, rows)
+        except Exception as e2:
+            log.warning(f"MOSI enrichment failed (returning raw data): {e2}")
 
-        # ── Enrich with MOSI Lite scores ──
-        rows = _enrich_with_mosi_lite(conn, rows)
+        return {"screen": "trend-screen", "count": len(rows), "results": rows}
 
-        return {
-            "screen": "trend-screen",
-            "filters": [
-                "Market Cap > 1,000 Cr",
-                "Market Cap < 75,000 Cr",
-                "Close > EMA(200)",
-                "Close > EMA(50)",
-                "Close > EMA(20)",
-                "Close > EMA(10)",
-                "Close > 0.75 × 52w High",
-            ],
-            "count": len(rows),
-            "results": rows,
-        }
     except Exception as e:
         log.error(f"Trend screen failed: {e}", exc_info=True)
-        return {"screen": "trend-screen", "filters": [
-            "Market Cap > 1,000 Cr",
-            "Market Cap < 75,000 Cr",
-            "Close > EMA(200)",
-            "Close > EMA(50)",
-            "Close > EMA(20)",
-            "Close > EMA(10)",
-            "Close > 0.75 × 52w High",
-        ], "count": 0, "results": [], "error": str(e)}
+        return {"screen": "trend-screen", "error": str(e), "count": 0, "results": []}
 
