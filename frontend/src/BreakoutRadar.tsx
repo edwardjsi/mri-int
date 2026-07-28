@@ -11,7 +11,7 @@ type SortCol = 'symbol' | 'close' | 'volume_multiplier' | 'rsi' | 'atr_pct' | 'p
 
 const COL_DEFS: { key: SortCol; label: string }[] = [
   { key: 'symbol', label: 'Stock' },
-  { key: 'close', label: '\u20b9' },
+  { key: 'close', label: '₹' },
   { key: 'volume_multiplier', label: 'Vol\u00d7' },
   { key: 'rsi', label: 'RSI' },
   { key: 'atr_pct', label: 'ATR%' },
@@ -75,11 +75,11 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
   const sortedReady = useMemo(() => sortItems(ready, sortCol, sortDir), [ready, sortCol, sortDir]);
   const sortedConsolidating = useMemo(() => sortItems(consolidating, sortCol, sortDir), [consolidating, sortCol, sortDir]);
 
-  if (loading) return <div className="loading">Scanning breakout radar\u2026</div>;
+  if (loading) return <div className="loading">Scanning breakout radar…</div>;
 
   const sortIndicator = (col: SortCol) => {
     if (sortCol !== col) return '';
-    return sortDir === 'asc' ? ' \u25b2' : ' \u25bc';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
   };
 
   const renderTable = (items: any[]) => (
@@ -100,7 +100,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
           {items.map(item => (
             <tr key={item.symbol} className="clickable-row" onClick={() => onViewResearch(item)}>
               <td className="font-bold"><div>{item.symbol}</div></td>
-              <td>\u20b9{parseFloat(String(item.close)).toLocaleString()}</td>
+              <td>₹{parseFloat(String(item.close)).toLocaleString()}</td>
               <td style={{ color: item.volume_multiplier >= 1.3 ? '#22c55e' : '#94a3b8' }}>
                 {item.volume_multiplier}x
               </td>
@@ -109,7 +109,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
               </td>
               <td>{item.atr_pct?.toFixed(1)}%</td>
               <td style={{ color: item.proximity_to_6m_high !== null && item.proximity_to_6m_high >= -3 ? '#22c55e' : '#94a3b8' }}>
-                {item.proximity_to_6m_high !== null ? `${item.proximity_to_6m_high}%` : '\u2014'}
+                {item.proximity_to_6m_high !== null ? `${item.proximity_to_6m_high}%` : '—'}
               </td>
               <td style={{ color: item.mri_score >= 80 ? '#22c55e' : item.mri_score >= 60 ? '#f59e0b' : '#ef4444' }}>
                 {item.mri_score}
@@ -132,7 +132,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
 
   return (
     <div className="watchlist">
-      <h2 className="section-title">\ud83d\ude80 Breakout Radar</h2>
+      <h2 className="section-title">🚀 Breakout Radar</h2>
       <p style={{ color: '#94a3b8', marginBottom: '8px' }}>
         All tracked stocks with breakout status. Click any stock for the 6-gate breakout decision report.
       </p>
@@ -150,7 +150,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
           {brokenOut.length > 0 && (
             <div>
               <h3 style={{ color: '#22c55e', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                \ud83d\ude80 Active Breakouts ({brokenOut.length})
+                🚀 Active Breakouts ({brokenOut.length})
               </h3>
               {renderTable(sortedBroken)}
             </div>
@@ -158,7 +158,7 @@ export default function BreakoutRadar({ onViewResearch }: { onViewResearch: (sto
           {ready.length > 0 && (
             <div>
               <h3 style={{ color: '#f59e0b', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}>
-                \u26a1 Ready To Breakout ({ready.length})
+                ⚡ Ready To Breakout ({ready.length})
               </h3>
               {renderTable(sortedReady)}
             </div>
