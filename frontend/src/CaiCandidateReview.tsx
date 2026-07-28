@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthHeaders, apiFetch } from './api';
+import { apiFetch } from './api';
 import { CaiWeeklyChart } from './CaiWeeklyChart';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 

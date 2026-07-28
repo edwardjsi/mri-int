@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthHeaders, apiFetch } from './api';
+import { apiFetch } from './api';
 import { CaiPositionReview } from './CaiPositionReview';
 import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
