@@ -6,7 +6,8 @@ import {
   AlertTriangle, 
   CheckCircle, 
   Activity,
-  Star
+  Star,
+  Mail
 } from 'lucide-react';
 
 export const WeeklyReviewDashboard: React.FC = () => {
@@ -15,6 +16,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [approving, setApproving] = useState<boolean>(false);
   const [approveStatus, setApproveStatus] = useState<string | null>(null);
+  const [emailing, setEmailing] = useState<boolean>(false);
 
   const [sortField, setSortField] = useState<string>('cai_score');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -58,6 +60,20 @@ export const WeeklyReviewDashboard: React.FC = () => {
       setError(err.message || 'Failed to approve decisions');
     } finally {
       setApproving(false);
+    }
+  };
+
+  const handleEmail = async () => {
+    try {
+      setEmailing(true);
+      const result = await apiFetch('/portfolio-review/v1/email-weekly-review', {
+        method: 'POST'
+      });
+      setApproveStatus(result.message || 'Email sent successfully');
+    } catch (err: any) {
+      setError(err.message || 'Failed to email review');
+    } finally {
+      setEmailing(false);
     }
   };
 
@@ -159,11 +175,19 @@ export const WeeklyReviewDashboard: React.FC = () => {
           <div className="flex items-center gap-3 mt-4 md:mt-0">
             <button 
               onClick={fetchReviewData} 
-              disabled={approving}
+              disabled={approving || emailing}
               className="flex items-center gap-2 bg-indigo-900/30 text-indigo-300 px-4 py-2 rounded-lg hover:bg-indigo-800/50 transition font-medium disabled:opacity-50"
             >
               <Activity className="h-4 w-4" />
-              Re-run Analysis
+              Re-run
+            </button>
+            <button 
+              onClick={handleEmail} 
+              disabled={emailing}
+              className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition font-medium disabled:opacity-50"
+            >
+              <Mail className="h-4 w-4" />
+              {emailing ? 'Sending...' : 'Email'}
             </button>
             <button 
               onClick={handleApprove} 
@@ -171,7 +195,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
               className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition font-medium  disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="h-4 w-4" />
-              {approving ? 'Recording...' : 'Approve & Record Actions'}
+              {approving ? 'Recording...' : 'Approve Actions'}
             </button>
           </div>
         </div>

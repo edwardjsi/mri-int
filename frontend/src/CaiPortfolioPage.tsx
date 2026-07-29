@@ -4,6 +4,7 @@ import { CaiPositionReview } from './CaiPositionReview';
 import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
 import { CaiLedger } from './CaiLedger';
+import { Mail } from 'lucide-react';
 
 export const CaiPortfolioPage: React.FC = () => {
   const [portfolio, setPortfolio] = useState<any>(null);
@@ -20,6 +21,7 @@ export const CaiPortfolioPage: React.FC = () => {
 
   const [sortField, setSortField] = useState<string>('symbol');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [emailing, setEmailing] = useState(false);
 
   const handleManualTrade = async () => {
     try {
@@ -56,6 +58,20 @@ export const CaiPortfolioPage: React.FC = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEmail = async () => {
+    try {
+      setEmailing(true);
+      const result = await apiFetch('/portfolio-review/v1/email-weekly-review', {
+        method: 'POST'
+      });
+      alert(result.message || 'Email sent successfully');
+    } catch (err: any) {
+      alert(err.message || 'Failed to email review');
+    } finally {
+      setEmailing(false);
     }
   };
 
@@ -149,12 +165,22 @@ export const CaiPortfolioPage: React.FC = () => {
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-800/20">
             <h2 className="text-lg font-bold text-white">Active Positions</h2>
-            <button 
-              onClick={() => setShowManualTrade(true)}
-              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              + Manual Trade Entry
-            </button>
+            <div className="flex gap-3">
+              <button 
+                onClick={handleEmail}
+                disabled={emailing}
+                className="flex items-center gap-2 bg-indigo-900/30 text-indigo-300 border border-indigo-800 hover:bg-indigo-800/50 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <Mail className="w-4 h-4" />
+                {emailing ? 'Sending...' : 'Email Review'}
+              </button>
+              <button 
+                onClick={() => setShowManualTrade(true)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                + Manual Trade Entry
+              </button>
+            </div>
           </div>
         <table className="w-full text-left border-collapse">
           <thead>

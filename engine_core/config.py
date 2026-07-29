@@ -94,7 +94,7 @@ AWS_REGION = os.environ.get("AWS_REGION", "ap-south-1")
 
 # SES Email Config
 SES_REGION = os.environ.get("SES_REGION", "ap-southeast-1")
-SES_SENDER_EMAIL = os.environ.get("SES_SENDER_EMAIL", "edwardjsi@gmail.com")
+SES_SENDER_EMAIL = os.environ.get("SES_SENDER_EMAIL", "sales@goalsgap.in")
 
 # Backtest config
 START_DATE = "2022-01-01"

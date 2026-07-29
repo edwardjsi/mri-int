@@ -40,6 +40,33 @@ async def get_weekly_portfolio_review(client=Depends(get_current_client)):
         logger.exception(f"WEEKLY REVIEW GENERATION ERROR: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate weekly review")
 
+@router.post("/v1/email-weekly-review")
+async def email_weekly_portfolio_review(client=Depends(get_current_client)):
+    """
+    Generates the weekly review and sends it as an HTML email to the client.
+    """
+    from engine_core.portfolio_os_review_service import PortfolioOsReviewService
+    from engine_core.email_service import send_weekly_portfolio_review
+    try:
+        service = PortfolioOsReviewService()
+        result = service.generate_weekly_review(str(client["id"]))
+        
+        email = client.get("email")
+        name = client.get("name", "Investor")
+        if not email:
+            raise HTTPException(status_code=400, detail="Client email not found")
+            
+        success = send_weekly_portfolio_review(email, name, result)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to send email via SES")
+            
+        return {"status": "success", "message": f"Weekly review emailed to {email}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"WEEKLY REVIEW EMAIL ERROR: {e}")
+        raise HTTPException(status_code=500, detail="Failed to email weekly review")
+
 @router.post("/v1/approve-weekly-review")
 async def approve_weekly_portfolio_review(client=Depends(get_current_client)):
     """
