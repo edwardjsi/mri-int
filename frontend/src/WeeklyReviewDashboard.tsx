@@ -5,8 +5,6 @@ import {
   TrendingUp, 
   AlertTriangle, 
   CheckCircle, 
-  Clock, 
-  DollarSign, 
   Activity,
   Star
 } from 'lucide-react';
