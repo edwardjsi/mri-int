@@ -12,7 +12,7 @@ set -o pipefail
 # DATABASE_URL=postgresql://user:pass@host/dbname
 # DB_SSL=true
 # SES_SENDER_EMAIL=sales@goalsgap.in
-# SES_REGION=ap-southeast-1
+# SES_REGION=ap-south-1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"

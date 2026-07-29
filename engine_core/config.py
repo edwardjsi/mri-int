@@ -93,7 +93,7 @@ S3_BUCKET = os.environ.get("S3_BUCKET", "mri-dev-outputs-251876202726")
 AWS_REGION = os.environ.get("AWS_REGION", "ap-south-1")
 
 # SES Email Config
-SES_REGION = os.environ.get("SES_REGION", "ap-southeast-1")
+SES_REGION = os.environ.get("SES_REGION", "ap-south-1")
 SES_SENDER_EMAIL = os.environ.get("SES_SENDER_EMAIL", "sales@goalsgap.in")
 
 # Backtest config
