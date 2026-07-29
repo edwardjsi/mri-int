@@ -2089,6 +2089,137 @@ def _build_integrity_timeline_email_section(timeline: dict) -> str:
     )
 
 
+def send_weekly_portfolio_review(email: str, name: str, results: dict):
+    if not email or not aws_credentials_present():
+        return False
+        
+    try:
+        ses_region = resolve_ses_region()
+        ses = get_ses_client(ses_region)
+        
+        summary = results.get("portfolio_summary", {})
+        decision = results.get("highest_priority_decision", {})
+        holdings = results.get("holdings", [])
+        action_queue = results.get("action_queue", [])
+        
+        subject = f"MRI Weekly Portfolio Review: {summary.get('market_regime', 'Bull')} Market"
+        
+        # Build Highest Priority Decision Box
+        decision_html = ""
+        if decision:
+            color = "#ef4444" if decision.get("action") == "EXIT" else \
+                    "#f97316" if decision.get("action") == "REDUCE" else \
+                    "#22c55e" if decision.get("action") in ["ADD", "BUY"] else "#3b82f6"
+            decision_html = f"""
+            <div style="background:{color}10; border:2px solid {color}; border-radius:12px; padding:20px; margin-bottom:24px;">
+                <h3 style="margin:0 0 8px; color:{color}; font-size:14px; text-transform:uppercase;">⭐ This Week's Decision</h3>
+                <div style="font-size:24px; font-weight:bold; margin-bottom:12px; color:#111827;">
+                    <span style="color:{color}">{decision.get("action")}</span> {decision.get("stock")}
+                </div>
+                <p style="margin:0 0 12px; font-size:14px; color:#4b5563;">{decision.get("reason")}</p>
+                <div style="display:flex; gap:16px;">
+                    <div><span style="font-size:12px; color:#6b7280;">Confidence:</span> <b style="color:#111827">{decision.get("confidence")}%</b></div>
+                    <div><span style="font-size:12px; color:#6b7280;">MRI Score:</span> <b style="color:#111827">{decision.get("mri_score")}</b></div>
+                    <div><span style="font-size:12px; color:#6b7280;">CAI Score:</span> <b style="color:#111827">{decision.get("cai_score")}</b></div>
+                </div>
+            </div>
+            """
+
+        # Build Action Queue
+        action_rows = ""
+        for a in action_queue:
+            color = "#ef4444" if a.get("action") in ["EXIT", "REDUCE"] else \
+                    "#22c55e" if a.get("action") in ["ADD", "BUY"] else "#6b7280"
+            action_rows += f"""
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:12px; font-weight:bold; color:{color}">{a.get("action")}</td>
+                <td style="padding:12px; font-weight:bold; color:#111827">{a.get("stock")}</td>
+                <td style="padding:12px; color:#4b5563; font-size:13px;">{a.get("reason")}</td>
+                <td style="padding:12px; text-align:right; font-weight:bold; color:#111827">{a.get("confidence")}%</td>
+            </tr>
+            """
+        
+        # Build Holdings Status
+        holdings_rows = ""
+        for h in holdings:
+            pl_color = "#22c55e" if h.get("pl_pct", 0) >= 0 else "#ef4444"
+            pl_sign = "+" if h.get("pl_pct", 0) >= 0 else ""
+            act_color = "#ef4444" if h.get("current_action") in ["EXIT", "REDUCE"] else \
+                    "#22c55e" if h.get("current_action") in ["ADD", "BUY"] else "#6b7280"
+            holdings_rows += f"""
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:10px; font-weight:bold; color:#111827">{h.get("ticker")}</td>
+                <td style="padding:10px; text-align:right; color:{pl_color}">{pl_sign}{h.get("pl_pct")}%</td>
+                <td style="padding:10px; text-align:center; color:#111827">{h.get("mri_score")}</td>
+                <td style="padding:10px; text-align:center; font-weight:bold; color:{act_color}">{h.get("current_action")}</td>
+            </tr>
+            """
+
+        html_body = f"""
+        <html>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:auto;padding:20px;color:#333;background:#f9fafb;">
+            <div style="background:white; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e5e7eb; padding-bottom:16px; margin-bottom:24px;">
+                    <h2 style="margin:0; color:#111827; font-size:20px;">💼 Weekly Portfolio Review</h2>
+                    <span style="background:#e0e7ff; color:#4338ca; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:bold;">{summary.get('market_regime')} Regime</span>
+                </div>
+                
+                <p style="font-size:15px; color:#4b5563; margin-bottom:24px;">Hi {name or 'Investor'},</p>
+                <p style="font-size:15px; color:#4b5563; margin-bottom:24px;">Your weekly portfolio analysis is complete. Below are the data-driven actions recommended for this week.</p>
+                
+                {decision_html}
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:32px;">
+                    <div style="background:#f3f4f6; padding:16px; border-radius:8px;">
+                        <div style="font-size:12px; color:#6b7280; margin-bottom:4px; text-transform:uppercase;">Portfolio Health</div>
+                        <div style="font-size:24px; font-weight:bold; color:#111827;">{summary.get('portfolio_health')}</div>
+                    </div>
+                    <div style="background:#f3f4f6; padding:16px; border-radius:8px;">
+                        <div style="font-size:12px; color:#6b7280; margin-bottom:4px; text-transform:uppercase;">Deployment</div>
+                        <div style="font-size:24px; font-weight:bold; color:#111827;">{summary.get('deployment_pct')}%</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin:0 0 12px; color:#111827; font-size:16px;">📈 Action Queue</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:32px; font-size:14px;">
+                    {action_rows if action_rows else '<tr><td colspan="4" style="padding:16px; text-align:center; color:#6b7280;">No actions required this week.</td></tr>'}
+                </table>
+                
+                <h3 style="margin:0 0 12px; color:#111827; font-size:16px;">🛡️ Current Holdings</h3>
+                <table style="width:100%; border-collapse:collapse; font-size:13px; background:#f9fafb; border-radius:8px;">
+                    <tr style="background:#f3f4f6; text-transform:uppercase; font-size:11px; color:#6b7280;">
+                        <th style="padding:10px; text-align:left; border-radius:8px 0 0 0;">Stock</th>
+                        <th style="padding:10px; text-align:right;">P/L</th>
+                        <th style="padding:10px; text-align:center;">MRI</th>
+                        <th style="padding:10px; text-align:center; border-radius:0 8px 0 0;">Action</th>
+                    </tr>
+                    {holdings_rows}
+                </table>
+                
+                <div style="margin-top:32px; padding-top:24px; border-top:1px solid #e5e7eb; text-align:center;">
+                    <a href="https://your-domain.com/caiportfolio" style="background:#4f46e5; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px;">View Live Dashboard</a>
+                </div>
+            </div>
+            <p style="font-size:11px; color:#9ca3af; text-align:center; margin-top:24px;">Market Regime Intelligence · Weekly Analysis Engine</p>
+        </body>
+        </html>
+        """
+        
+        ses.send_email(
+            Source=SENDER_EMAIL,
+            Destination={"ToAddresses": [email]},
+            Message={
+                "Subject": {"Data": subject, "Charset": "UTF-8"},
+                "Body": {"Html": {"Data": html_body, "Charset": "UTF-8"}},
+            },
+        )
+        logger.info(f"✅ Weekly Portfolio Review sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to send Weekly Portfolio Review email: {e}")
+        return False
+
+
 if __name__ == "__main__":
     send_signal_emails()
     send_stee_signal_emails()

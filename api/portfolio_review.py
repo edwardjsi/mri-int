@@ -25,6 +25,35 @@ import json
 router = APIRouter(prefix="/api/portfolio-review", tags=["Portfolio Review"])
 logger = logging.getLogger(__name__)
 
+@router.get("/v1/weekly-review")
+async def get_weekly_portfolio_review(client=Depends(get_current_client)):
+    """
+    Executes the deterministic PortfolioOS CAI Engine on the user's active holdings.
+    Returns the exact JSON contract defined in the Weekly Portfolio Review PRD.
+    """
+    from engine_core.portfolio_os_review_service import PortfolioOsReviewService
+    try:
+        service = PortfolioOsReviewService()
+        result = service.generate_weekly_review(str(client["id"]))
+        return result
+    except Exception as e:
+        logger.exception(f"WEEKLY REVIEW GENERATION ERROR: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate weekly review")
+
+@router.post("/v1/approve-weekly-review")
+async def approve_weekly_portfolio_review(client=Depends(get_current_client)):
+    """
+    Records the Weekly Review decisions into the Decision Ledger.
+    """
+    from engine_core.portfolio_os_review_service import PortfolioOsReviewService
+    try:
+        service = PortfolioOsReviewService()
+        result = service.approve_weekly_review(str(client["id"]))
+        return result
+    except Exception as e:
+        logger.exception(f"WEEKLY REVIEW APPROVAL ERROR: {e}")
+        raise HTTPException(status_code=500, detail="Failed to record decisions to ledger")
+
 @router.get("/holdings")
 async def get_holdings(
     client=Depends(get_current_client),

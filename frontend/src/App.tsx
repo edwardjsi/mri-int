@@ -18,6 +18,7 @@ import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { CaiPortfolioPage } from './CaiPortfolioPage';
 import { CaiDashboard } from './CaiDashboard';
 import { CaiCandidateReview } from './CaiCandidateReview';
+import { WeeklyReviewDashboard } from './WeeklyReviewDashboard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './App.css';
 
@@ -2723,7 +2724,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'trend' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'trend' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research' | 'caidashboard' | 'caiportfolio' | 'weeklyreview'>('dashboard');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2782,6 +2783,9 @@ function App() {
           <div className="nav-section-label">CAI Workspace</div>
           <button className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`} onClick={() => setPage('caidashboard')}>
             <span className="nav-icon">🏦</span> CAI Hub
+          </button>
+          <button className={`nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')}>
+            <span className="nav-icon">📋</span> Weekly Review
           </button>
           <button className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`} onClick={() => setPage('caiportfolio')}>
             <span className="nav-icon">💼</span> Portfolio
@@ -2856,6 +2860,7 @@ function App() {
                       page === 'trend' ? 'Trend Screen' :
                       page === 'perx' ? 'PERX Institutional Scan' :
                       page === 'caidashboard' ? 'Capital Allocation Intelligence' :
+                      page === 'weeklyreview' ? 'Weekly Portfolio Review' :
                       page === 'caiportfolio' ? 'CAI Portfolio Workspace' :
                       page === 'unified' ? 'Unified Institutional Scan' :
                       page === 'guidance' ? 'Management Credibility' :
@@ -2865,6 +2870,7 @@ function App() {
         <div className="content-body">
           {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
           {page === 'caidashboard' && <CaiDashboard onNavigate={setPage} />}
+          {page === 'weeklyreview' && <WeeklyReviewDashboard />}
           {page === 'caiportfolio' && <CaiPortfolioPage />}
           {page === 'shadow' && <ShadowMomentumPage onSelectStock={setSelectedStock} />}
           {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}

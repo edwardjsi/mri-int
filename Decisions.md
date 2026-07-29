@@ -2646,3 +2646,70 @@ Status: FINAL.
 - Graceful fallback: market_cap column detected via `information_schema.columns`; filter skipped if column missing
 - Enrichment: Reuses `_enrich_with_mosi_lite()` for MOSI Lite scores and QIF data
 - Pure pass/fail — no breakout state classification; all matching stocks returned
+
+---
+
+## Decision 106 — PortfolioOS Phase 1 Start Boundary
+Date: 2026-07-29
+Decision-maker: Owner + AI engineer
+Trigger: Owner approved beginning implementation from `docs/29 July 26 PortfolioOS Execution plan.md` and explicitly requested that `Progress.md` and `Decisions.md` be updated first with today's exact scope before any feature code is written.
+
+### Decision
+
+Begin PortfolioOS with the smallest deterministic foundation slice from Phase 1:
+
+1. Introduce pure domain models for `IndicatorSnapshot` and `StockSnapshot`.
+2. Build a deterministic `StockSnapshotBuilder` in `engine_core/` that assembles a weekly-style stock evaluation snapshot from already-computed MRI platform data.
+3. Keep this first slice pure and testable:
+   - no Rule Engine
+   - no CAI action recommendations
+   - no dashboard changes
+   - no new database tables or migrations in this session unless the builder is blocked without them
+4. Reuse existing indicator and scoring outputs as the single source of truth rather than recalculating them:
+   - `daily_prices` for quantitative indicators
+   - `stock_scores` for MRI technical score and supporting conditions
+   - `quality_verdicts` / existing quality data when available
+5. Treat snapshots as immutable output objects. The builder may generate them, but this starting slice does not yet persist a historical snapshot ledger.
+
+### Reason
+
+The July 29 PRD defines the architecture in strict dependency order:
+
+`Indicator Engine -> Stock Snapshot Builder -> MRI/Regime/Portfolio/Decision layers`
+
+Starting with the snapshot layer is the safest incremental step because it:
+
+- respects the PRD's single-responsibility boundaries
+- gives CAI and the future Rule Engine a stable input contract
+- avoids duplicating calculations that already exist elsewhere in the MRI platform
+- is testable without DB migrations, UI changes, or action semantics
+- lets future sessions add `DecisionContext`, rules, portfolio state transitions, and ledgering on top of a stable foundation
+
+### Explicit scope for July 29 session start
+
+In scope:
+
+- new deterministic snapshot module under `engine_core/`
+- snapshot dataclasses / typed structures
+- builder logic that normalizes existing metrics into a PortfolioOS-friendly shape
+- unit tests for the builder and snapshot invariants
+- documentation updates in `Progress.md`, `Decisions.md`, and later `Sessions.md`
+
+Out of scope for this first implementation slice:
+
+- CAI action outputs (`BUY`, `ADD`, `EXIT`, etc.)
+- externalized hard/soft rule evaluation
+- decision ledger persistence
+- outcome analytics
+- dashboard/API surface changes unless needed only for local verification
+- architecture redesign of existing CAS / CAI systems
+
+### Implementation notes
+
+- Prefer weekly-ready field names and immutable objects, but source from existing daily tables until a dedicated snapshot persistence layer is justified.
+- The builder must consume precomputed values; it must not become a second indicator engine.
+- If a required field is missing, represent it explicitly as missing/`None` rather than inventing a proxy unless the proxy already exists elsewhere in the system.
+- The first commit should establish the contract, not the full PortfolioOS stack.
+
+Status: APPROVED — implementation starts 2026-07-29.
+
