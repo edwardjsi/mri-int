@@ -241,6 +241,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                   <thead className="bg-gray-900 text-white border-b border-gray-700">
                     <tr>
                       <th className="p-4 font-semibold cursor-pointer hover:text-indigo-300" onClick={() => handleSort('ticker')}>Stock</th>
+                      <th className="p-4 font-semibold text-right cursor-pointer hover:text-indigo-300" onClick={() => handleSort('quantity')}>Qty</th>
                       <th className="p-4 font-semibold text-right cursor-pointer hover:text-indigo-300" onClick={() => handleSort('value')}>Value (₹)</th>
                       <th className="p-4 font-semibold text-right cursor-pointer hover:text-indigo-300" onClick={() => handleSort('pl_pct')}>P/L %</th>
                       <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" title="Master Risk Indicator (Stock Quality)" onClick={() => handleSort('mri_score')}>MRI (Quality)</th>
@@ -252,6 +253,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                     {sortedHoldings.map((h: any, i: number) => (
                       <tr key={i} className="hover:bg-gray-800 transition">
                         <td className="p-4 font-medium text-white">{h.ticker}</td>
+                        <td className="p-4 text-right font-medium text-gray-300">{h.quantity}</td>
                         <td className="p-4 text-right font-medium text-gray-300">₹{(h.quantity * h.current_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-600' : 'text-red-400'}`}>
                           {h.pl_pct > 0 ? '+' : ''}{h.pl_pct}%
