@@ -56,9 +56,10 @@ async def email_weekly_portfolio_review(client=Depends(get_current_client)):
         if not email:
             raise HTTPException(status_code=400, detail="Client email not found")
             
-        success = send_weekly_portfolio_review(email, name, result)
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to send email via SES")
+        try:
+            send_weekly_portfolio_review(email, name, result)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"AWS SES Error: {str(e)}")
             
         return {"status": "success", "message": f"Weekly review emailed to {email}"}
     except HTTPException:

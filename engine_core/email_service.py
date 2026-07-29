@@ -2241,7 +2241,7 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
         return True
     except Exception as e:
         logger.error(f"❌ Failed to send Weekly Portfolio Review email: {e}")
-        return False
+        raise e
 
 
 if __name__ == "__main__":
