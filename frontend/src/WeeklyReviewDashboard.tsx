@@ -51,10 +51,10 @@ export const WeeklyReviewDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-gray-900">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-          <p className="text-gray-500">Compiling PortfolioOS Analysis...</p>
+          <p className="text-gray-400">Compiling PortfolioOS Analysis...</p>
         </div>
       </div>
     );
@@ -62,12 +62,12 @@ export const WeeklyReviewDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="m-8 rounded-lg bg-red-50 p-6 shadow-sm border border-red-100">
-        <div className="flex items-center gap-3 text-red-700">
+      <div className="m-8 rounded-lg bg-red-900/30 p-6  border border-red-800/50">
+        <div className="flex items-center gap-3 text-red-400">
           <AlertTriangle className="h-6 w-6" />
           <h2 className="text-lg font-semibold">System Error</h2>
         </div>
-        <p className="mt-2 text-red-600">{error}</p>
+        <p className="mt-2 text-red-400">{error}</p>
         <div className="flex gap-4 mt-4">
           <button 
             onClick={fetchReviewData}
@@ -77,7 +77,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
           </button>
           <button 
             onClick={() => setError(null)}
-            className="rounded border border-red-200 bg-white px-4 py-2 text-red-600 hover:bg-red-50 transition"
+            className="rounded border border-red-700/50 bg-gray-800 px-4 py-2 text-red-400 hover:bg-red-900/30 transition"
           >
             Dismiss
           </button>
@@ -97,28 +97,28 @@ export const WeeklyReviewDashboard: React.FC = () => {
   } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans">
+    <div className="min-h-screen bg-gray-900 p-6 font-sans">
       <div className="mx-auto max-w-7xl space-y-6">
         
         {/* Approve Status Banner */}
         {approveStatus && (
-          <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 flex justify-between items-center shadow-sm">
+          <div className="bg-green-900/30 border border-green-800/50 text-green-300 rounded-xl p-4 flex justify-between items-center ">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <span className="font-medium">{approveStatus}</span>
             </div>
-            <button onClick={() => setApproveStatus(null)} className="text-green-600 hover:text-green-800 font-bold">&times;</button>
+            <button onClick={() => setApproveStatus(null)} className="text-green-600 hover:text-green-300 font-bold">&times;</button>
           </div>
         )}
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between bg-gray-800 p-6 rounded-xl  border border-gray-700">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Briefcase className="h-6 w-6 text-indigo-600" />
               Weekly Portfolio Review
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-400 mt-1">
               Last Analysis: {new Date(summary.analysis_time).toLocaleString()}
             </p>
           </div>
@@ -126,7 +126,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
             <button 
               onClick={fetchReviewData} 
               disabled={approving}
-              className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-100 transition font-medium disabled:opacity-50"
+              className="flex items-center gap-2 bg-indigo-900/30 text-indigo-300 px-4 py-2 rounded-lg hover:bg-indigo-800/50 transition font-medium disabled:opacity-50"
             >
               <Activity className="h-4 w-4" />
               Re-run Analysis
@@ -134,7 +134,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
             <button 
               onClick={handleApprove} 
               disabled={approving || actionQueue.length === 0}
-              className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition font-medium  disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="h-4 w-4" />
               {approving ? 'Recording...' : 'Approve & Record Actions'}
@@ -176,7 +176,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white/10 rounded-lg p-5 backdrop-blur-sm">
+                <div className="bg-gray-800/10 rounded-lg p-5 backdrop-blur-sm">
                   <h4 className="font-semibold text-indigo-100 mb-2 flex items-center gap-2">
                     <CheckCircle className="h-4 w-4" /> Reason
                   </h4>
@@ -196,16 +196,16 @@ export const WeeklyReviewDashboard: React.FC = () => {
             )}
 
             {/* Section D: Holdings Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-900">Current Holdings</h2>
-                <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+            <div className="bg-gray-800 rounded-xl  border border-gray-700 overflow-hidden">
+              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-white">Current Holdings</h2>
+                <span className="bg-gray-700 text-gray-400 px-3 py-1 rounded-full text-sm font-medium">
                   {holdings.length} Positions
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-gray-600">
-                  <thead className="bg-gray-50 text-gray-900 border-b border-gray-100">
+                <table className="w-full text-left text-sm text-gray-400">
+                  <thead className="bg-gray-900 text-white border-b border-gray-700">
                     <tr>
                       <th className="p-4 font-semibold">Stock</th>
                       <th className="p-4 font-semibold text-right">P/L %</th>
@@ -216,22 +216,22 @@ export const WeeklyReviewDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {holdings.map((h: any, i: number) => (
-                      <tr key={i} className="hover:bg-gray-50 transition">
-                        <td className="p-4 font-medium text-gray-900">{h.ticker}</td>
-                        <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <tr key={i} className="hover:bg-gray-900 transition">
+                        <td className="p-4 font-medium text-white">{h.ticker}</td>
+                        <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-600' : 'text-red-400'}`}>
                           {h.pl_pct > 0 ? '+' : ''}{h.pl_pct}%
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${h.mri_score >= 80 ? 'bg-green-100 text-green-700' : h.mri_score >= 60 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${h.mri_score >= 80 ? 'bg-green-900/40 text-green-400' : h.mri_score >= 60 ? 'bg-blue-900/40 text-blue-400' : 'bg-gray-700 text-gray-300'}`}>
                             {h.mri_score}
                           </span>
                         </td>
                         <td className="p-4 text-center font-medium">{h.cai_score}</td>
                         <td className="p-4 text-center">
                           <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold ${
-                            ['EXIT', 'REDUCE'].includes(h.current_action) ? 'bg-red-100 text-red-700' :
-                            ['ADD', 'BUY'].includes(h.current_action) ? 'bg-green-100 text-green-700' :
-                            'bg-gray-100 text-gray-700'
+                            ['EXIT', 'REDUCE'].includes(h.current_action) ? 'bg-red-900/40 text-red-400' :
+                            ['ADD', 'BUY'].includes(h.current_action) ? 'bg-green-900/40 text-green-400' :
+                            'bg-gray-700 text-gray-300'
                           }`}>
                             {h.current_action}
                           </span>
@@ -240,7 +240,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                     ))}
                     {holdings.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-gray-500">
+                        <td colSpan={5} className="p-8 text-center text-gray-400">
                           No active holdings found.
                         </td>
                       </tr>
@@ -256,46 +256,46 @@ export const WeeklyReviewDashboard: React.FC = () => {
           <div className="space-y-6">
             
             {/* Section A: Portfolio Overview */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-gray-800 rounded-xl  border border-gray-700 p-6">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Activity className="h-5 w-5 text-indigo-500" />
                 Portfolio Overview
               </h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                  <span className="text-gray-500">Market Regime</span>
-                  <span className="font-semibold text-gray-900">{summary.market_regime}</span>
+                  <span className="text-gray-400">Market Regime</span>
+                  <span className="font-semibold text-white">{summary.market_regime}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                  <span className="text-gray-500">Health Score</span>
+                  <span className="text-gray-400">Health Score</span>
                   <span className="font-bold text-indigo-600">{summary.portfolio_health}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                  <span className="text-gray-500">Deployment</span>
-                  <span className="font-semibold text-gray-900">{summary.deployment_pct}%</span>
+                  <span className="text-gray-400">Deployment</span>
+                  <span className="font-semibold text-white">{summary.deployment_pct}%</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                  <span className="text-gray-500">Cash</span>
-                  <span className="font-semibold text-gray-900">₹{summary.cash_available.toLocaleString()}</span>
+                  <span className="text-gray-400">Cash</span>
+                  <span className="font-semibold text-white">₹{summary.cash_available.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                  <span className="text-gray-500">Action Items</span>
-                  <span className="font-bold text-orange-600">{summary.action_items_count}</span>
+                  <span className="text-gray-400">Action Items</span>
+                  <span className="font-bold text-orange-400">{summary.action_items_count}</span>
                 </div>
               </div>
             </div>
 
             {/* Section F: Portfolio Warnings */}
             {warnings && warnings.length > 0 && (
-              <div className="bg-orange-50 rounded-xl shadow-sm border border-orange-100 p-6">
-                <h2 className="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">
+              <div className="bg-orange-900/30 rounded-xl  border border-orange-800/50 p-6">
+                <h2 className="text-lg font-bold text-orange-300 mb-4 flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
                   Portfolio Warnings
                 </h2>
                 <ul className="space-y-3">
                   {warnings.map((w: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-orange-700 text-sm">
-                      <span className="mt-1 flex-shrink-0 h-1.5 w-1.5 rounded-full bg-orange-500"></span>
+                      <span className="mt-1 flex-shrink-0 h-1.5 w-1.5 rounded-full bg-orange-900/300"></span>
                       <span>{w}</span>
                     </li>
                   ))}
@@ -304,34 +304,34 @@ export const WeeklyReviewDashboard: React.FC = () => {
             )}
 
             {/* Section C: Action Queue */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-gray-800 rounded-xl  border border-gray-700 p-6">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-indigo-500" />
                 Action Queue
               </h2>
               <div className="space-y-3">
                 {actionQueue.length > 0 ? actionQueue.map((a: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition">
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-700 hover:border-indigo-100 hover:bg-indigo-900/30/30 transition">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            ['EXIT', 'REDUCE'].includes(a.action) ? 'bg-red-100 text-red-700' :
-                            ['ADD', 'BUY'].includes(a.action) ? 'bg-green-100 text-green-700' :
-                            'bg-gray-100 text-gray-700'
+                            ['EXIT', 'REDUCE'].includes(a.action) ? 'bg-red-900/40 text-red-400' :
+                            ['ADD', 'BUY'].includes(a.action) ? 'bg-green-900/40 text-green-400' :
+                            'bg-gray-700 text-gray-300'
                         }`}>
                           {a.action}
                         </span>
-                        <span className="font-semibold text-gray-900">{a.stock}</span>
+                        <span className="font-semibold text-white">{a.stock}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1" title={a.reason}>{a.reason}</p>
+                      <p className="text-xs text-gray-400 mt-1 line-clamp-1" title={a.reason}>{a.reason}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-bold text-gray-900">{a.confidence}%</div>
-                      <div className="text-[10px] text-gray-500 uppercase">Conf.</div>
+                      <div className="text-sm font-bold text-white">{a.confidence}%</div>
+                      <div className="text-[10px] text-gray-400 uppercase">Conf.</div>
                     </div>
                   </div>
                 )) : (
-                  <p className="text-sm text-gray-500 text-center py-4">No pending actions this week.</p>
+                  <p className="text-sm text-gray-400 text-center py-4">No pending actions this week.</p>
                 )}
               </div>
             </div>

@@ -20,6 +20,10 @@ class TrancheAdd(BaseModel):
     quantity: int
     entry_price: float
 
+class SellRequest(BaseModel):
+    quantity: int
+    sell_price: float
+
 class PositionResponse(BaseModel):
     id: str
     symbol: str
@@ -181,6 +185,54 @@ def add_tranche(position_id: str, req: TrancheAdd, client=Depends(get_current_cl
         conn.rollback()
         logger.error(f"Error adding tranche: {e}")
         raise HTTPException(status_code=500, detail="Failed to add tranche")
+    finally:
+        cur.close()
+
+@router.post("/positions/{position_id}/sell", response_model=PositionResponse)
+def sell_position(position_id: str, req: SellRequest, client=Depends(get_current_client), conn=Depends(get_db)):
+    """Sell a portion or all of a position."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        portfolio = get_or_create_portfolio(cur, client)
+        
+        cur.execute(
+            "SELECT id, symbol, quantity, average_price, tranche FROM cai_position WHERE id = %s AND portfolio_id = %s AND status = 'ACTIVE'",
+            (position_id, portfolio["id"])
+        )
+        pos = cur.fetchone()
+        
+        if not pos:
+            raise HTTPException(status_code=404, detail="Active position not found")
+            
+        if req.quantity <= 0:
+            raise HTTPException(status_code=400, detail="Sell quantity must be greater than 0")
+            
+        if req.quantity > pos["quantity"]:
+            raise HTTPException(status_code=400, detail=f"Cannot sell more than owned ({pos['quantity']})")
+            
+        new_qty = pos["quantity"] - req.quantity
+        new_status = 'CLOSED' if new_qty == 0 else 'ACTIVE'
+        
+        cur.execute(
+            """
+            UPDATE cai_position 
+            SET quantity = %s, status = %s
+            WHERE id = %s
+            RETURNING id, symbol, quantity, average_price, allocation, tranche, status
+            """,
+            (new_qty, new_status, position_id)
+        )
+        updated_pos = cur.fetchone()
+        conn.commit()
+        return PositionResponse(**updated_pos)
+        
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error selling position: {e}")
+        raise HTTPException(status_code=500, detail="Failed to sell position")
     finally:
         cur.close()
 

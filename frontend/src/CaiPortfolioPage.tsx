@@ -12,7 +12,7 @@ export const CaiPortfolioPage: React.FC = () => {
   const [reviewPositionId, setReviewPositionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'committee' | 'ledger'>('portfolio');
   const [showManualTrade, setShowManualTrade] = useState(false);
-  const [tradeType, setTradeType] = useState<'NEW' | 'TRANCHE'>('NEW');
+  const [tradeType, setTradeType] = useState<'NEW' | 'TRANCHE' | 'SELL'>('NEW');
   const [tradeSymbol, setTradeSymbol] = useState('');
   const [tradeQty, setTradeQty] = useState('');
   const [tradePrice, setTradePrice] = useState('');
@@ -28,10 +28,15 @@ export const CaiPortfolioPage: React.FC = () => {
           method: 'POST',
           body: JSON.stringify({ symbol: tradeSymbol, quantity: Number(tradeQty), average_price: Number(tradePrice) })
         });
-      } else {
+      } else if (tradeType === 'TRANCHE') {
         await apiFetch(`/cai/portfolio/positions/${tradePosId}/tranches`, {
           method: 'POST',
           body: JSON.stringify({ quantity: Number(tradeQty), entry_price: Number(tradePrice) })
+        });
+      } else if (tradeType === 'SELL') {
+        await apiFetch(`/cai/portfolio/positions/${tradePosId}/sell`, {
+          method: 'POST',
+          body: JSON.stringify({ quantity: Number(tradeQty), sell_price: Number(tradePrice) })
         });
       }
       setShowManualTrade(false);
@@ -256,6 +261,10 @@ export const CaiPortfolioPage: React.FC = () => {
                 <input type="radio" checked={tradeType === 'TRANCHE'} onChange={() => setTradeType('TRANCHE')} className="mr-2" />
                 Add Tranche
               </label>
+              <label className="flex items-center text-gray-300">
+                <input type="radio" checked={tradeType === 'SELL'} onChange={() => setTradeType('SELL')} className="mr-2" />
+                Sell/Reduce
+              </label>
             </div>
 
             {tradeType === 'NEW' && (
@@ -265,7 +274,7 @@ export const CaiPortfolioPage: React.FC = () => {
               </div>
             )}
 
-            {tradeType === 'TRANCHE' && (
+            {['TRANCHE', 'SELL'].includes(tradeType) && (
               <div className="mb-4">
                 <label className="block text-sm text-gray-400 mb-1">Select Position</label>
                 <select className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white" value={tradePosId} onChange={e => setTradePosId(e.target.value)}>
