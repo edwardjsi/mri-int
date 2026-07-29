@@ -16,6 +16,18 @@ export const WeeklyReviewDashboard: React.FC = () => {
   const [approving, setApproving] = useState<boolean>(false);
   const [approveStatus, setApproveStatus] = useState<string | null>(null);
 
+  const [sortField, setSortField] = useState<string>('cai_score');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
   useEffect(() => {
     fetchReviewData();
   }, []);
@@ -95,6 +107,27 @@ export const WeeklyReviewDashboard: React.FC = () => {
     holdings,
     warnings
   } = data;
+
+  const sortedHoldings = holdings ? [...holdings].sort((a: any, b: any) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+    
+    if (sortField === 'value') {
+      aVal = a.quantity * a.current_price;
+      bVal = b.quantity * b.current_price;
+    }
+    
+    if (typeof aVal === 'string') {
+      aVal = aVal.toLowerCase();
+      bVal = bVal.toLowerCase();
+    }
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  }) : [];
+
+  const totalValue = holdings?.reduce((sum: number, h: any) => sum + (h.quantity * h.current_price), 0) || 0;
 
   return (
     <div className="min-h-screen bg-gray-900 p-6 font-sans">
@@ -207,17 +240,19 @@ export const WeeklyReviewDashboard: React.FC = () => {
                 <table className="w-full text-left text-sm text-gray-400">
                   <thead className="bg-gray-900 text-white border-b border-gray-700">
                     <tr>
-                      <th className="p-4 font-semibold">Stock</th>
-                      <th className="p-4 font-semibold text-right">P/L %</th>
-                      <th className="p-4 font-semibold text-center">MRI</th>
-                      <th className="p-4 font-semibold text-center">CAI</th>
-                      <th className="p-4 font-semibold text-center">Action</th>
+                      <th className="p-4 font-semibold cursor-pointer hover:text-indigo-300" onClick={() => handleSort('ticker')}>Stock</th>
+                      <th className="p-4 font-semibold text-right cursor-pointer hover:text-indigo-300" onClick={() => handleSort('value')}>Value (₹)</th>
+                      <th className="p-4 font-semibold text-right cursor-pointer hover:text-indigo-300" onClick={() => handleSort('pl_pct')}>P/L %</th>
+                      <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" title="Master Risk Indicator (Stock Quality)" onClick={() => handleSort('mri_score')}>MRI (Quality)</th>
+                      <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" title="Capital Allocation Intelligence (Conviction)" onClick={() => handleSort('cai_score')}>CAI (Conviction)</th>
+                      <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" onClick={() => handleSort('current_action')}>Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {holdings.map((h: any, i: number) => (
-                      <tr key={i} className="hover:bg-gray-900 transition">
+                  <tbody className="divide-y divide-gray-800">
+                    {sortedHoldings.map((h: any, i: number) => (
+                      <tr key={i} className="hover:bg-gray-800 transition">
                         <td className="p-4 font-medium text-white">{h.ticker}</td>
+                        <td className="p-4 text-right font-medium text-gray-300">₹{(h.quantity * h.current_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-600' : 'text-red-400'}`}>
                           {h.pl_pct > 0 ? '+' : ''}{h.pl_pct}%
                         </td>
@@ -238,14 +273,21 @@ export const WeeklyReviewDashboard: React.FC = () => {
                         </td>
                       </tr>
                     ))}
-                    {holdings.length === 0 && (
+                    {sortedHoldings.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-gray-400">
+                        <td colSpan={6} className="p-8 text-center text-gray-400">
                           No active holdings found.
                         </td>
                       </tr>
                     )}
                   </tbody>
+                  <tfoot className="bg-gray-900 text-white border-t-2 border-gray-700">
+                    <tr>
+                      <td className="p-4 font-bold">Total</td>
+                      <td className="p-4 text-right font-bold text-indigo-400">₹{totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td colSpan={4}></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>
