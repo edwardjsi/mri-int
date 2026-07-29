@@ -26,7 +26,8 @@ class PortfolioOsReviewService:
                     "field": "portfolio_position.current_price",
                     "operator": "<",
                     "value": "context.portfolio_position.current_stop"
-                }
+                },
+                "reason": "Price has fallen below the trailing structure stop loss."
             },
             {
                 "name": "First tranche earned next tranche",
@@ -45,7 +46,8 @@ class PortfolioOsReviewService:
                             "value": 80
                         }
                     ]
-                }
+                },
+                "reason": "Strong MRI and trend score indicate ideal conditions to add next tranche."
             },
             {
                 "name": "Trend intact",
@@ -55,7 +57,8 @@ class PortfolioOsReviewService:
                     "field": "stock_snapshot.trend_score",
                     "operator": ">=",
                     "value": 50
-                }
+                },
+                "reason": "Trend score remains strong above 50, supporting continued ownership."
             },
             {
                 "name": "Trend weakening",
@@ -65,7 +68,8 @@ class PortfolioOsReviewService:
                     "field": "stock_snapshot.trend_score",
                     "operator": "<",
                     "value": 50
-                }
+                },
+                "reason": "Trend is weakening (score below 50). Holding but monitoring closely for exit triggers."
             }
         ]
         self.rule_engine = RuleEngine(json.dumps(rules))

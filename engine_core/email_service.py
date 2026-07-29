@@ -2165,9 +2165,9 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
             <tr style="border-bottom:1px solid #e5e7eb;">
                 <td style="padding:10px; font-weight:bold; color:#111827">{h.get("ticker")}</td>
                 <td style="padding:10px; text-align:right; color:{pl_color}">{pl_sign}{h.get("pl_pct")}%</td>
-                <td style="padding:10px; text-align:center; color:#111827">{h.get("mri_score")}</td>
+                <td style="padding:10px; text-align:center; color:#111827">{h.get("cai_score")}</td>
                 <td style="padding:10px; text-align:center; font-weight:bold; color:{act_color}">{h.get("current_action")}</td>
-                <td style="padding:10px; text-align:center; font-weight:bold; color:#f97316">{h.get("review_status") if h.get("review_status") != "NONE" else ""}</td>
+                <td style="padding:10px; text-align:left; font-size:12px; color:#6b7280;">{h.get("primary_reason", "")}</td>
             </tr>
             """
 
@@ -2213,9 +2213,9 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
                     <tr style="background:#f3f4f6; text-transform:uppercase; font-size:11px; color:#6b7280;">
                         <th style="padding:10px; text-align:left; border-radius:8px 0 0 0;">Stock</th>
                         <th style="padding:10px; text-align:right;">P/L</th>
-                        <th style="padding:10px; text-align:center;">MRI</th>
+                        <th style="padding:10px; text-align:center;">CAI</th>
                         <th style="padding:10px; text-align:center;">Action</th>
-                        <th style="padding:10px; text-align:center; border-radius:0 8px 0 0;">Review</th>
+                        <th style="padding:10px; text-align:left; border-radius:0 8px 0 0;">Reason</th>
                     </tr>
                     {holdings_rows}
                 </table>
