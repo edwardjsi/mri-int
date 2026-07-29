@@ -24,7 +24,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
     try {
       setLoading(true);
       setApproveStatus(null);
-      const result = await apiFetch('/api/portfolio-review/v1/weekly-review');
+      const result = await apiFetch('/portfolio-review/v1/weekly-review');
       setData(result);
       setError(null);
     } catch (err: any) {
@@ -38,7 +38,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
     if (!confirm('Are you sure you want to approve these decisions and record them to the Decision Ledger?')) return;
     try {
       setApproving(true);
-      const result = await apiFetch('/api/portfolio-review/v1/approve-weekly-review', {
+      const result = await apiFetch('/portfolio-review/v1/approve-weekly-review', {
         method: 'POST'
       });
       setApproveStatus(`Successfully recorded ${result.recorded_count} actions to the Decision Ledger (Report ID: ${result.report_id || 'N/A'})`);
