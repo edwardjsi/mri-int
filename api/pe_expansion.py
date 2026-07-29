@@ -20,7 +20,7 @@ from fastapi.responses import HTMLResponse
 
 from engine_core.db import get_connection
 from engine_core.aws_ses import aws_credentials_present, get_ses_client, resolve_ses_region
-from engine_core.email_service import SENDER_EMAIL
+from engine_core.email_service import get_sender_email
 from engine_perx.pe_signals import build_pe_expansion_report
 from botocore.exceptions import ClientError
 
@@ -769,7 +769,7 @@ def _send_pe_expansion_email(recipient_email: str, report: dict[str, Any]) -> di
     # Pre-flight checks — surface common config issues before hitting SES
     if not recipient_email:
         return {"status": "send_failed", "warning": "recipient_email is empty"}
-    if not SENDER_EMAIL:
+    if not get_sender_email():
         return {"status": "send_failed",
                 "warning": "SENDER_EMAIL is not configured (set SES_SENDER_EMAIL env var)"}
     if not aws_credentials_present():
@@ -780,7 +780,7 @@ def _send_pe_expansion_email(recipient_email: str, report: dict[str, Any]) -> di
         ses_region = resolve_ses_region()
         ses = get_ses_client(ses_region)
         resp = ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [recipient_email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
