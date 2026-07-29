@@ -11,7 +11,7 @@ set -o pipefail
 # These should be set as environment variables (Render, GitHub Actions, etc.)
 # DATABASE_URL=postgresql://user:pass@host/dbname
 # DB_SSL=true
-# SES_SENDER_EMAIL=edwardjsi@gmail.com
+# SES_SENDER_EMAIL=sales@goalsgap.in
 # SES_REGION=ap-southeast-1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

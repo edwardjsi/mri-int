@@ -113,7 +113,7 @@ export DB_PASSWORD=$(aws secretsmanager get-secret-value \
   --region $REGION \
   --query "SecretString" --output text | python3 -c "import sys,json; print(json.load(sys.stdin)['password'])")
 export PYTHONPATH="$PROJECT_DIR"
-export SES_SENDER_EMAIL="edwardjsi@gmail.com"
+export SES_SENDER_EMAIL="sales@goalsgap.in"
 export AWS_REGION="$REGION"
 export SES_REGION="${SES_REGION:-$AWS_REGION}"
 

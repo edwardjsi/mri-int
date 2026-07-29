@@ -61,5 +61,5 @@ variable "db_secret_arn" {
 variable "ses_sender_email" {
   description = "SES verified sender email"
   type        = string
-  default     = "edwardjsi@gmail.com"
+  default     = "sales@goalsgap.in"
 }

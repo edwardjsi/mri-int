@@ -21,7 +21,7 @@ services:
       - key: PYTHONPATH
         value: /app
       - key: SES_SENDER_EMAIL
-        value: edwardjsi@gmail.com
+        value: sales@goalsgap.in
       - key: SES_REGION
         value: ap-southeast-1
       - key: AWS_REGION
