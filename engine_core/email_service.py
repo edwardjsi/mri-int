@@ -20,7 +20,8 @@ def _narrative_scorer():
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "sales@goalsgap.in")
+def get_sender_email():
+    return os.getenv("SES_SENDER_EMAIL", "sales@goalsgap.in")
 FRONTEND_URL = os.getenv("FRONTEND_URL", os.getenv("PUBLIC_FRONTEND_URL", "https://mri-frontend.onrender.com")).rstrip("/")
 
 
@@ -757,7 +758,7 @@ def send_password_reset_email_detailed(email: str, name: str, token: str) -> tup
     
     try:
         ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -777,12 +778,12 @@ def send_password_reset_email_detailed(email: str, name: str, token: str) -> tup
             )
         return (
             False,
-            f"SES send_email failed ({code}) (region={ses_region}, sender={SENDER_EMAIL}): {msg}.{hint}".strip(),
+            f"SES send_email failed ({code}) (region={ses_region}, sender={get_sender_email()}): {msg}.{hint}".strip(),
         )
     except Exception as e:
         return (
             False,
-            f"SES send_email failed (region={ses_region}, sender={SENDER_EMAIL}): {e}",
+            f"SES send_email failed (region={ses_region}, sender={get_sender_email()}): {e}",
         )
 
 
@@ -907,7 +908,7 @@ def send_signal_emails():
 
         try:
             ses.send_email(
-                Source=SENDER_EMAIL,
+                Source=get_sender_email(),
                 Destination={"ToAddresses": [email]},
                 Message={
                     "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -1002,7 +1003,7 @@ def send_stee_signal_emails():
 
             try:
                 ses.send_email(
-                    Source=SENDER_EMAIL,
+                    Source=get_sender_email(),
                     Destination={"ToAddresses": [email]},
                     Message={
                         "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -1066,7 +1067,7 @@ def send_on_demand_risk_audit_report(email, name, successful, failed):
         """
         
         ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -1102,7 +1103,7 @@ def send_portfolio_review(email: str, name: str, results: dict):
         """
         
         ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -1118,12 +1119,12 @@ def send_portfolio_review(email: str, name: str, results: dict):
 
 def send_alert_email(subject: str, message_html: str):
     """Generic alert email for pipeline failures or data quality warnings."""
-    return send_email_custom(SENDER_EMAIL, f"MRI ALERT: {subject}", message_html)
+    return send_email_custom(get_sender_email(), f"MRI ALERT: {subject}", message_html)
 
 def send_email_custom(recipient_email: str, subject: str, html_body: str):
     """Send a custom HTML email to a specific recipient."""
-    if not recipient_email or not SENDER_EMAIL or not aws_credentials_present():
-        logger.warning(f"Email disabled: recipient={recipient_email}, sender={SENDER_EMAIL}")
+    if not recipient_email or not get_sender_email() or not aws_credentials_present():
+        logger.warning(f"Email disabled: recipient={recipient_email}, sender={get_sender_email()}")
         return False
         
     try:
@@ -1131,7 +1132,7 @@ def send_email_custom(recipient_email: str, subject: str, html_body: str):
         ses = get_ses_client(ses_region)
         
         ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [recipient_email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -1331,7 +1332,7 @@ def send_morning_brief():
 
         try:
             ses.send_email(
-                Source=SENDER_EMAIL,
+                Source=get_sender_email(),
                 Destination={"ToAddresses": [email_addr]},
                 Message={
                     "Subject": {"Data": subject, "Charset": "UTF-8"},
@@ -2229,7 +2230,7 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
         """
         
         ses.send_email(
-            Source=SENDER_EMAIL,
+            Source=get_sender_email(),
             Destination={"ToAddresses": [email]},
             Message={
                 "Subject": {"Data": subject, "Charset": "UTF-8"},
