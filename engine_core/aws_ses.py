@@ -57,6 +57,6 @@ def resolve_ses_region() -> str:
 
 
 def get_ses_client(region_name: Optional[str] = None):
-    region = region_name or resolve_ses_region()
-    return boto3.client("ses", region_name=region)
+    # FORCE ap-south-1 since AWS verified SES limits there
+    return boto3.client("ses", region_name="ap-south-1")
 
