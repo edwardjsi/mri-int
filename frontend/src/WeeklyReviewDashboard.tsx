@@ -17,6 +17,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
   const [approving, setApproving] = useState<boolean>(false);
   const [approveStatus, setApproveStatus] = useState<string | null>(null);
   const [emailing, setEmailing] = useState<boolean>(false);
+  const [selectedHolding, setSelectedHolding] = useState<any>(null);
 
   const [sortField, setSortField] = useState<string>('cai_score');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -289,15 +290,26 @@ export const WeeklyReviewDashboard: React.FC = () => {
                             {h.mri_score}
                           </span>
                         </td>
-                        <td className="p-4 text-center font-medium">{h.cai_score}</td>
+                        <td className="p-4 text-center font-medium">
+                          <button 
+                            onClick={() => setSelectedHolding(h)}
+                            className="hover:text-indigo-400 transition underline underline-offset-2 decoration-gray-600 hover:decoration-indigo-400"
+                            title="Click for detailed CAI analysis"
+                          >
+                            {h.cai_score}
+                          </button>
+                        </td>
                         <td className="p-4 text-center">
-                          <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold ${
-                            ['EXIT', 'REDUCE'].includes(h.current_action) ? 'bg-red-900/40 text-red-400' :
-                            ['ADD', 'BUY'].includes(h.current_action) ? 'bg-green-900/40 text-green-400' :
-                            'bg-gray-700 text-gray-300'
-                          }`}>
+                          <button
+                            onClick={() => setSelectedHolding(h)}
+                            className={`inline-block px-2 py-1 rounded-md text-xs font-bold hover:opacity-80 transition cursor-pointer ${
+                              ['EXIT', 'REDUCE'].includes(h.current_action) ? 'bg-red-900/40 text-red-400' :
+                              ['ADD', 'BUY'].includes(h.current_action) ? 'bg-green-900/40 text-green-400' :
+                              'bg-gray-700 text-gray-300'
+                            }`}
+                          >
                             {h.current_action}
-                          </span>
+                          </button>
                         </td>
                         <td className="p-4 text-center">
                           {h.review_status !== 'NONE' ? (
@@ -451,6 +463,83 @@ export const WeeklyReviewDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* CAI Score Detailed Popup */}
+      {selectedHolding && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedHolding(null)}>
+          <div className="bg-gray-900 w-full max-w-lg rounded-2xl border border-gray-700 shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Star className="h-5 w-5 text-indigo-400" />
+                CAI Analysis: {selectedHolding.ticker}
+              </h3>
+              <button onClick={() => setSelectedHolding(null)} className="text-gray-400 hover:text-white transition text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                <div className="text-xs text-gray-400 mb-1">CAI Score</div>
+                <div className="text-2xl font-bold text-indigo-400">{selectedHolding.cai_score}</div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                <div className="text-xs text-gray-400 mb-1">MRI Score</div>
+                <div className="text-2xl font-bold text-white">{selectedHolding.mri_score}</div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                <div className="text-xs text-gray-400 mb-1">Confidence</div>
+                <div className="text-2xl font-bold text-white">{selectedHolding.confidence}%</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                <div className="text-sm font-bold text-gray-300 mb-1 flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-orange-400" /> Recommendation
+                </div>
+                <div className={`text-lg font-bold ${
+                  ['EXIT', 'REDUCE'].includes(selectedHolding.current_action) ? 'text-red-400' :
+                  ['ADD', 'BUY'].includes(selectedHolding.current_action) ? 'text-green-400' : 'text-blue-400'
+                }`}>
+                  {selectedHolding.current_action}
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                <div className="text-sm font-bold text-gray-300 mb-1">Primary Reason</div>
+                <div className="text-gray-100 text-sm">{selectedHolding.primary_reason || 'Determined by CAI logic engine.'}</div>
+              </div>
+
+              {selectedHolding.secondary_reason && (
+                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                  <div className="text-sm font-bold text-gray-300 mb-1">Secondary Context</div>
+                  <div className="text-gray-400 text-sm">{selectedHolding.secondary_reason}</div>
+                </div>
+              )}
+
+              {selectedHolding.supporting_evidence && selectedHolding.supporting_evidence.length > 0 && (
+                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                  <div className="text-sm font-bold text-gray-300 mb-2">Supporting Evidence</div>
+                  <ul className="list-disc pl-5 text-sm text-gray-400 space-y-1">
+                    {selectedHolding.supporting_evidence.map((evidence: string, idx: number) => (
+                      <li key={idx}>{evidence}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-800 text-center">
+              <button 
+                onClick={() => setSelectedHolding(null)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

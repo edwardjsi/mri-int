@@ -148,6 +148,9 @@ class PortfolioOsReviewService:
                             "next_tranche": "N/A",
                             "structure_stop": position.current_stop,
                             "confidence": rec.confidence,
+                            "primary_reason": rec.primary_reason,
+                            "secondary_reason": rec.secondary_reason,
+                            "supporting_evidence": rec.supporting_evidence,
                             "last_reviewed": snapshot.as_of_date.isoformat()
                         })
                         
