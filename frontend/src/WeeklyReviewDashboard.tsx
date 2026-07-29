@@ -104,6 +104,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
     portfolio_summary: summary,
     highest_priority_decision: hpDecision,
     action_queue: actionQueue,
+    review_queue: reviewQueue,
     holdings,
     warnings
   } = data;
@@ -247,6 +248,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                       <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" title="Master Risk Indicator (Stock Quality)" onClick={() => handleSort('mri_score')}>MRI (Quality)</th>
                       <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" title="Capital Allocation Intelligence (Conviction)" onClick={() => handleSort('cai_score')}>CAI (Conviction)</th>
                       <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" onClick={() => handleSort('current_action')}>Action</th>
+                      <th className="p-4 font-semibold text-center cursor-pointer hover:text-indigo-300" onClick={() => handleSort('review_status')}>Review</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
@@ -273,11 +275,22 @@ export const WeeklyReviewDashboard: React.FC = () => {
                             {h.current_action}
                           </span>
                         </td>
+                        <td className="p-4 text-center">
+                          {h.review_status !== 'NONE' ? (
+                            <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold ${
+                              h.review_status === 'URGENT_REVIEW' ? 'bg-red-900/40 text-red-400 border border-red-800/50' : 'bg-orange-900/40 text-orange-400 border border-orange-800/50'
+                            }`} title={h.review_reason}>
+                              {h.review_status === 'URGENT_REVIEW' ? 'URGENT' : 'REVIEW'}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {sortedHoldings.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-gray-400">
+                        <td colSpan={8} className="p-8 text-center text-gray-400">
                           No active holdings found.
                         </td>
                       </tr>
@@ -325,6 +338,10 @@ export const WeeklyReviewDashboard: React.FC = () => {
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
                   <span className="text-gray-400">Action Items</span>
                   <span className="font-bold text-orange-400">{summary.action_items_count}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                  <span className="text-gray-400">Review Required</span>
+                  <span className="font-bold text-indigo-400">{summary.review_items_count}</span>
                 </div>
               </div>
             </div>
@@ -379,6 +396,33 @@ export const WeeklyReviewDashboard: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Section G: Review Queue */}
+            {reviewQueue && reviewQueue.length > 0 && (
+              <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-orange-500" />
+                  Review Required
+                </h2>
+                <div className="space-y-3">
+                  {reviewQueue.map((r: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-700 hover:border-orange-800/50 hover:bg-orange-900/10 transition">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                              r.status === 'URGENT_REVIEW' ? 'bg-red-900/40 text-red-400' : 'bg-orange-900/40 text-orange-400'
+                          }`}>
+                            {r.status === 'URGENT_REVIEW' ? 'URGENT' : 'REVIEW'}
+                          </span>
+                          <span className="font-semibold text-white">{r.stock}</span>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{r.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

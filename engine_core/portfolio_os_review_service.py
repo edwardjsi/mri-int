@@ -60,7 +60,7 @@ class PortfolioOsReviewService:
             {
                 "name": "Trend weakening",
                 "priority": 4,
-                "action": "REVIEW",
+                "action": "HOLD",
                 "condition": {
                     "field": "stock_snapshot.trend_score",
                     "operator": "<",
@@ -90,6 +90,7 @@ class PortfolioOsReviewService:
 
                 holdings = []
                 action_queue = []
+                review_queue = []
                 
                 total_invested = 0.0
                 total_current = 0.0
@@ -142,6 +143,8 @@ class PortfolioOsReviewService:
                             "mri_score": round(mri_score, 1),
                             "cai_score": round(cai_score, 1),
                             "current_action": rec.action,
+                            "review_status": rec.review_status,
+                            "review_reason": rec.review_reason,
                             "next_tranche": "N/A",
                             "structure_stop": position.current_stop,
                             "confidence": rec.confidence,
@@ -156,6 +159,13 @@ class PortfolioOsReviewService:
                                 "action": rec.action,
                                 "confidence": rec.confidence,
                                 "reason": rec.primary_reason
+                            })
+                            
+                        if rec.review_status in ["REVIEW_REQUIRED", "URGENT_REVIEW"]:
+                            review_queue.append({
+                                "stock": symbol,
+                                "status": rec.review_status,
+                                "reason": rec.review_reason
                             })
                             
                     except Exception as e:
@@ -193,6 +203,7 @@ class PortfolioOsReviewService:
                     "cash_target_pct": 20,
                     "holdings_count": len(holdings),
                     "action_items_count": len(action_queue),
+                    "review_items_count": len(review_queue),
                     "analysis_time": datetime.now(timezone.utc).isoformat()
                 }
                 
@@ -206,6 +217,7 @@ class PortfolioOsReviewService:
                     "portfolio_summary": portfolio_summary,
                     "highest_priority_decision": highest_priority_decision,
                     "action_queue": action_queue,
+                    "review_queue": review_queue,
                     "holdings": holdings,
                     "opportunities": [],  # Deferred to V2 or separate scan
                     "warnings": warnings,

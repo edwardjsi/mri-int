@@ -2101,6 +2101,7 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
         decision = results.get("highest_priority_decision", {})
         holdings = results.get("holdings", [])
         action_queue = results.get("action_queue", [])
+        review_queue = results.get("review_queue", [])
         
         subject = f"MRI Weekly Portfolio Review: {summary.get('market_regime', 'Bull')} Market"
         
@@ -2138,6 +2139,19 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
                 <td style="padding:12px; text-align:right; font-weight:bold; color:#111827">{a.get("confidence")}%</td>
             </tr>
             """
+            
+        # Build Review Queue
+        review_rows = ""
+        for r in review_queue:
+            r_color = "#ef4444" if r.get("status") == "URGENT_REVIEW" else "#f97316"
+            r_status = "URGENT" if r.get("status") == "URGENT_REVIEW" else "REVIEW"
+            review_rows += f"""
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:12px; font-weight:bold; color:{r_color}">{r_status}</td>
+                <td style="padding:12px; font-weight:bold; color:#111827">{r.get("stock")}</td>
+                <td style="padding:12px; color:#4b5563; font-size:13px;">{r.get("reason")}</td>
+            </tr>
+            """
         
         # Build Holdings Status
         holdings_rows = ""
@@ -2152,6 +2166,7 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
                 <td style="padding:10px; text-align:right; color:{pl_color}">{pl_sign}{h.get("pl_pct")}%</td>
                 <td style="padding:10px; text-align:center; color:#111827">{h.get("mri_score")}</td>
                 <td style="padding:10px; text-align:center; font-weight:bold; color:{act_color}">{h.get("current_action")}</td>
+                <td style="padding:10px; text-align:center; font-weight:bold; color:#f97316">{h.get("review_status") if h.get("review_status") != "NONE" else ""}</td>
             </tr>
             """
 
@@ -2185,13 +2200,21 @@ def send_weekly_portfolio_review(email: str, name: str, results: dict):
                     {action_rows if action_rows else '<tr><td colspan="4" style="padding:16px; text-align:center; color:#6b7280;">No actions required this week.</td></tr>'}
                 </table>
                 
+                {f'''
+                <h3 style="margin:0 0 12px; color:#111827; font-size:16px;">⚠️ Review Required</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:32px; font-size:14px;">
+                    {review_rows}
+                </table>
+                ''' if review_rows else ''}
+                
                 <h3 style="margin:0 0 12px; color:#111827; font-size:16px;">🛡️ Current Holdings</h3>
                 <table style="width:100%; border-collapse:collapse; font-size:13px; background:#f9fafb; border-radius:8px;">
                     <tr style="background:#f3f4f6; text-transform:uppercase; font-size:11px; color:#6b7280;">
                         <th style="padding:10px; text-align:left; border-radius:8px 0 0 0;">Stock</th>
                         <th style="padding:10px; text-align:right;">P/L</th>
                         <th style="padding:10px; text-align:center;">MRI</th>
-                        <th style="padding:10px; text-align:center; border-radius:0 8px 0 0;">Action</th>
+                        <th style="padding:10px; text-align:center;">Action</th>
+                        <th style="padding:10px; text-align:center; border-radius:0 8px 0 0;">Review</th>
                     </tr>
                     {holdings_rows}
                 </table>

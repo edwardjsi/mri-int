@@ -9,6 +9,8 @@ from engine_core.portfolio_os_rule_engine import RuleEvaluationResult
 class CaiRecommendation:
     """The final recommendation output from the CAI Engine."""
     action: str
+    review_status: str
+    review_reason: Optional[str]
     confidence: float
     action_score: float
     primary_reason: str
@@ -31,6 +33,23 @@ class CaiEngine:
         # 1. Action is fully determined by the Rule Engine
         action = rule_result.action or "WAIT"
         
+        # Evaluate Review Status based on PRD v2.0
+        review_status = "NONE"
+        review_reason = None
+        
+        # Example review triggers
+        if context.stock_snapshot.trend_score and context.stock_snapshot.trend_score < 50:
+            review_status = "REVIEW_REQUIRED"
+            review_reason = "Trend weakening"
+        elif context.portfolio_position.current_allocation > 0.10:
+            review_status = "REVIEW_REQUIRED"
+            review_reason = "Allocation exceeds target"
+            
+        if action == "REVIEW":
+            action = "HOLD"
+            review_status = "REVIEW_REQUIRED"
+            review_reason = "Manually flagged for review"
+            
         # 2. Compute Confidence based on PRD Section 7
         confidence = self._compute_confidence(context)
         
@@ -51,6 +70,8 @@ class CaiEngine:
 
         return CaiRecommendation(
             action=action,
+            review_status=review_status,
+            review_reason=review_reason,
             confidence=round(confidence, 2),
             action_score=round(action_score, 2),
             primary_reason=primary_reason,
