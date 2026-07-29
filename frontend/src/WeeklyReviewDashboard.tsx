@@ -255,7 +255,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                         <td className="p-4 font-medium text-white">{h.ticker}</td>
                         <td className="p-4 text-right font-medium text-gray-300">{h.quantity}</td>
                         <td className="p-4 text-right font-medium text-gray-300">₹{(h.quantity * h.current_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-600' : 'text-red-400'}`}>
+                        <td className={`p-4 text-right font-medium ${h.pl_pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {h.pl_pct > 0 ? '+' : ''}{h.pl_pct}%
                         </td>
                         <td className="p-4 text-center">
