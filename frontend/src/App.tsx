@@ -2887,6 +2887,7 @@ function App() {
       )}
 
       <nav className="mobile-nav">
+        <button className={`mobile-nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')} title="Weekly Review">📅</button>
         <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')} title="Dashboard">🏠</button>
         <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')} title="Swing Momentum">🔄</button>
         <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')} title="History">📋</button>
