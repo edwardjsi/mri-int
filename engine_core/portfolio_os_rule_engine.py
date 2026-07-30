@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
 from engine_core.portfolio_os_context import DecisionContext
+from engine_core.xai_framework import ExplanationNode, XaiRule
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,8 @@ class RuleEvaluationResult:
     action: Optional[str]
     triggered_rule: Optional[str]
     reason: Optional[str]
+    explanation_node: Optional[ExplanationNode] = None
+    evaluated_rules: Optional[List[XaiRule]] = None
 
 
 class RuleEngine:
@@ -35,16 +38,43 @@ class RuleEngine:
     def evaluate(self, context: DecisionContext) -> RuleEvaluationResult:
         """
         Evaluates rules in priority order. Returns the first action triggered by a rule.
+        Builds the explanation tree and tracks all evaluated rules.
         """
+        evaluated_rules = []
+        explanation = ExplanationNode("Rule Engine", "Evaluated Rules")
+
         for rule in self.rules:
-            if self._evaluate_condition(rule.get('condition', {}), context):
+            rule_name = rule.get('name', 'Unknown Rule')
+            rule_id = str(rule.get('id', rule_name))
+            
+            # For simplicity, we just log that we evaluated it. A full evaluation would track exactly which subcondition matched.
+            triggered = self._evaluate_condition(rule.get('condition', {}), context)
+            
+            xai_rule = XaiRule(
+                name=rule_name,
+                rule_id=rule_id,
+                result="PASS" if triggered else "FAIL",
+                threshold=str(rule.get('condition')),
+                actual_value="Evaluated context"
+            )
+            evaluated_rules.append(xai_rule)
+            
+            if triggered:
+                explanation.result = rule.get('action')
+                explanation.details["triggered_rule"] = rule_name
+                explanation.details["reason"] = rule.get('reason')
+                
                 return RuleEvaluationResult(
                     action=rule.get('action'),
-                    triggered_rule=rule.get('name'),
-                    reason=rule.get('reason', f"Triggered rule: {rule.get('name')}")
+                    triggered_rule=rule_name,
+                    reason=rule.get('reason', f"Triggered rule: {rule_name}"),
+                    explanation_node=explanation,
+                    evaluated_rules=evaluated_rules
                 )
         
-        return RuleEvaluationResult(action=None, triggered_rule=None, reason="No rules triggered")
+        explanation.result = "None"
+        explanation.details["reason"] = "No rules triggered"
+        return RuleEvaluationResult(action=None, triggered_rule=None, reason="No rules triggered", explanation_node=explanation, evaluated_rules=evaluated_rules)
 
     def _evaluate_condition(self, condition: Dict[str, Any], context: DecisionContext) -> bool:
         if not condition:

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any, Mapping, Optional
+from engine_core.xai_framework import ExplanationNode
 
 
 _MISSING = object()
@@ -49,6 +50,7 @@ class StockSnapshot:
     quality_score: Optional[float]
     risk_score: Optional[float]
     supporting_flags: tuple[str, ...]
+    mri_explanation: Optional[ExplanationNode] = None
 
 
 class StockSnapshotBuilder:
@@ -135,7 +137,7 @@ class StockSnapshotBuilder:
         )
 
         # Compute deterministic MRI scores
-        computed_scores = self.mri_engine.compute_scores(indicators)
+        computed_scores, mri_explanation = self.mri_engine.compute_scores(indicators)
         
         mri_score = computed_scores.get('mri_score')
         trend_score = computed_scores.get('trend_score')
@@ -160,6 +162,7 @@ class StockSnapshotBuilder:
             quality_score=quality_score,
             risk_score=risk_score,
             supporting_flags=supporting_flags,
+            mri_explanation=mri_explanation,
         )
 
     def _resolve_as_of_date(

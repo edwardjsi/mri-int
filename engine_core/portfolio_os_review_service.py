@@ -155,7 +155,8 @@ class PortfolioOsReviewService:
                             "primary_reason": rec.primary_reason,
                             "secondary_reason": rec.secondary_reason,
                             "supporting_evidence": rec.supporting_evidence,
-                            "last_reviewed": snapshot.as_of_date.isoformat()
+                            "last_reviewed": snapshot.as_of_date.isoformat(),
+                            "explanation_tree": rec.explanation_tree.to_dict() if rec.explanation_tree else None
                         })
                         
                         if rec.action in ["BUY", "ADD", "REDUCE", "ROTATE", "EXIT"]:
@@ -165,7 +166,8 @@ class PortfolioOsReviewService:
                                 "cai": round(cai_score, 1),
                                 "action": rec.action,
                                 "confidence": rec.confidence,
-                                "reason": rec.primary_reason
+                                "reason": rec.primary_reason,
+                                "explanation_tree": rec.explanation_tree.to_dict() if rec.explanation_tree else None
                             })
                             
                         if rec.review_status in ["REVIEW_REQUIRED", "URGENT_REVIEW"]:

@@ -7,8 +7,30 @@ import {
   CheckCircle, 
   Activity,
   Star,
-  Mail
+  Mail,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
+
+const Accordion = ({ title, children, defaultOpen = false }: any) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-gray-700 rounded-lg mb-4 bg-gray-800 overflow-hidden">
+      <button 
+        className="w-full flex justify-between items-center p-4 text-white hover:bg-gray-700/50 transition"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="font-medium">{title}</span>
+        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </button>
+      {isOpen && (
+        <div className="p-4 border-t border-gray-700 text-gray-300 text-sm bg-gray-800/50">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const WeeklyReviewDashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
@@ -291,13 +313,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
                           </span>
                         </td>
                         <td className="p-4 text-center font-medium">
-                          <button 
-                            onClick={() => setSelectedHolding(h)}
-                            className="hover:text-indigo-400 transition underline underline-offset-2 decoration-gray-600 hover:decoration-indigo-400"
-                            title="Click for detailed CAI analysis"
-                          >
-                            {h.cai_score}
-                          </button>
+                          {h.cai_score}
                         </td>
                         <td className="p-4 text-center">
                           <button
@@ -408,7 +424,7 @@ export const WeeklyReviewDashboard: React.FC = () => {
               </h2>
               <div className="space-y-3">
                 {actionQueue.length > 0 ? actionQueue.map((a: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-700 hover:border-indigo-100 hover:bg-indigo-900/30/30 transition">
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-700 hover:border-indigo-100 hover:bg-indigo-900/30 transition cursor-pointer" onClick={() => setSelectedHolding(a)}>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${
@@ -464,78 +480,103 @@ export const WeeklyReviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* CAI Score Detailed Popup */}
       {selectedHolding && (
-        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedHolding(null)}>
-          <div className="bg-gray-900 w-full max-w-lg rounded-2xl border border-gray-700 shadow-2xl p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Star className="h-5 w-5 text-indigo-400" />
-                CAI Analysis: {selectedHolding.ticker}
-              </h3>
-              <button onClick={() => setSelectedHolding(null)} className="text-gray-400 hover:text-white transition text-2xl leading-none">&times;</button>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-                <div className="text-xs text-gray-400 mb-1">CAI Score</div>
-                <div className="text-2xl font-bold text-indigo-400">{selectedHolding.cai_score}</div>
+        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-gray-900 border-l border-gray-700 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto flex flex-col">
+          <div className="p-6 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              {selectedHolding.ticker || selectedHolding.stock} Decision
+            </h3>
+            <button onClick={() => setSelectedHolding(null)} className="text-gray-400 hover:text-white transition text-2xl leading-none">&times;</button>
+          </div>
+          
+          <div className="p-6 flex-grow">
+            {!selectedHolding.explanation_tree ? (
+              <div className="bg-red-900/30 p-4 rounded text-red-400 border border-red-800">
+                Error: Explanation tree is missing or invalid for this recommendation.
               </div>
-              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-                <div className="text-xs text-gray-400 mb-1">MRI Score</div>
-                <div className="text-2xl font-bold text-white">{selectedHolding.mri_score}</div>
-              </div>
-              <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-                <div className="text-xs text-gray-400 mb-1">Confidence</div>
-                <div className="text-2xl font-bold text-white">{selectedHolding.confidence}%</div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                <div className="text-sm font-bold text-gray-300 mb-1 flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-orange-400" /> Recommendation
-                </div>
-                <div className={`text-lg font-bold ${
-                  ['EXIT', 'REDUCE'].includes(selectedHolding.current_action) ? 'text-red-400' :
-                  ['ADD', 'BUY'].includes(selectedHolding.current_action) ? 'text-green-400' : 'text-blue-400'
-                }`}>
-                  {selectedHolding.current_action}
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                <div className="text-sm font-bold text-gray-300 mb-1">Primary Reason</div>
-                <div className="text-gray-100 text-sm">{selectedHolding.primary_reason || 'Determined by CAI logic engine.'}</div>
-              </div>
-
-              {selectedHolding.secondary_reason && (
-                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                  <div className="text-sm font-bold text-gray-300 mb-1">Secondary Context</div>
-                  <div className="text-gray-400 text-sm">{selectedHolding.secondary_reason}</div>
-                </div>
-              )}
-
-              {selectedHolding.supporting_evidence && selectedHolding.supporting_evidence.length > 0 && (
-                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                  <div className="text-sm font-bold text-gray-300 mb-2">Supporting Evidence</div>
-                  <ul className="list-disc pl-5 text-sm text-gray-400 space-y-1">
-                    {selectedHolding.supporting_evidence.map((evidence: string, idx: number) => (
-                      <li key={idx}>{evidence}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-gray-800 text-center">
-              <button 
-                onClick={() => setSelectedHolding(null)}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition"
-              >
-                Close
-              </button>
-            </div>
+            ) : (
+              <>
+                <Accordion title="Recommendation" defaultOpen={true}>
+                  <div className="space-y-2">
+                    <div className="flex justify-between border-b border-gray-700 pb-2">
+                      <span className="text-gray-400">Action</span>
+                      <span className="font-bold text-white">{selectedHolding.current_action || selectedHolding.action}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-700 pb-2">
+                      <span className="text-gray-400">Confidence</span>
+                      <span className="font-bold text-white">{selectedHolding.confidence}%</span>
+                    </div>
+                    <div className="pt-1">
+                      <span className="text-gray-400 block mb-1">Summary</span>
+                      <span>{selectedHolding.primary_reason || selectedHolding.reason}</span>
+                    </div>
+                  </div>
+                </Accordion>
+                
+                <Accordion title="Why" defaultOpen={true}>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-gray-400 block mb-1">Primary Reason</span>
+                      <p>{selectedHolding.primary_reason || selectedHolding.reason}</p>
+                    </div>
+                    {selectedHolding.secondary_reason && (
+                      <div>
+                        <span className="text-gray-400 block mb-1">Supporting Context</span>
+                        <p>{selectedHolding.secondary_reason}</p>
+                      </div>
+                    )}
+                  </div>
+                </Accordion>
+                
+                <Accordion title="Rules">
+                  <div className="space-y-3">
+                    {selectedHolding.explanation_tree.children && selectedHolding.explanation_tree.children.length > 0 ? (
+                      selectedHolding.explanation_tree.children.map((child: any, idx: number) => (
+                         <div key={idx} className="bg-gray-900 p-3 rounded border border-gray-700">
+                           <div className="font-semibold text-white mb-1">{child.name}</div>
+                           <div className="text-xs text-gray-400">Result: <span className="text-gray-200">{child.result}</span></div>
+                           {child.details && Object.entries(child.details).map(([k, v]) => (
+                             <div key={k} className="text-xs text-gray-400 mt-1">
+                               <span className="capitalize">{k.replace(/_/g, ' ')}</span>: {String(v)}
+                             </div>
+                           ))}
+                         </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No rule evaluations found.</p>
+                    )}
+                  </div>
+                </Accordion>
+                
+                <Accordion title="Evidence">
+                  <div className="space-y-2">
+                    {selectedHolding.supporting_evidence && selectedHolding.supporting_evidence.length > 0 ? (
+                      <ul className="list-disc pl-4 space-y-1">
+                        {selectedHolding.supporting_evidence.map((ev: string, i: number) => (
+                          <li key={i}>{ev}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500">No supporting evidence provided.</p>
+                    )}
+                    
+                    {selectedHolding.explanation_tree.details && selectedHolding.explanation_tree.details.calculations && (
+                      <div className="mt-4 border-t border-gray-700 pt-3">
+                        <h4 className="text-gray-400 mb-2 font-medium">Calculations</h4>
+                        {selectedHolding.explanation_tree.details.calculations.map((calc: any, i: number) => (
+                           <div key={i} className="bg-gray-900 p-2 rounded text-xs border border-gray-700">
+                             <div><strong>{calc.name}</strong></div>
+                             <div>Formula: {calc.formula}</div>
+                             <div>Inputs: {calc.inputs}</div>
+                             <div>Output: {calc.output}</div>
+                           </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Accordion>
+              </>
+            )}
           </div>
         </div>
       )}

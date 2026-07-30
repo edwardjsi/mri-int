@@ -22,7 +22,7 @@ class TestMriEngine:
             breakout_state="NONE", breakout_age=0,
             condition_breakout_10d=False, condition_price_quality=1.0
         )
-        scores = self.engine.compute_scores(indicator)
+        scores, _ = self.engine.compute_scores(indicator)
         
         # 40 (alignment) + 20 (slopes) + 20 (capped RS) = 80.0
         assert scores["trend_score"] == 80.0
@@ -36,7 +36,7 @@ class TestMriEngine:
             breakout_state="BROKEN_OUT", breakout_age=2,
             condition_breakout_10d=True, condition_price_quality=1.0
         )
-        scores = self.engine.compute_scores(indicator)
+        scores, _ = self.engine.compute_scores(indicator)
         
         # Base 50 - 4 (age penalty 2*2) + 30 (vol ratio > 1.5) - 10 (overhead) = 66.0
         assert scores["breakout_score"] == 66.0
@@ -50,7 +50,7 @@ class TestMriEngine:
             breakout_state="NONE", breakout_age=0,
             condition_breakout_10d=False, condition_price_quality=1.0
         )
-        scores = self.engine.compute_scores(indicator)
+        scores, _ = self.engine.compute_scores(indicator)
         
         # Distance = (125-80)/125 = 36% (>20% -> +20 risk)
         # Volume = 50,000 (<100k -> +20 risk)
@@ -58,7 +58,7 @@ class TestMriEngine:
         assert scores["risk_score"] == 90.0
 
     def test_handles_none_indicators(self):
-        scores = self.engine.compute_scores(None)
+        scores, _ = self.engine.compute_scores(None)
         assert scores["trend_score"] == 0.0
         assert scores["risk_score"] == 100.0
         assert scores["mri_score"] == 0.0

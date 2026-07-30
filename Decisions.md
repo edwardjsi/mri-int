@@ -2713,3 +2713,24 @@ Out of scope for this first implementation slice:
 
 Status: APPROVED — implementation starts 2026-07-29.
 
+
+
+## Decision 107 — MRI Explainable AI (XAI) Framework v1.0
+Date: 2026-07-30
+Decision: Implemented the Explainable AI (XAI) framework as a foundational capability.
+Reason: To ensure all MRI recommendations are fully transparent, auditable, and support progressive drill-down.
+Status: FINAL.
+
+
+## Decision 107 — MRI Explainable AI (XAI) Framework v1.0
+Date: 2026-07-30
+Decision: Implemented the Explainable AI (XAI) framework as a foundational capability.
+Reason: To ensure all MRI recommendations are fully transparent, auditable, and support progressive drill-down.
+Status: FINAL.
+
+
+## Decision 108 — MRI Frontend V1 Scope and Constraints
+Date: 2026-07-30
+Decision: Build a hyper-minimal frontend strictly focused on the weekly review and decision ledger, removing charts, AI chat, and standalone portfolio views. A right-side panel will be used for progressive disclosure of XAI.
+Reason: To optimize for decision-making speed (under 10 mins for 20 stocks) and validate the core Decision Engine and Explainability without UI overhead.
+Status: FINAL.

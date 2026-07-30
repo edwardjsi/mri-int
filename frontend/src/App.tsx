@@ -2724,7 +2724,7 @@ class ErrorBoundary extends React.Component<
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'dashboard' | 'history' | 'performance' | 'riskaudit' | 'watchlist' | 'breakout' | 'trend' | 'admin' | 'shadow' | 'perx' | 'aae' | 'unified' | '112co' | 'guidance' | 'peexpansion' | 'research' | 'caidashboard' | 'caiportfolio' | 'weeklyreview'>('dashboard');
+  const [page, setPage] = useState<'history' | 'weeklyreview'>('weeklyreview');
   const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -2776,71 +2776,12 @@ function App() {
           <span className="brand-name">MRI</span>
         </div>
         <div className="nav-links">
-          <button className={`nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
+          <button className={`nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')}>
             <span className="nav-icon">🏠</span> Dashboard
           </button>
-
-          <div className="nav-section-label">CAI Workspace</div>
-          <button className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`} onClick={() => setPage('caidashboard')}>
-            <span className="nav-icon">🏦</span> CAI Hub
-          </button>
-          <button className={`nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')}>
-            <span className="nav-icon">📋</span> Weekly Review
-          </button>
-          <button className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`} onClick={() => setPage('caiportfolio')}>
-            <span className="nav-icon">💼</span> Portfolio
-          </button>
           <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
-            <span className="nav-icon">📋</span> History
+            <span className="nav-icon">📋</span> Decision Ledger
           </button>
-          <button className={`nav-link ${page === 'performance' ? 'active' : ''}`} onClick={() => setPage('performance')}>
-            <span className="nav-icon">📈</span> Performance
-          </button>
-          <button className={`nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
-            <span className="nav-icon">🛡️</span> Risk Audit
-          </button>
-          <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
-            <span className="nav-icon">👀</span> Watchlist
-          </button>
-
-          <div className="nav-section-label">Signals</div>
-          <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
-            <span className="nav-icon">🔄</span> Swing Momentum
-          </button>
-          <button className={`nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>
-            <span className="nav-icon">🚀</span> Breakout Radar
-          </button>
-          <button className={`nav-link ${page === 'trend' ? 'active' : ''}`} onClick={() => setPage('trend')}>
-            <span className="nav-icon">📊</span> Trend Screen
-          </button>
-          <button className={`nav-link ${page === '112co' ? 'active' : ''}`} onClick={() => setPage('112co')}>
-            <span className="nav-icon">🔬</span> 112Co Watchlist
-          </button>
-
-          <div className="nav-section-label">Research</div>
-          <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
-            <span className="nav-icon">🏛️</span> PERX
-          </button>
-          <button className={`nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')}>
-            <span className="nav-icon">📈</span> Expansion Lens
-          </button>
-          <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
-            <span className="nav-icon">🧬</span> AAE Console
-          </button>
-          <button className={`nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')}>
-            <span className="nav-icon">🧠</span> Unified Scan
-          </button>
-          <button className={`nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')}>
-            <span className="nav-icon">🔍</span> GuidanceCheck
-          </button>
-          <button className={`nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')}>
-            <span className="nav-icon">🧠</span> Conviction Engine
-          </button>
-{isAdmin() && (
-            <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
-              <span className="nav-icon">🛡️</span> Platform Intelligence
-            </button>
-          )}
         </div>
         <div className="sidebar-footer">
           <div className="user-info">{getClientName()}</div>

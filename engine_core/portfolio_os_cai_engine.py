@@ -3,6 +3,7 @@ from typing import Optional
 
 from engine_core.portfolio_os_context import DecisionContext
 from engine_core.portfolio_os_rule_engine import RuleEvaluationResult
+from engine_core.xai_framework import ExplanationNode, XaiRule, XaiEvidence, XaiCalculation, XaiDecision
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,10 @@ class CaiRecommendation:
     secondary_reason: Optional[str]
     supporting_evidence: list[str]
     position_size_recommendation: Optional[float]
+    explanation_tree: Optional[ExplanationNode] = None
+    rules: Optional[list[XaiRule]] = None
+    evidence: Optional[list[XaiEvidence]] = None
+    calculations: Optional[list[XaiCalculation]] = None
 
 
 class CaiEngine:
@@ -68,6 +73,19 @@ class CaiEngine:
         if context.stock_snapshot.risk_score:
             evidence.append(f"Risk Score: {context.stock_snapshot.risk_score}")
 
+        cai_node = ExplanationNode("CAI Engine", action)
+        cai_node.details["confidence"] = round(confidence, 2)
+        cai_node.details["action_score"] = round(action_score, 2)
+        cai_node.details["position_size"] = pos_size
+        
+        # Pull in rule engine node if exists
+        if rule_result.explanation_node:
+            cai_node.add_child(rule_result.explanation_node)
+            
+        xai_evidence = []
+        if context.stock_snapshot.trend_score:
+            xai_evidence.append(XaiEvidence("Trend Score", str(context.stock_snapshot.trend_score), "MRI Engine", "90 Days", "now", "Trend Calculation"))
+
         return CaiRecommendation(
             action=action,
             review_status=review_status,
@@ -77,7 +95,11 @@ class CaiEngine:
             primary_reason=primary_reason,
             secondary_reason=secondary_reason,
             supporting_evidence=evidence,
-            position_size_recommendation=pos_size
+            position_size_recommendation=pos_size,
+            explanation_tree=cai_node,
+            rules=rule_result.evaluated_rules or [],
+            evidence=xai_evidence,
+            calculations=[]
         )
 
     def _compute_confidence(self, context: DecisionContext) -> float:
