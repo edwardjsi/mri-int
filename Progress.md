@@ -2,6 +2,22 @@
 
 ---
 
+## 📅 Session: July 30, 2026 — Restore Main Dashboard Navigation Links
+
+**Session Start:** ~21:10 IST
+**Session End:** ~21:20 IST
+
+### What Was Done This Session
+
+#### 1. Restore Sidebar Navigation Links ✅
+- [x] Restored the full suite of sidebar links (`Signal Dashboard`, `CAI Dashboard`, `CAI Portfolio`, `Swing Momentum`, `Breakout Radar`, `Trend Screen`, `112Co`, `Watchlist`, `PERX`, `Expansion Lens`, `AAE Console`, `Unified Scan`, `GuidanceCheck`, `Conviction`, `Risk Audit`, and `Platform Intel`) in `frontend/src/App.tsx`.
+- [x] Verified mobile navigation was already intact.
+
+### 📌 Current Milestone
+- **Main Dashboard UI links restored.**
+
+---
+
 ## 📅 Session: July 7, 2026 — Capital Allocation Score V1.0 Session N+1 (Migration + Pure Engine + Tests)
 
 **Session Start:** (afternoon IST)

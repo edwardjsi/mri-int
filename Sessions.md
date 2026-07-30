@@ -1,3 +1,18 @@
+## **July 30, 2026: Restore Main Dashboard Navigation Links**
+
+**Objective**: Restore the missing sidebar navigation links in the main dashboard UI.
+
+**Actions**:
+- Restored the full suite of sidebar navigation links (Signal Dashboard, CAI Dashboard, CAI Portfolio, Swing Momentum, Breakout Radar, Trend Screen, 112Co, Watchlist, PERX, Expansion Lens, AAE Console, Unified Scan, GuidanceCheck, Conviction, Risk Audit, and Platform Intel) to the desktop sidebar in `frontend/src/App.tsx`.
+- Verified that the changes do not break mobile navigation which was already intact.
+
+**Verification**:
+- Ran Vite dev server locally (`npm run dev`) to ensure there are no build or compilation errors. 
+
+**Result**: All primary functional paths are now accessible via the desktop sidebar menu again.
+
+---
+
 ## **July 7, 2026: Capital Allocation Score V1.0 — Session N+1 (Migration + Pure Engine + Tests)**
 
 **Objective**: Ship the smallest testable unit of CAS V1.0: schema migration, pure-logic engine module, and unit tests. No API, no frontend, no DB writes.
