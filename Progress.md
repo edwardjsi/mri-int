@@ -18,6 +18,23 @@
 
 ---
 
+## 📅 Session: July 30, 2026 — Operationalizing MRI Frontend V1 (Morning Session)
+
+**Session Start:** (morning IST)
+
+### What Was Done This Session
+
+#### 1. Implement Minimal MRI Frontend V1 ✅
+- [x] Executed the requirements from the `docs/investor/30 July 26 MRI Frontend V1.md` PRD.
+- [x] Simplified navigation to explicitly include only the **Dashboard (Weekly Review)** and **Decision Ledger**. (Note: the full navigation was later restored per user request in the evening session).
+- [x] Shifted away from the old modal behavior toward a right-side panel layout for progressive XAI disclosure.
+- [x] Validated that the UI strictly renders backend-supported schema without extraneous charts, settings, or frontend business logic to optimize for the 10-minute weekly review cycle.
+
+### 📌 Current Milestone
+- **MRI Frontend V1 successfully operationalized based on PRD.**
+
+---
+
 ## 📅 Session: July 7, 2026 — Capital Allocation Score V1.0 Session N+1 (Migration + Pure Engine + Tests)
 
 **Session Start:** (afternoon IST)

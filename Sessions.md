@@ -13,6 +13,20 @@
 
 ---
 
+## **July 30, 2026: Operationalizing MRI Frontend V1 (Morning Session)**
+
+**Objective**: Implement the MRI Frontend V1 as a hyper-minimal, decision-focused interface for weekly portfolio reviews based on the `docs/investor/30 July 26 MRI Frontend V1.md` PRD.
+
+**Actions**:
+- Simplified navigation to include only the Dashboard (Weekly Review) and Decision Ledger (note: this was reverted in the evening session per user feedback).
+- Replaced the old modal behavior with a right-side panel for progressive XAI disclosure (Explanation Tree).
+- Stripped the UI of extraneous frontend business logic, charts, and secondary features to strictly render backend-supported schema.
+- Finalized the UI to strictly adhere to the P0 "decision-making only" design principle to validate the 10-minute weekly review cycle.
+
+**Result**: MRI Frontend V1 successfully operationalized based on the PRD constraints.
+
+---
+
 ## **July 7, 2026: Capital Allocation Score V1.0 — Session N+1 (Migration + Pure Engine + Tests)**
 
 **Objective**: Ship the smallest testable unit of CAS V1.0: schema migration, pure-logic engine module, and unit tests. No API, no frontend, no DB writes.
