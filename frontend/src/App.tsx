@@ -21,6 +21,7 @@ import { V1Dashboard } from './V1Dashboard';
 import { StockDecisionPage } from './StockDecisionPage';
 import { CiwDebuggerPage } from './CiwDebuggerPage';
 import { ResearchInbox } from './ResearchInbox';
+import { AkeDashboard } from './AkeDashboard';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
@@ -2742,6 +2743,9 @@ function Navigation() {
           <Link to="/inbox" className={`nav-link ${page === 'inbox' ? 'active' : ''}`}>
             <span className="nav-icon">📥</span> Research Inbox
           </Link>
+          <Link to="/extractor" className={`nav-link ${page === 'extractor' ? 'active' : ''}`}>
+            <span className="nav-icon">🧠</span> Ontology Engine
+          </Link>
           <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}>
             <span className="nav-icon">📋</span> Decision Ledger
           </Link>
@@ -2754,6 +2758,7 @@ function Navigation() {
       <nav className="mobile-nav">
         <Link to="/dashboard" className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} title="Dashboard">🏠</Link>
         <Link to="/inbox" className={`mobile-nav-link ${page === 'inbox' ? 'active' : ''}`} title="Research Inbox">📥</Link>
+        <Link to="/extractor" className={`mobile-nav-link ${page === 'extractor' ? 'active' : ''}`} title="Ontology Engine">🧠</Link>
         <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
@@ -2806,6 +2811,7 @@ function App() {
               <Route path="/ledger" element={<HistoryPage onSelectStock={() => {}} />} />
               <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
               <Route path="/inbox" element={<ResearchInbox />} />
+              <Route path="/extractor" element={<AkeDashboard />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
