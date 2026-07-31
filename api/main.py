@@ -200,11 +200,14 @@ app.include_router(aae_router)
 app.include_router(breakout_router)
 app.include_router(cas_router)
 app.include_router(one12co_router)
+from api.extractor import router as extractor_router
+
 app.include_router(guidance_router)
 app.include_router(unified_router)
 app.include_router(cai_portfolio_router)
 app.include_router(ciw_router)
 app.include_router(inbox_router)
+app.include_router(extractor_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])

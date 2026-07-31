@@ -80,8 +80,13 @@
 - [x] Mapped the strict UI order: Header -> Current Understanding -> Why (Catalysts/Risks) -> Monitoring -> Timeline.
 - [x] Implemented Expandable Knowledge Nodes displaying exactly how knowledge traces back to a `SourceDocument` and its transaction origin.
 
+#### 10. Adaptive Knowledge Extraction (AKE) v1.0 ✅
+- [x] Implemented Universal Extractor API endpoints (`api/extractor.py`) to manage variable promotion and lifecycle.
+- [x] Built the `AkeDashboard.tsx` Human Review Queue to visualize variables in `RESERVE` status awaiting promotion.
+- [x] Connected UI actions to allow one-click Approve (promote), Merge, or Reject for ontological evolution.
+
 ### 📌 Current Milestone
-- **CIW Operationalization: End-to-End Vertical Slice Complete. Phase 5 UI is observable.**
+- **CIW Operationalization: AKE V1.0 Complete. The system is a self-evolving knowledge engine.**
 
 ---
 

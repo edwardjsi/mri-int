@@ -1309,3 +1309,13 @@ def ensure_guidance_tables(cur) -> None:
         "ALTER TABLE public.management_narrative_timeline "
         "ALTER COLUMN quote_verification_method TYPE VARCHAR(32);"
     )
+    
+    # 10. CIW and AKE Tables
+    try:
+        from engine_core.ciw_db_schema import ensure_ciw_tables
+        from engine_core.ake_db_schema import ensure_ake_tables
+        ensure_ciw_tables(conn)
+        ensure_ake_tables(conn)
+    except ImportError:
+        pass
+
