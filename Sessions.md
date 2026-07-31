@@ -1,3 +1,7 @@
+## **July 31, 2026: Signal Dashboard first-link fix**
+
+Fixed dead stock-click on the main dashboard: onSelectStock stubs from the routing refactor replaced with setSelectedStock across 7 routes; re-mounted StockDetailsModal in App.tsx. npm run build clean.
+
 ## **July 31, 2026: Company Intelligence Workspace (CIW) - Phases 1, 2, 2.5, 4, 4.5, 5, 6**
 
 **Objective**: Establish the CIW domain model, build a compatibility-first integration with the Decision Engine, validate with a Golden Dataset, launch the foundational ingestion pipeline (Knowledge Update Processor), prepare the visual debugging API for Phase 5, and freeze the architecture with official documentation.

@@ -2,6 +2,12 @@
 
 ---
 
+## Session: July 31, 2026 - Fix Signal Dashboard first-link (stock click no-op)
+
+**Root cause:** Routing refactor (3c0335c) stubbed onSelectStock with an empty handler on DashboardPage and 6 other routes.
+
+**Fix:** Restored selectedStock state and StockDetailsModal mount in App.tsx; wired onSelectStock=setSelectedStock on /signals, /ledger, /shadow, /riskaudit, /watchlist, /conviction, /admin. Build verified (tsc + vite).
+
 ## 📅 Session: July 31, 2026 — Implement MRI Frontend V1 (Phase 1-3)
 
 **Session Start:** ~12:30 IST

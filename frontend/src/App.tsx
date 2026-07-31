@@ -2784,6 +2784,7 @@ function Navigation() {
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('reset_token');
@@ -2823,18 +2824,18 @@ function App() {
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<V1Dashboard />} />
               <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
-              <Route path="/ledger" element={<HistoryPage onSelectStock={() => {}} />} />
+              <Route path="/ledger" element={<HistoryPage onSelectStock={setSelectedStock} />} />
               <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
               <Route path="/inbox" element={<ResearchInbox />} />
               <Route path="/extractor" element={<AkeDashboard />} />
               
               {/* Restored routes */}
-              <Route path="/signals" element={<DashboardPage onSelectStock={() => {}} />} />
+              <Route path="/signals" element={<DashboardPage onSelectStock={setSelectedStock} />} />
               <Route path="/caidashboard" element={<CaiDashboard />} />
               <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
-              <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={() => {}} />} />
-              <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={() => {}} />} />
-              <Route path="/watchlist" element={<WatchlistPage onSelectStock={() => {}} />} />
+              <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
+              <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
+              <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />
               <Route path="/112co" element={<One12CoDashboard onViewResearch={() => {}} />} />
               <Route path="/breakout" element={<BreakoutRadarPage onViewResearch={() => {}} />} />
               <Route path="/trend" element={<TrendScreen onViewResearch={() => {}} />} />
@@ -2843,14 +2844,17 @@ function App() {
               <Route path="/aae" element={<AaeDashboard onBack={() => {}} onNavigate={() => {}} />} />
               <Route path="/unified" element={<UnifiedAnalysis onBack={() => {}} />} />
               <Route path="/guidance" element={<GuidanceCheck />} />
-              <Route path="/conviction" element={<ConvictionEngine onSelectStock={() => {}} />} />
-              <Route path="/admin" element={<AdminDashboard onSelectStock={() => {}} />} />
+              <Route path="/conviction" element={<ConvictionEngine onSelectStock={setSelectedStock} />} />
+              <Route path="/admin" element={<AdminDashboard onSelectStock={setSelectedStock} />} />
               <Route path="/research" element={<ResearchReport symbol="" onBack={() => {}} />} />
               
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
         </main>
+        {selectedStock && (
+          <StockDetailsModal stock={selectedStock} onClose={() => setSelectedStock(null)} />
+        )}
       </div>
     </Router>
   );
