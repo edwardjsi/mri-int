@@ -36,6 +36,7 @@ from api.ciw import router as ciw_router
 from api.research_inbox import router as inbox_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
+from api.workspace import router as workspace_router
 
 load_dotenv()
 
@@ -208,6 +209,8 @@ app.include_router(cai_portfolio_router)
 app.include_router(ciw_router)
 app.include_router(inbox_router)
 app.include_router(extractor_router)
+app.include_router(workspace_router)
+
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])
