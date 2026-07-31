@@ -1,7 +1,9 @@
 import React from 'react';
 import { Briefcase, Activity, FileText, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export const CaiDashboard: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
+export const CaiDashboard: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       <div className="text-center mb-10 mt-10">
@@ -11,7 +13,7 @@ export const CaiDashboard: React.FC<{ onNavigate: (page: string) => void }> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div 
-          onClick={() => onNavigate('caiportfolio')}
+          onClick={() => navigate('/caiportfolio')}
           className="bg-gray-900 border border-gray-800 p-6 rounded-2xl hover:border-blue-500 cursor-pointer transition-colors group"
         >
           <div className="bg-blue-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-500/20">
@@ -22,7 +24,7 @@ export const CaiDashboard: React.FC<{ onNavigate: (page: string) => void }> = ({
         </div>
 
         <div 
-          onClick={() => onNavigate('caiportfolio')}
+          onClick={() => navigate('/ledger')}
           className="bg-gray-900 border border-gray-800 p-6 rounded-2xl hover:border-purple-500 cursor-pointer transition-colors group"
         >
           <div className="bg-purple-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-500/20">
@@ -33,7 +35,7 @@ export const CaiDashboard: React.FC<{ onNavigate: (page: string) => void }> = ({
         </div>
 
         <div 
-          onClick={() => onNavigate('caiportfolio')}
+          onClick={() => navigate('/ledger')}
           className="bg-gray-900 border border-gray-800 p-6 rounded-2xl hover:border-green-500 cursor-pointer transition-colors group"
         >
           <div className="bg-green-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-500/20">
@@ -44,7 +46,7 @@ export const CaiDashboard: React.FC<{ onNavigate: (page: string) => void }> = ({
         </div>
 
         <div 
-          onClick={() => onNavigate('caiportfolio')}
+          onClick={() => navigate('/ledger')}
           className="bg-gray-900 border border-gray-800 p-6 rounded-2xl hover:border-yellow-500 cursor-pointer transition-colors group"
         >
           <div className="bg-yellow-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-yellow-500/20">

@@ -2830,7 +2830,7 @@ function App() {
               
               {/* Restored routes */}
               <Route path="/signals" element={<DashboardPage onSelectStock={() => {}} />} />
-              <Route path="/caidashboard" element={<CaiDashboard onNavigate={() => {}} />} />
+              <Route path="/caidashboard" element={<CaiDashboard />} />
               <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
               <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={() => {}} />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={() => {}} />} />
