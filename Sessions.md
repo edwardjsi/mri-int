@@ -1,3 +1,36 @@
+## **July 31, 2026: Company Intelligence Workspace (CIW) - Phases 1, 2, 2.5, 4, 4.5, 5, 6**
+
+**Objective**: Establish the CIW domain model, build a compatibility-first integration with the Decision Engine, validate with a Golden Dataset, launch the foundational ingestion pipeline (Knowledge Update Processor), prepare the visual debugging API for Phase 5, and freeze the architecture with official documentation.
+
+**Actions**:
+1. **Domain Model (`ciw_models.py`)**: Formalized `CompanyWorkspace` aggregate root, split into `Identity`, `KnowledgeState`, `Timeline`, and `PortfolioContext`. Introduced `KnowledgeNode` as the base abstraction for all evidence-backed objects and added Enums (`NodeType`, `Status`, `Confidence`) for strict type safety.
+2. **Database Schema (`ciw_db_schema.py`)**: Created PostgreSQL tables (`ciw_company`, `ciw_knowledge_node`, `ciw_timeline_event`, `ciw_update_transaction`, `ciw_source_document`) leveraging relational columns for core state and JSONB for lineage/history. Successfully executed the script.
+3. **Repository & API (`ciw_repository.py`, `api/ciw.py`)**: Built `CompanyWorkspaceRepository` to automatically assemble the domain models from raw SQL rows. Bound the repository to a new `GET /api/ciw/{symbol}` endpoint and attached the router in `main.py`.
+4. **Decision Engine Compatibility (Phase 2)**: Extended `DecisionContext` in `portfolio_os_context.py` with optional CIW abstraction fields (`ciw_thesis`, `ciw_business_quality`, etc.). Refactored `PortfolioOsReviewService` and `CaiEngine` to selectively pull from `CompanyWorkspaceRepository` when CIW data exists, while falling back seamlessly to legacy rule-engine explanations otherwise.
+5. **Golden Dataset Validation (Phase 2.5)**: Engineered a Validation Harness featuring: (1) `ciw_golden_seeder.py` mapping coherent stories for 8 company archetypes (including one sparse entry), (2) `ciw_golden_runner.py` triggering the engine, (3) `ciw_validation_report.md` artifact capture, and (4) `test_ciw_golden_dataset.py` for automated regression testing. 
+6. **Knowledge Pipeline Initialization (Phase 4 & 4.5)**: Decoupled document interpretation from state mutation by constructing two independent processors: `KnowledgeUpdateProcessor` (LLM-based entity extraction/mapping to `KnowledgeUpdateTransaction`) and `WorkspaceUpdater` (transactional database mutator enforcing "one-active-thesis" invariants). Validated the E2E flow using a single Neuland Labs MOSI report, correctly generating nodes and logging a `ciw_update_transaction`.
+7. **Visual Debugger API & Architecture Freeze (Phase 5/6)**: Updated `api/ciw.py` to calculate and append a dynamic `Knowledge Health` dashboard to the API response (tracking open risks, monitoring flags, and missing evidence). Authored `docs/mri_system_architecture_v1.md`, officially freezing the system's bounded contexts, repositories, invariants, and flow.
+8. **Vertical Slice Validation (Phase 3 UI)**: Designed and integrated `CiwDebuggerPage.tsx` into the React application (`/company/:symbol`), implementing a transparent, window-into-the-brain design. It maps out Current Understanding, Catalysts, Risks, Monitoring, and Timeline chronologically, utilizing expandable modules so every abstract conclusion visibly traces back to its concrete `SourceDocument` and transaction origin.
+
+**Result**: The complete pipeline—from unstructured document to abstract knowledge transaction to deterministic rules engine output and visual observability—is now fully implemented. The system operates as a transparent, evidence-backed knowledge OS.
+
+---
+
+## **July 31, 2026: Operationalize MRI Frontend V1 (Phases 1-3)**
+
+**Objective**: Execute Phases 1-3 of the MRI Frontend V1 rollout, implementing strict routing, data contracts, and a dynamic Dashboard UI.
+
+**Actions**:
+1. **Routing & Navigation (`App.tsx`)**: Replaced custom state routing with `react-router-dom`, stripping legacy sidebar links and enforcing `/dashboard`, `/decision/:decisionId`, and `/ledger`.
+2. **Data Contracts (`api.ts`)**: Implemented the strictly defined `DashboardPayload`, `StockDecisionPayload`, and `DecisionLedgerPayload`. Refactored `DashboardPayload` to use a dynamic, metadata-driven `cards` array for extensibility. Added a `monitoring` block to the `StockDecisionPayload`.
+3. **Dashboard UI (`V1Dashboard.tsx`)**: Implemented the V1 dashboard renderer which loops over the metadata cards and correctly routes decisions in the `weeklyDecisions` list. Ensured no business logic lives in the component.
+4. **Stock Decision View (`StockDecisionPage.tsx`)**: Built the core decision detail view as a purely conditional, metadata-driven renderer. Extended the data contract with `decisionHeader`, `decisionMetadata`, and `history` tracking, flattening the layout to follow a strict logical hierarchy (Action -> Why -> Rules -> Evidence -> Monitoring -> Metadata).
+5. **Verification**: Ran `npm run build` locally without any TypeScript or build errors.
+
+**Result**: Phase 1 (Routing), Phase 2 (Contracts), Phase 3 (Dashboard UI), and Phase 4 (Stock Decision View) are operationalized and adhere to the Master Handoff rules.
+
+---
+
 ## **July 30, 2026: Restore Main Dashboard Navigation Links**
 
 **Objective**: Restore the missing sidebar navigation links in the main dashboard UI.

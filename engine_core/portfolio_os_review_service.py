@@ -8,6 +8,7 @@ from engine_core.portfolio_os_snapshot_repository import StockSnapshotRepository
 from engine_core.portfolio_os_context import DecisionContext
 from engine_core.portfolio_os_rule_engine import RuleEngine
 from engine_core.portfolio_os_cai_engine import CaiEngine
+from engine_core.ciw_repository import CompanyWorkspaceRepository
 
 
 class PortfolioOsReviewService:
@@ -118,11 +119,33 @@ class PortfolioOsReviewService:
                         if position.current_stop == 0.0:
                             position = type(position)(**{**position.__dict__, "current_stop": position.entry_price * 0.85})
 
+                        # Phase 2: Fetch CIW Knowledge as preferred context
+                        ciw_repo = CompanyWorkspaceRepository(conn=conn)
+                        workspace = ciw_repo.get_workspace(symbol)
+
+                        ciw_thesis = None
+                        ciw_business_quality = None
+                        ciw_risks = None
+                        ciw_catalysts = None
+                        ciw_monitoring = None
+
+                        if workspace:
+                            ciw_thesis = workspace.state.understanding.get('thesis').text if workspace.state.understanding.get('thesis') else None
+                            ciw_business_quality = workspace.state.understanding.get('business_quality').text if workspace.state.understanding.get('business_quality') else None
+                            ciw_risks = [r.dict() for r in workspace.state.risks] if hasattr(workspace.state.risks, '__iter__') else None
+                            ciw_catalysts = [c.dict() for c in workspace.state.catalysts] if hasattr(workspace.state.catalysts, '__iter__') else None
+                            ciw_monitoring = [m.dict() for m in workspace.state.monitoring] if hasattr(workspace.state.monitoring, '__iter__') else None
+
                         context = DecisionContext(
                             stock_snapshot=snapshot,
                             portfolio_position=position,
                             portfolio_context={"cash_reserve": 0.10, "is_averaging_enabled": True},
-                            rule_set={}
+                            rule_set={},
+                            ciw_thesis=ciw_thesis,
+                            ciw_business_quality=ciw_business_quality,
+                            ciw_risks=ciw_risks,
+                            ciw_catalysts=ciw_catalysts,
+                            ciw_monitoring=ciw_monitoring
                         )
                         
                         rule_result = self.rule_engine.evaluate(context)

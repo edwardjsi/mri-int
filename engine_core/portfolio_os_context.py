@@ -25,6 +25,13 @@ class DecisionContext:
     portfolio_position: Optional[PortfolioPosition] = None
     portfolio_context: Optional[PortfolioContext] = None
     rule_set: Optional[str] = None
+    
+    # CIW Extension fields (Phase 2 Compatibility)
+    ciw_thesis: Optional[str] = None
+    ciw_business_quality: Optional[str] = None
+    ciw_risks: Optional[list] = None
+    ciw_catalysts: Optional[list] = None
+    ciw_monitoring: Optional[list] = None
 
     def __post_init__(self):
         if not self.stock_snapshot:

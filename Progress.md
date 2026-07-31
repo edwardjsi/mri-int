@@ -2,6 +2,89 @@
 
 ---
 
+## 📅 Session: July 31, 2026 — Implement MRI Frontend V1 (Phase 1-3)
+
+**Session Start:** ~12:30 IST
+**Session End:** ~13:05 IST
+
+### What Was Done This Session
+
+#### 1. Implement V1 Routing & Constraints ✅
+- [x] Refactored `App.tsx` to enforce V1 routing constraints (`/dashboard`, `/decision/:decisionId`, `/ledger`) using `react-router-dom`.
+- [x] Removed all extraneous legacy navigation links and features, simplifying the sidebar.
+
+#### 2. Implement V1 Data Contracts ✅
+- [x] Defined `DashboardPayload`, `StockDecisionPayload`, and `DecisionLedgerPayload` in `api.ts` to strictly mirror backend structure.
+- [x] Shifted `DashboardPayload` to a metadata-driven architecture (`cards` array) instead of hard-coded sections, allowing new intelligence without UI redeployment.
+- [x] Reserved space for a `monitoring` section in `StockDecisionPayload` for post-purchase tracking.
+
+#### 3. Implement V1 Dashboard Component ✅
+- [x] Created `V1Dashboard.tsx` to render the dynamic metadata cards and `weeklyDecisions` list.
+- [x] Enforced strict "dumb UI" rules: no client-side decision logic, fallback empty/loading states, and click-through navigation to stock decisions.
+
+#### 4. Implement Stock Decision Component ✅
+- [x] Extended `StockDecisionPayload` in `api.ts` with `decisionHeader`, `decisionMetadata`, and `history`.
+- [x] Created `StockDecisionPage.tsx` using conditional rendering to adapt purely to what the backend provides.
+- [x] Established the strict hierarchical layout: Header -> Recommendation -> Why -> Rules -> Evidence -> Monitoring -> Metadata.
+- [x] Wired component to `/decision/:decisionId` route in `App.tsx`.
+
+### 📌 Current Milestone
+- **CIW Operationalization: Phase 5 API Prepared. Architecture Frozen.**
+
+---
+
+## 📅 Session: July 31, 2026 — Company Intelligence Workspace (Phases 1, 2, 2.5, 4, 4.5, 5)
+
+**Session Start:** ~14:15 IST
+**Session End:** ~15:30 IST
+
+### What Was Done This Session
+
+#### 1. Define CIW Domain Model & Invariants (Phase 1) ✅
+- [x] Defined `KnowledgeNode`, `TimelineEvent`, `SourceDocument`, and `CompanyWorkspace` aggregate root in `engine_core/ciw_models.py`.
+- [x] Formalized Enums (`NodeType`, `Status`, `Confidence`, `EventType`) to guarantee type safety across the knowledge graph.
+
+#### 2. Initialize CIW Database Schema (Phase 1) ✅
+- [x] Created `engine_core/ciw_db_schema.py` to provision normalized Postgres tables: `ciw_company`, `ciw_timeline_event`, `ciw_knowledge_node`, `ciw_update_transaction`, and `ciw_source_document`.
+- [x] Executed the schema initialization successfully against the local database.
+
+#### 3. Build CIW Repository & API (Phase 1) ✅
+- [x] Implemented `CompanyWorkspaceRepository` in `engine_core/ciw_repository.py` to reconstruct the `CompanyWorkspace` aggregate root from the normalized tables.
+- [x] Created `GET /api/ciw/{symbol}` in `api/ciw.py` and mounted it in the FastAPI application.
+
+#### 4. Decision Engine CIW Adapter (Phase 2) ✅
+- [x] Extended `DecisionContext` in `engine_core/portfolio_os_context.py` with optional CIW fields (`ciw_thesis`, `ciw_business_quality`, `ciw_risks`, `ciw_catalysts`, `ciw_monitoring`).
+- [x] Refactored `PortfolioOsReviewService.generate_weekly_review` to query `CompanyWorkspaceRepository` as the preferred knowledge provider.
+- [x] Refactored `CaiEngine.generate_recommendation` to gracefully fallback to rule-based reasons, but prioritize CIW Thesis and Business Quality in explanation outputs, as well as appending XAI evidence for CIW elements.
+
+#### 5. Golden Dataset Validation (Phase 2.5) ✅
+- [x] Built `scripts/ciw_golden_seeder.py` to populate 8 distinct company archetypes and stories (Compounder, Cyclical, Turnaround, Sparse, etc.).
+- [x] Developed `scripts/ciw_golden_runner.py` to execute the engine on the golden dataset and produce an Expected vs Actual markdown report.
+- [x] Executed the pipeline to generate `artifacts/ciw_validation_report.md`.
+- [x] Established `engine_core/test_ciw_golden_dataset.py` as an automated regression suite to ensure future iterations of the Decision Engine or CIW preserve validation integrity.
+
+#### 6. Knowledge Update Processor (Phase 4) ✅
+- [x] Expanded `engine_core/ciw_models.py` with `KnowledgeUpdateTransaction` and `NodeUpdate` definitions.
+- [x] Implemented `KnowledgeUpdateProcessor` (document understanding) and `WorkspaceUpdater` (state mutation) in `engine_core/ciw_update_processor.py`.
+
+#### 7. E2E Pipeline Validation (Phase 4.5) ✅
+- [x] Built `scripts/ciw_phase4_validation.py` to simulate a raw MOSI report for NEULANDLAB flowing through the `KnowledgeUpdateProcessor` and `WorkspaceUpdater`.
+- [x] Proven that a single report correctly generates nodes and timeline events while successfully maintaining all invariants.
+
+#### 8. Phase 5 Backend & Architecture Freeze (Phase 5/6) ✅
+- [x] Updated `api/ciw.py` to compute and attach `Knowledge Health` metrics dynamically to the workspace payload.
+- [x] Authored `docs/mri_system_architecture_v1.md`, cementing the core models, contexts, and boundaries into official documentation.
+
+#### 9. Visual Debugger Vertical Slice (Phase 3 UI Completion) ✅
+- [x] Implemented `CiwDebuggerPage.tsx` to act as a window into the knowledge brain for `/company/:symbol`.
+- [x] Mapped the strict UI order: Header -> Current Understanding -> Why (Catalysts/Risks) -> Monitoring -> Timeline.
+- [x] Implemented Expandable Knowledge Nodes displaying exactly how knowledge traces back to a `SourceDocument` and its transaction origin.
+
+### 📌 Current Milestone
+- **CIW Operationalization: End-to-End Vertical Slice Complete. Phase 5 UI is observable.**
+
+---
+
 ## 📅 Session: July 30, 2026 — Restore Main Dashboard Navigation Links
 
 **Session Start:** ~21:10 IST

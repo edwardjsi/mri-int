@@ -17,9 +17,10 @@ import ResearchReport from './ResearchReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { CaiPortfolioPage } from './CaiPortfolioPage';
 import { CaiDashboard } from './CaiDashboard';
-import { CaiCandidateReview } from './CaiCandidateReview';
-import { WeeklyReviewDashboard } from './WeeklyReviewDashboard';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { V1Dashboard } from './V1Dashboard';
+import { StockDecisionPage } from './StockDecisionPage';
+import { CiwDebuggerPage } from './CiwDebuggerPage';
+import { ResearchInbox } from './ResearchInbox';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
@@ -2721,11 +2722,48 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+
+function Navigation() {
+  const location = useLocation();
+  const page = location.pathname.split('/')[1] || 'dashboard';
+  
+  return (
+    <>
+      <nav className="sidebar">
+        <div className="sidebar-brand">
+          <span className="brand-icon">📊</span>
+          <span className="brand-name">MRI</span>
+        </div>
+        <div className="nav-links">
+          <Link to="/dashboard" className={`nav-link ${page === 'dashboard' ? 'active' : ''}`}>
+            <span className="nav-icon">📊</span> Dashboard
+          </Link>
+          <Link to="/inbox" className={`nav-link ${page === 'inbox' ? 'active' : ''}`}>
+            <span className="nav-icon">📥</span> Research Inbox
+          </Link>
+          <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}>
+            <span className="nav-icon">📋</span> Decision Ledger
+          </Link>
+        </div>
+        <div className="sidebar-footer">
+          <div className="user-info">{getClientName()}</div>
+          <button className="btn-logout" onClick={() => { clearAuth(); window.location.href = '/'; }}>Logout</button>
+        </div>
+      </nav>
+      <nav className="mobile-nav">
+        <Link to="/dashboard" className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} title="Dashboard">🏠</Link>
+        <Link to="/inbox" className={`mobile-nav-link ${page === 'inbox' ? 'active' : ''}`} title="Research Inbox">📥</Link>
+        <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
+        <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
+      </nav>
+    </>
+  );
+}
+
 function App() {
   const [authed, setAuthed] = useState(isAuthenticated());
   const [showAuthPane, setShowAuthPane] = useState(false);
-  const [page, setPage] = useState<'history' | 'weeklyreview'>('weeklyreview');
-  const [selectedStock, setSelectedStock] = useState<any>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('reset_token');
@@ -2747,166 +2785,33 @@ function App() {
     return <LandingPage onRequestAuth={() => setShowAuthPane(true)} />;
   }
 
-  if (page === 'aae') {
-    return <AaeDashboard onBack={() => setPage('dashboard')} onNavigate={setPage} />;
-  }
-
-  if (page === 'unified') {
-    return <UnifiedAnalysis onBack={() => setPage('dashboard')} />;
-  }
-
-  if (page === 'research') {
-    const rSymbol = selectedStock ? (selectedStock.symbol || selectedStock) : '';
-    if (!rSymbol) return <div className="loading">Loading research report...</div>;
-    return <ResearchReport symbol={rSymbol} onBack={() => { setPage('dashboard'); setSelectedStock(null); }} />;
-  }
-  if (page === 'peexpansion') {
-    // Symbol can come from URL param (?symbol=POLYCAB) or from selectedStock.
-    // PeExpansionReport handles empty symbols internally — its search + Top 10 panel
-    // is always visible, so no fallback "No symbol selected" page is needed.
-    const peSymbol = urlParams.get('symbol') || (selectedStock && (selectedStock.symbol || selectedStock)) || '';
-    return <PeExpansionReport symbol={peSymbol} onBack={() => setPage('dashboard')} />;
-  }
-
   return (
-    <div className="app-layout">
-      <nav className="sidebar">
-        <div className="sidebar-brand">
-          <span className="brand-icon">📊</span>
-          <span className="brand-name">MRI</span>
-        </div>
-        <div className="nav-links">
-          <button className={`nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')}>
-            <span className="nav-icon">🏠</span> Weekly Review
-          </button>
-          <button className={`nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-            <span className="nav-icon">📊</span> Signal Dashboard
-          </button>
-          <button className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`} onClick={() => setPage('caidashboard')}>
-            <span className="nav-icon">🧠</span> CAI Dashboard
-          </button>
-          <button className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`} onClick={() => setPage('caiportfolio')}>
-            <span className="nav-icon">💼</span> CAI Portfolio
-          </button>
-          <button className={`nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')}>
-            <span className="nav-icon">🔄</span> Swing Momentum
-          </button>
-          <button className={`nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')}>
-            <span className="nav-icon">🚀</span> Breakout Radar
-          </button>
-          <button className={`nav-link ${page === 'trend' ? 'active' : ''}`} onClick={() => setPage('trend')}>
-            <span className="nav-icon">📈</span> Trend Screen
-          </button>
-          <button className={`nav-link ${page === '112co' ? 'active' : ''}`} onClick={() => setPage('112co')}>
-            <span className="nav-icon">🦅</span> 112Co
-          </button>
-          <button className={`nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')}>
-            <span className="nav-icon">👀</span> Watchlist
-          </button>
-          <button className={`nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')}>
-            <span className="nav-icon">🏛️</span> PERX
-          </button>
-          <button className={`nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')}>
-            <span className="nav-icon">🔍</span> Expansion Lens
-          </button>
-          <button className={`nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')}>
-            <span className="nav-icon">🧬</span> AAE Console
-          </button>
-          <button className={`nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')}>
-            <span className="nav-icon">🎯</span> Unified Scan
-          </button>
-          <button className={`nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')}>
-            <span className="nav-icon">🗣️</span> GuidanceCheck
-          </button>
-          <button className={`nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')}>
-            <span className="nav-icon">🔥</span> Conviction
-          </button>
-          <button className={`nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')}>
-            <span className="nav-icon">🛡️</span> Risk Audit
-          </button>
-          <button className={`nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>
-            <span className="nav-icon">📋</span> Decision Ledger
-          </button>
-          {isAdmin() && (
-            <button className={`nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>
-              <span className="nav-icon">🛡️</span> Platform Intel
-            </button>
-          )}
-        </div>
-        <div className="sidebar-footer">
-          <div className="user-info">{getClientName()}</div>
-          <button className="btn-logout" onClick={() => { clearAuth(); setAuthed(false); }}>Logout</button>
-        </div>
-      </nav>
-      <main className="main-content">
-        <header className="content-header">
-          <h1 className="page-title">
-            {page === 'dashboard' ? 'Signal Dashboard' :
-              page === 'shadow' ? 'Swing Momentum' :
-                page === 'history' ? 'Trade History' :
-                  page === 'riskaudit' ? 'Portfolio Risk Audit' :
-                    page === 'watchlist' ? 'Stock Watchlist' :
-                      page === '112co' ? '112Co Watchlist' :
-                      page === 'breakout' ? 'Breakout Radar' :
-                      page === 'trend' ? 'Trend Screen' :
-                      page === 'perx' ? 'PERX Institutional Scan' :
-                      page === 'caidashboard' ? 'Capital Allocation Intelligence' :
-                      page === 'weeklyreview' ? 'Weekly Portfolio Review' :
-                      page === 'caiportfolio' ? 'CAI Portfolio Workspace' :
-                      page === 'unified' ? 'Unified Institutional Scan' :
-                      page === 'guidance' ? 'Management Credibility' :
-                      page === 'admin' ? 'Platform Intelligence' :'My Performance'}
-          </h1>
-        </header>
-        <div className="content-body">
-          {page === 'dashboard' && <DashboardPage onSelectStock={setSelectedStock} />}
-          {page === 'caidashboard' && <CaiDashboard onNavigate={setPage} />}
-          {page === 'weeklyreview' && <WeeklyReviewDashboard />}
-          {page === 'caiportfolio' && <CaiPortfolioPage />}
-          {page === 'shadow' && <ShadowMomentumPage onSelectStock={setSelectedStock} />}
-          {page === 'history' && <HistoryPage onSelectStock={setSelectedStock} />}
-          {page === 'performance' && <PerformancePage />}
-          {page === 'riskaudit' && <RiskAuditPage onSelectStock={setSelectedStock} />}
-          {page === 'watchlist' && <WatchlistPage onSelectStock={setSelectedStock} />}
-          {page === '112co' && <One12CoDashboard onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
-          {page === 'breakout' && <BreakoutRadarPage onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
-          {page === 'trend' && <TrendScreen onViewResearch={(stock) => { setSelectedStock(stock); setPage('research'); }} />}
-          {page === 'perx' && <PerxPage />}
-          {page === 'guidance' && <GuidanceCheck />}
-          {page === 'conviction' && <ConvictionEngine onSelectStock={setSelectedStock} />}
-          {page === 'unified' && <div />}
-          {page === 'admin' && <AdminDashboard onSelectStock={setSelectedStock} />}
-        </div>
-      </main>
-
-      {selectedStock && (
-        <StockDetailsModal
-          stock={selectedStock}
-          onClose={() => setSelectedStock(null)}
-        />
-      )}
-
-      <nav className="mobile-nav">
-        <button className={`mobile-nav-link ${page === 'weeklyreview' ? 'active' : ''}`} onClick={() => setPage('weeklyreview')} title="Weekly Review">📅</button>
-        <button className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')} title="Dashboard">🏠</button>
-        <button className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} onClick={() => setPage('shadow')} title="Swing Momentum">🔄</button>
-        <button className={`mobile-nav-link ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')} title="History">📋</button>
-        <button className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} onClick={() => setPage('riskaudit')} title="Risk Audit">🛡️</button>
-        <button className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} onClick={() => setPage('watchlist')} title="Watchlist">👀</button>
-        <button className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} onClick={() => setPage('breakout')} title="Breakout Radar">🚀</button>
-        <button className={`mobile-nav-link ${page === 'trend' ? 'active' : ''}`} onClick={() => setPage('trend')} title="Trend Screen">📊</button>
-        <button className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} onClick={() => setPage('perx')} title="PERX">🏛️</button>
-        <button className={`mobile-nav-link ${page === 'peexpansion' ? 'active' : ''}`} onClick={() => setPage('peexpansion')} title="Expansion Lens">📈</button>
-        <button className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} onClick={() => setPage('aae')} title="AAE Console">🧬</button>
-        <button className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} onClick={() => setPage('unified')} title="Unified Scan">🧠</button>
-        <button className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} onClick={() => setPage('guidance')} title="GuidanceCheck">🔍</button>
-        <button className={`mobile-nav-link ${page === 'conviction' ? 'active' : ''}`} onClick={() => setPage('conviction')} title="Conviction Engine">🧠</button>
-{isAdmin() && (
-          <button className={`mobile-nav-link ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')} title="Platform Intelligence">🛡️</button>
-        )}
-        <button className="mobile-nav-link" onClick={() => { clearAuth(); setAuthed(false); }} title="Logout">🚪</button>
-      </nav>
-    </div>
+    <Router>
+      <div className="app-layout">
+        <Navigation />
+        <main className="main-content">
+          <header className="content-header">
+            <Routes>
+              <Route path="/dashboard" element={<h1 className="page-title">Dashboard</h1>} />
+              <Route path="/decision/:decisionId" element={<h1 className="page-title">Stock Decision</h1>} />
+              <Route path="/ledger" element={<h1 className="page-title">Decision Ledger</h1>} />
+              <Route path="*" element={<h1 className="page-title">MRI Portfolio</h1>} />
+            </Routes>
+          </header>
+          <div className="content-body">
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<V1Dashboard />} />
+              <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
+              <Route path="/ledger" element={<HistoryPage onSelectStock={() => {}} />} />
+              <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
+              <Route path="/inbox" element={<ResearchInbox />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
+    </Router>
   );
 }
 

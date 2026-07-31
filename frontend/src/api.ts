@@ -428,7 +428,60 @@ export const api = {
     apiFetch(`/unified/scan/${encodeURIComponent(symbol)}`, { method: 'POST' }),
   scanUnifiedWithEmail: (symbol: string) =>
     apiFetch(`/unified/scan/${encodeURIComponent(symbol)}?include_email=true`, { method: 'POST' }),
+
+  // MRI V1
+  getDashboard: (): Promise<DashboardPayload> => apiFetch('/mri-v1/dashboard'),
+  getStockDecision: (id: string): Promise<StockDecisionPayload> => apiFetch(`/mri-v1/decision/${id}`),
+  getDecisionLedger: (): Promise<DecisionLedgerPayload> => apiFetch('/mri-v1/ledger'),
 };
+
+export interface DashboardCard {
+  id: string;
+  title: string;
+  value: string;
+  status: string;
+  subtitle: string;
+  priority: number;
+}
+
+export interface DashboardPayload {
+  cards: DashboardCard[];
+  weeklyDecisions: { decisionId: string; stock: string; action: string; priority: number; confidence: number; summary: string; }[];
+}
+
+export interface StockDecisionPayload {
+  decisionHeader: {
+    symbol: string;
+    companyName: string;
+    action: string;
+    confidence: number;
+    decisionDate: string;
+    marketRegime: string;
+    portfolioImpact: string;
+  };
+  decisionMetadata: {
+    decisionId: string;
+    generatedAt: string;
+    engineVersion: string;
+    mosiVersion: string;
+    rulesVersion: string;
+    snapshotTimestamp: string;
+  };
+  recommendation?: { action: string; confidence: number; summary: string; };
+  why?: { primaryReason: string; supportingReasons: string[]; };
+  rules?: { name: string; status: string; detail: string; }[];
+  evidence?: { label: string; value: string; status: string; }[];
+  monitoring?: { label: string; detail: string; }[];
+  history?: {
+    previousAction: string;
+    previousConfidence: number;
+    lastReviewed: string;
+  };
+}
+
+export interface DecisionLedgerPayload {
+  items: { decisionId: string; date: string; stock: string; decision: string; executed: boolean; outcome: string; }[];
+}
 
 export { isAuthenticated, isAdmin, getClientName, clearAuth };
 export const getAuthHeaders = (): Record<string, string> => {

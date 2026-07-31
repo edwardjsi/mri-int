@@ -32,6 +32,8 @@ from api.one12co import router as one12co_router
 from api.guidance import router as guidance_router
 from api.unified import router as unified_router
 from api.cai_portfolio_service import router as cai_portfolio_router
+from api.ciw import router as ciw_router
+from api.research_inbox import router as inbox_router
 from api.schema import ensure_required_tables
 from engine_core.db import get_connection
 
@@ -201,6 +203,8 @@ app.include_router(one12co_router)
 app.include_router(guidance_router)
 app.include_router(unified_router)
 app.include_router(cai_portfolio_router)
+app.include_router(ciw_router)
+app.include_router(inbox_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])

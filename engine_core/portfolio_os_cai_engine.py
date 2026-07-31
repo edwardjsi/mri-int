@@ -66,12 +66,24 @@ class CaiEngine:
         
         # 5. Explanations (Template/Stub for LLM hand-off)
         primary_reason = rule_result.reason or f"Determined by rule: {rule_result.triggered_rule}"
+        
+        # Phase 2: Override or supplement with CIW Knowledge if available
+        if context.ciw_thesis:
+            primary_reason = f"CIW Thesis: {context.ciw_thesis[:150]}..."
+            
         secondary_reason = f"Market Regime is {context.stock_snapshot.market_regime}"
+        if context.ciw_business_quality:
+            secondary_reason = f"Quality: {context.ciw_business_quality[:100]}..."
+
         evidence = []
         if context.stock_snapshot.trend_score:
             evidence.append(f"Trend Score: {context.stock_snapshot.trend_score}")
         if context.stock_snapshot.risk_score:
             evidence.append(f"Risk Score: {context.stock_snapshot.risk_score}")
+        if context.ciw_risks:
+            evidence.append(f"CIW Risks Identified: {len(context.ciw_risks)}")
+        if context.ciw_catalysts:
+            evidence.append(f"CIW Catalysts Identified: {len(context.ciw_catalysts)}")
 
         cai_node = ExplanationNode("CAI Engine", action)
         cai_node.details["confidence"] = round(confidence, 2)
@@ -85,6 +97,9 @@ class CaiEngine:
         xai_evidence = []
         if context.stock_snapshot.trend_score:
             xai_evidence.append(XaiEvidence("Trend Score", str(context.stock_snapshot.trend_score), "MRI Engine", "90 Days", "now", "Trend Calculation"))
+        
+        if context.ciw_thesis:
+            xai_evidence.append(XaiEvidence("CIW Thesis", "Available", "CompanyWorkspace", "Latest", "now", "Fundamental Thesis"))
 
         return CaiRecommendation(
             action=action,
