@@ -25,6 +25,9 @@ from api.fundamental import router as fundamental_router
 from api.perx import router as perx_router
 from api.pe_expansion import router as pe_expansion_router
 from api.v2.perx import router as perx_v2_router
+from api.v2.positions import router as cai_v2_positions_router
+from api.v2.portfolios import router as cai_v2_portfolios_router
+from api.v2.notifications import router as cai_v2_notifications_router
 from api.aae import router as aae_router
 from api.breakout_status import router as breakout_router
 from api.cas import router as cas_router  # Decision 103 P4c — CAS Recommendations API
@@ -197,6 +200,9 @@ app.include_router(fundamental_router)
 app.include_router(perx_router)
 app.include_router(pe_expansion_router)
 app.include_router(perx_v2_router, prefix="/api/v2")
+app.include_router(cai_v2_positions_router, prefix="/api/v2")
+app.include_router(cai_v2_portfolios_router, prefix="/api/v2")
+app.include_router(cai_v2_notifications_router, prefix="/api/v2")
 app.include_router(aae_router)
 app.include_router(breakout_router)
 app.include_router(cas_router)

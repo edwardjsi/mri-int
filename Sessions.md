@@ -1,3 +1,16 @@
+## **August 1, 2026: CAI Decision Ladder V2.1 Planning**
+
+**Objective**: Create the execution plan for the CAI Decision Ladder V2.1 based on the PRD, and get approval before implementation.
+
+**Actions**:
+1. Reviewed `docs/investor/01 Aug 26 CAI Decision Levels V2.0.md` PRD.
+2. Created execution plan `docs/CAI_DECISION_LADDER_V2.1_PLAN_2026-08-01.md`.
+3. Added Decision 109 to `Decisions.md` in DRAFT status, outlining the CAI transition from binary to a tiered decision state machine with explainability and ledger persistence.
+
+**Next Step**: Await user approval for the execution plan before beginning Phase 1 (Domain Models & Schema).
+
+---
+
 ## **July 31, 2026: Signal Dashboard first-link fix**
 
 Fixed dead stock-click on the main dashboard: onSelectStock stubs from the routing refactor replaced with setSelectedStock across 7 routes; re-mounted StockDetailsModal in App.tsx. npm run build clean.
@@ -963,7 +976,17 @@ User insight that drove the fix: "till yesterday Swing Momentum page identified 
 
 ---
 
-# **MRI Sessions Log**
+# **MRI Session Logs
+
+## August 1, 2026 - CAI Decision Ladder V2.1 Operationalization Complete
+- Formally modeled the V2.1 Decision Engine using strict Pydantic schemas enforcing the core contract (`why_not_add`, `confidence`, `stability`).
+- Implemented and migrated the Postgres Database Schema (`cai_v2_decision_snapshots`, `cai_v2_state_transitions`, `cai_v2_decision_ledger`, `cai_v2_notification_locks`).
+- Engineered the `CaiV2Engine` pipeline to deterministically evaluate states `QUIT > STRUCTURE > ALERT > ADD > HOLD`.
+- Built the `CaiV2LedgerEngine` to orchestrated evaluation, snapshotting, and idempotent notification routing.
+- Validated all V2.1 behaviors via Golden Scenario tests (`pytest`).
+- Constructed the frontend `CaiV2Dashboard` featuring the explicit visual semantic markers for rapid decision-making.
+
+---
 
 ## **May 22, 2026: Investor-Grade Context Layer (Valuation, Earnings, Ownership, Liquidity)**
 

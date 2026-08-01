@@ -2734,3 +2734,11 @@ Date: 2026-07-30
 Decision: Build a hyper-minimal frontend strictly focused on the weekly review and decision ledger, removing charts, AI chat, and standalone portfolio views. A right-side panel will be used for progressive disclosure of XAI.
 Reason: To optimize for decision-making speed (under 10 mins for 20 stocks) and validate the core Decision Engine and Explainability without UI overhead.
 Status: FINAL.
+
+---
+
+## Decision 109 — CAI Decision Ladder V2.1
+Date: 2026-08-01
+Decision: Transition CAI from binary buy/sell recommendations to a tiered decision state machine (ADD, HOLD, ALERT, STRUCTURE, QUIT). Establish strict precedence (QUIT > STRUCTURE > ADD > HOLD) for conflict resolution and require exhaustive explainability (confidence, stability, expiry, "Why Not Add") for each evaluation. Create distinct DB schemas for threshold definitions and a persistent decision ledger.
+Reason: Supports true portfolio lifecycle management and explains the precise operational state of each position. Enables the tracking of decision quality over time and improves investor discipline by separating states from price thresholds. See `docs/CAI_DECISION_LADDER_V2.1_PLAN_2026-08-01.md`.
+Status: DRAFT — execution plan awaiting user approval.

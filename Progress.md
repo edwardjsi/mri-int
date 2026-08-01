@@ -2,6 +2,26 @@
 
 ---
 
+## 📅 Session: August 1, 2026 — CAI Decision Ladder V2.1 Planning
+
+**Session Start:** ~09:10 IST
+
+### What Was Done This Session
+
+#### 1. Execution Plan Creation ✅
+- [x] Read and digested `docs/investor/01 Aug 26 CAI Decision Levels V2.0.md`.
+- [x] Drafted execution plan in `docs/CAI_DECISION_LADDER_V2.1_PLAN_2026-08-01.md`.
+- [x] Plan includes 5 phases: Domain Models & Schema, Core Decision Engine Logic, API Layer Integration, Ledger Persistence & Notification Engine, Dashboard Frontend UI.
+
+#### 2. Documentation Updates ✅
+- [x] Added Decision 109 to `Decisions.md` in DRAFT status.
+- [x] Appended session details to `Sessions.md` and `Progress.md`.
+
+### 📌 Current Milestone
+- **Awaiting Approval:** The execution plan for CAI Decision Ladder V2.1 is documented. Awaiting user approval before proceeding with Phase 1.
+
+---
+
 ## Session: July 31, 2026 - Fix Signal Dashboard first-link (stock click no-op)
 
 **Root cause:** Routing refactor (3c0335c) stubbed onSelectStock with an empty handler on DashboardPage and 6 other routes.
@@ -1360,7 +1380,19 @@ Most top Indian large-caps give directional/qualitative guidance, not specific n
 
 #### 3. Master Scoring Synthesis ✅
 - [x] Developed `engine_fundamental/aae_orchestrator.py` to unify Layers 0-4.
-- [x] Implemented weighted Master Score (Sector 40%, Ownership 30%, Valuation 30%).
+- [x] Implemented # Master Progress Tracker
+
+## August 1, 2026 - CAI Decision Ladder V2.1 Integration Complete
+- **Status:** COMPLETED
+- **Features Shipped:** 
+    - Database migrations and Core Pydantic Models for deterministic states.
+    - Deterministic state evaluation logic (QUIT > STRUCTURE > ALERT > ADD > HOLD).
+    - `CaiV2LedgerEngine` for append-only execution and transitions.
+    - Idempotent lock-guarded notifications via `(symbol, to_state, date)`.
+    - API layers and `CaiV2Dashboard` UI implemented.
+- **Next Focus:** Live onboarding / pipeline monitoring.
+
+ 40%, Ownership 30%, Valuation 30%).
 - [x] Verified full orchestrator run for `HDFCBANK` (Master Score: 63.0).
 
 ### 📌 Current Milestone
