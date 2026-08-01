@@ -3,6 +3,8 @@
 **Algorithm ID:** `DL-2.1-RESOLUTIONS`
 **Status:** Approved for Implementation
 
+> **CAI is an evidence-driven investment decision operating system. It does not predict markets; it continuously evaluates technical, fundamental, portfolio, and market evidence to help investors allocate and protect capital through deterministic, explainable decisions.**
+
 This document defines the **Product Philosophy and Investor Actions** that govern the Decision Ladder Engine. It dictates how the system evaluates the mathematical thresholds (defined in `DECISION_LADDER_THRESHOLDS.md`) into final states and actionable intelligence.
 
 ## 1. Product Philosophy
