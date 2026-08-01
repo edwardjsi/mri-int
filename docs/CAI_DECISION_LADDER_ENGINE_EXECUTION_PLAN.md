@@ -7,14 +7,14 @@ This execution plan operationalizes the strictly scoped, deterministic Decision 
 ## Phase 1: Database Infrastructure
 * **Task:** Create migration script to alter the `cai_position` table.
 * **Details:** 
-  - Add columns to `cai_position`: `add_level`, `alert_level`, `structure_level`, `quit_level` (all DECIMAL), `decision_state` (VARCHAR), and `decision_calculated_at` (TIMESTAMP).
+  - Add columns to `cai_position`: `add_level`, `alert_level`, `structure_level`, `quit_level` (all DECIMAL), `decision_state` (ENUM: ADD, HOLD, ALERT, STRUCTURE, QUIT, NOT_COMPUTED), `decision_calculated_at` (TIMESTAMP), and `decision_algorithm_version` (VARCHAR).
   - This keeps the position state unified (avoiding unnecessary JOINs) and provides a flat persistence layer for the current ladder.
 
 ## Phase 2: Core Engine Logic (`engine_core/cai_decision_ladder_engine.py`)
 * **Task:** Implement the stateless batch engine.
 * **Details:**
   - **Input:** Query the existing MRI technical tables to extract all technical inputs required by the approved Decision Ladder algorithm for all active CAI positions.
-  - **Algorithm:** Compute the four deterministic thresholds using the approved Decision Ladder algorithm. 
+  - **Algorithm:** Compute the four deterministic thresholds using the approved Decision Ladder algorithm. The engine must be deterministic: identical technical inputs must always produce identical outputs. 
   - **State Calculation:** The backend must explicitly determine the `decision_state` (e.g., `ADD`, `HOLD`/`MAINTAIN`, `ALERT`, `STRUCTURE`, `QUIT`).
   - **Output:** Update the existing `cai_position` row. No text generation, no confidence scoring.
 
