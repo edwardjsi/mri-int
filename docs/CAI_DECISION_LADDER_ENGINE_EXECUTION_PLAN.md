@@ -1,5 +1,12 @@
 # Execution Plan: CAI Decision Ladder Engine V2.0
 
+**Status:** Approved (Frozen)
+**Version:** 2.0
+**Owner:** CAI
+**Last Updated:** 01 Aug 2026
+
+*Note: This document defines the implementation plan only. It does not define the Decision Ladder algorithm. The algorithm is specified separately in: `docs/DECISION_LADDER_ALGORITHM_V2.md`*
+
 **Reference:** `docs/investor/01 Aug 26 TechAlone.md`
 
 This execution plan operationalizes the strictly scoped, deterministic Decision Ladder Engine. It enforces the anti-hallucination directives (no text narratives, backend-owned states, no probabilistic scores).

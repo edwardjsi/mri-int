@@ -63,3 +63,31 @@ The backend must resolve the `decision_state` by evaluating conditions in this s
 * `ELSE decision_state = 'HOLD'`
 
 *Note: The system guarantees exactly one active state per position.*
+
+---
+
+## Edge Case Resolution & Determinism Rules
+
+To guarantee mathematical determinism, the engine must execute the following fallback rules universally:
+
+### 1. Missing Swing Lows / Highs (e.g., IPOs, Straight Parabolic Runs)
+* **Rule:** If `swing_low` is NULL, fallback to `ema_50_w`. If `ema_50_w` is also NULL, fallback to `current_price * 0.80` (arbitrary 20% trailing stop floor).
+* **Rule:** If `swing_high` is NULL (e.g., all-time highs), `add_level` evaluates strictly to `current_price * 1.05`.
+
+### 2. Missing EMAs (Recent IPOs < 50 weeks)
+* **Rule:** If `ema_50_w` is NULL, the `structure_level` evaluates to the 20-week EMA (`ema_20_w`). If `ema_20_w` is also NULL, the `structure_level` evaluates to the recent `swing_low`.
+
+### 3. Precedence in Disagreements (e.g., Swing Low > EMA50)
+* **Rule:** The calculation formulas remain completely rigid. If the 50-EMA is mathematically higher than the Swing Low, then the Structure level is higher than the Quit level. If a gap down forces price below both simultaneously, the State Resolution Hierarchy (Priority 1: QUIT) naturally overrides Priority 2 (STRUCTURE).
+
+### 4. Gaps and Friday Closes
+* **Rule:** The engine only evaluates the *Friday Close*. Intraday gaps or mid-week wicks below thresholds are strictly ignored by this batch engine.
+
+### 5. Stage 1 Bases
+* **Rule:** If the stock is moving sideways and the 20-EMA / 50-EMA / Swing Lows are completely compressed (e.g., within 2% of each other), the mathematical outputs remain exactly as formulated. The State Resolution Priority cleanly handles the tight compression. 
+
+### 6. Rounding Convention
+* **Rule:** All output thresholds must be mathematically rounded to the nearest two decimal places (`ROUND(value, 2)`) before insertion into the database to match PostgreSQL `DECIMAL(10,2)`.
+
+### 7. Triggering `NOT_COMPUTED`
+* **Rule:** The ONLY condition that produces a `NOT_COMPUTED` state is if `current_price` (Weekly Close) is entirely missing from the upstream data feed (e.g., stock delisted, upstream data failure). If price exists, the engine *must* compute the ladder via fallbacks.
