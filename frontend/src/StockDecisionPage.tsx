@@ -33,7 +33,7 @@ const mockViewModel = {
   ]
 };
 
-export default function StockDecisionPage() {
+export function StockDecisionPage() {
   const data = mockViewModel;
   const formatPrice = (val: number) => `₹${val.toFixed(2)}`;
   
