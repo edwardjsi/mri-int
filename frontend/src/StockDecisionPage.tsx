@@ -8,7 +8,8 @@ const STATE_COLORS = {
   HOLD: '#3B82F6',
   ALERT: '#F59E0B',
   STRUCTURE: '#F97316',
-  QUIT: '#EF4444'
+  QUIT: '#EF4444',
+  NOT_COMPUTED: '#9CA3AF'
 } as const;
 
 type DecisionState = keyof typeof STATE_COLORS;

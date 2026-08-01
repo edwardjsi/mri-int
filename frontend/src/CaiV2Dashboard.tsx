@@ -8,7 +8,8 @@ const STATE_COLORS = {
   HOLD: '#3B82F6',
   ALERT: '#F59E0B',
   STRUCTURE: '#F97316',
-  QUIT: '#EF4444'
+  QUIT: '#EF4444',
+  NOT_COMPUTED: '#9CA3AF'
 } as const;
 
 type DecisionState = keyof typeof STATE_COLORS;
@@ -18,7 +19,8 @@ const STATE_PRIORITY: Record<DecisionState, number> = {
   STRUCTURE: 2,
   ALERT: 3,
   ADD: 4,
-  HOLD: 5
+  HOLD: 5,
+  NOT_COMPUTED: 6
 };
 
 interface Holding {
@@ -73,12 +75,12 @@ export default function CaiV2Dashboard() {
 
   // Derive state distribution and actions today
   const distribution = useMemo(() => {
-    const counts = { ADD: 0, MAINTAIN: 0, ALERT: 0, STRUCTURE: 0, QUIT: 0 };
+    const counts = { ADD: 0, HOLD: 0, ALERT: 0, STRUCTURE: 0, QUIT: 0, NOT_COMPUTED: 0 };
     holdings.forEach(h => {
       if (counts[h.decision] !== undefined) {
         counts[h.decision]++;
       } else {
-        counts['MAINTAIN']++; // fallback
+        counts['HOLD']++; // fallback
       }
     });
     return counts;
@@ -91,9 +93,9 @@ export default function CaiV2Dashboard() {
 
   const getStateStyle = (state: DecisionState) => {
     return {
-      backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.MAINTAIN}20`,
-      color: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
-      borderColor: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
+      backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.HOLD}20`,
+      color: STATE_COLORS[state] || STATE_COLORS.HOLD,
+      borderColor: STATE_COLORS[state] || STATE_COLORS.HOLD,
       borderWidth: '1px',
       borderStyle: 'solid'
     };
@@ -211,7 +213,7 @@ export default function CaiV2Dashboard() {
                 </tr>
               ) : (
                 sortedHoldings.map((h, i) => {
-                  const isNearAlert = h.alert && h.price !== null && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
+                  const isNearAlert = h.alert_level && h.price !== null && Math.abs((h.price - h.alert_level) / h.alert_level) <= 0.02;
                   return (
                     <tr key={i} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
