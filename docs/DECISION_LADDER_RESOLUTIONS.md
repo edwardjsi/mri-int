@@ -30,6 +30,9 @@ For example, `Price > Next Add` does NOT mean BUY. It means the stock is now eli
 **Principle 3: The Decision Ladder is one technical decision framework within CAI.**
 Future versions of CAI will combine Technical, Fundamental (MOSI), Portfolio, and Market Regime evidence before arriving at a final recommendation. This ensures the ladder never becomes "the whole brain."
 
+**Principle 4: CAI favors explainability over complexity.**
+When two approaches produce comparable decision quality, the system should prefer the simpler, more transparent model. Every recommendation should be traceable to explicit observations, evidence, rules, and policies.
+
 ---
 
 ## 3. Investor Action Matrix
