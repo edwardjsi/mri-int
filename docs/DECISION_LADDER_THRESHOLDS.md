@@ -7,7 +7,6 @@ This document defines *how* the engine calculates the technical price thresholds
 
 ## Core Variables Required
 The engine requires the following weekly technical data for each position:
-* `current_price` (Weekly Close)
 * `ema_20_w` (20-week Exponential Moving Average)
 * `ema_50_w` (50-week Exponential Moving Average)
 * `primary_swing_low` (Highest valid weekly higher-low in the current trend)
@@ -55,7 +54,6 @@ The Threshold Engine guarantees the following invariants for every successfully 
 * `alert_level > structure_level`
 * `structure_level > quit_level`
 * `quit_level < structure_level < alert_level`
-* Exactly one active state.
 * Threshold calculations are mathematically deterministic.
 * Identical inputs always produce identical outputs.
 * Thresholds are derived strictly and exclusively from weekly data.

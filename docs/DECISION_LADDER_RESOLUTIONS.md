@@ -17,7 +17,20 @@ The Opportunity Flow (Next Add) exists to deploy capital selectively. The Risk F
 
 ---
 
-## 2. Investor Action Matrix
+## 2. CAI Philosophical Principles
+
+**Principle 1: The Decision Ladder is descriptive, not predictive.**
+It describes the current state of technical evidence. It does not predict future prices.
+
+**Principle 2: Crossing a threshold does not cause a decision. It enables a decision.**
+For example, `Price > Next Add` does NOT mean BUY. It means the stock is now eligible for evaluation under the Opportunity Flow.
+
+**Principle 3: The Decision Ladder is one source of evidence.**
+Future versions of CAI will combine Technical Evidence, Fundamental Evidence (MOSI), Portfolio Evidence, and Market Regime Evidence before arriving at a final recommendation. This ensures the ladder never becomes "the whole brain."
+
+---
+
+## 3. Investor Action Matrix
 
 | Engine State | Investor Action | Conceptual Meaning |
 |--------------|-----------------|--------------------|
@@ -29,7 +42,7 @@ The Opportunity Flow (Next Add) exists to deploy capital selectively. The Risk F
 
 ---
 
-## 3. State Resolution Hierarchy
+## 4. State Resolution Hierarchy
 
 The backend engine evaluates the mathematical thresholds against the `current_price` (Friday Weekly Close) in the following strict priority order. The highest priority condition that evaluates to TRUE becomes the active `decision_state`.
 
@@ -50,9 +63,11 @@ The backend engine evaluates the mathematical thresholds against the `current_pr
 **Priority 5: HOLD (Default)**
 * `ELSE decision_state = 'HOLD'`
 
+*Note: The Resolution Engine mathematically guarantees exactly one active state per position.*
+
 ---
 
-## 4. Threshold Provenance & Quality
+## 5. Threshold Provenance & Quality
 
 The system must track the provenance of the calculation to foster investor trust and debuggability. 
 
