@@ -2823,7 +2823,7 @@ function App() {
           <div className="content-body">
             <Routes>
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<V1Dashboard />} />
+              <Route path="/dashboard" element={<CaiV2Dashboard />} />
               <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
               <Route path="/ledger" element={<HistoryPage onSelectStock={setSelectedStock} />} />
               <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
@@ -2832,6 +2832,7 @@ function App() {
               
               {/* Restored routes */}
               <Route path="/signals" element={<DashboardPage onSelectStock={setSelectedStock} />} />
+              <Route path="/caidashboard" element={<CaiV2Dashboard />} />
               <Route path="/caiportfolio" element={<CaiV2Dashboard />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
               <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />

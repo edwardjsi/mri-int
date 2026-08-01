@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { apiFetch } from './api';
 
 // Semantic decision colors from UX Spec
 const STATE_COLORS = {
@@ -10,53 +13,80 @@ const STATE_COLORS = {
 
 type DecisionState = keyof typeof STATE_COLORS;
 
-// Mock data matching the normalized Decision ViewModel
-const mockViewModel = {
-  symbol: 'NVDA',
-  currentPrice: 450.25,
-  state: 'ADD' as DecisionState,
-  lastEvaluated: '2026-08-01T14:30:00Z',
-  allocation: {
-    currentWeight: 8.5,
-    targetWeight: 12.0
-  },
-  narrative: {
-    why: 'Fresh weekly breakout confirmed with volume expansion across institutional parameters.',
-    whyNow: 'Price cleared the primary resistance node (420) on Friday close.',
-    whatNext: 'Deploy ₹50,000 to increase portfolio weight toward the 12% target.'
-  },
-  thresholds: [
-    { level: 'Next Add', price: 480.00, type: 'ADD' },
-    { level: 'Alert', price: 420.00, type: 'ALERT' },
-    { level: 'Structure', price: 400.00, type: 'STRUCTURE' },
-    { level: 'Quit', price: 380.00, type: 'QUIT' }
-  ]
-};
-
 export function StockDecisionPage() {
-  const data = mockViewModel;
-  const formatPrice = (val: number) => `₹${val.toFixed(2)}`;
+  const { decisionId: symbol } = useParams();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch the real portfolio data and find the stock
+    const fetchStockData = async () => {
+      try {
+        setLoading(true);
+        const portfolio = await apiFetch('/cai/portfolio');
+        const pos = portfolio.positions?.find((p: any) => p.symbol === symbol);
+        
+        if (pos) {
+          const decision = (pos.decision || pos.cai_state || 'MAINTAIN') as DecisionState;
+          setData({
+            symbol: pos.symbol,
+            currentPrice: pos.current_price || pos.average_price || 0,
+            state: decision,
+            lastEvaluated: new Date().toISOString(), // Mocking timestamp if missing
+            allocation: {
+              currentWeight: pos.allocation || 0,
+              targetWeight: 12.0 // Still mocked as target weight usually comes from engine
+            },
+            narrative: {
+              why: pos.cai_why || 'Waiting for CAI Engine weekly batch run.',
+              whyNow: pos.cai_why_now || 'No immediate structural action triggered.',
+              whatNext: pos.cai_what_next || 'Maintain position and wait for next signal.'
+            },
+            thresholds: [
+              { level: 'Next Add', price: pos.next_add, type: 'ADD' },
+              { level: 'Alert', price: pos.alert_level, type: 'ALERT' },
+              { level: 'Structure', price: pos.structure_level, type: 'STRUCTURE' },
+              { level: 'Quit', price: pos.quit_level, type: 'QUIT' }
+            ]
+          });
+        } else {
+          setData(null);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (symbol) {
+      fetchStockData();
+    }
+  }, [symbol]);
+
+  const formatPrice = (val: number | null | undefined) => val ? `₹${val.toFixed(2)}` : 'NOT_COMPUTED';
   
-  // Format the timestamp cleanly
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading {symbol} Decision Context...</div>;
+  if (!data) return <div className="p-8 text-center text-red-500">Could not find active position data for {symbol}</div>;
+
   const timestamp = new Date(data.lastEvaluated).toLocaleString('en-IN', {
     dateStyle: 'medium',
     timeStyle: 'short'
   });
 
   const getStateStyle = (state: DecisionState) => ({
-    backgroundColor: `${STATE_COLORS[state]}20`,
-    color: STATE_COLORS[state],
-    borderColor: STATE_COLORS[state],
+    backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.MAINTAIN}20`,
+    color: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
+    borderColor: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
     borderWidth: '1px',
     borderStyle: 'solid'
   });
 
   // Calculate percentage placement for the current price marker on the ladder
-  // For UI simulation, we map the max/min of the thresholds to a 0-100% scale
-  const maxPrice = Math.max(...data.thresholds.map(t => t.price), data.currentPrice);
-  const minPrice = Math.min(...data.thresholds.map(t => t.price), data.currentPrice);
+  const validThresholds = data.thresholds.filter((t: any) => t.price != null);
+  const maxPrice = Math.max(...validThresholds.map((t: any) => t.price), data.currentPrice);
+  const minPrice = Math.min(...validThresholds.map((t: any) => t.price), data.currentPrice);
+  
   const getTopPosition = (price: number) => {
-    // 0% is maxPrice (top), 100% is minPrice (bottom)
     const range = maxPrice - minPrice;
     if (range === 0) return '50%';
     return `${((maxPrice - price) / range) * 100}%`;
@@ -70,7 +100,7 @@ export function StockDecisionPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-4">
             {data.symbol}
-            <span className="px-3 py-1 rounded text-sm font-bold tracking-wide" style={getStateStyle(data.state)}>
+            <span className="px-3 py-1 rounded text-sm font-bold tracking-wide uppercase" style={getStateStyle(data.state)}>
               {data.state}
             </span>
           </h1>
@@ -156,7 +186,9 @@ export function StockDecisionPage() {
             </div>
 
             {/* Threshold Nodes */}
-            {data.thresholds.map((threshold, idx) => {
+            {data.thresholds.map((threshold: any, idx: number) => {
+              if (threshold.price == null) return null; // Don't plot missing thresholds on the ladder
+              
               const stateType = threshold.type as DecisionState;
               return (
                 <div 

@@ -102,7 +102,7 @@ export default function CaiV2Dashboard() {
   const formatPrice = (val: number | null) => val ? `₹${val.toFixed(2)}` : null;
   const formatThreshold = (val: number | null, status: string | null) => {
     if (val) return `₹${val.toFixed(2)}`;
-    return <span className="text-[10px] font-sans tracking-wider text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{status || 'NOT_COMPUTED'}</span>;
+    return <span className="text-[10px] font-sans font-bold tracking-wider text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded uppercase">{status || 'NOT_COMPUTED'}</span>;
   };
 
   if (loading) {
