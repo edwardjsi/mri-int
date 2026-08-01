@@ -61,8 +61,14 @@ def load_mri_inputs(conn, symbol: str):
     df_weekly['ema_20_w'] = df_weekly['close'].ewm(span=20, adjust=False).mean()
     df_weekly['ema_50_w'] = df_weekly['close'].ewm(span=50, adjust=False).mean()
     
-    # Proxy for Swing Low: lowest low of the last 4 weeks
+    # Proxy for Swing Low: lowest low of the last 4 weeks (Primary)
     df_weekly['swing_low'] = df_weekly['low'].rolling(window=4, min_periods=1).min()
+    
+    # Calculate 14-week ATR
+    df_weekly['tr'] = np.maximum(df_weekly['high'] - df_weekly['low'], 
+                                 np.maximum(abs(df_weekly['high'] - df_weekly['close'].shift()), 
+                                            abs(df_weekly['low'] - df_weekly['close'].shift())))
+    df_weekly['atr_14'] = df_weekly['tr'].rolling(window=14, min_periods=1).mean()
     
     # Proxy for Breakout Level (Add Level): highest high of the last 10 weeks
     df_weekly['breakout_level'] = df_weekly['high'].rolling(window=10, min_periods=1).max()
@@ -76,6 +82,7 @@ def load_mri_inputs(conn, symbol: str):
         "ema_50_w": float(latest['ema_50_w']) if pd.notnull(latest['ema_50_w']) and len(df_weekly) >= 50 else None,
         "swing_low": float(latest['swing_low']) if pd.notnull(latest['swing_low']) else None,
         "breakout_level": float(latest['breakout_level']) if pd.notnull(latest['breakout_level']) else None,
+        "atr": float(latest['atr_14']) if pd.notnull(latest['atr_14']) else 0.0,
     }
 
 def compute_thresholds(inputs: dict):
@@ -88,6 +95,7 @@ def compute_thresholds(inputs: dict):
     ema_50 = inputs["ema_50_w"]
     sl = inputs["swing_low"]
     bo = inputs["breakout_level"]
+    atr = inputs["atr"]
     
     # 1. Anchor: Structure Level
     if sl is not None:
@@ -101,8 +109,8 @@ def compute_thresholds(inputs: dict):
         
     # 2. Derived: Alert and Quit
     if structure_level is not None:
-        alert_level = structure_level * 1.05
-        quit_level = structure_level * 0.95
+        alert_level = structure_level + atr
+        quit_level = structure_level - (0.5 * atr)
     else:
         alert_level = None
         quit_level = None
