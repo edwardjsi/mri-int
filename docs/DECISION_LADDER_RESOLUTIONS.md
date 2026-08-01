@@ -33,6 +33,9 @@ Future versions of CAI will combine Technical, Fundamental (MOSI), Portfolio, an
 **Principle 4: CAI favors explainability over complexity.**
 When two approaches produce comparable decision quality, the system should prefer the simpler, more transparent model. Every recommendation should be traceable to explicit observations, evidence, rules, and policies.
 
+**Principle 5: Structured Observations Only.**
+All investment decisions within CAI shall be derived exclusively from structured observations. Unstructured documents (financial statements, presentations, conference calls, news, and filings) are source material for observation extraction, never direct inputs to the Decision Engine.
+
 ---
 
 ## 3. Investor Action Matrix
