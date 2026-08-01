@@ -47,6 +47,23 @@ The Decision Ladder uses a mathematically rigid **Derived Anchor Model**. This m
 
 ---
 
+## Mathematical Invariants
+
+The Threshold Engine guarantees the following invariants for every successfully computed ladder:
+
+* `add_level > current_price` (if Add Level is present)
+* `alert_level > structure_level`
+* `structure_level > quit_level`
+* `quit_level < structure_level < alert_level`
+* Exactly one active state.
+* Threshold calculations are mathematically deterministic.
+* Identical inputs always produce identical outputs.
+* Thresholds are derived strictly and exclusively from weekly data.
+
+If one of these invariants is mathematically violated, the engine must set `decision_state = 'NOT_COMPUTED'` rather than returning invalid or corrupted ladder data.
+
+---
+
 ## Edge Case Resolution
 
 ### 1. Missing Swing Lows (e.g., Parabolic Runs)

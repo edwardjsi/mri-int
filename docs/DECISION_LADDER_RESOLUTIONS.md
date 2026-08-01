@@ -57,7 +57,7 @@ The backend engine evaluates the mathematical thresholds against the `current_pr
 The system must track the provenance of the calculation to foster investor trust and debuggability. 
 
 ### Provenance Tracking
-The engine evaluates the `decision_quality` to indicate confidence in the ladder geometry:
+The engine evaluates the `threshold_quality` to indicate confidence in the ladder geometry:
 * **HIGH:** Ladder derived from a high-quality `primary_swing_low`.
 * **NORMAL:** Ladder derived normally from EMAs (fallback).
 * **LOW:** Ladder mathematically derived but visually compressed (Stage 1 base) or missing data.

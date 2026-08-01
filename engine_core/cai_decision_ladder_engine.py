@@ -189,7 +189,7 @@ def persist(conn, holding_id: str, state: str, thresholds: dict, quality: str):
                 structure_level = %s,
                 quit_level = %s,
                 decision_state = %s,
-                decision_quality = %s,
+                threshold_quality = %s,
                 decision_calculated_at = NOW(),
                 decision_algorithm_version = %s
             WHERE id = %s
