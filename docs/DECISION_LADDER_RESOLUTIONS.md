@@ -27,8 +27,8 @@ It describes the current state of technical evidence. It does not predict future
 **Principle 2: Crossing a threshold does not cause a decision. It enables a decision.**
 For example, `Price > Next Add` does NOT mean BUY. It means the stock is now eligible for evaluation under the Opportunity Flow.
 
-**Principle 3: The Decision Ladder is one source of evidence.**
-Future versions of CAI will combine Technical Evidence, Fundamental Evidence (MOSI), Portfolio Evidence, and Market Regime Evidence before arriving at a final recommendation. This ensures the ladder never becomes "the whole brain."
+**Principle 3: The Decision Ladder is one technical decision framework within CAI.**
+Future versions of CAI will combine Technical, Fundamental (MOSI), Portfolio, and Market Regime evidence before arriving at a final recommendation. This ensures the ladder never becomes "the whole brain."
 
 ---
 
