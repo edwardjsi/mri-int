@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiFetch } from './api';
 
 // Semantic decision colors
 const STATE_COLORS = {
@@ -20,21 +21,54 @@ const STATE_PRIORITY: Record<DecisionState, number> = {
   MAINTAIN: 5
 };
 
-const MOCK_HOLDINGS = [
-  { symbol: 'AAPL', decision: 'MAINTAIN' as DecisionState, price: 175.50, next_add: 180.00, alert: 170.00, structure: 165.00, quit: 155.00 },
-  { symbol: 'NVDA', decision: 'ADD' as DecisionState, price: 450.25, next_add: null, alert: 420.00, structure: 400.00, quit: 380.00 },
-  { symbol: 'TSLA', decision: 'QUIT' as DecisionState, price: 185.10, next_add: 250.00, alert: 210.00, structure: 200.00, quit: 190.00 },
-  { symbol: 'AMD', decision: 'STRUCTURE' as DecisionState, price: 105.20, next_add: 120.00, alert: 110.00, structure: 108.00, quit: 95.00 },
-  { symbol: 'INTC', decision: 'ALERT' as DecisionState, price: 34.50, next_add: 40.00, alert: 35.00, structure: 32.00, quit: 28.00 }
-];
-
 export default function CaiV2Dashboard() {
-  const [holdings] = useState(MOCK_HOLDINGS);
+  const [portfolio, setPortfolio] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        setLoading(true);
+        const data = await apiFetch('/cai/portfolio');
+        setPortfolio(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPortfolio();
+  }, []);
+
+  // Map backend positions to our dashboard UI
+  const holdings = useMemo(() => {
+    if (!portfolio || !portfolio.positions) return [];
+    return portfolio.positions.map((p: any) => {
+      // Map API data if available, fallback gracefully
+      const decision = (p.decision || p.cai_state || 'MAINTAIN') as DecisionState;
+      return {
+        symbol: p.symbol,
+        decision: decision,
+        price: p.current_price || p.average_price || 0,
+        next_add: p.next_add || null,
+        alert: p.alert_level || null,
+        structure: p.structure_level || null,
+        quit: p.quit_level || null
+      };
+    });
+  }, [portfolio]);
 
   // Derive state distribution and actions today
   const distribution = useMemo(() => {
     const counts = { ADD: 0, MAINTAIN: 0, ALERT: 0, STRUCTURE: 0, QUIT: 0 };
-    holdings.forEach(h => counts[h.decision]++);
+    holdings.forEach(h => {
+      if (counts[h.decision] !== undefined) {
+        counts[h.decision]++;
+      } else {
+        counts['MAINTAIN']++; // fallback
+      }
+    });
     return counts;
   }, [holdings]);
 
@@ -45,15 +79,26 @@ export default function CaiV2Dashboard() {
 
   const getStateStyle = (state: DecisionState) => {
     return {
-      backgroundColor: `${STATE_COLORS[state]}20`, // 20% opacity background
-      color: STATE_COLORS[state],
-      borderColor: STATE_COLORS[state],
+      backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.MAINTAIN}20`,
+      color: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
+      borderColor: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
       borderWidth: '1px',
       borderStyle: 'solid'
     };
   };
 
   const formatPrice = (val: number | null) => val ? `₹${val.toFixed(2)}` : '-';
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Loading CAI Dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-500">Error: {error}</div>;
+  }
+
+  const regime = portfolio?.regime || 'Bull Market'; // Or derived from API
+  const cash = portfolio?.cash || 0;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-sans" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -66,7 +111,7 @@ export default function CaiV2Dashboard() {
           <div className="flex gap-2 mt-3">
             {['ADD', 'ALERT', 'STRUCTURE', 'QUIT'].map(state => {
               const count = distribution[state as DecisionState];
-              if (count === 0) return null;
+              if (!count) return null;
               return (
                 <span key={state} className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(state as DecisionState)}>
                   {count} {state}
@@ -111,14 +156,14 @@ export default function CaiV2Dashboard() {
         
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-sm font-semibold text-gray-500 uppercase">Cash Available</h2>
-          <div className="text-2xl font-mono font-bold text-gray-900 mt-2">₹1,250,000</div>
+          <div className="text-2xl font-mono font-bold text-gray-900 mt-2">₹{cash.toLocaleString()}</div>
           <div className="text-xs text-gray-400 mt-1">Ready to deploy</div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 w-full text-left">Market Regime</h2>
           <div className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full font-bold text-sm border border-gray-300 w-full text-center">
-            Bull Market
+            {regime}
           </div>
         </div>
       </div>
@@ -142,29 +187,36 @@ export default function CaiV2Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {sortedHoldings.map((h, i) => {
-                // Check if price is within 2% of alert level
-                const isNearAlert = h.alert && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
-                return (
-                  <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
-                      <Link to={`/decision/${h.symbol}`}>{h.symbol}</Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(h.decision)}>
-                        {h.decision}
-                      </span>
-                    </td>
-                    <td className={`px-4 py-3 font-mono ${isNearAlert ? 'font-bold border-l-4 border-amber-500' : ''}`}>
-                      {formatPrice(h.price)}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-gray-500">{formatPrice(h.next_add)}</td>
-                    <td className="px-4 py-3 font-mono text-amber-600">{formatPrice(h.alert)}</td>
-                    <td className="px-4 py-3 font-mono text-orange-600">{formatPrice(h.structure)}</td>
-                    <td className="px-4 py-3 font-mono text-red-600">{formatPrice(h.quit)}</td>
-                  </tr>
-                );
-              })}
+              {sortedHoldings.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    No active positions found in your real portfolio.
+                  </td>
+                </tr>
+              ) : (
+                sortedHoldings.map((h, i) => {
+                  const isNearAlert = h.alert && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
+                  return (
+                    <tr key={i} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
+                        <Link to={`/decision/${h.symbol}`}>{h.symbol}</Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(h.decision)}>
+                          {h.decision}
+                        </span>
+                      </td>
+                      <td className={`px-4 py-3 font-mono ${isNearAlert ? 'font-bold border-l-4 border-amber-500' : ''}`}>
+                        {formatPrice(h.price)}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-gray-500">{formatPrice(h.next_add)}</td>
+                      <td className="px-4 py-3 font-mono text-amber-600">{formatPrice(h.alert)}</td>
+                      <td className="px-4 py-3 font-mono text-orange-600">{formatPrice(h.structure)}</td>
+                      <td className="px-4 py-3 font-mono text-red-600">{formatPrice(h.quit)}</td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
