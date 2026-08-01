@@ -1,5 +1,25 @@
 # Execution Statement: MOSI Compiler v1.0
 
+## Instructions to Engineering Team
+> **Proceed with implementation. The architecture is frozen for Version 1. Deliver a working vertical slice before proposing architectural improvements.**
+
+### 1. Build, don't redesign
+> The architecture for MOSI Compiler V1 is frozen. If you discover a better design while implementing, record it, but do not stop Milestone 1 to redesign the system. The objective is to prove the end-to-end pipeline.
+
+### 2. Optimize for working software
+The success criterion is not beautiful code. The success criterion is:
+`Golden MOSI` → `Compile` → `4 JSON artifacts` → `Import` → `Company Knowledge page`
+If this works, V1 is a success.
+
+### 3. Escalate instead of assuming
+If any part of the specification is ambiguous:
+* don't invent architecture
+* don't silently change the contract
+* raise the question
+The compiler contract is more important than implementation elegance.
+
+---
+
 ## 1. Objective
 **Prove that a single MOSI report can be transformed into a complete, auditable, versioned Company Knowledge Base.** 
 The goal is not just writing code; it is proving the extraction pipeline works reliably and immutably.
