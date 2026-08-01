@@ -10,6 +10,27 @@ This execution plan operationalizes the strictly scoped, deterministic Decision 
 3. **Deterministic Engine:** Identical technical inputs must always produce identical outputs.
 4. **Technical Data Only:** Version 2.0 uses MRI technical inputs exclusively. No MOSI, fundamentals, AI narratives, or probabilistic adjustments.
 5. **Weekly Evaluation:** Decision Ladder values are generated once per week after Friday market close and remain valid until the next scheduled calculation.
+6. **Rule Ownership:** The Decision Ladder algorithm is owned by the backend. The database stores its outputs. The API transports its outputs. The frontend renders its outputs. No layer may redefine or reinterpret the algorithm.
+
+### Data Flow
+```text
+Friday Close
+      │
+      ▼
+MRI Technical Data
+      │
+      ▼
+Decision Ladder Engine
+      │
+      ▼
+cai_position
+      │
+      ▼
+/cai/portfolio
+      │
+      ▼
+React UI
+```
 
 ## Phase 1: Database Infrastructure
 * **Task:** Create migration script to alter the `cai_position` table.
