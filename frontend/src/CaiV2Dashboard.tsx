@@ -21,6 +21,17 @@ const STATE_PRIORITY: Record<DecisionState, number> = {
   MAINTAIN: 5
 };
 
+interface Holding {
+  symbol: string;
+  decision: DecisionState;
+  price: number | null;
+  next_add: number | null;
+  alert: number | null;
+  structure: number | null;
+  quit: number | null;
+  status: string | null;
+}
+
 export default function CaiV2Dashboard() {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +53,7 @@ export default function CaiV2Dashboard() {
   }, []);
 
   // Map backend positions to our dashboard UI
-  const holdings = useMemo(() => {
+  const holdings: Holding[] = useMemo(() => {
     if (!portfolio || !portfolio.positions) return [];
     return portfolio.positions.map((p: any) => {
       // Map API data if available, fallback gracefully
@@ -200,7 +211,7 @@ export default function CaiV2Dashboard() {
                 </tr>
               ) : (
                 sortedHoldings.map((h, i) => {
-                  const isNearAlert = h.alert && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
+                  const isNearAlert = h.alert && h.price !== null && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
                   return (
                     <tr key={i} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
