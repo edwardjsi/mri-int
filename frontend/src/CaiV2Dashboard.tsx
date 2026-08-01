@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
 // Semantic decision colors
 const STATE_COLORS = {
@@ -28,7 +28,7 @@ const MOCK_HOLDINGS = [
 ];
 
 export default function CaiV2Dashboard() {
-  const [holdings, setHoldings] = useState(MOCK_HOLDINGS);
+  const [holdings] = useState(MOCK_HOLDINGS);
 
   // Derive state distribution and actions today
   const distribution = useMemo(() => {

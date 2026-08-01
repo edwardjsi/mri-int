@@ -1,4 +1,3 @@
-import React from 'react';
 
 const MOCK_NOTIFICATIONS = [
   { id: 1, type: 'ALERT', symbol: 'INTC', message: 'Price dropped below structural alert level (35.00).', time: '2 hours ago', read: false },

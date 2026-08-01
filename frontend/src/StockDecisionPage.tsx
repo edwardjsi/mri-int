@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Semantic decision colors from UX Spec
 const STATE_COLORS = {
