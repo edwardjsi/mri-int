@@ -2832,9 +2832,7 @@ function App() {
               
               {/* Restored routes */}
               <Route path="/signals" element={<DashboardPage onSelectStock={setSelectedStock} />} />
-              <Route path="/caidashboard" element={<CaiDashboard />} />
-              <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
-              <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
+              <Route path="/caiportfolio" element={<CaiV2Dashboard />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
               <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />
               <Route path="/112co" element={<One12CoDashboard onViewResearch={() => {}} />} />

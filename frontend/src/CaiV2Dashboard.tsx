@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 // Semantic decision colors
 const STATE_COLORS = {
@@ -146,7 +147,9 @@ export default function CaiV2Dashboard() {
                 const isNearAlert = h.alert && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
                 return (
                   <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-bold text-gray-900 cursor-pointer text-blue-600 hover:underline">{h.symbol}</td>
+                    <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
+                      <Link to={`/decision/${h.symbol}`}>{h.symbol}</Link>
+                    </td>
                     <td className="px-4 py-3">
                       <span className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(h.decision)}>
                         {h.decision}
