@@ -33,11 +33,46 @@ Only after Milestone 1 works flawlessly:
 
 ## 6. Acceptance Tests (Definition of Done for V1)
 - [ ] Four artifacts created.
-- [ ] Zero hallucinated fields.
+- [ ] Every extracted field must either be traceable to explicit source evidence, or be null.
 - [ ] All evidence links resolve.
 - [ ] Every fact has an ID.
 - [ ] Every entity has an ID.
 - [ ] Every fact has temporal context.
 - [ ] Every fact has provenance.
 - [ ] Compiler is deterministic (running twice produces identical output).
+- [ ] Importing the same Golden MOSI twice must not create duplicate knowledge.
 - [ ] Company Knowledge page renders without errors against the Golden MOSI.
+
+---
+
+# Architect's Notes
+
+> **If implementing any of these recommendations would materially delay Milestone 1 (proving the Golden MOSI end-to-end), defer them. Shipping a working vertical slice is more important than perfect architecture.**
+
+### 1. Compiler must be stateless (Recommended)
+The MOSI Compiler should not own the Knowledge Repository.
+`MOSI Report` → `MOSI Compiler` → `4 JSON Artifacts` → `Knowledge Importer` → `Knowledge Repository`
+The compiler's responsibility ends once it produces the artifacts. Importing, validation, versioning, and persistence belong to a separate component.
+
+### 2. Add an Import milestone
+After the compiler successfully generates the artifacts:
+* Validate all four artifacts.
+* Import them into the repository.
+* Reject invalid imports.
+* Version successful imports.
+* Record compilation history.
+
+### 3. Treat "Four Artifacts" as Version 1
+Instead of making four artifacts a permanent rule, define them as the required outputs for Version 1. This keeps the design extensible for future additions without changing the compiler contract.
+
+### 4. Suggested Implementation Roadmap
+1. MOSI Compiler
+2. Knowledge Importer
+3. Company Knowledge UI
+4. Quarterly Results Compiler
+5. Quarterly Delta Merger
+6. Observation Engine
+7. Rule & Evidence Engine
+8. Decision Engine
+
+The Decision Engine should be built only after the Knowledge Base has proven itself.
