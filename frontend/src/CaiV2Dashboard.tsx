@@ -1,56 +1,123 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 
-// Mock data to simulate API responses for V2 dashboard
-const MOCK_PORTFOLIO_HEALTH = {
-  health_score: 85.0,
-  total_positions: 10,
-  state_distribution: { ADD: 2, HOLD: 5, ALERT: 1, STRUCTURE: 1, QUIT: 1 }
+// Semantic decision colors
+const STATE_COLORS = {
+  ADD: '#10B981',
+  MAINTAIN: '#3B82F6',
+  ALERT: '#F59E0B',
+  STRUCTURE: '#F97316',
+  QUIT: '#EF4444'
+} as const;
+
+type DecisionState = keyof typeof STATE_COLORS;
+
+const STATE_PRIORITY: Record<DecisionState, number> = {
+  QUIT: 1,
+  STRUCTURE: 2,
+  ALERT: 3,
+  ADD: 4,
+  MAINTAIN: 5
 };
 
 const MOCK_HOLDINGS = [
-  { symbol: 'AAPL', decision: 'HOLD', confidence: 0.9, stability: 0.8, why: 'Trend is healthy', why_not_add: 'Portfolio weight already full', expiry: '2026-08-02', portfolio_pct: 12.5, sector_pct: 25.0, next_tranche: 'N/A' },
-  { symbol: 'NVDA', decision: 'ADD', confidence: 0.95, stability: 0.9, why: 'Strong growth fundamentals', why_not_add: null, expiry: '2026-08-02', portfolio_pct: 8.0, sector_pct: 25.0, next_tranche: 'Buy 50 shares' },
-  { symbol: 'TSLA', decision: 'QUIT', confidence: 0.99, stability: 0.2, why: 'Price below 200 EMA', why_not_add: 'Thesis invalidated', expiry: '2026-08-02', portfolio_pct: 4.5, sector_pct: 15.0, next_tranche: 'Sell all' },
-  { symbol: 'AMD', decision: 'STRUCTURE', confidence: 0.85, stability: 0.5, why: 'High overhead supply', why_not_add: 'Wait for resistance breakout', expiry: '2026-08-02', portfolio_pct: 5.0, sector_pct: 25.0, next_tranche: 'Hold/Trim' },
-  { symbol: 'INTC', decision: 'ALERT', confidence: 0.8, stability: 0.4, why: 'Stability dropped recently', why_not_add: 'Watch closely before adding', expiry: '2026-08-02', portfolio_pct: 3.0, sector_pct: 25.0, next_tranche: 'N/A' }
+  { symbol: 'AAPL', decision: 'MAINTAIN' as DecisionState, price: 175.50, next_add: 180.00, alert: 170.00, structure: 165.00, quit: 155.00 },
+  { symbol: 'NVDA', decision: 'ADD' as DecisionState, price: 450.25, next_add: null, alert: 420.00, structure: 400.00, quit: 380.00 },
+  { symbol: 'TSLA', decision: 'QUIT' as DecisionState, price: 185.10, next_add: 250.00, alert: 210.00, structure: 200.00, quit: 190.00 },
+  { symbol: 'AMD', decision: 'STRUCTURE' as DecisionState, price: 105.20, next_add: 120.00, alert: 110.00, structure: 108.00, quit: 95.00 },
+  { symbol: 'INTC', decision: 'ALERT' as DecisionState, price: 34.50, next_add: 40.00, alert: 35.00, structure: 32.00, quit: 28.00 }
 ];
 
 export default function CaiV2Dashboard() {
-  const [health, setHealth] = useState(MOCK_PORTFOLIO_HEALTH);
   const [holdings, setHoldings] = useState(MOCK_HOLDINGS);
 
-  const getStateColor = (state: string) => {
-    switch (state) {
-      case 'ADD': return 'bg-green-100 text-green-800 border-green-300';
-      case 'HOLD': return 'bg-gray-100 text-gray-800 border-gray-300';
-      case 'ALERT': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'STRUCTURE': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'QUIT': return 'bg-red-100 text-red-800 border-red-300';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  // Derive state distribution and actions today
+  const distribution = useMemo(() => {
+    const counts = { ADD: 0, MAINTAIN: 0, ALERT: 0, STRUCTURE: 0, QUIT: 0 };
+    holdings.forEach(h => counts[h.decision]++);
+    return counts;
+  }, [holdings]);
+
+  const actionsToday = holdings.filter(h => h.decision !== 'MAINTAIN');
+  const sortedHoldings = useMemo(() => {
+    return [...holdings].sort((a, b) => STATE_PRIORITY[a.decision] - STATE_PRIORITY[b.decision]);
+  }, [holdings]);
+
+  const getStateStyle = (state: DecisionState) => {
+    return {
+      backgroundColor: `${STATE_COLORS[state]}20`, // 20% opacity background
+      color: STATE_COLORS[state],
+      borderColor: STATE_COLORS[state],
+      borderWidth: '1px',
+      borderStyle: 'solid'
+    };
   };
 
+  const formatPrice = (val: number | null) => val ? `₹${val.toFixed(2)}` : '-';
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">CAI Decision Engine V2.1</h1>
+    <div className="p-6 bg-gray-50 min-h-screen font-sans" style={{ fontFamily: 'Inter, sans-serif' }}>
       
-      {/* Widgets Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Top Row: Hero */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Portfolio Health</h3>
-          <p className="text-4xl font-bold text-gray-900 mt-2">{health.health_score.toFixed(1)} / 100</p>
-          <p className="text-sm text-gray-400 mt-1">{health.total_positions} Total Positions</p>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase">Actions Today</h2>
+          <div className="text-4xl font-bold text-gray-900 mt-2">{actionsToday.length} Actions</div>
+          <div className="flex gap-2 mt-3">
+            {['ADD', 'ALERT', 'STRUCTURE', 'QUIT'].map(state => {
+              const count = distribution[state as DecisionState];
+              if (count === 0) return null;
+              return (
+                <span key={state} className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(state as DecisionState)}>
+                  {count} {state}
+                </span>
+              );
+            })}
+          </div>
         </div>
         
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2 flex flex-col justify-center">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">Today's Priority Card</h2>
+          {actionsToday.length > 0 ? (
+            <div className="p-4 rounded border" style={getStateStyle(actionsToday[0].decision)}>
+              <span className="font-bold text-lg">{actionsToday[0].symbol}</span> requires attention ({actionsToday[0].decision}). Review the decision ladder for next steps.
+            </div>
+          ) : (
+            <div className="p-4 rounded border bg-green-50 text-green-800 border-green-200">
+              No portfolio actions required today. All positions remain healthy. Next automated review: Friday Close.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Middle Row: Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">Decision Distribution</h3>
-          <div className="flex space-x-4">
-            {Object.entries(health.state_distribution).map(([state, count]) => (
-              <div key={state} className={`px-4 py-2 rounded border ${getStateColor(state)} flex-1 text-center`}>
-                <div className="text-xs font-bold">{state}</div>
-                <div className="text-2xl font-bold">{count}</div>
-              </div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">Decision Distribution</h2>
+          <div className="flex h-4 rounded overflow-hidden">
+            {Object.entries(distribution).map(([state, count]) => {
+              if (count === 0) return null;
+              return (
+                <div key={state} style={{ width: `${(count / holdings.length) * 100}%`, backgroundColor: STATE_COLORS[state as DecisionState] }} title={`${state}: ${count}`} />
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-500 font-mono">
+            {Object.entries(distribution).filter(([_, count]) => count > 0).map(([state, count]) => (
+              <span key={state} style={{ color: STATE_COLORS[state as DecisionState] }} className="font-bold">{count} {state}</span>
             ))}
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase">Cash Available</h2>
+          <div className="text-2xl font-mono font-bold text-gray-900 mt-2">₹1,250,000</div>
+          <div className="text-xs text-gray-400 mt-1">Ready to deploy</div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 w-full text-left">Market Regime</h2>
+          <div className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full font-bold text-sm border border-gray-300 w-full text-center">
+            Bull Market
           </div>
         </div>
       </div>
@@ -66,39 +133,40 @@ export default function CaiV2Dashboard() {
               <tr>
                 <th className="px-4 py-3">Symbol</th>
                 <th className="px-4 py-3">Decision</th>
-                <th className="px-4 py-3">Confidence</th>
-                <th className="px-4 py-3">Stability</th>
-                <th className="px-4 py-3">Why</th>
-                <th className="px-4 py-3">Why Not Add?</th>
-                <th className="px-4 py-3">Next Tranche</th>
-                <th className="px-4 py-3">Expiry</th>
-                <th className="px-4 py-3">Port %</th>
+                <th className="px-4 py-3">Current Price</th>
+                <th className="px-4 py-3">Next Add</th>
+                <th className="px-4 py-3">Alert Level</th>
+                <th className="px-4 py-3">Structure Level</th>
+                <th className="px-4 py-3">Quit Level</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {holdings.map((h, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-gray-900">{h.symbol}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded text-xs font-bold border ${getStateColor(h.decision)}`}>
-                      {h.decision}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{(h.confidence * 100).toFixed(0)}%</td>
-                  <td className="px-4 py-3">{(h.stability * 100).toFixed(0)}%</td>
-                  <td className="px-4 py-3 truncate max-w-xs" title={h.why}>{h.why}</td>
-                  <td className="px-4 py-3 truncate max-w-xs text-gray-500 italic" title={h.why_not_add || ''}>
-                    {h.why_not_add || '-'}
-                  </td>
-                  <td className="px-4 py-3 text-xs">{h.next_tranche}</td>
-                  <td className="px-4 py-3 text-xs">{h.expiry}</td>
-                  <td className="px-4 py-3">{h.portfolio_pct.toFixed(1)}%</td>
-                </tr>
-              ))}
+              {sortedHoldings.map((h, i) => {
+                // Check if price is within 2% of alert level
+                const isNearAlert = h.alert && Math.abs((h.price - h.alert) / h.alert) <= 0.02;
+                return (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-bold text-gray-900 cursor-pointer text-blue-600 hover:underline">{h.symbol}</td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(h.decision)}>
+                        {h.decision}
+                      </span>
+                    </td>
+                    <td className={`px-4 py-3 font-mono ${isNearAlert ? 'font-bold border-l-4 border-amber-500' : ''}`}>
+                      {formatPrice(h.price)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-gray-500">{formatPrice(h.next_add)}</td>
+                    <td className="px-4 py-3 font-mono text-amber-600">{formatPrice(h.alert)}</td>
+                    <td className="px-4 py-3 font-mono text-orange-600">{formatPrice(h.structure)}</td>
+                    <td className="px-4 py-3 font-mono text-red-600">{formatPrice(h.quit)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   );
 }

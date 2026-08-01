@@ -1,268 +1,187 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { api, StockDecisionPayload } from './api';
+import React from 'react';
 
-export function StockDecisionPage() {
-  const { decisionId } = useParams<{ decisionId: string }>();
-  const [data, setData] = useState<StockDecisionPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+// Semantic decision colors from UX Spec
+const STATE_COLORS = {
+  ADD: '#10B981',
+  MAINTAIN: '#3B82F6',
+  ALERT: '#F59E0B',
+  STRUCTURE: '#F97316',
+  QUIT: '#EF4444'
+} as const;
 
-  useEffect(() => {
-    if (!decisionId) return;
-    setLoading(true);
-    api.getStockDecision(decisionId)
-      .then(setData)
-      .catch((err) => {
-        console.error(err);
-        if (err.message.includes('404')) {
-          // Mock data for development preview if backend endpoint is not ready
-          setData({
-            decisionHeader: {
-              symbol: 'TCS',
-              companyName: 'Tata Consultancy Services',
-              action: 'ADD',
-              confidence: 91,
-              decisionDate: new Date().toISOString().split('T')[0],
-              marketRegime: 'Bullish',
-              portfolioImpact: 'Maintains tech exposure at 15%'
-            },
-            decisionMetadata: {
-              decisionId: decisionId,
-              generatedAt: new Date().toISOString(),
-              engineVersion: 'v2.1.0',
-              mosiVersion: '1.4.2',
-              rulesVersion: '2026-07',
-              snapshotTimestamp: new Date().toISOString()
-            },
-            recommendation: {
-              action: 'ADD',
-              confidence: 91,
-              summary: 'Weekly trend remains intact with strong momentum.'
-            },
-            why: {
-              primaryReason: 'Weekly structure intact with increasing institutional flow.',
-              supportingReasons: ['Higher highs maintained', 'No hard rules triggered', 'MOSI score > 80']
-            },
-            rules: [
-              { name: 'Weekly Structure', status: 'PASS', detail: 'Higher-high / higher-low sequence intact' },
-              { name: 'Trailing Stop', status: 'PASS', detail: 'Price is 12% above trailing stop of ₹3,400' }
-            ],
-            evidence: [
-              { label: '30W EMA', value: 'Above', status: 'PASS' },
-              { label: 'RSI (14)', value: '62', status: 'PASS' },
-              { label: 'Volume', value: 'Surging', status: 'PASS' }
-            ],
-            monitoring: [
-              { label: 'Next earnings', detail: 'Estimated Aug 12' },
-              { label: 'Alert at', detail: '₹4,100 resistance' }
-            ],
-            history: {
-              previousAction: 'BUY',
-              previousConfidence: 82,
-              lastReviewed: '2026-07-24'
-            }
-          });
-        } else {
-          setError('Unable to load decision details. Try again.');
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [decisionId]);
+type DecisionState = keyof typeof STATE_COLORS;
 
-  if (loading) {
-    return (
-      <div className="section">
-        <h2 className="section-title">Decision Details</h2>
-        <div style={{ opacity: 0.5, animation: 'pulse 1.5s infinite' }}>
-          <div style={{ height: '120px', background: '#1e293b', borderRadius: '12px', marginBottom: '20px' }}></div>
-          <div style={{ height: '80px', background: '#1e293b', borderRadius: '12px', marginBottom: '20px' }}></div>
-          <div style={{ height: '200px', background: '#1e293b', borderRadius: '12px' }}></div>
-        </div>
-      </div>
-    );
-  }
+// Mock data matching the normalized Decision ViewModel
+const mockViewModel = {
+  symbol: 'NVDA',
+  currentPrice: 450.25,
+  state: 'ADD' as DecisionState,
+  lastEvaluated: '2026-08-01T14:30:00Z',
+  allocation: {
+    currentWeight: 8.5,
+    targetWeight: 12.0
+  },
+  narrative: {
+    why: 'Fresh weekly breakout confirmed with volume expansion across institutional parameters.',
+    whyNow: 'Price cleared the primary resistance node (420) on Friday close.',
+    whatNext: 'Deploy ₹50,000 to increase portfolio weight toward the 12% target.'
+  },
+  thresholds: [
+    { level: 'Next Add', price: 480.00, type: 'ADD' },
+    { level: 'Alert', price: 420.00, type: 'ALERT' },
+    { level: 'Structure', price: 400.00, type: 'STRUCTURE' },
+    { level: 'Quit', price: 380.00, type: 'QUIT' }
+  ]
+};
 
-  if (error || !data) {
-    return (
-      <div className="section">
-        <div className="empty-state" style={{ color: '#fca5a5', borderColor: '#ef4444' }}>
-          ⚠️ {error || 'No decision details are available for this stock.'}
-        </div>
-      </div>
-    );
-  }
+export default function StockDecisionPage() {
+  const data = mockViewModel;
+  const formatPrice = (val: number) => `₹${val.toFixed(2)}`;
+  
+  // Format the timestamp cleanly
+  const timestamp = new Date(data.lastEvaluated).toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
 
-  const { decisionHeader, recommendation, why, rules, evidence, monitoring, decisionMetadata, history } = data;
+  const getStateStyle = (state: DecisionState) => ({
+    backgroundColor: `${STATE_COLORS[state]}20`,
+    color: STATE_COLORS[state],
+    borderColor: STATE_COLORS[state],
+    borderWidth: '1px',
+    borderStyle: 'solid'
+  });
 
-  const getActionColor = (action: string) => {
-    if (['BUY', 'ADD'].includes(action)) return '#22c55e';
-    if (['SELL', 'EXIT', 'REDUCE'].includes(action)) return '#ef4444';
-    return '#94a3b8';
-  };
-
-  const getStatusColor = (status: string) => {
-    if (status === 'PASS' || status === 'Positive') return '#22c55e';
-    if (status === 'FAIL' || status === 'Negative') return '#ef4444';
-    if (status === 'WARN' || status === 'Warning') return '#eab308';
-    return '#94a3b8';
+  // Calculate percentage placement for the current price marker on the ladder
+  // For UI simulation, we map the max/min of the thresholds to a 0-100% scale
+  const maxPrice = Math.max(...data.thresholds.map(t => t.price), data.currentPrice);
+  const minPrice = Math.min(...data.thresholds.map(t => t.price), data.currentPrice);
+  const getTopPosition = (price: number) => {
+    // 0% is maxPrice (top), 100% is minPrice (bottom)
+    const range = maxPrice - minPrice;
+    if (range === 0) return '50%';
+    return `${((maxPrice - price) / range) * 100}%`;
   };
 
   return (
-    <div className="decision-page" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '60px' }}>
+    <div className="p-6 bg-gray-50 min-h-screen font-sans" style={{ fontFamily: 'Inter, sans-serif' }}>
       
-      <Link to="/dashboard" style={{ display: 'inline-block', marginBottom: '20px', color: '#94a3b8', textDecoration: 'none', fontSize: '14px' }}>
-        ← Back to Dashboard
-      </Link>
-
-      {/* 1. Decision Header */}
-      <section style={{ background: '#0f172a', borderRadius: '12px', padding: '24px', border: '1px solid #1e293b', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '28px', color: '#f8fafc' }}>{decisionHeader.symbol}</h1>
-            <div style={{ color: '#94a3b8', fontSize: '15px', marginTop: '4px' }}>{decisionHeader.companyName}</div>
+      {/* Header */}
+      <div className="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-4">
+            {data.symbol}
+            <span className="px-3 py-1 rounded text-sm font-bold tracking-wide" style={getStateStyle(data.state)}>
+              {data.state}
+            </span>
+          </h1>
+          <div className="text-2xl font-mono text-gray-700 mt-2 font-semibold">
+            {formatPrice(data.currentPrice)}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ 
-              display: 'inline-block', 
-              padding: '6px 16px', 
-              borderRadius: '20px', 
-              background: `${getActionColor(decisionHeader.action)}20`,
-              color: getActionColor(decisionHeader.action),
-              fontWeight: 'bold',
-              fontSize: '18px',
-              border: `1px solid ${getActionColor(decisionHeader.action)}50`
-            }}>
-              {decisionHeader.action} {decisionHeader.confidence}%
+        </div>
+        <div className="text-sm text-gray-500 text-right">
+          <div>Last Evaluated</div>
+          <div className="font-mono font-bold text-gray-700">{timestamp}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Pane: Context & Narrative */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Capital Allocation */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">Capital Allocation</h2>
+            <div className="flex items-center gap-6">
+              <div>
+                <div className="text-xs text-gray-400">Current Weight</div>
+                <div className="text-xl font-mono font-bold text-gray-800">{data.allocation.currentWeight.toFixed(1)}%</div>
+              </div>
+              <div className="text-gray-300 font-light text-3xl">/</div>
+              <div>
+                <div className="text-xs text-gray-400">Target Weight</div>
+                <div className="text-xl font-mono font-bold text-gray-800">{data.allocation.targetWeight.toFixed(1)}%</div>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="ml-8 flex-1 h-2 bg-gray-100 rounded overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 rounded" 
+                  style={{ width: `${Math.min((data.allocation.currentWeight / data.allocation.targetWeight) * 100, 100)}%` }}
+                />
+              </div>
             </div>
+          </div>
+
+          {/* Narrative Block */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">Decision Rationale</h2>
+            <div className="space-y-6">
+              
+              <div className="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-r">
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">Why?</h3>
+                <p className="text-gray-800 font-medium">{data.narrative.why}</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-r">
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">Why Now?</h3>
+                <p className="text-gray-800 font-medium">{data.narrative.whyNow}</p>
+              </div>
+
+              <div className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r">
+                <h3 className="text-xs font-bold text-blue-600 uppercase mb-1">What Next?</h3>
+                <p className="text-gray-900 font-bold">{data.narrative.whatNext}</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Right Pane: Decision Ladder */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-6">Decision Ladder</h2>
+          
+          <div className="relative h-96 border-l-2 border-gray-200 ml-4 mt-8 mb-8" aria-label="Decision thresholds ladder">
+            
+            {/* Current Price Marker */}
+            <div 
+              className="absolute w-full flex items-center z-10 transition-all duration-300"
+              style={{ top: getTopPosition(data.currentPrice), left: '-6px' }}
+            >
+              <div className="w-3 h-3 bg-gray-900 rounded-full border-2 border-white shadow"></div>
+              <div className="ml-4 flex flex-col bg-gray-900 text-white px-3 py-1 rounded shadow-lg">
+                <span className="text-[10px] uppercase font-bold text-gray-300 tracking-wider">Current</span>
+                <span className="font-mono font-bold">{formatPrice(data.currentPrice)}</span>
+              </div>
+            </div>
+
+            {/* Threshold Nodes */}
+            {data.thresholds.map((threshold, idx) => {
+              const stateType = threshold.type as DecisionState;
+              return (
+                <div 
+                  key={idx} 
+                  className="absolute w-full flex items-center"
+                  style={{ top: getTopPosition(threshold.price), left: '-5px' }}
+                >
+                  <div 
+                    className="w-2 h-2 rounded-full border-2 bg-white"
+                    style={{ borderColor: STATE_COLORS[stateType] }}
+                  ></div>
+                  <div className="ml-6 flex flex-col">
+                    <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: STATE_COLORS[stateType] }}>
+                      {threshold.level}
+                    </span>
+                    <span className="font-mono text-gray-600 font-semibold">{formatPrice(threshold.price)}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', borderTop: '1px solid #1e293b', paddingTop: '16px' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase' }}>Date</div>
-            <div style={{ color: '#cbd5e1', marginTop: '4px' }}>{decisionHeader.decisionDate}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase' }}>Regime</div>
-            <div style={{ color: '#cbd5e1', marginTop: '4px' }}>{decisionHeader.marketRegime}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase' }}>Impact</div>
-            <div style={{ color: '#cbd5e1', marginTop: '4px' }}>{decisionHeader.portfolioImpact}</div>
-          </div>
-        </div>
-      </section>
-
-      {/* History (Optional/Reserved for future) */}
-      {history && (
-        <section style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', gap: '24px', background: '#1e293b', padding: '16px 24px', borderRadius: '8px', fontSize: '14px' }}>
-            <div><span style={{ color: '#64748b', marginRight: '8px' }}>Last Review:</span><span style={{ color: '#cbd5e1' }}>{history.lastReviewed}</span></div>
-            <div><span style={{ color: '#64748b', marginRight: '8px' }}>Previous:</span><span style={{ color: '#cbd5e1' }}>{history.previousAction} ({history.previousConfidence}%)</span></div>
-            <div>
-              <span style={{ color: '#64748b', marginRight: '8px' }}>Confidence Shift:</span>
-              <span style={{ color: decisionHeader.confidence > history.previousConfidence ? '#22c55e' : (decisionHeader.confidence < history.previousConfidence ? '#ef4444' : '#94a3b8') }}>
-                {decisionHeader.confidence > history.previousConfidence ? '+' : ''}{decisionHeader.confidence - history.previousConfidence}
-              </span>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 2. Recommendation */}
-      {recommendation && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Recommendation</h3>
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderLeft: `4px solid ${getActionColor(recommendation.action)}`, padding: '20px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '16px', color: '#f8fafc', lineHeight: '1.5' }}>{recommendation.summary}</p>
-          </div>
-        </section>
-      )}
-
-      {/* 3. Why */}
-      {why && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Why</h3>
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '20px', borderRadius: '8px' }}>
-            <div style={{ fontSize: '16px', color: '#f8fafc', marginBottom: '16px', fontWeight: 500 }}>{why.primaryReason}</div>
-            {why.supportingReasons && why.supportingReasons.length > 0 && (
-              <ul style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.6' }}>
-                {why.supportingReasons.map((reason, idx) => (
-                  <li key={idx} style={{ marginBottom: '8px' }}>{reason}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* 4. Rules */}
-      {rules && rules.length > 0 && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Rules Evaluated</h3>
-          <div style={{ border: '1px solid #1e293b', borderRadius: '8px', overflow: 'hidden' }}>
-            {rules.map((rule, idx) => (
-              <div key={idx} style={{ background: '#0f172a', padding: '16px 20px', borderBottom: idx < rules.length - 1 ? '1px solid #1e293b' : 'none', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', background: `${getStatusColor(rule.status)}20`, color: getStatusColor(rule.status) }}>
-                  {rule.status}
-                </div>
-                <div>
-                  <div style={{ color: '#f8fafc', fontWeight: 500, marginBottom: '4px' }}>{rule.name}</div>
-                  <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>{rule.detail}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 5. Evidence */}
-      {evidence && evidence.length > 0 && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Evidence</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-            {evidence.map((ev, idx) => (
-              <div key={idx} style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '16px', borderRadius: '8px' }}>
-                <div style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', marginBottom: '8px' }}>{ev.label}</div>
-                <div style={{ color: '#f8fafc', fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>{ev.value}</div>
-                <div style={{ color: getStatusColor(ev.status), fontSize: '12px', fontWeight: 'bold' }}>{ev.status}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 6. Monitoring */}
-      {monitoring && monitoring.length > 0 && (
-        <section style={{ marginBottom: '40px' }}>
-          <h3 style={{ color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Monitoring</h3>
-          <div style={{ background: '#1e293b', padding: '20px', borderRadius: '8px' }}>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#cbd5e1', lineHeight: '1.6' }}>
-              {monitoring.map((item, idx) => (
-                <li key={idx} style={{ marginBottom: '8px' }}>
-                  <strong style={{ color: '#f8fafc' }}>{item.label}:</strong> {item.detail}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
-
-      {/* 7. Decision Metadata */}
-      {decisionMetadata && (
-        <section style={{ borderTop: '1px solid #1e293b', paddingTop: '24px' }}>
-          <h3 style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Decision Metadata</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', fontSize: '13px' }}>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>Decision ID</div><div style={{ color: '#94a3b8', fontFamily: 'monospace' }}>{decisionMetadata.decisionId}</div></div>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>Generated At</div><div style={{ color: '#94a3b8' }}>{decisionMetadata.generatedAt}</div></div>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>Engine Version</div><div style={{ color: '#94a3b8' }}>{decisionMetadata.engineVersion}</div></div>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>MOSI Version</div><div style={{ color: '#94a3b8' }}>{decisionMetadata.mosiVersion}</div></div>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>Rules Version</div><div style={{ color: '#94a3b8' }}>{decisionMetadata.rulesVersion}</div></div>
-            <div><div style={{ color: '#64748b', marginBottom: '2px' }}>Snapshot Timestamp</div><div style={{ color: '#94a3b8' }}>{decisionMetadata.snapshotTimestamp}</div></div>
-          </div>
-        </section>
-      )}
+      </div>
     </div>
   );
 }

@@ -978,6 +978,12 @@ User insight that drove the fix: "till yesterday Swing Momentum page identified 
 
 # **MRI Session Logs
 
+## August 1, 2026 - CAI Decision Framework V4.0 Architectural Planning
+- Received and reviewed `01 Aug 26 UIUX.md` (PRD-018) detailing Version 4.0.
+- Logged Decision 110: Shift to multi-strategy institutional platform with decoupled pipeline (Regime, Policy, Explanation services).
+- Authored the execution plan `docs/CAI_DECISION_FRAMEWORK_V4.0_PLAN.md` breaking implementation into 5 phases.
+- Pending user approval before initiating Phase 1.
+
 ## August 1, 2026 - CAI Decision Ladder V2.1 Operationalization Complete
 - Formally modeled the V2.1 Decision Engine using strict Pydantic schemas enforcing the core contract (`why_not_add`, `confidence`, `stability`).
 - Implemented and migrated the Postgres Database Schema (`cai_v2_decision_snapshots`, `cai_v2_state_transitions`, `cai_v2_decision_ledger`, `cai_v2_notification_locks`).

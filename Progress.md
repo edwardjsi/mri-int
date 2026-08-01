@@ -1382,6 +1382,10 @@ Most top Indian large-caps give directional/qualitative guidance, not specific n
 - [x] Developed `engine_fundamental/aae_orchestrator.py` to unify Layers 0-4.
 - [x] Implemented # Master Progress Tracker
 
+## August 1, 2026 - CAI Decision Framework V4.0 Planning
+- **Status:** PENDING APPROVAL
+- **Upcoming Work:** Multi-strategy configuration, Market Regime Service, Portfolio Policy Engine, and UI/UX Traceability Modals (PRD-018).
+
 ## August 1, 2026 - CAI Decision Ladder V2.1 Integration Complete
 - **Status:** COMPLETED
 - **Features Shipped:** 
