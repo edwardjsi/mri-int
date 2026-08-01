@@ -5,20 +5,23 @@ This document serves as the immutable source of truth for terminology across the
 | Term | Canonical Meaning |
 |------|-------------------|
 | **Threshold** | A mathematically computed price boundary. Never contains business logic. |
-| **Decision** | The final, deterministic recommendation produced after evaluating thresholds, evidence, and portfolio policy. |
-| **Evidence** | Structured, objective information derived from one or more observations by deterministic rules. |
+| **Decision** | The final portfolio recommendation produced after resolving technical, fundamental, portfolio, market, and policy evidence. |
+| **Evidence** | One or more validated observations that support or weaken an investment hypothesis. |
+| **Hypothesis** | A testable proposition about a stock's future trajectory, combining multiple inferences (e.g. "Growth story intact"). |
 | **Rule** | A deterministic function that produces evidence. |
 | **Policy** | Portfolio-level governance that constrains decisions. |
 | **Structure** | The current technical integrity of the trend. |
 | **Opportunity** | Conditions under which additional capital may be deployed. |
 | **Risk** | Conditions under which capital protection becomes increasingly important. |
-| **Observation** | An objective fact detected from data before any interpretation. |
-| **Inference** | A conclusion drawn from one or more pieces of evidence. |
-| **Decision Engine** | The orchestration layer that combines evidence, thresholds, rules, and policies into a single decision. |
+| **Observation** | A raw, deterministic fact extracted directly from technical, fundamental, portfolio, or market data before any interpretation. |
+| **Inference** | An intermediate conclusion derived from one or more pieces of evidence. Inferences are inputs to portfolio decisions but are not themselves recommendations. |
 | **Decision State** | The current lifecycle state of a position (`ADD`, `HOLD`, `ALERT`, `STRUCTURE`, `QUIT`). |
 | **MOSI** | Management, Operations, Strategy, and Industry. The fundamental intelligence engine evaluating structured and unstructured corporate data. |
 | **Threshold Engine** | Pure mathematical engine that computes technical price boundaries. |
-| **Evidence Engine** | The collection of Rule Engines that transform observations into structured evidence consumed by the Decision Engine. |
+| **Evidence Engine** | The collection of Rule Engines that transform observations into structured evidence. |
+| **Inference Engine** | Aggregates evidence into intermediate hypotheses about the stock. |
+| **Policy Engine** | Applies portfolio-level constraints (e.g., maximum allocation, regime locks) to filter permissible inferences. |
+| **Resolution Engine** | Orchestrates the complete decision process by resolving thresholds, inferences, and policies into a single decision. |
 
 ---
 
@@ -27,34 +30,34 @@ This document serves as the immutable source of truth for terminology across the
 This diagram defines how the core concepts and engines interact sequentially:
 
 ```text
-Observation
-        │
-        ▼
-Rule
-        │
-produces
-        ▼
-Evidence
-        │
-combined by
-        ▼
-Decision Engine
-        │
-constrained by
-        ▼
-Policy
-        │
-produces
-        ▼
-Decision
-        │
-represented by
-        ▼
-Decision State
-        │
-displayed as
-        ▼
-Decision Ladder
+                 DATA
+                   │
+                   ▼
+        Observation Engines
+                   │
+                   ▼
+             Rule Engines
+                   │
+                   ▼
+          Evidence Engine
+                   │
+                   ▼
+          Inference Engine
+                   │
+                   ▼
+           Policy Engine
+                   │
+                   ▼
+        Resolution Engine
+                   │
+                   ▼
+              Decision
+                   │
+                   ▼
+          Decision State
+                   │
+                   ▼
+         Decision Ladder UI
 ```
 
 ---
@@ -69,9 +72,9 @@ This is the single responsibility contract for the platform:
 | Market Structure Engine | Identifies trend, swings, support, resistance      | Generates recommendations |
 | Threshold Engine        | Calculates technical price levels                  | Applies business rules    |
 | Rule Engine             | Produces evidence from observations                | Makes final decisions     |
+| Inference Engine        | Generates hypotheses from evidence                 | Recommends buys or sells  |
 | Policy Engine           | Applies portfolio constraints                      | Calculates indicators     |
-| Resolution Engine       | Resolves thresholds and evidence into one decision | Changes portfolio         |
-| Decision Engine         | Orchestrates the complete decision process         | Performs UI rendering     |
+| Resolution Engine       | Resolves thresholds, inferences, and policies into one decision | Changes portfolio directly |
 
 ---
 
@@ -80,16 +83,20 @@ This is the single responsibility contract for the platform:
 The information flow through the platform must remain strictly unidirectional:
 
 ```text
-Data
-  ↓
+Raw Data
+      ↓
 Observations
-  ↓
+      ↓
 Evidence
-  ↓
-Inference
-  ↓
+      ↓
+Inferences
+      ↓
+Policies
+      ↓
 Decision
-  ↓
+      ↓
+Decision State
+      ↓
 Investor Action
 ```
 
