@@ -25,10 +25,10 @@ interface Holding {
   symbol: string;
   decision: DecisionState;
   price: number | null;
-  next_add: number | null;
-  alert: number | null;
-  structure: number | null;
-  quit: number | null;
+  add_level: number | null;
+  alert_level: number | null;
+  structure_level: number | null;
+  quit_level: number | null;
   status: string | null;
 }
 
@@ -62,10 +62,10 @@ export default function CaiV2Dashboard() {
         symbol: p.symbol,
         decision: decision,
         price: p.current_price || p.average_price || 0,
-        next_add: p.next_add || null,
-        alert: p.alert_level || null,
-        structure: p.structure_level || null,
-        quit: p.quit_level || null,
+        add_level: p.add_level || null,
+        alert_level: p.alert_level || null,
+        structure_level: p.structure_level || null,
+        quit_level: p.quit_level || null,
         status: p.status || p.thresholds_status || null
       };
     });
@@ -225,10 +225,10 @@ export default function CaiV2Dashboard() {
                       <td className={`px-4 py-3 font-mono ${isNearAlert ? 'font-bold border-l-4 border-amber-500' : ''}`}>
                         {formatPrice(h.price) || '-'}
                       </td>
-                      <td className="px-4 py-3 font-mono text-gray-500">{formatThreshold(h.next_add, h.status)}</td>
-                      <td className="px-4 py-3 font-mono text-amber-600">{formatThreshold(h.alert, h.status)}</td>
-                      <td className="px-4 py-3 font-mono text-orange-600">{formatThreshold(h.structure, h.status)}</td>
-                      <td className="px-4 py-3 font-mono text-red-600">{formatThreshold(h.quit, h.status)}</td>
+                      <td className="px-4 py-3 font-mono text-gray-500">{formatThreshold(h.add_level, h.status)}</td>
+                      <td className="px-4 py-3 font-mono text-amber-600">{formatThreshold(h.alert_level, h.status)}</td>
+                      <td className="px-4 py-3 font-mono text-orange-600">{formatThreshold(h.structure_level, h.status)}</td>
+                      <td className="px-4 py-3 font-mono text-red-600">{formatThreshold(h.quit_level, h.status)}</td>
                     </tr>
                   );
                 })

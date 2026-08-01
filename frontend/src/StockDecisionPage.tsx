@@ -43,7 +43,7 @@ export function StockDecisionPage() {
               whatNext: pos.cai_what_next || 'Hold position and wait for next signal.'
             },
             thresholds: [
-              { level: 'Next Add', price: pos.next_add, type: 'ADD' },
+              { level: 'Next Add', price: pos.add_level, type: 'ADD' },
               { level: 'Alert', price: pos.alert_level, type: 'ALERT' },
               { level: 'Structure', price: pos.structure_level, type: 'STRUCTURE' },
               { level: 'Quit', price: pos.quit_level, type: 'QUIT' }
