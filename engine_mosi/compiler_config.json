@@ -1,0 +1,16 @@
+{
+    "schema_version": "1.0",
+    "supported_documents": [
+        "MOSI",
+        "Quarterly Results",
+        "Concall"
+    ],
+    "llm": "GPT-4o",
+    "temperature": 0,
+    "rules": [
+        {
+            "id": "RULE-COMP-001",
+            "description": "Never guess or hallucinate metrics."
+        }
+    ]
+}
