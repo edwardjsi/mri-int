@@ -89,26 +89,25 @@ def compute_thresholds(inputs: dict):
     sl = inputs["swing_low"]
     bo = inputs["breakout_level"]
     
-    # 1. Quit Level
+    # 1. Anchor: Structure Level
     if sl is not None:
-        quit_level = sl
+        structure_level = sl
     elif ema_50 is not None:
-        quit_level = ema_50
-    else:
-        quit_level = None # NOT_COMPUTED trigger
-        
-    # 2. Structure Level
-    if ema_50 is not None:
         structure_level = ema_50
     elif ema_20 is not None:
         structure_level = ema_20
     else:
-        structure_level = sl
+        structure_level = None
         
-    # 3. Alert Level
-    alert_level = ema_20
-    
-    # 4. Add Level
+    # 2. Derived: Alert and Quit
+    if structure_level is not None:
+        alert_level = structure_level * 1.05
+        quit_level = structure_level * 0.95
+    else:
+        alert_level = None
+        quit_level = None
+        
+    # 3. Add Level
     if bo is not None:
         add_level = bo
     else:
