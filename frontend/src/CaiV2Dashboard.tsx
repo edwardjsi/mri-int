@@ -5,7 +5,7 @@ import { apiFetch } from './api';
 // Semantic decision colors
 const STATE_COLORS = {
   ADD: '#10B981',
-  MAINTAIN: '#3B82F6',
+  HOLD: '#3B82F6',
   ALERT: '#F59E0B',
   STRUCTURE: '#F97316',
   QUIT: '#EF4444'
@@ -18,7 +18,7 @@ const STATE_PRIORITY: Record<DecisionState, number> = {
   STRUCTURE: 2,
   ALERT: 3,
   ADD: 4,
-  MAINTAIN: 5
+  HOLD: 5
 };
 
 interface Holding {
@@ -57,7 +57,7 @@ export default function CaiV2Dashboard() {
     if (!portfolio || !portfolio.positions) return [];
     return portfolio.positions.map((p: any) => {
       // Map API data if available, fallback gracefully
-      const decision = (p.decision || p.cai_state || 'MAINTAIN') as DecisionState;
+      const decision = (p.decision_state || 'HOLD') as DecisionState;
       return {
         symbol: p.symbol,
         decision: decision,
@@ -84,7 +84,7 @@ export default function CaiV2Dashboard() {
     return counts;
   }, [holdings]);
 
-  const actionsToday = holdings.filter(h => h.decision !== 'MAINTAIN');
+  const actionsToday = holdings.filter(h => h.decision !== 'HOLD' && h.decision !== 'NOT_COMPUTED');
   const sortedHoldings = useMemo(() => {
     return [...holdings].sort((a, b) => STATE_PRIORITY[a.decision] - STATE_PRIORITY[b.decision]);
   }, [holdings]);

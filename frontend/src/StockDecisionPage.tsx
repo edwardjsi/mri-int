@@ -5,7 +5,7 @@ import { apiFetch } from './api';
 // Semantic decision colors from UX Spec
 const STATE_COLORS = {
   ADD: '#10B981',
-  MAINTAIN: '#3B82F6',
+  HOLD: '#3B82F6',
   ALERT: '#F59E0B',
   STRUCTURE: '#F97316',
   QUIT: '#EF4444'
@@ -27,7 +27,7 @@ export function StockDecisionPage() {
         const pos = portfolio.positions?.find((p: any) => p.symbol === symbol);
         
         if (pos) {
-          const decision = (pos.decision || pos.cai_state || 'MAINTAIN') as DecisionState;
+          const decision = (pos.decision_state || 'HOLD') as DecisionState;
           setData({
             symbol: pos.symbol,
             currentPrice: pos.current_price || pos.average_price || 0,
@@ -40,7 +40,7 @@ export function StockDecisionPage() {
             narrative: {
               why: pos.cai_why || 'Waiting for CAI Engine weekly batch run.',
               whyNow: pos.cai_why_now || 'No immediate structural action triggered.',
-              whatNext: pos.cai_what_next || 'Maintain position and wait for next signal.'
+              whatNext: pos.cai_what_next || 'Hold position and wait for next signal.'
             },
             thresholds: [
               { level: 'Next Add', price: pos.next_add, type: 'ADD' },
@@ -74,9 +74,9 @@ export function StockDecisionPage() {
   });
 
   const getStateStyle = (state: DecisionState) => ({
-    backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.MAINTAIN}20`,
-    color: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
-    borderColor: STATE_COLORS[state] || STATE_COLORS.MAINTAIN,
+    backgroundColor: `${STATE_COLORS[state] || STATE_COLORS.HOLD}20`,
+    color: STATE_COLORS[state] || STATE_COLORS.HOLD,
+    borderColor: STATE_COLORS[state] || STATE_COLORS.HOLD,
     borderWidth: '1px',
     borderStyle: 'solid'
   });

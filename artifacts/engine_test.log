@@ -1,0 +1,68 @@
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:4: DeprecationWarning: 
+Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+(to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+but was not found to be installed on your system.
+If this would cause problems for you,
+please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+        
+  import pandas as pd
+INFO:__main__:Loading active CAI positions...
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+/home/immanuels/Desktop/mri-int/engine_core/cai_decision_ladder_engine.py:40: UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+  df = pd.read_sql_query(query, conn, params=(symbol,))
+DEBUG: LOADING root db.py from /home/immanuels/Desktop/mri-int/db.py
+
+Decision Ladder Batch Summary
+=============================
+Algorithm: DL-2.0
+Processed: 21 positions
+
+ADD: 0
+HOLD: 19
+ALERT: 0
+STRUCTURE: 0
+QUIT: 0
+NOT_COMPUTED: 2
+
+Execution Time: 3.87 seconds
+Completed Successfully
+

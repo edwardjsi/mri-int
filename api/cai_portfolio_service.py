@@ -32,6 +32,12 @@ class PositionResponse(BaseModel):
     allocation: float
     tranche: int
     status: str
+    decision_state: Optional[str] = None
+    add_level: Optional[float] = None
+    alert_level: Optional[float] = None
+    structure_level: Optional[float] = None
+    quit_level: Optional[float] = None
+    decision_calculated_at: Optional[str] = None
 
 class PortfolioResponse(BaseModel):
     id: str
@@ -72,7 +78,9 @@ def get_portfolio_endpoint(client=Depends(get_current_client), conn=Depends(get_
         
         cur.execute(
             """
-            SELECT id, symbol, quantity, average_price, allocation, tranche, status
+            SELECT id, symbol, quantity, average_price, allocation, tranche, status,
+                   decision_state, add_level, alert_level, structure_level, quit_level,
+                   CAST(decision_calculated_at AS VARCHAR) as decision_calculated_at
             FROM cai_position
             WHERE portfolio_id = %s AND status = 'ACTIVE'
             ORDER BY symbol ASC
