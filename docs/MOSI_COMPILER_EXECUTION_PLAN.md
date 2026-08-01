@@ -1,23 +1,43 @@
 # Execution Statement: MOSI Compiler v1.0
 
 ## 1. Objective
-To implement the single end-to-end vertical slice for the MOSI Compiler as specified in `01 Aug 26 Mosi Compiler1.0.md`. This will establish the foundational pipeline for extracting structured knowledge from research documents into deterministic JSON artifacts.
+**Prove that a single MOSI report can be transformed into a complete, auditable, versioned Company Knowledge Base.** 
+The goal is not just writing code; it is proving the extraction pipeline works reliably and immutably.
 
-## 2. Status
-The architecture and documentation phase is **FROZEN**. We have now shifted entirely to implementation and execution.
+## 2. Compilation Status Lifecycle
+Every company will possess exactly one compilation status state:
+`NOT_STARTED` → `COMPILING` → `COMPILED` → `VALIDATED` → `FAILED`
 
-## 3. Work Completed
-1. **Created Compiler Script (`engine_mosi/mosi_compiler.py`)**: 
-   Implemented the `MosiCompiler` class which simulates the exact deterministic ingestion of a MOSI report, producing the required 4 JSON output artifacts:
-   - `company_facts.json` (Atomic, un-nested raw extracted facts with explicit evidence grounding and confidence origin)
-   - `company_knowledge.json` (Entity Identity and Management Expansion Schemas)
-   - `extraction_report.json` (Diagnostic execution telemetry)
-   - `knowledge_manifest.json` (Lightweight metadata index)
-2. **Created Config (`engine_mosi/compiler_config.json`)**: 
-   Configures schema version, supported document types, LLM settings, and anti-hallucination rules.
+## 3. Explicit Architectural Boundary
+> **The compiler must not call any CAI Decision, Rule, Evidence, Inference, Policy, or Resolution engine. Its sole responsibility ends with producing structured knowledge artifacts.**
 
-## 4. Next Steps (Action Items)
-- Execute the compiler locally with `python engine_mosi/mosi_compiler.py` to verify output artifact structures.
-- Map the JSON output artifacts to a simple "Company Knowledge" UI page.
-- Replace the mock extraction in `mosi_compiler.py` with actual deterministic parsing and strictly controlled LLM extractions, ensuring rigorous `verify_evidence` string grounding.
-- Validate that the compiler runs idempotently against Granules historical documents without mutation.
+## 4. Deliverables
+1. `company_facts.json`
+2. `company_knowledge.json`
+3. `extraction_report.json`
+4. `knowledge_manifest.json`
+5. **Company Knowledge Debugging UI Page**: A simple page capable of displaying Granules' Business, Plants, Products, Management, Financials, Risks, Facts, Evidence, and the Compiler Report to visually inspect output.
+
+## 5. Implementation Milestones
+
+### Milestone 1: The Pipeline Proof (Mock to UI)
+Build the entire pipeline using manually prepared JSON output from one "Golden MOSI" report.
+- Establish the **Golden MOSI** (Granules MOSI report frozen in time as a permanent regression test).
+- Process the mock data through the compiler script to produce the exactly formatted 4 JSON files.
+- Render the JSON onto the Company Knowledge UI Page.
+
+### Milestone 2: AI Extraction Integration
+Only after Milestone 1 works flawlessly:
+- Replace the mock JSON with true deterministic parsing and LLM extraction.
+- Apply rigorous `verify_evidence` string grounding.
+
+## 6. Acceptance Tests (Definition of Done for V1)
+- [ ] Four artifacts created.
+- [ ] Zero hallucinated fields.
+- [ ] All evidence links resolve.
+- [ ] Every fact has an ID.
+- [ ] Every entity has an ID.
+- [ ] Every fact has temporal context.
+- [ ] Every fact has provenance.
+- [ ] Compiler is deterministic (running twice produces identical output).
+- [ ] Company Knowledge page renders without errors against the Golden MOSI.
