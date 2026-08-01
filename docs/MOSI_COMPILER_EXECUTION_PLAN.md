@@ -11,18 +11,50 @@ Every company will possess exactly one compilation status state:
 ## 3. Explicit Architectural Boundary
 > **The compiler must not call any CAI Decision, Rule, Evidence, Inference, Policy, or Resolution engine. Its sole responsibility ends with producing structured knowledge artifacts.**
 
-## 4. Deliverables
+## 4. Explicit Non-Goals (V1)
+The MOSI Compiler does NOT:
+- calculate indicators
+- create observations
+- create evidence
+- create inferences
+- create hypotheses
+- calculate scores
+- generate recommendations
+- evaluate portfolio policy
+- compare quarters
+- merge historical knowledge
+
+Those responsibilities belong to downstream engines.
+
+## 5. Compiler Contract
+**Input:**
+- One MOSI Report
+
+**Output:**
+- One immutable Company Knowledge Version
+
+**Properties:**
+- Deterministic
+- Repeatable
+- Auditable
+- Versioned
+- Explainable
+
+## 6. Deliverables
 1. `company_facts.json`
 2. `company_knowledge.json`
 3. `extraction_report.json`
 4. `knowledge_manifest.json`
 5. **Company Knowledge Debugging UI Page**: A simple page capable of displaying Granules' Business, Plants, Products, Management, Financials, Risks, Facts, Evidence, and the Compiler Report to visually inspect output.
 
-## 5. Implementation Milestones
+## 7. Implementation Milestones
 
 ### Milestone 1: The Pipeline Proof (Mock to UI)
 Build the entire pipeline using manually prepared JSON output from one "Golden MOSI" report.
-- Establish the **Golden MOSI** (Granules MOSI report frozen in time as a permanent regression test).
+- Establish the **Golden MOSI**:
+  - **Company**: Granules India
+  - **Purpose**: Permanent regression dataset.
+  - **Rule**: This report SHALL NEVER change. Every future compiler version must successfully compile this report. If a new compiler cannot reproduce the Golden MOSI outputs, the build fails.
 - Process the mock data through the compiler script to produce the exactly formatted 4 JSON files.
 - Render the JSON onto the Company Knowledge UI Page.
 
@@ -31,7 +63,7 @@ Only after Milestone 1 works flawlessly:
 - Replace the mock JSON with true deterministic parsing and LLM extraction.
 - Apply rigorous `verify_evidence` string grounding.
 
-## 6. Acceptance Tests (Definition of Done for V1)
+## 8. Acceptance Tests (Definition of Done for V1)
 - [ ] Four artifacts created.
 - [ ] Every extracted field must either be traceable to explicit source evidence, or be null.
 - [ ] All evidence links resolve.
