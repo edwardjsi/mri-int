@@ -4,6 +4,13 @@
 
 This execution plan operationalizes the strictly scoped, deterministic Decision Ladder Engine. It enforces the anti-hallucination directives (no text narratives, backend-owned states, no probabilistic scores).
 
+## Architectural Principles
+1. **Backend is the Single Source of Truth:** All Decision Ladder calculations are performed in Python.
+2. **React is Presentation Only:** The frontend performs zero business logic and only renders backend-provided values.
+3. **Deterministic Engine:** Identical technical inputs must always produce identical outputs.
+4. **Technical Data Only:** Version 2.0 uses MRI technical inputs exclusively. No MOSI, fundamentals, AI narratives, or probabilistic adjustments.
+5. **Weekly Evaluation:** Decision Ladder values are generated once per week after Friday market close and remain valid until the next scheduled calculation.
+
 ## Phase 1: Database Infrastructure
 * **Task:** Create migration script to alter the `cai_position` table.
 * **Details:** 
@@ -15,7 +22,7 @@ This execution plan operationalizes the strictly scoped, deterministic Decision 
 * **Details:**
   - **Input:** Query the existing MRI technical tables to extract all technical inputs required by the approved Decision Ladder algorithm for all active CAI positions.
   - **Algorithm:** Compute the four deterministic thresholds using the approved Decision Ladder algorithm. The engine must be deterministic: identical technical inputs must always produce identical outputs. 
-  - **State Calculation:** The backend must explicitly determine the `decision_state` (e.g., `ADD`, `HOLD`/`MAINTAIN`, `ALERT`, `STRUCTURE`, `QUIT`).
+  - **State Calculation:** The backend must explicitly determine the `decision_state` (e.g., `ADD`, `HOLD`, `ALERT`, `STRUCTURE`, `QUIT`).
   - **Output:** Update the existing `cai_position` row. No text generation, no confidence scoring.
 
 ## Phase 3: API Contract Update (`api/cai_portfolio_service.py`)
