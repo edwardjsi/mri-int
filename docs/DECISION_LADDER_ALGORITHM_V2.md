@@ -20,8 +20,8 @@ The engine requires the following weekly technical data for each position:
 ### 1. Add Level
 **Definition:** The price point at which the position demonstrates sufficient breakout strength to warrant additional capital.
 **Rule:** 
-`add_level = max(current_price * 1.05, swing_high)`
-*(Implementation logic: The Add level is positioned above the current action, requiring the stock to either clear the recent swing high or demonstrate a 5% upward momentum thrust).*
+`add_level` is defined as the lowest price that objectively confirms renewed strength after the current consolidation.
+*(Implementation logic: The specific computation delegates to the approved MRI breakout or swing high rule, rather than a simplistic multiplier).*
 
 ### 2. Alert Level
 **Definition:** The early warning boundary indicating momentum deceleration.
@@ -71,8 +71,8 @@ The backend must resolve the `decision_state` by evaluating conditions in this s
 To guarantee mathematical determinism, the engine must execute the following fallback rules universally:
 
 ### 1. Missing Swing Lows / Highs (e.g., IPOs, Straight Parabolic Runs)
-* **Rule:** If `swing_low` is NULL, fallback to `ema_50_w`. If `ema_50_w` is also NULL, fallback to `current_price * 0.80` (arbitrary 20% trailing stop floor).
-* **Rule:** If `swing_high` is NULL (e.g., all-time highs), `add_level` evaluates strictly to `current_price * 1.05`.
+* **Rule:** If `swing_low` is NULL, fallback to `ema_50_w`. If `ema_50_w` is also NULL, the system must set `decision_state = 'NOT_COMPUTED'`. A deterministic engine must not manufacture technical levels from arbitrary percentages.
+* **Rule:** If `swing_high` is NULL, `add_level` evaluates via the approved breakout rule if possible.
 
 ### 2. Missing EMAs (Recent IPOs < 50 weeks)
 * **Rule:** If `ema_50_w` is NULL, the `structure_level` evaluates to the 20-week EMA (`ema_20_w`). If `ema_20_w` is also NULL, the `structure_level` evaluates to the recent `swing_low`.
@@ -83,11 +83,13 @@ To guarantee mathematical determinism, the engine must execute the following fal
 ### 4. Gaps and Friday Closes
 * **Rule:** The engine only evaluates the *Friday Close*. Intraday gaps or mid-week wicks below thresholds are strictly ignored by this batch engine.
 
-### 5. Stage 1 Bases
-* **Rule:** If the stock is moving sideways and the 20-EMA / 50-EMA / Swing Lows are completely compressed (e.g., within 2% of each other), the mathematical outputs remain exactly as formulated. The State Resolution Priority cleanly handles the tight compression. 
+### 5. Stage 1 Bases (Sideways Compression)
+* **Rule:** If the stock is moving sideways and the 20-EMA / 50-EMA / Swing Lows are completely compressed, the mathematical outputs remain as formulated. However, the engine evaluates an internal metadata flag `decision_quality = 'LOW'` to distinguish these mechanically correct but contextually weak ladders from high-quality trends (`decision_quality = 'NORMAL'`).
 
 ### 6. Rounding Convention
 * **Rule:** All output thresholds must be mathematically rounded to the nearest two decimal places (`ROUND(value, 2)`) before insertion into the database to match PostgreSQL `DECIMAL(10,2)`.
 
 ### 7. Triggering `NOT_COMPUTED`
-* **Rule:** The ONLY condition that produces a `NOT_COMPUTED` state is if `current_price` (Weekly Close) is entirely missing from the upstream data feed (e.g., stock delisted, upstream data failure). If price exists, the engine *must* compute the ladder via fallbacks.
+* **Rule:** The system sets `decision_state = 'NOT_COMPUTED'` under exactly two conditions:
+  1. `current_price` (Weekly Close) is entirely missing from the upstream data feed.
+  2. The asset lacks enough history to compute both the primary support (`swing_low`) and the fallback support (`ema_50_w`).
