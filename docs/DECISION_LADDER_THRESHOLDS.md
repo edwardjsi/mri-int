@@ -34,10 +34,10 @@ The Decision Ladder uses a mathematically rigid **Derived Anchor Model**. This m
 *(Implementation logic: This serves as the absolute anchor for the entire downside ladder. It marks the last major structural pivot).*
 
 ### 3. Risk Alert Level
-**Definition:** A volatility-adjusted distance above the anchor.
+**Definition:** The earliest level where historical evidence shows structural failure becomes materially more probable.
 **Rule:**
 `alert_level = structure_level + (1 * atr_14_w)`
-*(Implementation logic: By scaling with ATR, high-beta stocks get a wider warning buffer, and defensive stocks get a tighter one).*
+*(Implementation logic: Alert should mean "approaching failure". We initially approximate this boundary using 1 Average True Range above the structure level. In future iterations, this may evolve into a dynamic probability score without changing the core product philosophy.)*
 
 ### 4. Technical Exit Level (Quit)
 **Definition:** A volatility-adjusted confirmation distance below the anchor.

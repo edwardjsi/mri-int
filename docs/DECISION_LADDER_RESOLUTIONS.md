@@ -12,6 +12,9 @@ The Decision Ladder separates opportunity from risk:
 
 **Core Tenet:** A stock should remain in `HOLD` for most of its life. The engine must *not* issue a Risk Alert during a normal market pullback. Risk Alert is strictly reserved for when a stock approaches the zone of possible structural failure.
 
+**The Decision Ladder is asymmetric.**
+The Opportunity Flow (Next Add) exists to deploy capital selectively. The Risk Flow exists to preserve capital. These flows are independent and must never be mathematically coupled.
+
 ---
 
 ## 2. Investor Action Matrix
@@ -41,7 +44,8 @@ The backend engine evaluates the mathematical thresholds against the `current_pr
 * `IF current_price >= structure_level AND current_price < alert_level THEN decision_state = 'ALERT'`
 
 **Priority 4: ADD**
-* `IF current_price >= add_level THEN decision_state = 'ADD'`
+* `IF current_price >= add_level AND breakout_confirmed AND portfolio_eligible THEN decision_state = 'ADD'`
+* *Note: Price crossing the Add line does not automatically mean buy. The MRI Breakout Engine and Portfolio Policy must independently confirm.*
 
 **Priority 5: HOLD (Default)**
 * `ELSE decision_state = 'HOLD'`
@@ -58,13 +62,12 @@ The engine evaluates the `decision_quality` to indicate confidence in the ladder
 * **NORMAL:** Ladder derived normally from EMAs (fallback).
 * **LOW:** Ladder mathematically derived but visually compressed (Stage 1 base) or missing data.
 
-### Future Specification (V3.0)
-The REST API should eventually return self-explaining thresholds. Example:
+### Provenance Tracking (V2.1 Requirement)
+Every calculated threshold must store its mathematical provenance. Example payload mapping:
 ```json
 {
     "structure": 1728.37,
     "reason": "Primary weekly higher low",
-    "derived_from": "PRIMARY_SWING_LOW",
-    "swing_date": "2026-06-05"
+    "derived_from": "PRIMARY_SWING_LOW"
 }
 ```
