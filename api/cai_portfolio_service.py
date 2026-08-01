@@ -38,6 +38,7 @@ class PositionResponse(BaseModel):
     structure_level: Optional[float] = None
     quit_level: Optional[float] = None
     decision_calculated_at: Optional[str] = None
+    current_price: Optional[float] = None
 
 class PortfolioResponse(BaseModel):
     id: str
@@ -78,12 +79,18 @@ def get_portfolio_endpoint(client=Depends(get_current_client), conn=Depends(get_
         
         cur.execute(
             """
-            SELECT id, symbol, quantity, average_price, allocation, tranche, status,
-                   decision_state, add_level, alert_level, structure_level, quit_level,
-                   CAST(decision_calculated_at AS VARCHAR) as decision_calculated_at
-            FROM cai_position
-            WHERE portfolio_id = %s AND status = 'ACTIVE'
-            ORDER BY symbol ASC
+            SELECT cp.id, cp.symbol, cp.quantity, cp.average_price, cp.allocation, cp.tranche, cp.status,
+                   cp.decision_state, cp.add_level, cp.alert_level, cp.structure_level, cp.quit_level,
+                   CAST(cp.decision_calculated_at AS VARCHAR) as decision_calculated_at,
+                   dp.close as current_price
+            FROM cai_position cp
+            LEFT JOIN (
+                SELECT symbol, close
+                FROM daily_prices
+                WHERE date = (SELECT MAX(date) FROM daily_prices)
+            ) dp ON cp.symbol = dp.symbol
+            WHERE cp.portfolio_id = %s AND cp.status = 'ACTIVE'
+            ORDER BY cp.symbol ASC
             """,
             (portfolio["id"],)
         )
