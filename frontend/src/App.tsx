@@ -2744,6 +2744,7 @@ function Navigation() {
           <Link to="/extractor" className={`nav-link ${page === 'extractor' ? 'active' : ''}`}><span className="nav-icon">🧠</span> Ontology Engine</Link>
           <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}><span className="nav-icon">📋</span> Decision Ledger</Link>
           <Link to="/mosi" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Company Knowledge</Link>
+          <Link to="/company/GRANULES" className={`nav-link ${page === 'company' ? 'active' : ''}`}><span className="nav-icon">🔬</span> CIW Debugger</Link>
           
           {/* Restored links */}
           <Link to="/signals" className={`nav-link ${page === 'signals' ? 'active' : ''}`}><span className="nav-icon">📈</span> Signal Dashboard</Link>
@@ -2779,6 +2780,7 @@ function Navigation() {
         <Link to="/extractor" className={`mobile-nav-link ${page === 'extractor' ? 'active' : ''}`} title="Ontology Engine">🧠</Link>
         <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
         <Link to="/mosi" className={`mobile-nav-link ${page === 'mosi' ? 'active' : ''}`} title="Company Knowledge">📚</Link>
+        <Link to="/company/GRANULES" className={`mobile-nav-link ${page === 'company' ? 'active' : ''}`} title="CIW Debugger">🔬</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
     </>
