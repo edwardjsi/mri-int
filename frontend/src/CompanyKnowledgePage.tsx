@@ -229,19 +229,19 @@ export const CompanyKnowledgePage: React.FC = () => {
                     <div>
                         <strong>Products:</strong>
                         <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                            {knowledge.business_model.structured_entities.products.map((p: string) => <li key={p}>{p}</li>)}
+                            {(knowledge.business_model?.structured_entities?.products || []).map((p: string) => <li key={p}>{p}</li>)}
                         </ul>
                     </div>
                     <div>
                         <strong>Plants:</strong>
                         <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                            {knowledge.business_model.structured_entities.plants.map((p: string) => <li key={p}>{p}</li>)}
+                            {(knowledge.business_model?.structured_entities?.plants || []).map((p: string) => <li key={p}>{p}</li>)}
                         </ul>
                     </div>
                     <div>
                         <strong>Customer Segments:</strong>
                         <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                            {knowledge.business_model.structured_entities.customer_segments.map((p: string) => <li key={p}>{p}</li>)}
+                            {(knowledge.business_model?.structured_entities?.customer_segments || []).map((p: string) => <li key={p}>{p}</li>)}
                         </ul>
                     </div>
                 </div>
@@ -251,12 +251,12 @@ export const CompanyKnowledgePage: React.FC = () => {
             <div className="card" style={{ padding: '20px' }}>
                 <h3 style={{ marginTop: 0, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>Management</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    {Object.entries(knowledge.management).map(([key, val]: [string, any]) => {
-                        if (key === 'key_executives') return null;
+                    {Object.entries(knowledge.management || {}).map(([key, val]: [string, any]) => {
+                        if (key === 'key_executives' || !val) return null;
                         return (
                             <div key={key}>
                                 <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}:</strong>
-                                <p style={{ margin: '4px 0' }}>{val.narrative}</p>
+                                <p style={{ margin: '4px 0' }}>{val.narrative || ''}</p>
                             </div>
                         );
                     })}
@@ -264,7 +264,7 @@ export const CompanyKnowledgePage: React.FC = () => {
                 <div style={{ marginTop: '16px' }}>
                     <strong>Key Executives:</strong>
                     <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                        {knowledge.management.key_executives.map((e: any) => (
+                        {(knowledge.management?.key_executives || []).map((e: any) => (
                             <li key={e.entity_id}>{e.name} ({e.role})</li>
                         ))}
                     </ul>
@@ -286,7 +286,7 @@ export const CompanyKnowledgePage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {facts.map(f => (
+                        {(facts || []).map(f => (
                             <tr key={f.fact_id}>
                                 <td>{f.fact_id}</td>
                                 <td>{f.metric_name}</td>
