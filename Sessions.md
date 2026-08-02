@@ -1,3 +1,14 @@
+## **August 3, 2026: Investment Model Platform Completion & Dossier Pivot**
+**Objective**: Finalize the Investment Model Platform infrastructure and pivot all engineering focus toward UX and the Living Company Dossier.
+**Actions**:
+1. **Model Infrastructure Complete**: Successfully deployed generic model runner, generic ModelResultRepository, and abstract `InvestmentModel` interface. 
+2. **Model Implementations**: Ported CANSLIM and introduced RRG as generic models producing deterministic results.
+3. **Ambient Intelligence Rendering**: Injected latest model results seamlessly into Portfolio, Watchlist, and Company Dossier APIs.
+4. **Strategic Pivot**: Declared model platform complete enough. Halted plans for Piotroski/Minervini. Reprioritized roadmap: P1 - Living Company Dossier, P2 - Knowledge extraction quality, P3 - Evidence-backed rules, P4 - Portfolio UX, P5 - Watchlist UX.
+5. **New PR Rule**: Enforced mandatory `Before` (Screenshot), `After` (Screenshot), and `Investor Benefit` statement for all future pull requests.
+
+---
+
 ## **August 2, 2026: The Living Dossier Strategic Pivot**
 **Objective**: Shift the identity of the MRI platform from a "screener" to a "Living Investment Dossier" — the central hub for understanding every owned company. Documented the 4-phase roadmap to roll this out across the entire portfolio.
 **Actions**:

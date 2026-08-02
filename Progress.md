@@ -2,6 +2,36 @@
 
 ---
 
+## 📅 Session: August 3, 2026 — Investment Model Platform Completion & Dossier Pivot
+**Session Start:** ~00:20 IST
+**Session End:** ~00:50 IST
+
+### What Was Done This Session
+
+#### 1. Investment Model Infrastructure Complete ✅
+- [x] Successfully deployed generic model runner, generic ModelResultRepository, and abstract `InvestmentModel` interface.
+- [x] Ported CANSLIM and introduced RRG as generic models producing deterministic results.
+- [x] Injected latest model results seamlessly into Portfolio, Watchlist, and Company Dossier APIs.
+
+#### 2. Strategic Pivot: Living Company Dossier ✅
+- [x] Declared model platform complete enough. Halted plans for Piotroski/Minervini.
+- [x] Reprioritized roadmap to focus on UX and the Living Company Dossier.
+- [x] **P1:** Living Company Dossier (★★★★★)
+- [x] **P2:** Knowledge extraction quality (★★★★★)
+- [x] **P3:** Evidence-backed rules (★★★★★)
+- [x] **P4:** Portfolio UX (★★★★☆)
+- [x] **P5:** Watchlist UX (★★★★☆)
+- [x] **P6:** Next investment model (★★☆☆☆)
+
+#### 3. PR Mandate Updated ✅
+- [x] Updated `AGENTS.md` Rule 8 to mandate `Before` (Screenshot), `After` (Screenshot), and `Investor Benefit` statement for all future PRs.
+
+### 📌 Current Milestone
+- **Model Infrastructure Phase Completed.**
+- **Next:** Sprint to make every company in the portfolio open to a living, evidence-backed dossier answering the five core investment questions in under five minutes.
+
+---
+
 ## 📅 Session: August 2, 2026 — Company Dossier UI Feedback Implementation
 **Session Start:** ~22:30 IST
 **Session End:** ~23:20 IST
@@ -28,8 +58,13 @@
 ### 📌 Current Milestone
 - **Company Dossier V0.4 Completed:** The UI is now a 9/10, resembling an institutional analyst's initiation report with every statement backed by evidence and structured to build conviction.
 - **Strategic Pivot:** MRI identity updated from "screener" to **"The place where I understand every company I own"**.
-- **Next:** Phase 1 of the Living Dossier Roadmap — Replace every portfolio company click with the universal Investment Dossier experience, complete with an honest "Knowledge Status" state for unresearched stocks.
-
+- **Next:**
+  - P1: Living Company Dossier (★★★★★)
+  - P2: Knowledge extraction quality (★★★★★)
+  - P3: Evidence-backed rules (★★★★★)
+  - P4: Portfolio UX (★★★★☆)
+  - P5: Watchlist UX (★★★★☆)
+  - P6: Next investment model (★★☆☆☆)
 ---
 
 ## 📅 Session: August 1, 2026 — CAI MOSI Compiler Pipeline Completion

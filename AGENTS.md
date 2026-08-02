@@ -68,6 +68,9 @@ Delete mock JSON, fake repositories, stub rules, and placeholder code. Every spr
 **Rule 7 — The One-Day Rule**
 A competent investment analyst should be able to review every change from a single day's work in under 30 minutes. Limit PR size to specific, testable, measurable improvements (e.g., "Today we improved the Business section of Granules").
 
+**Rule 8 — Mandatory UX and Benefit Documentation**
+Every PR must include a "Before" screenshot, an "After" screenshot, and a one-sentence "Investor Benefit". Example: "Investor Benefit: I can immediately identify whether a holding is fundamentally strong, technically improving, and well understood without opening another screen."
+
 ### Definition of Value
 
 A change creates value if it improves at least one of the following:
