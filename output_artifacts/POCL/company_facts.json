@@ -1,0 +1,250 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Revenue",
+    "value": 2939,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-05-27",
+      "source_date": "2026-05-27"
+    },
+    "evidence": {
+      "heading": "Key Positives",
+      "paragraph_index": 1,
+      "quote": "FY26: Revenue: \u20b92,939 crore",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "EBITDA",
+    "value": 218,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-05-27",
+      "source_date": "2026-05-27"
+    },
+    "evidence": {
+      "heading": "Key Positives",
+      "paragraph_index": 1,
+      "quote": "FY26: EBITDA: \u20b9218 crore",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "PAT",
+    "value": 139,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-05-27",
+      "source_date": "2026-05-27"
+    },
+    "evidence": {
+      "heading": "Key Positives",
+      "paragraph_index": 1,
+      "quote": "FY26: PAT: \u20b9139 crore",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY27 planned capex",
+    "value": "\u20b9180\u2013200 crore",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY27",
+      "effective_date": "2026-05-27",
+      "source_date": "2026-05-27"
+    },
+    "evidence": {
+      "heading": "What Management Is Doing Right",
+      "paragraph_index": 1,
+      "quote": "FY27 planned capex: \u20b9180\u2013200 crore",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "EBITDA margin guidance",
+    "value": 8,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": null
+    },
+    "evidence": {
+      "heading": "What Management Is Doing Right",
+      "paragraph_index": 1,
+      "quote": "Management explicitly guided: EBITDA >8%",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "ROCE guidance",
+    "value": 20,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": null
+    },
+    "evidence": {
+      "heading": "What Management Is Doing Right",
+      "paragraph_index": 1,
+      "quote": "Management explicitly guided: ROCE >20%",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-1",
+    "entity_id": null,
+    "category": "BUSINESS",
+    "metric_name": "Current Stage",
+    "value": "Expansion Stage",
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": null
+    },
+    "evidence": {
+      "heading": "FINAL VERDICT",
+      "paragraph_index": 1,
+      "quote": "Current Stage: Expansion Stage",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "entity_id": null,
+    "category": "BUSINESS",
+    "metric_name": "Multi-Bagger Probability (5\u20137 yrs)",
+    "value": "Moderate",
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": null
+    },
+    "evidence": {
+      "heading": "FINAL VERDICT",
+      "paragraph_index": 1,
+      "quote": "Multi-Bagger Probability (5\u20137 yrs): Moderate",
+      "source": {
+        "document_id": "DOC-POCL-7",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

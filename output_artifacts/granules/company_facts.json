@@ -1,0 +1,188 @@
+[
+  {
+    "fact_id": "KNW-FIN-1a2b3c4d",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue CAGR",
+    "value": 24,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "Last five fiscal years",
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Financial Performance & Margins",
+      "paragraph_index": 0,
+      "quote": "Revenue CAGR has been 24% over the last five fiscal years.",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUS-5e6f7a8b",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "BUSINESS",
+    "metric_name": "Vizag Block 4 API Facility Capacity",
+    "value": 2500,
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Manufacturing Plants",
+      "paragraph_index": 0,
+      "quote": "Vizag Block 4 API Facility (Capacity: 2,500 MT, Status: Commissioned)",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUS-9c0d1e2f",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "BUSINESS",
+    "metric_name": "Vizag Block 4 API Facility Status",
+    "value": "Commissioned",
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Manufacturing Plants",
+      "paragraph_index": 0,
+      "quote": "Vizag Block 4 API Facility (Capacity: 2,500 MT, Status: Commissioned)",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-MGT-3a4b5c6d",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "MANAGEMENT",
+    "metric_name": "Forward Guidance CAGR",
+    "value": 20,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "Next three years",
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Forward Guidance",
+      "paragraph_index": 0,
+      "quote": "Management has explicitly stated they are expected to grow at 20%+ CAGR for the next three years.",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-MGT-7e8f9a0b",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "MANAGEMENT",
+    "metric_name": "Promoter Holding",
+    "value": "High",
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Promoter Skin In Game",
+      "paragraph_index": 0,
+      "quote": "High promoter holding with zero pledge, demonstrating strong conviction.",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-MGT-1c2d3e4f",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "MANAGEMENT",
+    "metric_name": "Promoter Pledge",
+    "value": "Zero",
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-08-01"
+    },
+    "evidence": {
+      "heading": "Promoter Skin In Game",
+      "paragraph_index": 0,
+      "quote": "High promoter holding with zero pledge, demonstrating strong conviction.",
+      "source": {
+        "document_id": "DOC-000145",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

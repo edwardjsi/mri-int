@@ -1,0 +1,59 @@
+{
+  "entity_id": "ENT-COMP-532966",
+  "entity_name": "Welspun Corp Limited",
+  "business_model": {
+    "narrative_summary": "Welspun Corp Limited is India's largest carbon-steel welded pipe manufacturer, focusing on large-diameter pipes for oil & gas pipelines, water transmission, and structural applications. The company is positioned to benefit from the global gas pipeline super-cycle.",
+    "structured_entities": {
+      "products": [
+        "Large-diameter carbon-steel welded pipes",
+        "Line pipes",
+        "HSAW",
+        "ERW",
+        "Coated"
+      ],
+      "plants": [
+        "India",
+        "USA",
+        "Saudi Arabia"
+      ],
+      "customer_segments": [
+        "Oil & gas pipelines",
+        "Water transmission",
+        "Structural applications"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Welspun Corp focuses on maintaining a strong balance sheet and prioritizing high returns on capital employed.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "The company has consistently met or exceeded market expectations, demonstrating strong operational performance.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management maintains a conservative approach to guidance, emphasizing realistic expectations.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management is candid about challenges in the domestic market while highlighting strengths in international operations.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The board is committed to maintaining high standards of governance and operational integrity.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoters hold a significant stake in the company, aligning their interests with those of shareholders.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Vipul Mathur",
+        "role": "MD & CEO"
+      }
+    ]
+  }
+}

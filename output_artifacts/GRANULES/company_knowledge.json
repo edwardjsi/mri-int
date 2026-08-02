@@ -1,0 +1,65 @@
+{
+  "entity_id": "ENT-COMP-GRANULES",
+  "entity_name": "Granules India Ltd",
+  "business_model": {
+    "narrative_summary": "Granules India Ltd operates in the pharmaceuticals sector, focusing on generics and contract development and manufacturing organization (CDMO) services, particularly in peptides.",
+    "structured_entities": {
+      "products": [
+        "Generics",
+        "Peptide CDMO"
+      ],
+      "plants": [
+        "Gagillapur",
+        "Genome Valley",
+        "GPI Virginia"
+      ],
+      "customer_segments": [
+        "Pharmaceutical companies",
+        "Healthcare providers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management focuses on strategic investments in R&D and capacity expansion to support growth in higher-value products.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has shown a commitment to transitioning the business model towards complex generics and CDMO services, with recent improvements in financial metrics.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management aims to achieve profitability in the peptide CDMO segment while maintaining growth in complex generics.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has improved transparency in communications, openly discussing challenges and operational details.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The board is focused on strategic oversight and ensuring compliance with regulatory standards.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is at 38%, with recent selling activity raising concerns about commitment.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Dr. K.P. Chigurupati",
+        "role": "Chairman and Managing Director"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Mukesh Surana",
+        "role": "CFO"
+      },
+      {
+        "entity_id": "ENT-EXEC-3",
+        "name": "Sanjay Kumar",
+        "role": "Strategy Head"
+      }
+    ]
+  }
+}

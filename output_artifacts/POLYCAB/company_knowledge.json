@@ -1,0 +1,62 @@
+{
+  "entity_id": "ENT-COMP-POLYCAB",
+  "entity_name": "Polycab India Ltd",
+  "business_model": {
+    "narrative_summary": "Polycab has transitioned from a market-leading wires & cables manufacturer into a diversified electrical goods powerhouse.",
+    "structured_entities": {
+      "products": [
+        "Wires and Cables",
+        "Fast-Moving Electrical Goods (FMEG)",
+        "EPC services"
+      ],
+      "plants": [
+        "Waghodia plant"
+      ],
+      "customer_segments": [
+        "Electrical infrastructure",
+        "Real estate",
+        "Renewables",
+        "Data centers",
+        "Industrial segments"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Polycab is deploying aggressive capex while maintaining a fortress balance sheet.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management consistently under-promises and over-delivers.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management maintains 1.5x industry growth directional guidance through FY30.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management openly discusses risks and has a strong governance structure.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Promoter holding at 61% provides stability and alignment.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter next generation redesignated as Joint Managing Directors in Q3 FY26.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Bharat Jaisinghani",
+        "role": "Joint Managing Director"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Nikhil Jaisinghani",
+        "role": "Joint Managing Director"
+      }
+    ]
+  }
+}

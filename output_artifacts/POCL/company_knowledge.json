@@ -1,0 +1,49 @@
+{
+  "entity_id": "ENT-COMP-POCL",
+  "entity_name": "Pondy Oxides & Chemicals Ltd",
+  "business_model": {
+    "narrative_summary": "POCL appears to be transitioning from a commodity recycling company to an organized circular-materials platform with forward integration and structural margin expansion.",
+    "structured_entities": {
+      "products": [
+        "Copper cathode",
+        "Lead",
+        "Plastics",
+        "Aluminum"
+      ],
+      "plants": [
+        "Mundra"
+      ],
+      "customer_segments": [
+        "Institutional investors",
+        "Recycling industry"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management emphasizes internal accrual funding, no long-term debt, and conservative leverage structure.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has demonstrated operational understanding and capital discipline.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management has provided guidance on EBITDA and ROCE targets.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "The company has improved its communication quality and strategic clarity.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Management has shown no reckless leverage or unrelated diversification.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Management's behavior indicates a commitment to shareholder value.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

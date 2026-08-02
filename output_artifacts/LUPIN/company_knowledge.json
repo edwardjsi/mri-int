@@ -1,0 +1,53 @@
+{
+  "entity_id": "ENT-COMP-500257",
+  "entity_name": "LUPIN Ltd",
+  "business_model": {
+    "narrative_summary": "LUPIN is focused on complex generics, including inhalation, injectables, and GLP-1, with a strategy of API backward integration.",
+    "structured_entities": {
+      "products": [
+        "Complex generics",
+        "Inhalation products",
+        "Injectables",
+        "GLP-1"
+      ],
+      "plants": null,
+      "customer_segments": [
+        "Pharmaceutical companies",
+        "Healthcare providers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": null,
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management guidance broadly matches numbers, indicating a reliable execution track record.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management has provided guidance that aligns with expected financial performance.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": null,
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": null,
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is at 46.9%, which is below 50%.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Nilesh Gupta",
+        "role": "Professional Management"
+      }
+    ]
+  }
+}

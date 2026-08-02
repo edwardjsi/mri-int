@@ -1,3 +1,32 @@
+## **August 2, 2026: The Living Dossier Strategic Pivot**
+**Objective**: Shift the identity of the MRI platform from a "screener" to a "Living Investment Dossier" — the central hub for understanding every owned company. Documented the 4-phase roadmap to roll this out across the entire portfolio.
+**Actions**:
+1. **Universal Company Route**: Simplified navigation so that clicking a ticker anywhere routes to the canonical `/company/:symbol` Investment Dossier, eliminating fragmented screens.
+2. **Knowledge Status Chips**: Added dynamic completion chips (e.g. 🟢 82%) to the portfolio dashboard so investors immediately know their knowledge coverage.
+3. **Canonical Empty States**: Ensured unresearched companies display a clean "Knowledge Status" state listing what's missing, rather than rendering an empty page.
+4. **Sidebar Simplification**: Reduced the dense left navigation to four simple categories: Portfolio, Watchlist, Research, Models, reinforcing the dossier-first UX.
+5. **Knowledge Sources Footer**: Embedded a "Knowledge Sources" section at the bottom of the dossier so users see the exact MOSI documents powering the page.
+
+---
+
+## **August 2, 2026: Company Dossier UI Feedback Implementation**
+**Objective**: Implement user feedback for the Company Dossier V0.1 to improve plain-English readability, add an Investment Snapshot, restructure product hierarchies, visual geography/footprint, and add the second tab "Why should revenue grow?". 
+**Actions**:
+1. **Verified Knowledge**: Changed 'Knowledge Confidence' to 'Verified Knowledge' for better investor-facing phrasing.
+2. **Top Card Thesis**: Added a 'Can I explain this company in 30 seconds?' summary sentence and replaced 'Why own it?' with a bulleted 'Investment Thesis'.
+3. **Impact & Evidence Metrics**: Enhanced catalyst and risk sections with hard impact numbers (e.g. '18% FY27 growth', '↓ Gross Margin') and evidence counts (e.g. '3 sources').
+4. **Ranked Growth Drivers**: Ordered growth drivers by stars (★★★★★ to ★★☆☆☆) to immediately signal their relative importance, and added evidence count badges ('4 documents, 9 quotes') to build trust.
+5. **The Trinity of Tabs**: Solidified the navigation into the essential investor trinity: Business, Growth, Risks, along with a Technical Appendix for jargon.
+6. **Sticky Investment Summary**: Replaced the "Why investors follow Granules" box with a dominant sticky header card.
+7. **Professional Missing States**: Replaced "⚠ Missing - Needs extraction" with professional "Not enough evidence yet" statements.
+8. **Plain English Business Summary**: Rewrote the main summary to be understandable by a non-pharma investor.
+9. **Investment Snapshot**: Added a compact 5-line summary box right after the business summary for immediate context.
+10. **Product Hierarchy**: Grouped products into Pain Management, Diabetes, Muscle Relaxant, and Respiratory categories.
+11. **Visual Data**: Replaced bullet points for Manufacturing Footprint and Geography with visual treatments (flags and progress-bar style revenue mix).
+**Result**: The Company Dossier is now a much cleaner, tabbed V0.4 that answers both "What does the company do?" and "Why should revenue grow?" with high readability, a sticky summary, evidence metrics, and a structured thesis.
+
+---
+
 ## **August 1, 2026: CAI MOSI Compiler Pipeline Completion**
 **Objective**: Complete the end-to-end MOSI ingestion and Company Knowledge delivery pipeline. Replace UI mocks with live database-backed API calls.
 **Actions**:

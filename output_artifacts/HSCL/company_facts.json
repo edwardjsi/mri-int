@@ -1,0 +1,157 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Return on Capital Employed (ROCE)",
+    "value": 33,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2023-06-13"
+    },
+    "evidence": {
+      "heading": "Executive Summary and Institutional Context",
+      "paragraph_index": 1,
+      "quote": "the company demonstrates that its recent ROCE expansion from a mere 6% in FY22 to an exceptional 33% in FY26",
+      "source": {
+        "document_id": "DOC-HSCL-1",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Revenue CAGR from FY23 to FY26",
+    "value": 3.7,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "FY23-FY26",
+      "effective_date": null,
+      "source_date": "2023-06-13"
+    },
+    "evidence": {
+      "heading": "STEP 4 SEGMENT-LEVEL GROWTH ANALYSIS",
+      "paragraph_index": 11,
+      "quote": "The 3-year consolidated revenue CAGR from FY23 to FY26 stands at approximately 3.7%",
+      "source": {
+        "document_id": "DOC-HSCL-1",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "PAT for FY26",
+    "value": 755,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2023-06-13"
+    },
+    "evidence": {
+      "heading": "STEP 11 NARRATIVE vs FINANCIAL REALITY",
+      "paragraph_index": 1,
+      "quote": "the company delivered a consolidated PAT of \u20b9755 Cr in FY26",
+      "source": {
+        "document_id": "DOC-HSCL-1",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Operating Profit Margin (OPM) in Q4 FY26",
+    "value": 21.7,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "Q4 FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2023-06-13"
+    },
+    "evidence": {
+      "heading": "STEP 6 MARGIN EXPANSION: STRUCTURAL OR CYCLICAL?",
+      "paragraph_index": 1,
+      "quote": "By Q4 FY26, this metric expanded dramatically to a consolidated 21.7%",
+      "source": {
+        "document_id": "DOC-HSCL-1",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Debt to Equity Ratio",
+    "value": 0.21,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2023-06-13"
+    },
+    "evidence": {
+      "heading": "STEP 8A \u2014 FINANCIAL HEALTH: QUANTITATIVE CHECKS (1\u20137)",
+      "paragraph_index": 7,
+      "quote": "0.20 - 0.21",
+      "source": {
+        "document_id": "DOC-HSCL-1",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

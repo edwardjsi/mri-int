@@ -1,0 +1,188 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "Current Share Price",
+    "value": 1846,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "Current Share Price (\u20b9) | 1,846 | User input",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "Current Market Cap",
+    "value": 46825,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "Current Market Cap (\u20b9 Cr) | 46,825 | User input",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EPS",
+    "value": 45,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "TTM EPS (\u20b9) | 45.00 | User input",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": 9646,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "TTM Revenue (\u20b9 Cr) | 9,646 | ipca1.md Q4 FY26 transcript",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": 1999,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "TTM EBITDA (\u20b9 Cr) | 1,999 (derived: 20.72% \u00d7 9,646)",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-IPCALAB",
+    "category": "FINANCIAL",
+    "metric_name": "Enterprise Value",
+    "value": null,
+    "unit": null,
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-14",
+      "source_date": "2026-07-14"
+    },
+    "evidence": {
+      "heading": "User Input Block (verified)",
+      "paragraph_index": 1,
+      "quote": "Enterprise Value (\u20b9 Cr) | null (not disclosed in sources)",
+      "source": {
+        "document_id": "DOC-IPCALAB-4",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

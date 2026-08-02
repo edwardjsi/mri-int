@@ -1,0 +1,52 @@
+{
+  "entity_id": "ENT-COMP-cgpower",
+  "entity_name": "CG Power and Industrial Solutions Limited",
+  "business_model": {
+    "narrative_summary": "CG Power is transitioning from a traditional capital equipment supplier to a high-technology industrial powerhouse through massive transformer capacity scaling, entry into railway safety electronics, and strategic foray into semiconductor design and OSAT packaging.",
+    "structured_entities": {
+      "products": [
+        "Heavy Electrical Power Transformers",
+        "High Voltage Switchgears",
+        "Industrial Low/Medium Voltage Motors",
+        "Railway Traction & Propulsion Systems",
+        "Semiconductor Design/OSAT"
+      ],
+      "plants": [
+        "Greenfield Transformer Plant",
+        "Brownfield Transformer Expansion"
+      ],
+      "customer_segments": [
+        "Utilities",
+        "Railways",
+        "Industrial OEMs"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Dynamic capital allocation with a focus on greenfield and brownfield expansions.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Sustained execution over 4 consecutive profitable years (FY22\u2013FY25).",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "High revenue visibility backed by a significant unexecuted order book.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Exemplary corporate governance under the Murugappa Group.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Professional board with a stable promoter stake of ~58%.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Murugappa Group maintains a controlling stake, ensuring alignment with shareholder interests.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

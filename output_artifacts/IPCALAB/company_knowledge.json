@@ -1,0 +1,71 @@
+{
+  "entity_id": "ENT-COMP-IPCALAB",
+  "entity_name": "Ipca Laboratories Limited",
+  "business_model": {
+    "narrative_summary": "Ipca Laboratories Limited is an Indian pharmaceutical company focused on generic pharmaceuticals and active pharmaceutical ingredients (APIs). It exports to over 100 countries and is a significant player in the US and UK markets.",
+    "structured_entities": {
+      "products": [
+        "Generic pharmaceuticals",
+        "Active Pharmaceutical Ingredients (APIs)"
+      ],
+      "plants": [
+        "Hingni API plant",
+        "Dewas formulations plant",
+        "Pithampur mAbs plant",
+        "Pisgah Labs USA"
+      ],
+      "customer_segments": [
+        "Domestic market",
+        "International market"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The company funds its capital expenditures primarily through internal accruals, maintaining a disciplined approach to capital allocation.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Ipca has demonstrated a consistent improvement in its EBITDA margins and revenue growth, particularly in the last financial year.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management expects revenue growth of 12-13% for FY27, with EBITDA margins projected to be around 22-22.3%.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has been transparent about the risks and challenges facing the company, including material cost increases and regulatory risks.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The company is managed by the founding Godha family, ensuring continuity and stability in governance.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is at 44.72%, indicating significant skin in the game.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Premchand Godha",
+        "role": "Executive Chairman"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Pranay Godha",
+        "role": "MD/CEO"
+      },
+      {
+        "entity_id": "ENT-EXEC-3",
+        "name": "Prashant Godha",
+        "role": "Executive Director"
+      },
+      {
+        "entity_id": "ENT-EXEC-4",
+        "name": "Ajit Kumar Jain",
+        "role": "MD/CFO"
+      }
+    ]
+  }
+}

@@ -1,0 +1,157 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-NEULANDLAB",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue for Q4 FY26",
+    "value": 788.7,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "QUARTERLY",
+      "period_label": "Q4 FY26",
+      "effective_date": "2026-06-30",
+      "source_date": "2026-06-24"
+    },
+    "evidence": {
+      "heading": "Quarterly Growth Acceleration Test",
+      "paragraph_index": 5,
+      "quote": "Q4 FY26: 788.7",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-5",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-NEULANDLAB",
+    "category": "FINANCIAL",
+    "metric_name": "PAT for FY26",
+    "value": 363.1,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-06-24"
+    },
+    "evidence": {
+      "heading": "Financial Health: Quantitative Checks",
+      "paragraph_index": 8,
+      "quote": "Core full-year PAT up 40% to \u20b9363.1 Cr",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-5",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-NEULANDLAB",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue CAGR (3-Year)",
+    "value": 24,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "3-Year",
+      "effective_date": null,
+      "source_date": "2026-06-24"
+    },
+    "evidence": {
+      "heading": "Financial Health: Quantitative Checks",
+      "paragraph_index": 8,
+      "quote": "Revenue CAGR (3-Year): Pass (~24% normalized tier, backed by a 37.1% step-up in FY26)",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-5",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-NEULANDLAB",
+    "category": "FINANCIAL",
+    "metric_name": "Full-year EBITDA margin FY26",
+    "value": 29.4,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-06-24"
+    },
+    "evidence": {
+      "heading": "Margin Expansion: Structural or Cyclical?",
+      "paragraph_index": 6,
+      "quote": "Full year FY26 blended EBITDA margin at 29.4%",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-5",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-NEULANDLAB",
+    "category": "FINANCIAL",
+    "metric_name": "Debt / Equity",
+    "value": -156.8,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-06-24"
+    },
+    "evidence": {
+      "heading": "Financial Health: Quantitative Checks",
+      "paragraph_index": 8,
+      "quote": "Net debt remains entirely negative at -\u20b9156.8 Cr",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-5",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

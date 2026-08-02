@@ -1,0 +1,45 @@
+{
+  "entity_id": null,
+  "entity_name": "MOSI AI",
+  "business_model": {
+    "narrative_summary": "MOSI AI provides a framework for institutional private equity expansion and multi-bagger detection, utilizing a two-tier architecture for deep analysis of companies.",
+    "structured_entities": {
+      "products": [
+        "Institutional PE Expansion Framework",
+        "Multi-Bagger Detection Framework"
+      ],
+      "plants": [],
+      "customer_segments": [
+        "Institutional Investors",
+        "Equity Analysts"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Data not available",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

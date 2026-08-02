@@ -163,3 +163,35 @@ gh pr create \
 
 > **V1.x = scoring infrastructure.** From here, the project's biggest improvements come from **measuring how well the engine predicts successful capital allocation**, not from making the scoring engine more elaborate. **V2.x = outcome-driven calibration.**
 
+---
+
+## 🎯 Strategic Pivot: The Living Investment Dossier (August 2026)
+
+**New Identity:** "MRI is the place where I understand every company I own."
+Instead of a screener tool, the platform is transitioning to a **Living Investment Dossier** architecture. Every company in the portfolio will have a single, unified, institutional-grade research page backed by evidence from compiled MOSI reports.
+
+### 🚧 The Living Dossier Roadmap
+
+#### Phase 1: Universal Dossier Entry (1–2 days)
+- [ ] Replace every portfolio company click with the new Investment Dossier page.
+- [ ] If knowledge exists, render the V0.4 Dossier UI.
+- [ ] If not, show a clean "Not compiled yet" state with a "Compile MOSI" call to action.
+
+#### Phase 2: Living Knowledge Base (2–3 days)
+- [ ] Support multiple MOSI reports per company (Annual Report + Transcripts + Filings).
+- [ ] Merge disparate reports into a single Company Knowledge record (the Living Dossier).
+- [ ] Add an automated timeline ("What changed?") based on chronological report ingestion.
+- [ ] Add a "Sources" panel listing all compiled documents.
+
+#### Phase 3: The 5 Investor Questions (3–5 days)
+- [ ] Ensure all 5 key investment-question tabs are present and populated across all dossiers:
+  1. What does the company do? (Business)
+  2. Why should revenue grow? (Growth)
+  3. Can management deliver? (Management)
+  4. What can go wrong? (Risks)
+  5. What changed recently? (Timeline)
+
+#### Phase 4: Portfolio Research Dashboard
+- [ ] Add a portfolio dashboard showing dossier completeness (Knowledge coverage, Last refresh, Missing sections, Evidence coverage).
+- [ ] Enable the Watchlist to mirror the Portfolio flow (1-click compile for unresearched stocks).
+

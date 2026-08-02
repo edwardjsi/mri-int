@@ -1,0 +1,54 @@
+{
+  "entity_id": "ENT-COMP-ARVINDFASN",
+  "entity_name": "Arvind Fashions Ltd",
+  "business_model": {
+    "narrative_summary": "Arvind Fashions is transitioning from a traditional multi-brand apparel distributor into a premium direct-to-consumer fashion platform with stronger margins, better cash flows, and higher ROCE potential.",
+    "structured_entities": {
+      "products": [
+        "US Polo Assn",
+        "Tommy Hilfiger",
+        "Calvin Klein",
+        "Arrow",
+        "Flying Machine"
+      ],
+      "plants": null,
+      "customer_segments": [
+        "Tier-2 cities",
+        "Tier-3 cities"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management has focused on consolidating control over high-growth assets and exiting loss-making labels.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has delivered on the 'Power Brand' strategy, improving margins and cleaning up the brand portfolio.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management targets 12-15% revenue growth and continued EBITDA expansion.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "AFL maintains high transparency in its consolidation of joint ventures.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Management has a clean fraud/scandal history with no material regulatory issues reported.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": null,
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Amisha Jain",
+        "role": "CEO"
+      }
+    ]
+  }
+}

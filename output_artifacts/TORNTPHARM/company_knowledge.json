@@ -1,0 +1,55 @@
+{
+  "entity_id": "ENT-COMP-500420",
+  "entity_name": "Torrent Pharmaceuticals Limited",
+  "business_model": {
+    "narrative_summary": "Torrent Pharma is a diversified global branded generics business with a strong presence across multiple markets, primarily focusing on pharmaceutical formulations.",
+    "structured_entities": {
+      "products": [
+        "Branded Generics",
+        "Generic Generics",
+        "Consumer Health"
+      ],
+      "plants": [
+        "Manufacturing facilities in India, USA, Germany"
+      ],
+      "customer_segments": [
+        "Pharmacies",
+        "Hospitals",
+        "Healthcare Providers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Focus on strategic acquisitions and organic growth through market share gains and product launches.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Consistent revenue growth and margin expansion, with a strong performance in the Indian market.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Expect continued growth driven by patent expiries and integration of JB Pharma.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management provides clear and detailed updates on performance and strategic direction.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Strong governance practices with a focus on shareholder value.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter family holds a significant controlling stake in the company.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Sudhir Menon",
+        "role": "CFO"
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "entity_id": "ENT-COMP-VOLTAMP",
+  "entity_name": "Voltamp Transformers Limited",
+  "business_model": {
+    "narrative_summary": "Voltamp Transformers Limited is a dominant player in the Indian heavy electrical equipment industry, focusing on industrial and dry-type transformers. The company is transitioning from a capacity-constrained market leader to a scaled manufacturer through the commissioning of its Jarod greenfield facility.",
+    "structured_entities": {
+      "products": [
+        "Industrial Transformers",
+        "Dry-Type Transformers"
+      ],
+      "plants": [
+        "Jarod Greenfield Facility"
+      ],
+      "customer_segments": [
+        "Listed Indian Corporates",
+        "Multinational Companies"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The management prioritizes a debt-free balance sheet and uses internal accruals for expansion, minimizing financial risk and avoiding dilution of shareholder equity.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "The management has a strong track record of navigating economic cycles while maintaining operational excellence and a zero-debt status.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "The company is expected to stabilize margins and ramp up new capacity in the 220kV class, with a focus on maintaining high dividend payouts.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has been noted for its disciplined but detached communication style, which has led to some criticism regarding transparency.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Voltamp Transformers maintains a high standard of governance with no major scandals or accounting irregularities reported.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "The promoter shareholding has decreased from approximately 38% to 30% by March 2026, coinciding with an increase in Domestic Institutional Investor holdings.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Kanubhai S. Patel",
+        "role": "CEO"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Kunjal L. Patel",
+        "role": "Director"
+      }
+    ]
+  }
+}

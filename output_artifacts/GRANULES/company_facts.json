@@ -1,0 +1,219 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Current Market Price (CMP)",
+    "value": 773,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "MOSI 14-Step Analysis \u2014 Granules India Ltd",
+      "paragraph_index": 1,
+      "quote": "CMP: \u20b9773",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Market Capitalization",
+    "value": 19166,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "MOSI 14-Step Analysis \u2014 Granules India Ltd",
+      "paragraph_index": 1,
+      "quote": "MCap: \u20b919,166 Cr",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Return on Capital Employed (ROCE)",
+    "value": 12.8,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "STEP 4 \u2014 Return Ratios",
+      "paragraph_index": 1,
+      "quote": "ROCE: 12.8%",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Return on Equity (ROE)",
+    "value": 10.5,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "STEP 4 \u2014 Return Ratios",
+      "paragraph_index": 1,
+      "quote": "ROE: 10.5%",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Debt to Equity Ratio (D/E)",
+    "value": 0.39,
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "STEP 5 \u2014 Balance Sheet Quality",
+      "paragraph_index": 1,
+      "quote": "D/E: 0.39",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Promoter Holding",
+    "value": 38.0,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "STEP 7 \u2014 Shareholding Pattern",
+      "paragraph_index": 1,
+      "quote": "Promoter: 38.0%",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": "ENT-COMP-GRANULES",
+    "category": "FINANCIAL",
+    "metric_name": "Quarterly Revenue Growth (FY26)",
+    "value": 19.1,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "QUARTERLY",
+      "period_label": "Q4 FY26",
+      "effective_date": "2026-06-02",
+      "source_date": "2026-06-02"
+    },
+    "evidence": {
+      "heading": "STEP 2 \u2014 Revenue Growth",
+      "paragraph_index": 1,
+      "quote": "YoY: 19.1%",
+      "source": {
+        "document_id": "DOC-GRANULES-22",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "execution_time_ms": 20319,
+  "missing_fields": 0,
+  "coverage_pct": 100.0,
+  "hallucinations_flagged": 4,
+  "warnings": [
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact"
+  ]
+}

@@ -1,0 +1,312 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Current Ratio",
+    "value": 1.87,
+    "unit": null,
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "Financial Health \u2014 7-Check Dashboard",
+      "paragraph_index": 0,
+      "quote": "Current ratio 1.87 (Pass)",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue FY26",
+    "value": 27488,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "JSON Summary",
+      "paragraph_index": 0,
+      "quote": "fy26_revenue_cr: 27488",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "EBITDA Margin FY26",
+    "value": 29.7,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "JSON Summary",
+      "paragraph_index": 0,
+      "quote": "fy26_ebitda_margin_pct: 29.7",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "PAT FY26",
+    "value": 5333,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "JSON Summary",
+      "paragraph_index": 0,
+      "quote": "fy26_pat_cr: 5333",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Promoter Holding Percentage",
+    "value": 46.9,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "14-Step Verdicts",
+      "paragraph_index": 0,
+      "quote": "Promoter 46.9% (below 50%)",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Net Debt to Equity FY25",
+    "value": -0.02,
+    "unit": null,
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "Financial Health \u2014 7-Check Dashboard",
+      "paragraph_index": 0,
+      "quote": "D/E (FY25) = \u22120.02 (net cash)",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Free Cash Flow to PAT FY25",
+    "value": 0.83,
+    "unit": null,
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "Financial Health \u2014 7-Check Dashboard",
+      "paragraph_index": 0,
+      "quote": "FCF / PAT (FY25) = **0.83** (\u20b92,720 Cr)",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-8",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Return on Equity FY25",
+    "value": 18.0,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "Financial Health \u2014 7-Check Dashboard",
+      "paragraph_index": 0,
+      "quote": "ROE = **18.0%**",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-9",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Return on Capital Employed FY25",
+    "value": 29.5,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "Financial Health \u2014 7-Check Dashboard",
+      "paragraph_index": 0,
+      "quote": "ROCE = **29.5%**",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-10",
+    "entity_id": "ENT-COMP-500257",
+    "category": "FINANCIAL",
+    "metric_name": "Dividend per Share FY26",
+    "value": 12,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-06-20",
+      "source_date": "2026-06-20"
+    },
+    "evidence": {
+      "heading": "JSON Summary",
+      "paragraph_index": 0,
+      "quote": "dividend_per_share: 12",
+      "source": {
+        "document_id": "DOC-LUPIN-28",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

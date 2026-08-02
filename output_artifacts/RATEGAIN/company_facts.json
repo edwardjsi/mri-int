@@ -1,0 +1,188 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "Current Price",
+    "value": 973,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "ANALYSIS METADATA",
+      "paragraph_index": 1,
+      "quote": "Current Price (\u20b9): 973",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "Market Cap",
+    "value": 11525,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "ANALYSIS METADATA",
+      "paragraph_index": 1,
+      "quote": "Market Cap (\u20b9 Cr): 11,525",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": 1823.6,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "ANALYSIS METADATA",
+      "paragraph_index": 1,
+      "quote": "TTM Revenue (\u20b9 Cr): 1,823.6",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": 337.5,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "ANALYSIS METADATA",
+      "paragraph_index": 1,
+      "quote": "TTM EBITDA (\u20b9 Cr): 337.5 (Adj. 358.3)",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "D/E Ratio",
+    "value": 0.01,
+    "unit": "TEXT",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "EXECUTIVE SUMMARY",
+      "paragraph_index": 1,
+      "quote": "0.01 D/E",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-RATEG",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue Growth Rate",
+    "value": "69.4%",
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25-FY26",
+      "effective_date": "2026-07-16",
+      "source_date": "2026-07-16"
+    },
+    "evidence": {
+      "heading": "STEP 1 \u2014 COMPANY STAGE & GROWTH CYCLE",
+      "paragraph_index": 1,
+      "quote": "Revenue doubled from \u20b91,077 Cr (FY25) \u2192 \u20b91,824 Cr (FY26) \u2014 69.4% YoY growth",
+      "source": {
+        "document_id": "DOC-RATEGAIN-16",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

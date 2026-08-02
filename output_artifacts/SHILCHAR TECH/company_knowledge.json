@@ -1,0 +1,51 @@
+{
+  "entity_id": "ENT-COMP-<ticker>",
+  "entity_name": "Shilchar Technologies",
+  "business_model": {
+    "narrative_summary": "Shilchar manufactures various types of transformers including power, distribution, renewable energy, furnace, converter duty, and earthing & isolation transformers, specializing in transformers up to 50 MVA and 132 kV class.",
+    "structured_entities": {
+      "products": [
+        "Power Transformers",
+        "Distribution Transformers",
+        "Renewable Energy Transformers",
+        "Furnace Transformers",
+        "Converter Duty Transformers",
+        "Earthing & Isolation Transformers"
+      ],
+      "plants": [
+        "Gavasad"
+      ],
+      "customer_segments": [
+        "Renewable Energy",
+        "Industrial"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management has a debt-free balance sheet and funds growth through internal accruals.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has successfully expanded capacity and delivered revenue and profit growth.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management targets FY27 revenue of \u20b9800\u2013900 Cr.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has been clear about growth drivers and expansion plans.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Management has no major governance controversies.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Management is family-led with a history of execution.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

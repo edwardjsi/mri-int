@@ -1,0 +1,312 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "Current Price",
+    "value": "\u20b91,498",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "current_price: '\u20b91,498'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "Current Market Cap",
+    "value": "\u20b939,517 Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "current_market_cap: '\u20b939,517 Cr'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EPS",
+    "value": "\u20b961.2",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "ttm_eps: '\u20b961.2'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": "\u20b916,968 Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "ttm_revenue: '\u20b916,968 Cr (FY26)'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": "\u20b92,371 Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "ttm_ebitda: '\u20b92,371 Cr (FY26)'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-532966",
+    "category": "FINANCIAL",
+    "metric_name": "Enterprise Value",
+    "value": "~\u20b935,000 Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Company Overview",
+      "paragraph_index": 0,
+      "quote": "enterprise_value: '~\u20b935,000 Cr (Cash-adjusted)'",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-1",
+    "entity_id": "ENT-COMP-532966",
+    "category": "BUSINESS",
+    "metric_name": "Order Book",
+    "value": "\u20b925,000+ Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Core Thesis",
+      "paragraph_index": 0,
+      "quote": "WELCORP is India's largest carbon-steel welded pipe manufacturer, riding the global gas pipeline super-cycle... The company has a \u20b925,000+ Cr order book.",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "entity_id": "ENT-COMP-532966",
+    "category": "BUSINESS",
+    "metric_name": "Revenue",
+    "value": "\u20b916,968 Cr",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Step 1: Company Stage & Growth Cycle",
+      "paragraph_index": 0,
+      "quote": "Revenue \u20b916,968 Cr (FY26).",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "entity_id": "ENT-COMP-532966",
+    "category": "BUSINESS",
+    "metric_name": "EBITDA Margin",
+    "value": "14%",
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Step 1: Company Stage & Growth Cycle",
+      "paragraph_index": 0,
+      "quote": "EBITDA \u20b92,371 Cr (14% margin).",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-4",
+    "entity_id": "ENT-COMP-532966",
+    "category": "BUSINESS",
+    "metric_name": "ROCE",
+    "value": "33%+",
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-02",
+      "source_date": "2026-07-02"
+    },
+    "evidence": {
+      "heading": "Core Thesis",
+      "paragraph_index": 0,
+      "quote": "33%+ ROCE.",
+      "source": {
+        "document_id": "DOC-WELCORP-18",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

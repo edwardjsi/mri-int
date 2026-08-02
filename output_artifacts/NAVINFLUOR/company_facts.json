@@ -1,0 +1,312 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue Contribution from High Performance Products (HPP)",
+    "value": 1616,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Segment-Level Growth Analysis",
+      "paragraph_index": 6,
+      "quote": "High Performance Products (HPP) | ~48.7% (\u20b91,616 Cr)",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue Contribution from Specialty Chemicals",
+    "value": 1153,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Segment-Level Growth Analysis",
+      "paragraph_index": 6,
+      "quote": "Specialty Chemicals | ~34.8% (\u20b91,153 Cr)",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue Contribution from CDMO (CRAMS)",
+    "value": 546,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Segment-Level Growth Analysis",
+      "paragraph_index": 6,
+      "quote": "CDMO (CRAMS) | ~16.5% (\u20b9546 Cr)",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "3-Year Revenue CAGR",
+    "value": 16.8,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "FY23-FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Fast-Growing Tag",
+      "paragraph_index": 6,
+      "quote": "The company's 3-year revenue CAGR stands at 16.8%",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "3-Year Adjusted PAT CAGR",
+    "value": 21.0,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "MULTI_YEAR",
+      "period_label": "FY23-FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Fast-Growing Tag",
+      "paragraph_index": 6,
+      "quote": "The 3-year Adjusted PAT CAGR is 21.0%",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "EBITDA Margin for FY26",
+    "value": 32.6,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Margin Expansion: Structural or Cyclical?",
+      "paragraph_index": 6,
+      "quote": "Navin Fluorine's TTM EBITDA margin of 32.6% is significantly above the industry average.",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Net Profit Margin for FY26",
+    "value": 22.67,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Margin Expansion: Structural or Cyclical?",
+      "paragraph_index": 6,
+      "quote": "Net Profit Margin | 22.67%",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-8",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Current Ratio",
+    "value": 1.48,
+    "unit": "null",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "H1 FY26",
+      "effective_date": "2026-09-30",
+      "source_date": "2026-09-30"
+    },
+    "evidence": {
+      "heading": "Financial Health: Qualitative Checks",
+      "paragraph_index": 6,
+      "quote": "Current Ratio: Current assets of \u20b92,109.50 Cr and current liabilities of \u20b91,421.31 Cr as of H1 FY26 yield a Current Ratio of 1.48x.",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-9",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Promoter Holding",
+    "value": 27.1,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Financial Health: Qualitative Checks",
+      "paragraph_index": 6,
+      "quote": "Promoter Holding: Stands at 27.1%.",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-10",
+    "entity_id": "ENT-COMP-NavinFluorine",
+    "category": "FINANCIAL",
+    "metric_name": "Foreign Institutional Investors (FIIs) Stake",
+    "value": 23.8,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "March 2026",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Financial Health: Qualitative Checks",
+      "paragraph_index": 6,
+      "quote": "Foreign Institutional Investors (FIIs) increased their stake significantly from 18.6% in December 2024 to 23.8% by March 2026.",
+      "source": {
+        "document_id": "DOC-NAVINFLUOR-24",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

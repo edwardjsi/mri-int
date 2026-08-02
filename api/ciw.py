@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any
 from engine_core.ciw_repository import CompanyWorkspaceRepository
+from engine_core.model_results_repository import ModelResultRepository
 
 router = APIRouter(prefix="/api/ciw", tags=["CIW"])
 
@@ -29,6 +30,7 @@ def get_company_workspace(symbol: str) -> Dict[str, Any]:
     Fetch the complete Company Intelligence Workspace (CIW) aggregate root for a symbol.
     """
     repo = CompanyWorkspaceRepository()
+    model_repo = ModelResultRepository()
     try:
         workspace = repo.get_workspace(symbol.upper())
         if not workspace:
@@ -36,6 +38,21 @@ def get_company_workspace(symbol: str) -> Dict[str, Any]:
         
         data = workspace.model_dump() if hasattr(workspace, "model_dump") else workspace.dict()
         data["health"] = calculate_knowledge_health(workspace)
+
+        # Add latest model results
+        models = model_repo.latest(symbol.upper())
+        data["models"] = [
+            {
+                "id": m.model_id,
+                "version": m.model_version,
+                "status": m.status,
+                "score": float(m.score) if m.score is not None else None,
+                "payload": m.payload,
+                "evaluation_date": m.evaluation_date.isoformat() if m.evaluation_date else None,
+            }
+            for m in models
+        ]
+        
         return data
     finally:
         repo.close()

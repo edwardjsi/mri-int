@@ -1,0 +1,18 @@
+{
+  "company_ticker": "SHAILY E",
+  "company_name": "Shaily Engineering Plastics Limited",
+  "knowledge_version": 1,
+  "last_updated": "2026-08-01T11:51:17.304140Z",
+  "stats": {
+    "total_facts": 10,
+    "total_entities": 3,
+    "metrics_tracked": 10,
+    "missing_schema_fields": 0,
+    "knowledge_coverage_pct": 100.0
+  },
+  "data_artifacts": {
+    "facts_file": "company_facts.json",
+    "knowledge_file": "company_knowledge.json",
+    "report_file": "extraction_report.json"
+  }
+}

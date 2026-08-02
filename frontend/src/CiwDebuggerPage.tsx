@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from './api';
+import { ModelBadgeGroup } from './components/ModelBadge';
 
 // --- Domain Models for CIW ---
 export interface KnowledgeNode {
@@ -51,7 +52,9 @@ export interface CompanyWorkspace {
     };
     timeline: TimelineEvent[];
     health: KnowledgeHealth;
+    models?: any[];
 }
+
 
 // --- Components ---
 
@@ -187,6 +190,9 @@ export const CiwDebuggerPage: React.FC = () => {
                         <div>
                             <h1 className="text-4xl font-bold text-white tracking-tight">{workspace.identity.symbol}</h1>
                             <h2 className="text-xl text-gray-400 mt-1">{workspace.identity.name}</h2>
+                            <div className="mt-3">
+                                {workspace.models && <ModelBadgeGroup models={workspace.models} />}
+                            </div>
                         </div>
                         <div className="text-right">
                             <div className="text-sm text-gray-500 uppercase tracking-widest mb-1">Status</div>

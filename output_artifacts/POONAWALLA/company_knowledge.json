@@ -1,0 +1,48 @@
+{
+  "entity_id": "ENT-COMP-POONAWALLA",
+  "entity_name": "Poonawalla Fincorp Limited",
+  "business_model": {
+    "narrative_summary": "Poonawalla Fincorp is a tech-enabled NBFC offering a digital-first retail lending platform with various loan products.",
+    "structured_entities": {
+      "products": [
+        "Personal loans",
+        "Gold loans",
+        "Consumer durable financing",
+        "Commercial vehicle loans",
+        "Education loans",
+        "Loan against property",
+        "Business loans",
+        "MSME lending"
+      ],
+      "plants": [],
+      "customer_segments": []
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management targets ROA to move 'strength to strength' from 1.81% baseline.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has consistently hit every guidance milestone across all 6 quarters.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Next phase: Scale \u2014 compounding AUM at 35-40% CAGR.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management openly discusses risks and acknowledges potential challenges.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Poonawalla Group has strong brand and effective control.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holds >50% effective control.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

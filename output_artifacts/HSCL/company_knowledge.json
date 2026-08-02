@@ -1,0 +1,50 @@
+{
+  "entity_id": "ENT-COMP-HSCL",
+  "entity_name": "Himadri Speciality Chemical Ltd",
+  "business_model": {
+    "narrative_summary": "Himadri Speciality Chemical Ltd is transitioning from a commodity coal tar distiller to a high-margin specialty chemicals and advanced materials conglomerate, focusing on specialty carbon blacks and lithium-ion battery materials.",
+    "structured_entities": {
+      "products": [
+        "Specialty carbon blacks",
+        "Lithium Iron Phosphate (LFP) cathode active materials",
+        "Silicon-carbon (SiCx) synthetic anodes"
+      ],
+      "plants": [
+        "LFP Cathode Active Material Plant",
+        "Specialty Carbon Black Facility"
+      ],
+      "customer_segments": [
+        "Global aluminum industry",
+        "Tire industry",
+        "Electric vehicle manufacturers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The company is focused on funding growth through internal cash accruals and targeted promoter equity infusions.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has consistently under-promised and over-delivered on profitability metrics.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management targets a sustainable EBITDA margin profile of over 20% as the product mix shifts.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management openly acknowledges risks and emphasizes margin-per-ton insulation through contractual pass-throughs.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Promoter holding stands at 52.50%, ensuring alignment of interests.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "The recent warrant conversion reflects promoter confidence in the company's growth trajectory.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

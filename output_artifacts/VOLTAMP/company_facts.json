@@ -1,0 +1,312 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Net Sales FY2024",
+    "value": 1616.22,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2024",
+      "effective_date": "2024-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Net Sales (\u20b9 Cr): 1,616.22",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Net Sales FY2025",
+    "value": 1934.23,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Net Sales (\u20b9 Cr): 1,934.23",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Operating Profit Margin FY2024",
+    "value": 19.9,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2024",
+      "effective_date": "2024-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Operating Profit Margin: 19.9%",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Operating Profit Margin FY2025",
+    "value": 18.9,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Operating Profit Margin: 18.9%",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Net Profit Margin FY2024",
+    "value": 19.0,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2024",
+      "effective_date": "2024-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Net Profit Margin: 19.0%",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Net Profit Margin FY2025",
+    "value": 16.8,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Net Profit Margin: 16.8%",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Order Book FY2024",
+    "value": 841,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2024",
+      "effective_date": "2024-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Order Book (\u20b9 Cr): 841",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-8",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Order Book FY2025",
+    "value": 1129,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Operational Metric",
+      "paragraph_index": 1,
+      "quote": "Order Book (\u20b9 Cr): 1,129",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-9",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Dividend Per Share FY2025",
+    "value": 100,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Capital Allocation and Shareholder Returns",
+      "paragraph_index": 1,
+      "quote": "In FY2025, the board proposed a record-high dividend of 1000% (\u20b9100 per share)",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-10",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "Total Dividend Payout FY2025",
+    "value": 101.17,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY2025",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-05-06"
+    },
+    "evidence": {
+      "heading": "Capital Allocation and Shareholder Returns",
+      "paragraph_index": 1,
+      "quote": "representing a total payout of \u20b9101.17 crore",
+      "source": {
+        "document_id": "DOC-VOLTAMP-21",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

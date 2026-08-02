@@ -1,0 +1,53 @@
+{
+  "entity_id": "ENT-COMP-RATEG",
+  "entity_name": "RateGain Travel Technologies Ltd",
+  "business_model": {
+    "narrative_summary": "RateGain is a structurally re-rated travel-tech SaaS company riding the global AI + travel digitisation wave, with its Sojern acquisition creating a Martech super-cycle.",
+    "structured_entities": {
+      "products": [
+        "DaaS (Data/Analytics/Intelligence)",
+        "Distribution (GDS connectivity, channel management)",
+        "MarTech (Social media management, paid digital marketing)"
+      ],
+      "plants": null,
+      "customer_segments": [
+        "Hotels",
+        "Airlines",
+        "OTAs"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The company is at the inflection point where CapEx is flattening and ROCE is rising.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has been conservative and transparent about segment weaknesses.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Expect margin expansion and PE from current ~59x to sustainable 30\u201340x as earnings catch up.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management acknowledges risks and has been candid about the distribution decline.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "RateGain is professionally managed with a stable promoter holding.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is ~46.2% (Bhanu Chopra + family).",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Bhanu Chopra",
+        "role": "Chairman & MD"
+      }
+    ]
+  }
+}

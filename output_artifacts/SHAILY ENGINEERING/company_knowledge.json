@@ -1,0 +1,60 @@
+{
+  "entity_id": "ENT-COMP-501423",
+  "entity_name": "Shaily Engineering Plastics Limited",
+  "business_model": {
+    "narrative_summary": "Shaily Engineering Plastics is a high-quality healthcare CDMO play in drug delivery devices, primarily pen injectors for GLP-1 therapies.",
+    "structured_entities": {
+      "products": [
+        "GLP-1 pen injectors",
+        "Healthcare IP-led platforms"
+      ],
+      "plants": [
+        "India",
+        "Abu Dhabi"
+      ],
+      "customer_segments": [
+        "Healthcare",
+        "Consumer Electronics",
+        "Industrial"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management is focused on funding capex for healthcare expansion while maintaining a strong balance sheet.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management consistently delivers on financial performance but has a pattern of optimistic timelines.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management has provided guidance on revenue growth and capacity expansion, but timelines have been optimistic.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management is transparent about financial performance and operational challenges.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The board is focused on maintaining regulatory compliance and operational excellence.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holds a significant stake in the company, aligning interests with shareholders.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Amit Sanghvi",
+        "role": "Managing Director"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Sanjay Shah",
+        "role": "Chief Financial Officer"
+      }
+    ]
+  }
+}

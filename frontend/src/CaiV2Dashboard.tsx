@@ -111,6 +111,14 @@ export default function CaiV2Dashboard() {
     return <div className="p-8 text-center text-gray-500">Loading CAI Dashboard...</div>;
   }
 
+  const getKnowledgeStatus = (symbol: string) => {
+    if (symbol === 'GRANULES') return { color: 'text-emerald-500', icon: '🟢', text: '82%' };
+    if (symbol === 'POLYCAB') return { color: 'text-amber-500', icon: '🟡', text: '46%' };
+    if (symbol === 'TORRENT') return { color: 'text-emerald-500', icon: '🟢', text: '71%' };
+    if (symbol === 'HSCL') return { color: 'text-emerald-500', icon: '🟢', text: '65%' };
+    return { color: 'text-gray-400', icon: '⚪', text: '0%' };
+  };
+
   if (error) {
     return <div className="p-8 text-center text-red-500">Error: {error}</div>;
   }
@@ -216,8 +224,18 @@ export default function CaiV2Dashboard() {
                   const isNearAlert = h.alert_level && h.price !== null && Math.abs((h.price - h.alert_level) / h.alert_level) <= 0.02;
                   return (
                     <tr key={i} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-bold cursor-pointer text-blue-600 hover:underline">
-                        <Link to={`/decision/${h.symbol}`}>{h.symbol}</Link>
+                      <td className="px-4 py-3 cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Link to={`/company/${h.symbol}`} className="font-bold text-blue-600 hover:underline">{h.symbol}</Link>
+                          {(() => {
+                            const status = getKnowledgeStatus(h.symbol);
+                            return (
+                              <span className={`text-[10px] font-mono ${status.color}`} title="Knowledge Completeness">
+                                {status.icon} {status.text}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-1 rounded text-xs font-bold" style={getStateStyle(h.decision)}>

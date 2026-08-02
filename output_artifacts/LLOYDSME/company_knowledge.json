@@ -1,0 +1,52 @@
+{
+  "entity_id": "ENT-COMP-LLOYDMET",
+  "entity_name": "Lloyds Metals & Energy",
+  "business_model": {
+    "narrative_summary": "Lloyds Metals & Energy has transformed from a small-cap sponge iron producer into a fully integrated mining-to-metals platform, focusing on iron ore, pellets, DRI, steel, and copper.",
+    "structured_entities": {
+      "products": [
+        "Iron ore",
+        "Pellets",
+        "DRI/Sponge iron",
+        "Steel",
+        "Copper"
+      ],
+      "plants": [
+        "Pellet Plant",
+        "Steel Plant"
+      ],
+      "customer_segments": [
+        "Mining services",
+        "Steel manufacturers",
+        "Copper producers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The company is focused on executing mega-projects on time and capturing earnings growth.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Lloyds Metals has demonstrated exceptional execution capabilities, with projects like the pellet plant reaching 100% capacity within 4 months.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "The company is positioned to benefit from India's steel demand growth and has a multi-decade resource advantage.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has been transparent about risks and provides specific, verifiable guidance.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "No red flags identified in governance.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding data not extracted but management tone is confident and transparent.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

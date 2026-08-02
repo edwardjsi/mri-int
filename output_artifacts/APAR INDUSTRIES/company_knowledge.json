@@ -1,0 +1,48 @@
+{
+  "entity_id": "ENT-COMP-APAR",
+  "entity_name": "Apar Industries Limited",
+  "business_model": {
+    "narrative_summary": "Apar Industries Limited is transitioning from a high-volume, low-margin manufacturer of commodity electrical inputs to a high-value technology enabler for global grid infrastructure and clean energy value chains.",
+    "structured_entities": {
+      "products": [
+        "High-temperature low-sag (HTLS) conductors",
+        "Specialized renewable cables",
+        "Ultra-high-grade transformer oils"
+      ],
+      "plants": [
+        "Continuous Transposed Conductors (CTC) manufacturing facility"
+      ],
+      "customer_segments": [
+        "Global utilities",
+        "Project developers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Apar Industries is focused on aggressive capacity expansion funded through internal accruals and low-cost debt.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has successfully executed on its commitments, including tripling CTC capacity and scaling U.S. exports.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "The company is positioned for long-term growth with a focus on high-margin products and expanding market share.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management maintains a realistic and execution-focused tone, discussing risks and growth opportunities.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Promoter shareholding is stable at 57.77%, with zero pledges, indicating strong governance.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter shareholding is stable, reflecting confidence in the company's future.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

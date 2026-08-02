@@ -39,6 +39,7 @@ class PositionResponse(BaseModel):
     quit_level: Optional[float] = None
     decision_calculated_at: Optional[str] = None
     current_price: Optional[float] = None
+    models: Optional[List[dict]] = None
 
 class PortfolioResponse(BaseModel):
     id: str
@@ -95,6 +96,27 @@ def get_portfolio_endpoint(client=Depends(get_current_client), conn=Depends(get_
             (portfolio["id"],)
         )
         positions = cur.fetchall()
+        
+        symbols = [p['symbol'] for p in positions]
+        
+        # Attach latest models
+        from engine_core.model_results_repository import ModelResultRepository
+        model_repo = ModelResultRepository()
+        models = model_repo.latest_for_symbols(symbols)
+        models_by_symbol = {}
+        for m in models:
+            if m.symbol not in models_by_symbol:
+                models_by_symbol[m.symbol] = []
+            models_by_symbol[m.symbol].append({
+                "id": m.model_id,
+                "version": m.model_version,
+                "status": m.status,
+                "score": float(m.score) if m.score is not None else None,
+                "evaluation_date": m.evaluation_date.isoformat() if m.evaluation_date else None,
+            })
+            
+        for p in positions:
+            p['models'] = models_by_symbol.get(p['symbol'], [])
         
         return PortfolioResponse(
             id=portfolio["id"],

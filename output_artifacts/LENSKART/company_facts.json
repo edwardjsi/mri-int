@@ -1,0 +1,219 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "Current Share Price",
+    "value": 556,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Current Share Price (\u20b9) | 556",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "Current Market Cap",
+    "value": 96500,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Current Market Cap (\u20b9 Cr) | 96,500",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": 9002.3,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM Revenue (\u20b9 Cr) | 9,002.3",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": 1789.5,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM EBITDA (\u20b9 Cr) | 1,789.5",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "Enterprise Value",
+    "value": 92619,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Enterprise Value (\u20b9 Cr) | 92,619 *(Market Cap minus Net Cash of \u20b93,881 Cr)*",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EPS",
+    "value": 2.84,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM EPS (\u20b9) | 2.84",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": "ENT-COMP-544600",
+    "category": "FINANCIAL",
+    "metric_name": "ROCE",
+    "value": 23.1,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-27",
+      "source_date": "2026-07-27"
+    },
+    "evidence": {
+      "heading": "STEP 8A \u2014 FINANCIAL HEALTH: QUANTITATIVE CHECKS (1\u20137)",
+      "paragraph_index": 5,
+      "quote": "FY26 ROCE (ex-IPO proceeds) reached 23.1% (up from 13.8% in FY25).",
+      "source": {
+        "document_id": "DOC-LENSKART-15",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

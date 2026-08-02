@@ -1,0 +1,54 @@
+{
+  "entity_id": "ENT-COMP-DFPCL",
+  "entity_name": "Deepak Fertilisers and Petrochemicals Corporation Limited",
+  "business_model": {
+    "narrative_summary": "Deepak Fertilisers and Petrochemicals Corporation Limited operates in the mining chemicals and fertilizer sectors, focusing on high-margin products and stable supply contracts.",
+    "structured_entities": {
+      "products": [
+        "Mining Chemicals",
+        "Fertilizers"
+      ],
+      "plants": [
+        "Gopalpur",
+        "Dahej"
+      ],
+      "customer_segments": [
+        "B2B Mining Chemicals",
+        "Agriculture"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "The company aims to redirect cash flows toward deleveraging post FY27.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has a mixed track record with execution, particularly regarding project timelines.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management guidance is viewed as risky due to past performance.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "The company has been criticized for lacking clear target prices in its communications.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The board's governance practices are not detailed in the report.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter pledge at 5.04% is considered small but not alarming.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Mukul Agrawal",
+        "role": "Investor"
+      }
+    ]
+  }
+}

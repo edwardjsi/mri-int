@@ -1,0 +1,188 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "Revenue growth",
+    "value": 14,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "FY26 Financial Performance \u2014 Strong Execution",
+      "paragraph_index": 2,
+      "quote": "Revenue growth: **~14%**",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "PAT growth",
+    "value": 62,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "FY26 Financial Performance \u2014 Strong Execution",
+      "paragraph_index": 2,
+      "quote": "PAT growth: **~62%**",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "EBITDA margin",
+    "value": 13.4,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "FY26 Financial Performance \u2014 Strong Execution",
+      "paragraph_index": 2,
+      "quote": "EBITDA margin: **13.4%** (+40 bps)",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "PAT",
+    "value": 124,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "FY26 Financial Performance \u2014 Strong Execution",
+      "paragraph_index": 2,
+      "quote": "PAT: **\u20b9124 crore**",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "Gross margin",
+    "value": 55.4,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "TLDR",
+      "paragraph_index": 1,
+      "quote": "AFL\u2019s inventory hedging and high gross margins (55.4%) provide a significant buffer.",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-ARVINDFASN",
+    "category": "FINANCIAL",
+    "metric_name": "Debt to EBITDA ratio",
+    "value": 2,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-03-31",
+      "source_date": "2026-03-31"
+    },
+    "evidence": {
+      "heading": "Five-Dimension Equity Analysis",
+      "paragraph_index": 4,
+      "quote": "TD/EBITDA ~2x",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-0",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

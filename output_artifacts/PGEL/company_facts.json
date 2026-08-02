@@ -1,0 +1,250 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY25 consolidated revenue",
+    "value": 4870,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY25",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Revenue Quality",
+      "paragraph_index": 1,
+      "quote": "FY25 consolidated revenue reached approximately \u20b94,870 crore, representing about 77% YoY growth.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY26 revenue guidance",
+    "value": "5700-5800",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Revenue Quality",
+      "paragraph_index": 1,
+      "quote": "Management's FY26 guidance is equally important: \u20b95,700\u20135,800 Cr.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY25 YoY growth",
+    "value": 77,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY25",
+      "effective_date": "2025-03-31",
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Revenue Quality",
+      "paragraph_index": 1,
+      "quote": "FY25 consolidated revenue reached approximately \u20b94,870 crore, representing about 77% YoY growth.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY26 PAT growth guidance",
+    "value": "3-7",
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Guidance Credibility",
+      "paragraph_index": 1,
+      "quote": "Management's FY26 guidance is relatively measured: PAT Growth: 3\u20137%.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": null,
+    "category": "FINANCIAL",
+    "metric_name": "FY26 Group Revenue guidance",
+    "value": "6550-6650",
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Guidance Credibility",
+      "paragraph_index": 1,
+      "quote": "Management is not projecting another 70\u201380% growth year simply because FY25 was exceptional. Instead, they are guiding for normalization while continuing to invest aggressively.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-1",
+    "entity_id": null,
+    "category": "BUSINESS",
+    "metric_name": "Number of manufacturing facilities",
+    "value": 11,
+    "unit": "NUMBER",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Scale",
+      "paragraph_index": 1,
+      "quote": "The company now operates: 11 manufacturing facilities.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "entity_id": null,
+    "category": "BUSINESS",
+    "metric_name": "Number of employees",
+    "value": 10000,
+    "unit": "NUMBER",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Scale",
+      "paragraph_index": 1,
+      "quote": "The company now operates: More than 10,000 employees.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "entity_id": null,
+    "category": "BUSINESS",
+    "metric_name": "Number of brands served",
+    "value": 70,
+    "unit": "NUMBER",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": null,
+      "source_date": "2026-07-25"
+    },
+    "evidence": {
+      "heading": "Customer Diversification",
+      "paragraph_index": 1,
+      "quote": "Serving more than 70 Indian and global brands reduces dependence on any single customer.",
+      "source": {
+        "document_id": "DOC-PGEL-19",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

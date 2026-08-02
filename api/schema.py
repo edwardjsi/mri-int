@@ -260,8 +260,13 @@ def ensure_required_tables(conn) -> None:
     # that the /api/breakout/top-by-cas endpoint reads. `cas_score` is the
     # only NEW column (the other 4 already exist above). Loop is idempotent
     # thanks to ADD COLUMN IF NOT EXISTS.
-    for col in ['cas_score', 'weekly_trend_score', 'overhead_supply_score', 'ema_100', 'rolling_high_52w']:
+    for col in ['cas_score', 'weekly_trend_score', 'overhead_supply_score', 'ema_100', 'rolling_high_52w',
+                'jdk_rs_ratio', 'jdk_rs_momentum', 'rrg_quadrant', 'rrg_heading', 'rrg_benchmark']:
         cur.execute(f"ALTER TABLE daily_prices ADD COLUMN IF NOT EXISTS {col} NUMERIC DEFAULT NULL")
+
+    # Fix the types for string columns (NUMERIC fallback from above)
+    cur.execute("ALTER TABLE daily_prices ALTER COLUMN rrg_quadrant TYPE VARCHAR(20);")
+    cur.execute("ALTER TABLE daily_prices ALTER COLUMN rrg_benchmark TYPE VARCHAR(20);")
 
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_daily_prices_weekly_trend_score "
@@ -700,6 +705,27 @@ def ensure_required_tables(conn) -> None:
             CONSTRAINT cas_outcomes_unique UNIQUE (recommendation_id, milestone_days)
         );
     """)
+    
+    # Model Results Repository (Investment Model Platform PR 1)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS model_results (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            symbol VARCHAR(20) NOT NULL,
+            model_id VARCHAR(50) NOT NULL,
+            model_version VARCHAR(20) NOT NULL,
+            evaluation_date DATE NOT NULL,
+            status VARCHAR(50),
+            score NUMERIC,
+            payload JSONB,
+            explain_node_id UUID,
+            execution_ms INT,
+            error_message TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT uq_model_results UNIQUE(symbol, model_id, model_version, evaluation_date)
+        );
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_model_results_symbol_date ON model_results(symbol, evaluation_date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_model_results_model_date ON model_results(model_id, evaluation_date DESC);")
     
     ensure_prde_tables(cur)
     ensure_aae_event_tables(cur)

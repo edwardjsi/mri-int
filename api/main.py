@@ -41,6 +41,7 @@ from api.schema import ensure_required_tables
 from engine_core.db import get_connection
 from api.workspace import router as workspace_router
 from api.mosi import router as mosi_router
+from api.canslim import router as canslim_router
 
 load_dotenv()
 
@@ -218,6 +219,7 @@ app.include_router(inbox_router)
 app.include_router(extractor_router)
 app.include_router(workspace_router)
 app.include_router(mosi_router)
+app.include_router(canslim_router, prefix="/api/v1/canslim")
 
 
 # Explicit Health Check (Must be before catch-all)

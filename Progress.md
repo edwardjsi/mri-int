@@ -2,6 +2,36 @@
 
 ---
 
+## 📅 Session: August 2, 2026 — Company Dossier UI Feedback Implementation
+**Session Start:** ~22:30 IST
+**Session End:** ~23:20 IST
+
+### What Was Done This Session
+
+#### 1. Company Dossier V0.4 UI Improvements ✅
+- [x] Implemented a sticky **Investment Summary** card at the top, dominating the view.
+- [x] Replaced "Knowledge Confidence" with the more actionable "Verified Knowledge".
+- [x] Added a 30-second single-sentence thesis at the top of the summary card.
+- [x] Converted "Why own it?" to a structured bulleted Investment Thesis.
+- [x] Enhanced Catalyst and Risk sections with magnitude metrics (e.g. 18% contribution) and evidence counts (e.g. 3 sources).
+- [x] Rewrote the business summary to plain English.
+- [x] Added a compact Investment Snapshot box (Business, Competitive Advantage, Largest Market, Core Products).
+- [x] Applied visual treatments to the Manufacturing Footprint (flags) and Geography (progress-bar style revenue mix).
+- [x] Updated "Missing" indicators to a more professional "Not enough evidence yet."
+
+#### 2. Tab Ecosystem Expansion ✅
+- [x] Solidified the navigation into the essential investor trinity: **Business, Growth, Risks**, along with a Technical Appendix for jargon.
+- [x] Implemented the second tab: "Growth Drivers" and the third tab: "Key Risks".
+- [x] Re-ordered Growth Drivers by star ranking (★★★★★ to ★★☆☆☆) to subtly tell investors where to focus.
+- [x] Added evidence count badges (e.g., '4 documents', '9 quotes', 'Updated 3 days ago') to every section to instantly build trust.
+
+### 📌 Current Milestone
+- **Company Dossier V0.4 Completed:** The UI is now a 9/10, resembling an institutional analyst's initiation report with every statement backed by evidence and structured to build conviction.
+- **Strategic Pivot:** MRI identity updated from "screener" to **"The place where I understand every company I own"**.
+- **Next:** Phase 1 of the Living Dossier Roadmap — Replace every portfolio company click with the universal Investment Dossier experience, complete with an honest "Knowledge Status" state for unresearched stocks.
+
+---
+
 ## 📅 Session: August 1, 2026 — CAI MOSI Compiler Pipeline Completion
 **Session Start:** ~17:00 IST
 **Session End:** ~18:15 IST

@@ -1,0 +1,250 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "Current share price",
+    "value": 442,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "Current share price",
+      "paragraph_index": 0,
+      "quote": "Current share price (\u20b9) is 442.",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "Current market cap",
+    "value": 38931,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "Current market cap",
+      "paragraph_index": 0,
+      "quote": "Current market cap (\u20b9 Cr) is 38,931.",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": 4029,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "TTM Revenue",
+      "paragraph_index": 0,
+      "quote": "TTM Revenue (\u20b9 Cr) is 4,029 (NII + fee).",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": 1934,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "TTM EBITDA",
+      "paragraph_index": 0,
+      "quote": "TTM EBITDA (\u20b9 Cr) is 1,934 (PPoP).",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "Enterprise Value",
+    "value": 38931,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "Enterprise Value",
+      "paragraph_index": 0,
+      "quote": "Enterprise Value (\u20b9 Cr) is 38,931 (simplified \u2014 use market cap as proxy).",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "AUM Growth YoY",
+    "value": 69.4,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25-26",
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "AUM Growth",
+      "paragraph_index": 0,
+      "quote": "AUM grew 69.4% YoY to \u20b960,348 Cr.",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-7",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "ROA",
+    "value": 1.81,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": null,
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "ROA",
+      "paragraph_index": 0,
+      "quote": "ROA crossed 1.81% (from 0.78% a year ago).",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-8",
+    "entity_id": "ENT-COMP-POONAWALLA",
+    "category": "FINANCIAL",
+    "metric_name": "Opex-to-AUM",
+    "value": 4.13,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "ANNUAL",
+      "period_label": "FY25-26",
+      "effective_date": "2026-07-01",
+      "source_date": "2026-07-01"
+    },
+    "evidence": {
+      "heading": "Opex-to-AUM",
+      "paragraph_index": 0,
+      "quote": "Opex-to-AUM declined from 4.76% \u2192 4.13% YoY.",
+      "source": {
+        "document_id": "DOC-POONAWALLA-27",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

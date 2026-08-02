@@ -1,0 +1,72 @@
+{
+  "entity_id": "ENT-COMP-544600",
+  "entity_name": "Lenskart Solutions Limited",
+  "business_model": {
+    "narrative_summary": "Lenskart is an AI-powered, vertically integrated eyewear technology platform compounding earnings at >50% annually by converting India's massive unorganized optical market into a high-margin recurring subscription ecosystem.",
+    "structured_entities": {
+      "products": [
+        "Prescription eyewear",
+        "Sunglasses",
+        "Contact lenses",
+        "AI-enabled vision testing"
+      ],
+      "plants": [
+        "Bhiwadi",
+        "Hyderabad"
+      ],
+      "customer_segments": [
+        "Tier 1 cities",
+        "Tier 2 cities",
+        "International markets"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Lenskart is investing heavily in expanding its store network and enhancing its technological capabilities.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "The company has demonstrated strong growth metrics and operational efficiency.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Lenskart expects continued growth driven by store expansion and technological advancements.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management provides clear and detailed updates on performance and strategy.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The company is led by a professional founder-led team with strong governance practices.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter group holding stands at ~17.8%, indicating significant personal investment in the company's success.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Peyush Bansal",
+        "role": "Founder & CEO"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Neha Bansal",
+        "role": "Co-Founder"
+      },
+      {
+        "entity_id": "ENT-EXEC-3",
+        "name": "Amit Chaudhary",
+        "role": "Co-Founder"
+      },
+      {
+        "entity_id": "ENT-EXEC-4",
+        "name": "Sumeet Kapahi",
+        "role": "Co-Founder"
+      }
+    ]
+  }
+}

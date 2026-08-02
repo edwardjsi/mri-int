@@ -1,0 +1,59 @@
+{
+  "entity_id": "ENT-COMP-RADICO",
+  "entity_name": "Radico Khaitan Ltd",
+  "business_model": {
+    "narrative_summary": "Radico Khaitan is a leading player in the Indian alcobev sector, focusing on premiumization and growth through its diverse product portfolio, including Rampur single malt and Jaisalmer gin.",
+    "structured_entities": {
+      "products": [
+        "Rampur single malt",
+        "Jaisalmer gin",
+        "Magic Moments vodka"
+      ],
+      "plants": [
+        "Rampur distillery"
+      ],
+      "customer_segments": [
+        "Domestic IMFL consumers",
+        "International markets"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management has demonstrated capital discipline by reducing debt while investing in capacity expansion and maintaining a consistent dividend policy.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "The company has shown strong revenue growth and margin expansion, indicating effective execution of its business strategy.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management aims to continue expanding operating margins and revenue through premium product offerings and market expansion.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management provides clear quarterly results but has limited investor day events.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Radico has a clean governance record with no SEBI enforcement actions or accounting restatements in the last 10 years.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is approximately 40%, with no significant dilution or offloading in the last three years.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Abhishek Khaitan",
+        "role": "Managing Director"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Lalit Khaitan",
+        "role": "Chairman"
+      }
+    ]
+  }
+}

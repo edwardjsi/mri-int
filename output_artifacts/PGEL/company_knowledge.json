@@ -1,0 +1,57 @@
+{
+  "entity_id": "ENT-COMP-PGEL",
+  "entity_name": "PGEL",
+  "business_model": {
+    "narrative_summary": "PGEL is evolving into India's leading integrated consumer durable manufacturing platform, benefiting from structural outsourcing, backward integration, and disciplined capacity expansion.",
+    "structured_entities": {
+      "products": [
+        "Room Air Conditioners",
+        "Washing Machines",
+        "Air Coolers",
+        "LED Televisions",
+        "Plastic Injection Moulding",
+        "Sheet Metal Components",
+        "Printed Circuit Board Assemblies",
+        "Automotive Components",
+        "Consumer Electronics",
+        "Bathroom Fittings"
+      ],
+      "plants": [
+        "South India refrigerator campus",
+        "Greater Noida washing machine expansion",
+        "West India RAC expansion"
+      ],
+      "customer_segments": [
+        "Indian brands",
+        "Global brands"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "PGEL's deployment appears focused on businesses that reinforce existing competitive strengths.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has remained strategically consistent, focusing on backward integration, capacity expansion, and product development.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management's FY26 guidance is relatively measured, indicating a normalization of growth expectations.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management discusses both opportunities and risks, providing a balanced disclosure.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Strong internal control framework with active oversight.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": null,
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

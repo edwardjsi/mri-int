@@ -1,0 +1,157 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-3BBLACKBIO",
+    "category": "FINANCIAL",
+    "metric_name": "Consolidated Revenue FY26",
+    "value": 131,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-06-01",
+      "source_date": "2026-06-01"
+    },
+    "evidence": {
+      "heading": "Core Financial Data (from Tijori)",
+      "paragraph_index": 1,
+      "quote": "Consolidated Revenue | ~Rs.131 Cr + agro",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-3BBLACKBIO",
+    "category": "FINANCIAL",
+    "metric_name": "Consolidated EBITDA FY26",
+    "value": 69,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-06-01",
+      "source_date": "2026-06-01"
+    },
+    "evidence": {
+      "heading": "Core Financial Data (from Tijori)",
+      "paragraph_index": 1,
+      "quote": "Consolidated EBITDA | ~Rs.69 Cr",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-3BBLACKBIO",
+    "category": "FINANCIAL",
+    "metric_name": "3B India EBITDA Margin FY26",
+    "value": 55,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-06-01",
+      "source_date": "2026-06-01"
+    },
+    "evidence": {
+      "heading": "Segments & FY26 Performance",
+      "paragraph_index": 1,
+      "quote": "3B India (Standalone) | EBITDA Margin | **55%**",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-3BBLACKBIO",
+    "category": "FINANCIAL",
+    "metric_name": "Exports Growth FY26",
+    "value": 26,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-06-01",
+      "source_date": "2026-06-01"
+    },
+    "evidence": {
+      "heading": "Core Financial Data (from Tijori)",
+      "paragraph_index": 1,
+      "quote": "Exports growth | +26%",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-3BBLACKBIO",
+    "category": "FINANCIAL",
+    "metric_name": "Consolidated Revenue Growth FY27 Guidance",
+    "value": "15-20%",
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY27",
+      "effective_date": "2026-06-01",
+      "source_date": "2026-06-01"
+    },
+    "evidence": {
+      "heading": "Core Financial Data (from Tijori)",
+      "paragraph_index": 1,
+      "quote": "Consolidated Revenue | 15-20% growth",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]

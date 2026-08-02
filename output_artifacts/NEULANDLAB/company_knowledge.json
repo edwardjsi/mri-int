@@ -1,0 +1,51 @@
+{
+  "entity_id": "ENT-COMP-NEULANDLAB",
+  "entity_name": "Neuland Laboratories Limited",
+  "business_model": {
+    "narrative_summary": "Neuland Laboratories is positioned in the Expansion Stage of its life cycle, transitioning from a generic API manufacturer to a high-margin Custom Manufacturing Solutions (CMS) provider.",
+    "structured_entities": {
+      "products": [
+        "High-barrier Active Pharmaceutical Ingredients (APIs)",
+        "Custom Manufacturing Solutions (CMS)",
+        "Prime APIs",
+        "Specialty APIs"
+      ],
+      "plants": [
+        "Unit 1",
+        "Unit 2",
+        "Unit 3"
+      ],
+      "customer_segments": [
+        "Global pharmaceutical innovators",
+        "Western pharmaceutical companies"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Neuland is fully capitalized with strong internal cash generation supporting expansion plans.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management has successfully pivoted the company towards high-margin custom synthesis.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management claims FY26 would be a year of strong growth.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management handles cyclical lumpiness transparently.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The company is highly professionally run with top-tier institutional governance.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoters hold 32.63% of the company.",
+      "facts": []
+    },
+    "key_executives": []
+  }
+}

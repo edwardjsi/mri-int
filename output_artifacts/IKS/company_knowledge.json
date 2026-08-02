@@ -1,0 +1,59 @@
+{
+  "entity_id": "ENT-COMP-544309",
+  "entity_name": "Inventurus Knowledge Solutions Limited (IKS Health)",
+  "business_model": {
+    "narrative_summary": "IKS Health provides a comprehensive AI-enabled Care Enablement Platform that delegates various administrative tasks for US healthcare providers across the patient journey.",
+    "structured_entities": {
+      "products": [
+        "AI-enabled Care Enablement Platform",
+        "Scribble Suite",
+        "Q CODE",
+        "IKS EVE\u2122",
+        "AssuRx\u2122",
+        "MyCare Hub"
+      ],
+      "plants": [],
+      "customer_segments": [
+        "US healthcare providers"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "IKS Health focuses on strategic acquisitions and investments in technology to enhance its service offerings.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "The company has demonstrated strong revenue and EBITDA growth, indicating effective execution of its business strategy.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "IKS Health anticipates continued revenue growth and margin expansion as it integrates TruBridge and scales AI-driven solutions.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has been transparent about risks and operational challenges, providing clear guidance on future expectations.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The board consists of high-caliber independent directors with experience in healthcare and technology.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "Promoter holding is approximately 45-50%, indicating significant alignment with shareholder interests.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Sachin Gupta",
+        "role": "Founder & CEO"
+      },
+      {
+        "entity_id": "ENT-EXEC-2",
+        "name": "Joseph Benardello",
+        "role": "Co-Founder"
+      }
+    ]
+  }
+}

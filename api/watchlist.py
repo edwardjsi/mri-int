@@ -38,6 +38,7 @@ class WatchlistItem(BaseModel):
     is_pending: bool = False
     perx_score: Optional[float] = None
     perx_lifecycle: Optional[str] = None
+    models: Optional[List[dict]] = None
 
 @router.get("/universal", response_model=List[str])
 def get_universal_watchlist(conn=Depends(get_db)):
@@ -172,6 +173,27 @@ def get_watchlist(client=Depends(get_current_client), conn=Depends(get_db)):
                 # Append minimal item so we don't break the whole list
                 results.append(WatchlistItem(symbol=row.get('symbol', 'ERROR')))
                 
+        # Attach latest models
+        if results:
+            symbols = [r.symbol for r in results if r.symbol != 'ERROR']
+            from engine_core.model_results_repository import ModelResultRepository
+            model_repo = ModelResultRepository()
+            models = model_repo.latest_for_symbols(symbols)
+            models_by_symbol = {}
+            for m in models:
+                if m.symbol not in models_by_symbol:
+                    models_by_symbol[m.symbol] = []
+                models_by_symbol[m.symbol].append({
+                    "id": m.model_id,
+                    "version": m.model_version,
+                    "status": m.status,
+                    "score": float(m.score) if m.score is not None else None,
+                    "evaluation_date": m.evaluation_date.isoformat() if m.evaluation_date else None,
+                })
+            for r in results:
+                if r.symbol in models_by_symbol:
+                    r.models = models_by_symbol[r.symbol]
+
         return results
 
     except Exception as e:

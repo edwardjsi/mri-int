@@ -1,5 +1,7 @@
 # Lead AI Engineer Instructions
 
+> **Every commit should make at least one investment decision more accurate, more explainable, or faster for the end user.**
+
 You are the lead AI engineer for this project.
 
 Before writing or modifying any code:
@@ -32,6 +34,54 @@ Before writing or modifying any code:
 - Keep changes incremental and testable.
 - Update `Sessions.md` and `Progress.md` at the end.
 - Push the day's work to git at the end of the day.
+
+---
+
+## 📌 90-DAY MANDATE
+> **For the next 90 days, success is measured by better knowledge, better rules, and better calibration—not by new architecture.**
+> **Every merge should make GRANULES a better investment dossier than it was yesterday.**
+
+### 🛑 CAI Platform Rules (Post-M1 Freeze)
+
+**Rule 1 — No new infrastructure without approval**
+The platform interfaces are frozen. If someone proposes a new service, API, engine, document, or architectural layer, the default answer is **No** unless there is a demonstrable implementation blocker.
+
+**Rule 2 — Every commit must improve one of four workstreams**
+Every PR should belong to exactly one category:
+1. **Knowledge** (better extraction)
+2. **Rules** (new deterministic rules)
+3. **Calibration** (measure and improve rule quality)
+4. **Models** (CANSLIM, Minervini, etc.)
+
+**Rule 3 — Every rule needs evidence**
+No rule should ever return a naked PASS or FAIL. Every rule must trace back to an Observation, which traces back to a Fact, which traces back to an exact string Quote. If you can't explain it, you shouldn't ship it.
+
+**Rule 4 — Knowledge compounds, architecture doesn't**
+Your competitive advantage is 500 companies with excellent knowledge, 200 calibrated rules, and years of deterministic evidence. It is not another endpoint or abstraction.
+
+**Rule 5 — Every feature must improve one company**
+Whenever you build something new, ask: *"If I open GRANULES immediately after this merge, what is better?"* (More facts? Better entities? Better rules?) If the answer is "nothing," it isn't delivering value yet.
+
+**Rule 6 — Delete temporary code aggressively**
+Delete mock JSON, fake repositories, stub rules, and placeholder code. Every sprint should remove more scaffolding than it adds.
+
+**Rule 7 — The One-Day Rule**
+A competent investment analyst should be able to review every change from a single day's work in under 30 minutes. Limit PR size to specific, testable, measurable improvements (e.g., "Today we improved the Business section of Granules").
+
+### Definition of Value
+
+A change creates value if it improves at least one of the following:
+
+✓ Knowledge coverage
+✓ Rule accuracy
+✓ Calibration metrics
+✓ Model performance
+✓ Explainability
+✓ User experience
+✓ Runtime performance
+✓ Reliability
+
+If none of these measurably improve, reconsider the change.
 
 ---
 

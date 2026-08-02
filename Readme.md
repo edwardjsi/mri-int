@@ -1,15 +1,19 @@
 # Market Regime Intelligence (MRI) Platform v2.0
 
-> **From regime filter → quality framework → AI-powered forensic debate engine.**
+> **From screener → quality framework → living institutional investment dossier.**
 
-MRI is a quantitative equity intelligence platform for Indian listed equities. It combines technical momentum scoring, fundamental quality analysis, and GPT-powered forensic debate reports — delivered daily via email to professional investors.
+MRI is the place where you understand every company you own. It is a quantitative equity intelligence platform for Indian listed equities that transforms scattered reports and technical data into a living, institutional-grade investment dossier for every company in your portfolio. It combines technical momentum scoring, fundamental quality analysis, and GPT-powered forensic extraction—delivering a unified, evidence-backed narrative.
 
 ---
 
 ## 🎯 What MRI Does
 
+At its core, MRI generates a **Living Investment Dossier** for any stock. 
+Every company in your portfolio or watchlist has an evidence-backed dossier that evolves as new MOSI reports are compiled.
+
 | Layer | Output | Frequency |
 |-------|--------|-----------|
+| **Living Dossier** | A single institutional research page answering: Business, Growth, Risks | On-demand |
 | **Market Regime** | Risk-On / Risk-Off / Neutral classification | Daily |
 | **MRI Score** | 0–100 weighted technical momentum score | Daily |
 | **Quality Verdict** | QIF score (0–100) + category + flags | Daily |

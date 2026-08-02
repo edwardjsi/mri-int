@@ -23,6 +23,7 @@ from engine_core.cas_indicators import (
     compute_weekly_close_above_resistance,
     compute_weekly_trend_score,
 )
+from engine_core.rrg_indicators import compute_rrg_indicators
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -116,6 +117,12 @@ INDICATOR_COLUMNS = (
     ("volume_threshold_used", "NUMERIC DEFAULT NULL"),
     ("breakout_date_for_volume", "DATE DEFAULT NULL"),
     ("volume_confirmed_breakout", "BOOLEAN DEFAULT NULL"),
+    # RRG Primitives (Investment Model Platform PR 2.5)
+    ("jdk_rs_ratio", "NUMERIC DEFAULT NULL"),
+    ("jdk_rs_momentum", "NUMERIC DEFAULT NULL"),
+    ("rrg_quadrant", "VARCHAR(20) DEFAULT NULL"),
+    ("rrg_heading", "NUMERIC DEFAULT NULL"),
+    ("rrg_benchmark", "VARCHAR(20) DEFAULT NULL"),
 )
 
 # The daily pipeline needs current and near-current indicators, while writing
@@ -187,6 +194,7 @@ def fetch_symbols_needing_repair():
                     OR volume_threshold_used IS NULL
                     OR breakout_date_for_volume IS NULL
                     OR volume_confirmed_breakout IS NULL
+                    OR rrg_quadrant IS NULL
                 )
                 OR (
                     date = (SELECT * FROM latest_date)
@@ -431,6 +439,24 @@ def compute_indicators(df, idx_df):
         close_idx = pd.Series(s_df["close"].values, index=date_series)
         volume_idx = pd.Series(s_df["volume"].values, index=date_series)
         avg_vol_idx = pd.Series(s_df["avg_volume_20d"].values, index=date_series)
+        
+        # ── RRG Primitives Calculation (PR 2.5) ────────────────────────
+        benchmark_symbol = "NIFTY50"  # Default
+        if not idx_df.empty:
+            # We align benchmark close prices by date for this specific stock
+            idx_aligned = idx_df.set_index("date")["idx_close"].reindex(date_series)
+            rrg_df = compute_rrg_indicators(close_idx, idx_aligned, window=14)
+            s_df["jdk_rs_ratio"] = rrg_df["jdk_rs_ratio"].values
+            s_df["jdk_rs_momentum"] = rrg_df["jdk_rs_momentum"].values
+            s_df["rrg_quadrant"] = rrg_df["rrg_quadrant"].values
+            s_df["rrg_heading"] = rrg_df["rrg_heading"].values
+            s_df["rrg_benchmark"] = benchmark_symbol
+        else:
+            s_df["jdk_rs_ratio"] = None
+            s_df["jdk_rs_momentum"] = None
+            s_df["rrg_quadrant"] = None
+            s_df["rrg_heading"] = None
+            s_df["rrg_benchmark"] = None
 
         # G3a: compute BOTH prior_52w_high and ATH before-current-week (cheap,
         # idempotent, both stored for auditability even if only one is
@@ -554,6 +580,11 @@ def compute_indicators(df, idx_df):
                         bool(row.get("volume_confirmed_breakout"))
                         if row.get("volume_confirmed_breakout") is not None else None
                     ),
+                    "jdk_rs_ratio": row.get("jdk_rs_ratio"),
+                    "jdk_rs_momentum": row.get("jdk_rs_momentum"),
+                    "rrg_quadrant": row.get("rrg_quadrant"),
+                    "rrg_heading": row.get("rrg_heading"),
+                    "rrg_benchmark": row.get("rrg_benchmark"),
                 }
             )
             merged = pd.merge(
@@ -633,6 +664,11 @@ def compute_indicators(df, idx_df):
                         bool(row.get("volume_confirmed_breakout"))
                         if row.get("volume_confirmed_breakout") is not None else None
                     ),
+                    "jdk_rs_ratio": row.get("jdk_rs_ratio"),
+                    "jdk_rs_momentum": row.get("jdk_rs_momentum"),
+                    "rrg_quadrant": row.get("rrg_quadrant"),
+                    "rrg_heading": row.get("rrg_heading"),
+                    "rrg_benchmark": row.get("rrg_benchmark"),
                 }
             )
 
@@ -740,7 +776,12 @@ def update_db_with_indicators(updates, max_retries=3):
                         breakout_day_volume_ratio = %(breakout_day_volume_ratio)s,
                         volume_threshold_used = %(volume_threshold_used)s,
                         breakout_date_for_volume = %(breakout_date_for_volume)s,
-                        volume_confirmed_breakout = %(volume_confirmed_breakout)s
+                        volume_confirmed_breakout = %(volume_confirmed_breakout)s,
+                        jdk_rs_ratio = %(jdk_rs_ratio)s,
+                        jdk_rs_momentum = %(jdk_rs_momentum)s,
+                        rrg_quadrant = %(rrg_quadrant)s,
+                        rrg_heading = %(rrg_heading)s,
+                        rrg_benchmark = %(rrg_benchmark)s
                     WHERE symbol = %(symbol)s AND date = %(date)s
                 """
                 execute_batch(cur, sql, updates, page_size=2000)

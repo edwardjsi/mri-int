@@ -1,0 +1,50 @@
+{
+  "entity_id": "ENT-COMP-3BBLACKBIO",
+  "entity_name": "3B BlackBio Dx Ltd",
+  "business_model": {
+    "narrative_summary": "India's leading open-system MDx kit maker with 55% standalone EBITDA margins and 70-country exports.",
+    "structured_entities": {
+      "products": [
+        "MDx kits"
+      ],
+      "plants": [],
+      "customer_segments": [
+        "Healthcare providers",
+        "Diagnostic laboratories"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Management has shown a strategic approach to capital allocation but faces challenges with integration and credibility.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Management's execution has been questioned due to inconsistent contract numbers and missed guidance.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management has provided guidance for 15-20% growth for FY27, but credibility is in question.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "Management has faced criticism for retroactive guidance justification and selective disclosure.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "The governance structure is in place, but management credibility issues raise concerns.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "The company is founder-led, indicating a level of commitment from the management.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1",
+        "name": "Founder Name",
+        "role": "CEO"
+      }
+    ]
+  }
+}

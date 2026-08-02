@@ -1,0 +1,61 @@
+{
+  "entity_id": "ENT-COMP-GRANULES",
+  "entity_name": "Granules India",
+  "business_model": {
+    "narrative_summary": "Granules operates as a vertically integrated pharmaceutical manufacturing company focused on core APIs, PFIs, and Finished Dosages. Its core strategy relies on high volume, low margin scale economies.",
+    "structured_entities": {
+      "products": [
+        "Paracetamol",
+        "Ibuprofen",
+        "Metformin"
+      ],
+      "plants": [
+        "Vizag Block 4 API Facility",
+        "Gagillapur PFI Facility",
+        "Bonthapally Facility"
+      ],
+      "customer_segments": [
+        "B2B API Supply",
+        "US Generic Rx"
+      ]
+    }
+  },
+  "management": {
+    "capital_allocation_philosophy": {
+      "narrative": "Prudent allocation focused on core APIs. The company does not chase unrelated diversifications.",
+      "facts": []
+    },
+    "execution_track_record": {
+      "narrative": "Consistent track record of delivering margins over the last 10 years, despite pricing pressure in the US.",
+      "facts": []
+    },
+    "forward_guidance": {
+      "narrative": "Management has explicitly stated they are expected to grow at 20%+ CAGR for the next three years.",
+      "facts": []
+    },
+    "communication_transparency": {
+      "narrative": "High transparency, clear disclosures in quarterly results.",
+      "facts": []
+    },
+    "governance_and_board": {
+      "narrative": "Independent board with strong pedigree.",
+      "facts": []
+    },
+    "promoter_skin_in_game": {
+      "narrative": "High promoter holding with zero pledge, demonstrating strong conviction.",
+      "facts": []
+    },
+    "key_executives": [
+      {
+        "entity_id": "ENT-EXEC-1a2b3c4d",
+        "name": "Krishna Prasad",
+        "role": "MD & Chairman"
+      },
+      {
+        "entity_id": "ENT-EXEC-5e6f7a8b",
+        "name": "Priyanka Chigurupati",
+        "role": "Executive Director"
+      }
+    ]
+  }
+}

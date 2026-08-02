@@ -5,6 +5,7 @@ import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
 import { CaiLedger } from './CaiLedger';
 import { Mail } from 'lucide-react';
+import { ModelBadgeGroup } from './components/ModelBadge';
 
 export const CaiPortfolioPage: React.FC = () => {
   const [portfolio, setPortfolio] = useState<any>(null);
@@ -213,7 +214,12 @@ export const CaiPortfolioPage: React.FC = () => {
             ) : (
               sortedPositions.map((pos: any) => (
                 <tr key={pos.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                  <td className="p-4 font-bold text-white">{pos.symbol}</td>
+                  <td className="p-4 font-bold text-white">
+                    <div className="flex flex-col gap-1">
+                      <span>{pos.symbol}</span>
+                      <ModelBadgeGroup models={pos.models} />
+                    </div>
+                  </td>
                   <td className="p-4 text-right font-mono text-gray-300">₹{pos.average_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                   <td className="p-4 text-right text-gray-300">{pos.quantity}</td>
                   <td className="p-4 text-center">

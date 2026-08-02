@@ -1,0 +1,312 @@
+[
+  {
+    "fact_id": "KNW-FINANCIAL-1",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "Current Share Price",
+    "value": 8862,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Current Share Price (\u20b9) | 8,862",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-2",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "Current Market Cap",
+    "value": 133488,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Current Market Cap (\u20b9 Cr) | 133,488",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-3",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EPS",
+    "value": 190,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM EPS (\u20b9) | 190",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-4",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM Revenue",
+    "value": 31187,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM Revenue (\u20b9 Cr) | ~31,187 (computed)",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-5",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "TTM EBITDA",
+    "value": 4284,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "TTM EBITDA (\u20b9 Cr) | ~4,284 (computed)",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-FINANCIAL-6",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "FINANCIAL",
+    "metric_name": "Enterprise Value",
+    "value": 129298,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "USER INPUT BLOCK",
+      "paragraph_index": 1,
+      "quote": "Enterprise Value (\u20b9 Cr) | ~129,298 (computed, net cash \u20b94,194 Cr)",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-1",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "BUSINESS",
+    "metric_name": "Revenue FY26",
+    "value": 28884,
+    "unit": "CURRENCY",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
+      "paragraph_index": 1,
+      "quote": "FY26 revenue crossed \u20b928,884 Cr (29% YoY)",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "BUSINESS",
+    "metric_name": "EBITDA Growth FY26",
+    "value": 35,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
+      "paragraph_index": 1,
+      "quote": "EBITDA grew 35% YoY",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "BUSINESS",
+    "metric_name": "PAT Growth FY26",
+    "value": 32,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "FY26",
+      "effective_date": "2026-03-31",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
+      "paragraph_index": 1,
+      "quote": "PAT grew 32% YoY",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  },
+  {
+    "fact_id": "KNW-BUSINESS-4",
+    "entity_id": "ENT-COMP-POLYCAB",
+    "category": "BUSINESS",
+    "metric_name": "Market Share in Wires & Cables",
+    "value": 31,
+    "unit": "PERCENTAGE",
+    "temporal_context": {
+      "period_type": "POINT_IN_TIME",
+      "period_label": "2026-07-17",
+      "effective_date": "2026-07-17",
+      "source_date": "2026-07-17"
+    },
+    "evidence": {
+      "heading": "STEP 10: MOAT, TAM & COMPETITIVE POSITION",
+      "paragraph_index": 1,
+      "quote": "30-31% market share",
+      "source": {
+        "document_id": "DOC-POLYCAB-23",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-01"
+      }
+    },
+    "confidence": {
+      "value": 1.0,
+      "reason": "Explicit statement in text"
+    },
+    "status": "ACTIVE",
+    "version": 1
+  }
+]
