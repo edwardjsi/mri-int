@@ -12,6 +12,15 @@ class MosiUploadRequest(BaseModel):
     symbol: str
     report_text: str
 
+@router.get("/library")
+def get_mosi_library():
+    """Returns a list of all symbols with imported MOSI artifacts."""
+    try:
+        symbols = importer.get_all_symbols()
+        return {"library": symbols}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/knowledge/{symbol}")
 def get_company_knowledge(symbol: str) -> Dict[str, Any]:
     artifacts = importer.get_artifacts(symbol.upper())

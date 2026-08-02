@@ -89,3 +89,15 @@ class KnowledgeImporter:
         finally:
             cur.close()
             conn.close()
+
+    def get_all_symbols(self):
+        """Fetches all symbols available in the library."""
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT symbol, updated_at, company_knowledge->>'entity_name' as entity_name FROM mosi_compiled_artifacts ORDER BY symbol ASC")
+            rows = cur.fetchall()
+            return [{"symbol": row["symbol"], "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None, "entity_name": row["entity_name"]} for row in rows]
+        finally:
+            cur.close()
+            conn.close()

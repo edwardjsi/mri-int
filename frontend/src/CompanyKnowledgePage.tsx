@@ -27,8 +27,9 @@ export const CompanyKnowledgePage: React.FC = () => {
     const { symbol: routeSymbol } = useParams<{ symbol: string }>();
     const navigate = useNavigate();
     
-    const [symbol, setSymbol] = useState(routeSymbol || 'GRANULES');
-    const [searchSymbol, setSearchSymbol] = useState(routeSymbol || 'GRANULES');
+    const [symbol, setSymbol] = useState(routeSymbol || '');
+    const [searchSymbol, setSearchSymbol] = useState(routeSymbol || '');
+    const [library, setLibrary] = useState<any[]>([]);
     const [facts, setFacts] = useState<Fact[]>([]);
     const [knowledge, setKnowledge] = useState<Knowledge | null>(null);
     const [report, setReport] = useState<any>(null);
@@ -65,14 +66,37 @@ export const CompanyKnowledgePage: React.FC = () => {
     };
 
     useEffect(() => {
+        const fetchLibrary = async () => {
+            try {
+                const res = await fetch('/api/v1/mosi/library');
+                if (res.ok) {
+                    const data = await res.json();
+                    setLibrary(data.library);
+                }
+            } catch (err) {
+                console.error("Failed to load MOSI library", err);
+            }
+        };
+        fetchLibrary();
+    }, []);
+
+    useEffect(() => {
         if (routeSymbol) {
             setSymbol(routeSymbol);
             setSearchSymbol(routeSymbol);
+        } else {
+            setSymbol('');
+            setSearchSymbol('');
         }
     }, [routeSymbol]);
 
     useEffect(() => {
-        fetchArtifacts(symbol);
+        if (symbol) {
+            fetchArtifacts(symbol);
+        } else {
+            setKnowledge(null);
+            setError(null);
+        }
     }, [symbol]);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -125,9 +149,43 @@ export const CompanyKnowledgePage: React.FC = () => {
                 </form>
             </div>
 
-            {loading && <p>Loading Company Knowledge Base...</p>}
+            {!symbol && (
+                <div className="card" style={{ padding: '24px' }}>
+                    <h2 style={{ marginTop: 0 }}>MOSI Knowledge Library</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Select a company below to view its compiled knowledge base artifacts.</p>
+                    {library.length === 0 ? (
+                        <p>No knowledge bases imported yet. Search for a symbol to begin importing.</p>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '24px' }}>
+                            {library.map((item) => (
+                                <div key={item.symbol} 
+                                     onClick={() => navigate(`/mosi/${item.symbol}`)}
+                                     style={{ 
+                                         padding: '16px', 
+                                         border: '1px solid var(--border-color)', 
+                                         borderRadius: '8px', 
+                                         cursor: 'pointer',
+                                         backgroundColor: 'var(--bg-secondary)',
+                                         transition: 'transform 0.2s, borderColor 0.2s'
+                                     }}
+                                     onMouseEnter={(e) => e.currentTarget.style.borderColor = '#10b981'}
+                                     onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                                >
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#60a5fa', marginBottom: '8px' }}>{item.symbol}</div>
+                                    <div style={{ fontSize: '14px', marginBottom: '8px' }}>{item.entity_name}</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                        Updated: {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'Unknown'}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {symbol && loading && <p>Loading Company Knowledge Base...</p>}
             
-            {error && (
+            {symbol && error && (
                 <div className="card" style={{ padding: '20px', backgroundColor: '#ef444415', border: '1px solid #ef4444' }}>
                     <p className="error-text" style={{ margin: '0 0 16px 0' }}>{error}</p>
                     
