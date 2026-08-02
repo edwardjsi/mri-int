@@ -1,76 +1,112 @@
-# CANSLIM Hybrid Screener & Enrichment Specification
+# CANSLIM Hybrid Screener & Knowledge Engine Specification
 
 ## 1. Objective
-To build a highly efficient CANSLIM screening module that avoids the prohibitive cost and false-negatives of processing the entire market through an LLM. It achieves this by splitting the William O'Neil CANSLIM framework into two distinct phases: a **Strict Quantitative Filter** followed by an **On-Demand LLM Enrichment** for missing qualitative data.
+To build a highly efficient, deterministic CANSLIM screening module that natively consumes the MRI Indicator Engine and MOSI Company Knowledge base. 
+
+**Core Architectural Tenets:**
+1. **LLM Extracts Facts, Rules Make Decisions:** The AI never decides if a stock "passes" CANSLIM. It solely extracts structured observations (e.g., *capacity expansion announced*). A deterministic Rule Engine evaluates those facts to issue a Pass/Fail.
+2. **Calculate Once, Consume Many Times:** CANSLIM is not a separate subsystem. It is a downstream consumer of the MRI Database and the MOSI Knowledge Store. 
+3. **Evidentiary Grounding:** Every qualitative score is backed by a `confidence` rating and an exact `evidence` quote.
+4. **Caching & Freshness:** Enrichment is only triggered if a stock is missing knowledge or if the knowledge is mathematically stale.
 
 ---
 
-## 2. The Two-Phase Funnel Architecture
+## 2. The Deterministic Funnel Architecture
 
 ### Phase 1: The Quant Filter (C, A, S, L, M)
-The backend will query the existing PostreSQL database to filter the Nifty 500 down to a manageable shortlist of highly probable candidates (e.g., 20-30 stocks).
+The CANSLIM filter queries the existing MRI Database to evaluate quantitative rules. It does not think in "letters" internally; it evaluates primitives and maps them to the UI.
 
-*   **[C] Current Earnings & [A] Annual Growth**: 
-    *   *Source*: Existing Fundamental Quality Verdict schema (`revenue_score`, `margin_score`).
-    *   *Filter*: Must have an aggregate fundamental score > 60%.
-*   **[S] Supply and Demand**: 
-    *   *Source*: MRI Engine Technicals.
-    *   *Filter*: Must show a `volume_surge` (>= 1.3x avg) OR a positive EMA 200 Slope (Accumulation Velocity).
-*   **[L] Leader or Laggard**: 
-    *   *Source*: MRI Engine Technicals.
-    *   *Filter*: Must have positive 90-day Relative Strength (`relative_strength > 0`) and be within 15% of a 52-week or 6-month high.
-*   **[M] Market Direction**: 
-    *   *Source*: Market Regime Engine.
-    *   *Filter*: Screener dynamic weighting adjusts based on Risk-On (Aggressive) vs. Risk-Off (Defensive).
+*   **Current Earnings (C) & Annual Growth (A)**: 
+    *   *Consumer*: Existing Fundamental Quality Verdict schema (`revenue_score`, `margin_score`).
+    *   *Rule*: Combined Fundamental Score > 60%.
+*   **Volume Expansion (S)**: 
+    *   *Consumer*: MRI Engine Technicals.
+    *   *Rule*: `volume_surge` >= 1.3x avg OR Accumulation Velocity (EMA 200 Slope) > 0.
+*   **Relative Strength (L)**: 
+    *   *Consumer*: MRI Engine Technicals.
+    *   *Rule*: Positive 90-day Relative Strength and Price within 15% of 6-month high.
+*   **Market Regime (M)**: 
+    *   *Consumer*: Market Regime Engine.
+    *   *Rule*: Fails dynamically if the broader market regime is explicitly RISK-OFF.
 
-### Phase 2: LLM Enrichment (N, I)
-For the 20-30 stocks that survive Phase 1, the system will look up their CIW/MOSI artifacts for "New Products" and "Institutional Sponsorship". If this data is thin or missing, the user triggers an LLM Enrichment task.
+### Phase 2: The Knowledge Lookup & Enrichment Queue (N, I)
+For candidates that pass the Quant Filter, the system queries the **MOSI Knowledge Store**.
 
-*   **[N] New Products / Management / Highs**: 
-    *   *Enrichment*: LLM specifically parses recent earnings transcripts/news for "Catalysts", "Capacity Expansions", and "Management Changes".
-*   **[I] Institutional Sponsorship**: 
-    *   *Enrichment*: LLM extracts mentions of QIB (Qualified Institutional Buyer) accumulation, promoter buying, or block deals.
+1.  **Check Freshness**: Is there a MOSI artifact for this symbol? Is it less than 30 days old?
+    *   *YES*: Pass facts to the Rule Engine immediately.
+    *   *NO / STALE*: Flag as `UNKNOWN` or `STALE` and place in the Enrichment Queue.
+2.  **The Extraction Task (Not Decision Task)**:
+    *   If enrichment is triggered, the LLM is prompted strictly to extract facts: *"Extract JSON arrays of any new products, capacity expansions, management changes, and institutional holdings changes."*
+3.  **The Rule Engine Evaluation**:
+    *   **New Catalysts (N)**: *Rule*: IF `len(new_products) > 0` OR `management_change == true` -> PASS.
+    *   **Institutional Buying (I)**: *Rule*: IF `institutional_holding_change > 0` -> PASS.
 
 ---
 
-## 3. Data Flow & Endpoints
+## 3. Data Flow & Schema
 
-### 3.1. `GET /api/v1/canslim/screen`
-*   **Action**: Executes the SQL filters for Phase 1.
-*   **Response**: Returns the top 30 quant-screened stocks.
-*   **Schema**:
-    ```json
-    {
-       "symbol": "TCS",
-       "quant_score": 85,
-       "canslim_status": {
-           "C": "Pass", "A": "Pass", "S": "Pass", "L": "Pass", "M": "Pass",
-           "N": "Pending_Enrichment",
-           "I": "Pending_Enrichment"
+### The API Flow
+```
+Indicator Engine -> MRI Database -> CANSLIM Quant Filter -> Candidate List
+                                                                 |
+                                                          Knowledge Lookup
+                                                                 |
+                                                         Missing or Stale?
+                                                        /                 \
+                                                      YES                  NO
+                                                      |                     |
+                                                LLM Extraction              |
+                                                      |                     |
+                                                MOSI Store <----------------+
+                                                      |
+                                              CANSLIM Rule Engine
+                                                      |
+                                             Ranked Candidate List
+```
+
+### The Output Schema
+Instead of a simple PASS/FAIL, the API returns a structured score, granular statuses, and evidence.
+
+```json
+{
+   "symbol": "GRANULES",
+   "canslim_score": 87,
+   "knowledge_age_days": 18,
+   "components": {
+       "N": {
+           "status": "PASS",
+           "confidence": 0.94,
+           "evidence": [
+               "We commissioned Block 4 API plant in Q1."
+           ]
+       },
+       "I": {
+           "status": "STALE",
+           "confidence": null,
+           "evidence": []
        }
-    }
-    ```
-
-### 3.2. `POST /api/v1/canslim/enrich`
-*   **Action**: Takes a list of symbols and triggers the LLM Agent.
-*   **Payload**: `{"symbols": ["TCS", "GRANULES"]}`
-*   **Process**:
-    1. Fetches raw text/transcripts for the symbol.
-    2. Prompts LLM: *"Identify major new product launches (N) and institutional buying activity (I) for [Symbol]. Return strict JSON."*
-    3. Updates the `mosi_compiled_artifacts` database with the new findings.
-*   **Response**: Enriched qualitative data for the UI.
+   }
+}
+```
 
 ---
 
 ## 4. Frontend UI/UX (`CanslimScreener.tsx`)
 
-1. **The Grid**: A clean data-table showing the shortlisted stocks. Columns represent the C-A-N-S-L-I-M letters. 
-2. **Visual Indicators**: Letters that pass are highlighted in **Green**. Letters that fail are **Red**. Letters lacking data are **Gray (Pending)**.
-3. **The "Auto-Enrich" Button**: A primary action button at the top of the screener: *"Enrich Missing Data (LLM)"*. Clicking this fires the `POST /enrich` endpoint and displays a loading skeleton on the Gray columns until the LLM returns the verified text.
-4. **Evidence Tooltips**: Hovering over the enriched "N" or "I" columns will display the exact LLM-extracted quote proving the new product or institutional buy.
+1. **The Ranking Grid**: Stocks are sorted by their overall **CANSLIM Score (0-100)** rather than just a binary filter.
+2. **Knowledge Freshness Column**: Displays the age of the underlying MOSI artifact (e.g., `18 days`, `No Knowledge`).
+3. **Status Indicators**:
+    *   🟢 `PASS`
+    *   🔴 `FAIL`
+    *   ⚪ `UNKNOWN` (No data)
+    *   🟡 `STALE` (Data > 30 days old)
+    *   🔵 `ENRICHING` (Currently running LLM extraction)
+4. **Evidence Tooltips**: Hovering over any `PASS` status in the N or I columns reveals the exact string evidence that triggered the Rule Engine.
+5. **The Enrichment Queue**: A button to "Enrich Unknown/Stale Candidates" which fires the LLM specifically for rows lacking fresh qualitative data.
 
 ---
 
 ## 5. Deployment Phasing
-*   **Sprint 1**: Build the Phase 1 backend route (`/screen`) utilizing existing database fields, and construct the basic `CanslimScreener.tsx` UI.
-*   **Sprint 2**: Build the LLM Enrichment Agent (`/enrich`) and integrate the "Auto-Enrich" frontend workflow.
+*   **Sprint 1**: Build the Backend Rule Engine to consume existing MRI DB metrics and evaluate the Quant components (C, A, S, L, M). Build the UI grid.
+*   **Sprint 2**: Integrate the MOSI Knowledge lookup to evaluate N and I based on existing stored JSON facts.
+*   **Sprint 3**: Implement the Enrichment Queue to auto-trigger the LLM fact-extractor for missing/stale knowledge.
