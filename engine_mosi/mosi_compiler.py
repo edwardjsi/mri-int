@@ -129,8 +129,28 @@ class MosiCompiler:
         start_time = datetime.utcnow()
         
         try:
-            # LLM Extraction
-            extracted = self._extract_knowledge_via_llm(report_text)
+            # Check if input is already extracted JSON (Bypass LLM)
+            is_precompiled = False
+            extracted = None
+            try:
+                # Some LLM outputs wrap JSON in markdown blocks
+                clean_text = report_text.strip()
+                if clean_text.startswith("```json"):
+                    clean_text = clean_text[7:]
+                if clean_text.endswith("```"):
+                    clean_text = clean_text[:-3]
+                
+                parsed = json.loads(clean_text.strip())
+                if isinstance(parsed, dict) and "company_facts" in parsed and "company_knowledge" in parsed:
+                    extracted = parsed
+                    is_precompiled = True
+            except:
+                pass
+                
+            if not is_precompiled:
+                # LLM Extraction
+                extracted = self._extract_knowledge_via_llm(report_text)
+                
             company_facts = extracted.get("company_facts", [])
             company_knowledge = extracted.get("company_knowledge", {})
             
