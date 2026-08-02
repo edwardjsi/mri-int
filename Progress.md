@@ -2,6 +2,50 @@
 
 ---
 
+## 📅 Session: August 1, 2026 — CAI MOSI Compiler Pipeline Completion
+**Session Start:** ~17:00 IST
+**Session End:** ~18:15 IST
+
+### What Was Done This Session
+
+#### 1. Knowledge Importer Engine ✅
+- [x] Implemented `engine_mosi/knowledge_importer.py` to persist `MosiCompiler` output artifacts into the `mosi_compiled_artifacts` database table.
+- [x] Ran batch importer against the ~30 existing processed MOSI company reports in `output_artifacts/`. All successful reports are now living in the database.
+
+#### 2. MOSI API & Backend Logic ✅
+- [x] Created `api/mosi.py` router with `GET /api/v1/mosi/knowledge/{symbol}` to fetch compiled state.
+- [x] Created `POST /api/v1/mosi/upload` to automatically process and ingest raw markdown MOSI reports.
+- [x] Integrated router into `api/main.py`. Verified zero Python syntax errors using `py_compile`.
+
+#### 3. Company Knowledge UI Integration ✅
+- [x] Refactored `CompanyKnowledgePage.tsx` to remove hardcoded JSON mocks and fetch live from `/api/v1/mosi/knowledge/{symbol}`.
+- [x] Added `react-router-dom` hooks (`useParams`, `useNavigate`) to tightly integrate the dashboard with `/mosi/:symbol` routing.
+- [x] Created an intuitive empty state: 404s surface a built-in markdown upload form to seamlessly compile missing Golden MOSIs.
+- [x] Ran `npm run build` locally, successfully verifying 0 TypeScript errors and clean chunk production.
+
+### 📌 Current Milestone
+- **Milestone 1 Completed:** The full vertical slice is built. The system transforms unstructured MOSI Golden reports into immutable JSON artifacts, persists them, and renders them interactively in a dashboard.
+- **Next:** Proceeding to the Observation Engine.
+
+---
+
+
+## 📅 Session: August 1, 2026 — CAI MOSI Compiler Architecture & Plan
+**Session Start:** ~15:00 IST
+
+### What Was Done This Session
+
+#### 1. Knowledge Model & Compiler Execution Plan ✅
+- [x] Digested the requirements for the MOSI Compiler v1.0.
+- [x] Created `docs/MOSI_COMPILER_EXECUTION_PLAN.md` with strict engineering instructions.
+- [x] Defined the boundary: The compiler ONLY extracts artifacts (`company_facts.json`, `company_knowledge.json`, `extraction_report.json`, `knowledge_manifest.json`) and performs NO reasoning.
+- [x] Established Milestone 1: Prove the end-to-end pipeline using mock data and a Golden MOSI (Granules India) rendered on a Company Knowledge UI page.
+
+### 📌 Current Milestone
+- **Awaiting Build:** The architecture is frozen. The engineering team is fully authorized to build the Milestone 1 vertical slice (Mock Data → JSON Artifacts → UI).
+
+---
+
 ## 📅 Session: August 1, 2026 — CAI TechAlone Decision Engine Planning
 
 **Session Start:** ~12:10 IST

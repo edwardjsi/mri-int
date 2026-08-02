@@ -1,3 +1,24 @@
+## **August 1, 2026: CAI MOSI Compiler Pipeline Completion**
+**Objective**: Complete the end-to-end MOSI ingestion and Company Knowledge delivery pipeline. Replace UI mocks with live database-backed API calls.
+**Actions**:
+1. **Knowledge Importer**: Built `engine_mosi/knowledge_importer.py` and saved all ~30 previous reports into the database table `mosi_compiled_artifacts`.
+2. **API Backend**: Wired up `api/mosi.py` providing seamless `GET` fetching and `POST` automated uploads for MOSI files, fully integrated with `api/main.py`.
+3. **Frontend Integration**: Updated `CompanyKnowledgePage.tsx` to use `react-router-dom` and actual `fetch()` logic. If a requested symbol returns a 404, it immediately surfaces a text area for uploading the Golden MOSI report. Verified build stability.
+**Result**: Milestone 1 complete. End-to-end knowledge base ingestion and UI presentation are live and robust against empty states.
+**Next Step**: Ready to proceed to the Observation Engine.
+
+---
+
+## **August 1, 2026: CAI MOSI Compiler Architecture & Execution Plan**
+**Objective**: Finalize the architectural boundary and execution plan for the MOSI Compiler v1.0. 
+**Actions**:
+1. Drafted and finalized `docs/MOSI_COMPILER_EXECUTION_PLAN.md`.
+2. Established explicit non-goals (compiler performs no reasoning) and the Compiler Contract (1 report -> 1 immutable Company Knowledge Version).
+3. Set up the Milestone 1 execution strategy using mock data and a Golden MOSI (Granules India).
+**Next Step**: Engineering team to begin implementation of the Milestone 1 vertical slice.
+
+---
+
 ## **August 1, 2026: TechAlone Decision Ladder Engine Specification**
 
 **Objective**: Draft the strict execution plan for the backend CAI Decision Ladder Engine, ruthlessly stripping away narratives and probabilistic models to focus purely on deterministic numerical outputs (`add`, `alert`, `structure`, `quit`).

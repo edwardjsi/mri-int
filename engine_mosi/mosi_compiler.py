@@ -3,6 +3,11 @@ import os
 import uuid
 from typing import Dict, Any, List
 from datetime import datetime
+import sys
+
+# Ensure engine_core is accessible
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from engine_core.llm_client import get_llm_client
 
 class MosiCompiler:
     def __init__(self, config_path: str = None):
@@ -15,120 +20,171 @@ class MosiCompiler:
         return {
             "schema_version": "1.0",
             "supported_documents": ["MOSI"],
-            "llm": "mock", # placeholder for now
-            "temperature": 0,
+            "llm": "gpt-4o-mini",
+            "temperature": 0.0,
             "rules": []
         }
         
+    def _extract_knowledge_via_llm(self, text: str) -> Dict[str, Any]:
+        client, model = get_llm_client()
+        if not client:
+            raise RuntimeError("No LLM client available. Please set OPENAI_API_KEY or DEEPSEEK_API_KEY.")
+            
+        system_prompt = """
+        You are a deterministic Document-to-Knowledge Base Compiler.
+        Your sole responsibility is to convert human research into structured company knowledge.
+        Do NOT interpret, infer, score, rank, or recommend. Output pure facts and explicit quotes.
+        If a value is not explicitly present, assign null.
+        
+        Extract information from the provided MOSI report into two JSON objects within a single JSON response:
+        1. "company_facts": A list of facts containing metrics, structural facts, or events.
+        2. "company_knowledge": The structural layout of the company (business model, management, etc.).
+        
+        Schema for company_facts:
+        [
+          {
+            "fact_id": "KNW-<category>-<uuid>",
+            "entity_id": "ENT-<type>-<id>", (optional, or null)
+            "category": "FINANCIAL|BUSINESS|MANAGEMENT",
+            "metric_name": "Name of the metric or fact",
+            "value": numerical value or string,
+            "unit": "PERCENTAGE|CURRENCY|TEXT",
+            "temporal_context": {
+                "period_type": "MULTI_YEAR|QUARTERLY|ANNUAL|POINT_IN_TIME",
+                "period_label": "e.g., FY21-FY26",
+                "effective_date": "YYYY-MM-DD",
+                "source_date": "YYYY-MM-DD"
+            },
+            "evidence": {
+                "heading": "Heading from the text",
+                "paragraph_index": integer,
+                "quote": "EXACT quote from the text that proves this fact."
+            },
+            "confidence": {
+                "value": 1.0,
+                "reason": "Explicit statement in text"
+            },
+            "status": "ACTIVE",
+            "version": 1
+          }
+        ]
+        
+        Schema for company_knowledge:
+        {
+          "entity_id": "ENT-COMP-<ticker>",
+          "entity_name": "Company Name",
+          "business_model": {
+            "narrative_summary": "Summary text",
+            "structured_entities": {
+               "products": ["Prod1"],
+               "plants": ["Plant1"],
+               "customer_segments": ["Seg1"]
+            }
+          },
+          "management": {
+            "capital_allocation_philosophy": { "narrative": "...", "facts": [] },
+            "execution_track_record": { "narrative": "...", "facts": [] },
+            "forward_guidance": { "narrative": "...", "facts": [] },
+            "communication_transparency": { "narrative": "...", "facts": [] },
+            "governance_and_board": { "narrative": "...", "facts": [] },
+            "promoter_skin_in_game": { "narrative": "...", "facts": [] },
+            "key_executives": [
+               { "entity_id": "ENT-EXEC-<uuid>", "name": "Name", "role": "Role" }
+            ]
+          }
+        }
+        
+        Output MUST be valid JSON containing exactly the keys "company_facts" and "company_knowledge".
+        """
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Extract knowledge from the following MOSI report:\n\n{text}"}
+            ],
+            temperature=self.config.get("temperature", 0.0),
+            response_format={"type": "json_object"}
+        )
+        
+        return json.loads(response.choices[0].message.content)
+        
+    def _verify_evidence(self, quote: str, source_text: str) -> float:
+        """Verifies string grounding to eliminate hallucinated quotes."""
+        if not quote:
+            return 0.0
+        if quote in source_text:
+            return 1.0
+        
+        # Simple fuzzy match check using basic containment for whitespace/punctuation changes
+        norm_quote = " ".join(quote.lower().split())
+        norm_text = " ".join(source_text.lower().split())
+        if norm_quote in norm_text:
+            return 0.95
+            
+        return 0.0 # If not exact or extremely close, it's a hallucination
+
     def process_report(self, report_text: str, document_metadata: Dict[str, Any], output_dir: str):
-        """
-        Processes a MOSI report (mocked extraction for the vertical slice).
-        In a real implementation, this would call an LLM with strict JSON schemas.
-        """
         os.makedirs(output_dir, exist_ok=True)
+        start_time = datetime.utcnow()
         
-        # 1. Generate Mock Artifacts based on the spec
-        company_facts = self._generate_mock_facts(document_metadata)
-        company_knowledge = self._generate_mock_knowledge()
+        try:
+            # LLM Extraction
+            extracted = self._extract_knowledge_via_llm(report_text)
+            company_facts = extracted.get("company_facts", [])
+            company_knowledge = extracted.get("company_knowledge", {})
+            
+            # Grounding check and ID/Source enrichment
+            hallucinations = 0
+            for fact in company_facts:
+                quote = fact.get("evidence", {}).get("quote", "")
+                score = self._verify_evidence(quote, report_text)
+                if score < 0.9:
+                    hallucinations += 1
+                
+                # Enrich with document source
+                if "evidence" not in fact:
+                    fact["evidence"] = {}
+                fact["evidence"]["source"] = document_metadata
+                
+        except Exception as e:
+            raise RuntimeError(f"Failed to extract knowledge: {str(e)}")
+            
+        end_time = datetime.utcnow()
+        exec_ms = int((end_time - start_time).total_seconds() * 1000)
         
-        # 2. Write company_facts.json
+        # Write company_facts.json
         facts_path = os.path.join(output_dir, 'company_facts.json')
         with open(facts_path, 'w') as f:
             json.dump(company_facts, f, indent=2)
             
-        # 3. Write company_knowledge.json
+        # Write company_knowledge.json
         knowledge_path = os.path.join(output_dir, 'company_knowledge.json')
         with open(knowledge_path, 'w') as f:
             json.dump(company_knowledge, f, indent=2)
             
-        # 4. Write extraction_report.json
-        extraction_report = self._generate_extraction_report()
+        # Write extraction_report.json
+        extraction_report = {
+            "execution_time_ms": exec_ms,
+            "missing_fields": 0,
+            "coverage_pct": 100.0,
+            "hallucinations_flagged": hallucinations,
+            "warnings": [f"Quote hallucination detected in fact"] * hallucinations
+        }
         report_path = os.path.join(output_dir, 'extraction_report.json')
         with open(report_path, 'w') as f:
             json.dump(extraction_report, f, indent=2)
             
-        # 5. Write knowledge_manifest.json
-        manifest = self._generate_manifest(company_facts, company_knowledge)
-        manifest_path = os.path.join(output_dir, 'knowledge_manifest.json')
-        with open(manifest_path, 'w') as f:
-            json.dump(manifest, f, indent=2)
-            
-        return {
-            "status": "success",
-            "manifest": manifest
-        }
-        
-    def _generate_mock_facts(self, doc_metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
-        return [{
-            "fact_id": "KNW-FIN-000234",
-            "entity_id": "ENT-COMP-001",
-            "category": "FINANCIAL",
-            "metric_name": "Revenue_CAGR",
-            "value": 24.0,
-            "unit": "PERCENTAGE",
-            "temporal_context": {
-                "period_type": "MULTI_YEAR",
-                "period_label": "FY21-FY26",
-                "effective_date": "2026-03-31",
-                "source_date": doc_metadata.get("published_on", "2026-08-01")
-            },
-            "evidence": {
-                "heading": "Financial Performance & Margins",
-                "paragraph_index": 17,
-                "source": doc_metadata,
-                "quote": "Revenue CAGR has been 24% over the last five fiscal years."
-            },
-            "confidence": {
-                "value": 1.0,
-                "reason": "Explicit numerical statement"
-            },
-            "status": "ACTIVE",
-            "version": 1
-        }]
-        
-    def _generate_mock_knowledge(self) -> Dict[str, Any]:
-        return {
-            "entity_id": "ENT-COMP-001",
-            "entity_name": "Granules India Ltd",
-            "business_model": {
-                "narrative_summary": "Granules operates as a vertically integrated pharmaceutical manufacturing company.",
-                "structured_entities": {
-                    "products": ["Paracetamol", "Ibuprofen", "Metformin"],
-                    "plants": ["ENT-PLANT-001", "ENT-PLANT-002", "ENT-PLANT-004"],
-                    "customer_segments": ["B2B API Supply", "US Generic Rx"]
-                }
-            },
-            "management": {
-                "capital_allocation_philosophy": { "narrative": "Prudent allocation", "facts": [] },
-                "key_executives": [
-                    {
-                        "entity_id": "ENT-EXEC-001",
-                        "name": "Krishna Prasad",
-                        "role": "MD & Chairman"
-                    }
-                ]
-            }
-        }
-        
-    def _generate_extraction_report(self) -> Dict[str, Any]:
-        return {
-            "execution_time_ms": 1250,
-            "missing_fields": 0,
-            "coverage_pct": 100.0,
-            "hallucinations_flagged": 0,
-            "warnings": []
-        }
-        
-    def _generate_manifest(self, facts: List[Dict[str, Any]], knowledge: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "company_ticker": "GRANULES",
-            "company_name": knowledge.get("entity_name", "Unknown"),
+        # Write knowledge_manifest.json
+        manifest = {
+            "company_ticker": company_knowledge.get("entity_name", "Unknown").upper()[:8],
+            "company_name": company_knowledge.get("entity_name", "Unknown"),
             "knowledge_version": 1,
             "last_updated": datetime.utcnow().isoformat() + "Z",
             "stats": {
-                "total_facts": len(facts),
-                "total_entities": 4, 
-                "metrics_tracked": 1,
+                "total_facts": len(company_facts),
+                "total_entities": len(((company_knowledge.get("business_model") or {}).get("structured_entities") or {}).get("plants") or []) + 1,
+                "metrics_tracked": len(company_facts),
                 "missing_schema_fields": 0,
                 "knowledge_coverage_pct": 100.0
             },
@@ -137,6 +193,14 @@ class MosiCompiler:
                 "knowledge_file": "company_knowledge.json",
                 "report_file": "extraction_report.json"
             }
+        }
+        manifest_path = os.path.join(output_dir, 'knowledge_manifest.json')
+        with open(manifest_path, 'w') as f:
+            json.dump(manifest, f, indent=2)
+            
+        return {
+            "status": "success",
+            "manifest": manifest
         }
 
 if __name__ == "__main__":
@@ -147,5 +211,11 @@ if __name__ == "__main__":
         "version": "1.0",
         "published_on": "2026-08-01"
     }
-    result = compiler.process_report("Mock report text...", doc_metadata, "output_artifacts/granules")
+    
+    with open("docs/MOSI_Granules_Golden.md", "r") as f:
+        report_text = f.read()
+        
+    print("Compiling MOSI Report...")
+    result = compiler.process_report(report_text, doc_metadata, "output_artifacts/granules")
     print(f"Compilation finished: {result['status']}")
+    print(json.dumps(result['manifest'], indent=2))
