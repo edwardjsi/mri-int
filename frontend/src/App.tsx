@@ -23,6 +23,7 @@ import { StockDecisionPage } from './StockDecisionPage';
 import { CiwDebuggerPage } from './CiwDebuggerPage';
 import { ResearchInbox } from './ResearchInbox';
 import { AkeDashboard } from './AkeDashboard';
+import { CompanyKnowledgePage } from './CompanyKnowledgePage';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
@@ -2742,6 +2743,7 @@ function Navigation() {
           <Link to="/inbox" className={`nav-link ${page === 'inbox' ? 'active' : ''}`}><span className="nav-icon">📥</span> Research Inbox</Link>
           <Link to="/extractor" className={`nav-link ${page === 'extractor' ? 'active' : ''}`}><span className="nav-icon">🧠</span> Ontology Engine</Link>
           <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}><span className="nav-icon">📋</span> Decision Ledger</Link>
+          <Link to="/mosi/GRANULES" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Company Knowledge</Link>
           
           {/* Restored links */}
           <Link to="/signals" className={`nav-link ${page === 'signals' ? 'active' : ''}`}><span className="nav-icon">📈</span> Signal Dashboard</Link>
@@ -2776,6 +2778,7 @@ function Navigation() {
         <Link to="/inbox" className={`mobile-nav-link ${page === 'inbox' ? 'active' : ''}`} title="Research Inbox">📥</Link>
         <Link to="/extractor" className={`mobile-nav-link ${page === 'extractor' ? 'active' : ''}`} title="Ontology Engine">🧠</Link>
         <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
+        <Link to="/mosi/GRANULES" className={`mobile-nav-link ${page === 'mosi' ? 'active' : ''}`} title="Company Knowledge">📚</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
     </>
@@ -2800,7 +2803,7 @@ function App() {
     return <ResetPasswordPage token={resetToken} onComplete={handleResetComplete} />;
   }
 
-  if (!authed) {
+  if (!authed && !window.location.pathname.startsWith('/mosi/')) {
     if (showAuthPane) {
       return <LoginPage onLogin={() => { setAuthed(true); setShowAuthPane(false); }} onCancel={() => setShowAuthPane(false)} />;
     }
@@ -2827,6 +2830,7 @@ function App() {
               <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
               <Route path="/ledger" element={<HistoryPage onSelectStock={setSelectedStock} />} />
               <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
+              <Route path="/mosi/:symbol" element={<CompanyKnowledgePage />} />
               <Route path="/inbox" element={<ResearchInbox />} />
               <Route path="/extractor" element={<AkeDashboard />} />
               
