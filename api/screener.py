@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Dict, Any, List, Optional
 from engine_core.model_results_repository import ModelResultRepository
-from lib.db import get_db_connection
+from db import get_connection
 from api.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/screener", tags=["Screener"])
@@ -19,7 +19,7 @@ def get_rrg_screener(
     company_names = {}
     owned_symbols = set()
     
-    conn = get_db_connection()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             # Fetch company names
