@@ -37,6 +37,7 @@ COPY engine_perx/ ./engine_perx/
 COPY engine_guidance/ ./engine_guidance/
 COPY engine_debate/ ./engine_debate/
 COPY engine_mosi/ ./engine_mosi/
+COPY engine_knowledge/ ./engine_knowledge/
 COPY api/ ./api/
 COPY config/ ./config/
 COPY scripts/ ./scripts/
