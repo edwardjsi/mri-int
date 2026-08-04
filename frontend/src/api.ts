@@ -189,7 +189,7 @@ export const api = {
     getRRG: (sort: string = 'rs_ratio', order: string = 'desc', quadrant: string = 'All') => {
         let qs = `?sort=${sort}&order=${order}`;
         if (quadrant && quadrant !== 'All') qs += `&quadrant=${quadrant}`;
-        return apiFetch(`/screener/rrg${qs}`);
+        return apiFetch(`/v1/screener/rrg${qs}`);
     },
     getPendingSignals: () => apiFetch('/signals/pending'),
     getSignalHistory: (days: number = 30) => apiFetch(`/signals/history?days=${days}`),

@@ -1,3 +1,4 @@
+import { apiFetch } from "./api";
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,9 +35,7 @@ export const CanslimScreener: React.FC = () => {
     const fetchScreen = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/v1/canslim/screen');
-            if (!res.ok) throw new Error('Failed to fetch CANSLIM screener data');
-            const data = await res.json();
+            const data = await apiFetch('/v1/canslim/screen');
             setCandidates(data.candidates);
         } catch (err: any) {
             setError(err.message);

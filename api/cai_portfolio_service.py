@@ -13,25 +13,25 @@ router = APIRouter(prefix="/api/cai/portfolio", tags=["cai_portfolio"])
 
 class PositionCreate(BaseModel):
     symbol: str
-    quantity: int
-    average_price: float
+    quantity: Optional[int] = None
+    average_price: Optional[float] = None
 
 class TrancheAdd(BaseModel):
-    quantity: int
+    quantity: Optional[int] = None
     entry_price: float
 
 class SellRequest(BaseModel):
-    quantity: int
+    quantity: Optional[int] = None
     sell_price: float
 
 class PositionResponse(BaseModel):
     id: str
     symbol: str
-    quantity: int
-    average_price: float
-    allocation: float
-    tranche: int
-    status: str
+    quantity: Optional[int] = None
+    average_price: Optional[float] = None
+    allocation: Optional[float] = None
+    tranche: Optional[int] = None
+    status: Optional[str] = None
     decision_state: Optional[str] = None
     add_level: Optional[float] = None
     alert_level: Optional[float] = None

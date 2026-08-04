@@ -2831,7 +2831,7 @@ function App() {
           <div className="content-body">
             <Routes>
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<CaiV2Dashboard />} />
+              <Route path="/dashboard" element={<DashboardPage onSelectStock={setSelectedStock} />} />
               <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
               <Route path="/ledger" element={<HistoryPage onSelectStock={setSelectedStock} />} />
               <Route path="/company/:symbol" element={<CompanyDossier />} />
