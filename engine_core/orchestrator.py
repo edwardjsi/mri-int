@@ -76,6 +76,17 @@ def run_full_mri_pipeline():
         # Step 8: Health (Skipping internal monitor script for now, handled by dashboard)
         logger.info("[8/9] Pipeline logic complete.")
 
+        # Step 8.5: Run investment models (CANSLIM + RRG)
+        logger.info("[8.5/9] Running Investment Models (CANSLIM + RRG)...")
+        try:
+            from engine_core.model_results_repository import ModelResultRepository
+            from engine_core.model_runner import ModelRunner
+            repo = ModelResultRepository()
+            runner = ModelRunner(repo)
+            runner.run(list(symbols))
+        except Exception as e:
+            logger.error(f"Investment models execution failed: {e}")
+
         # Step 9: Fundamentals
         logger.info("[9/9] Running Fundamental Analysis for top candidates...")
         conn = get_connection()
