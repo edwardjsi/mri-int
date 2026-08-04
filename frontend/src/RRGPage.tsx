@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from './api';
+import { api } from './api';
 
 const DEFAULT_COLUMNS = {
   rank: true,
