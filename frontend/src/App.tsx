@@ -2768,23 +2768,36 @@ function Navigation() {
           <span className="brand-icon">📊</span>
           <span className="brand-name">MRI</span>
         </div>
-        <div className="nav-links">
-          <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> Portfolio</Link>
-          <Link to="/watchlist" className={`nav-link ${page === 'watchlist' ? 'active' : ''}`}><span className="nav-icon">👀</span> Watchlist</Link>
-          <Link to="/mosi" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Research</Link>
-          <Link to="/canslim" className={`nav-link ${page === 'canslim' ? 'active' : ''}`}><span className="nav-icon">⭐</span> Models</Link>
+                <div className="nav-links">
+          <Link to="/dashboard" className={`nav-link ${page === 'dashboard' ? 'active' : ''}`}><span className="nav-icon">📊</span> Dashboard</Link>
+          <Link to="/inbox" className={`nav-link ${page === 'inbox' ? 'active' : ''}`}><span className="nav-icon">📥</span> Research Inbox</Link>
+          <Link to="/extractor" className={`nav-link ${page === 'extractor' ? 'active' : ''}`}><span className="nav-icon">🧠</span> Ontology Engine</Link>
+          <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}><span className="nav-icon">📋</span> Decision Ledger</Link>
+          
+          {/* Restored links */}
+          <Link to="/signals" className={`nav-link ${page === 'signals' ? 'active' : ''}`}><span className="nav-icon">📈</span> Signal Dashboard</Link>
+          <Link to="/caidashboard" className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`}><span className="nav-icon">🧠</span> CAI Dashboard</Link>
+          <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> CAI Portfolio</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
+          <Link to="/breakout" className={`nav-link ${page === 'breakout' ? 'active' : ''}`}><span className="nav-icon">🚀</span> Breakout Radar</Link>
+          <Link to="/trend" className={`nav-link ${page === 'trend' ? 'active' : ''}`}><span className="nav-icon">📉</span> Trend Screen</Link>
+          <Link to="/112co" className={`nav-link ${page === '112co' ? 'active' : ''}`}><span className="nav-icon">🦅</span> 112Co</Link>
+          <Link to="/watchlist" className={`nav-link ${page === 'watchlist' ? 'active' : ''}`}><span className="nav-icon">👀</span> Watchlist</Link>
+          <Link to="/perx" className={`nav-link ${page === 'perx' ? 'active' : ''}`}><span className="nav-icon">🏛️</span> PERX</Link>
+          <Link to="/peexpansion" className={`nav-link ${page === 'peexpansion' ? 'active' : ''}`}><span className="nav-icon">🔍</span> Expansion Lens</Link>
+          <Link to="/aae" className={`nav-link ${page === 'aae' ? 'active' : ''}`}><span className="nav-icon">🧬</span> AAE Console</Link>
+          <Link to="/unified" className={`nav-link ${page === 'unified' ? 'active' : ''}`}><span className="nav-icon">🎯</span> Unified Scan</Link>
+          <Link to="/guidance" className={`nav-link ${page === 'guidance' ? 'active' : ''}`}><span className="nav-icon">🗣️</span> GuidanceCheck</Link>
+          <Link to="/conviction" className={`nav-link ${page === 'conviction' ? 'active' : ''}`}><span className="nav-icon">🔥</span> Conviction</Link>
+          <Link to="/riskaudit" className={`nav-link ${page === 'riskaudit' ? 'active' : ''}`}><span className="nav-icon">🛡️</span> Risk Audit</Link>
+          
+          <Link to="/canslim" className={`nav-link ${page === 'canslim' ? 'active' : ''}`}><span className="nav-icon">⭐</span> Models</Link>
           <Link to="/rrg" className={`nav-link ${page === 'rrg' ? 'active' : ''}`}><span className="nav-icon">🧭</span> Relative Rotation</Link>
-
+          
           {isAdmin() && (
-            <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #334155' }}>
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', padding: '0 16px', marginBottom: '8px', fontWeight: 'bold' }}>Legacy & Admin</div>
-              <Link to="/dashboard" className={`nav-link ${page === 'dashboard' ? 'active' : ''}`}><span className="nav-icon">📊</span> Legacy Dashboard</Link>
-              <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}><span className="nav-icon">📋</span> Decision Ledger</Link>
-              <Link to="/admin" className={`nav-link ${page === 'admin' ? 'active' : ''}`}>
-                <span className="nav-icon">🛡️</span> Platform Intel
-              </Link>
-            </div>
+            <Link to="/admin" className={`nav-link ${page === 'admin' ? 'active' : ''}`}>
+              <span className="nav-icon">🛡️</span> Platform Intel
+            </Link>
           )}
         </div>
         <div className="sidebar-footer">
@@ -2793,12 +2806,13 @@ function Navigation() {
         </div>
       </nav>
       <nav className="mobile-nav">
-        <Link to="/caiportfolio" className={`mobile-nav-link ${page === 'caiportfolio' ? 'active' : ''}`} title="Portfolio">💼</Link>
-        <Link to="/watchlist" className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} title="Watchlist">👀</Link>
-        <Link to="/mosi" className={`mobile-nav-link ${page === 'mosi' ? 'active' : ''}`} title="Research">📚</Link>
-        <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
-        <Link to="/shadow" className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} title="Swing">🔄</Link>
+        <Link to="/dashboard" className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} title="Dashboard">🏠</Link>
+        <Link to="/inbox" className={`mobile-nav-link ${page === 'inbox' ? 'active' : ''}`} title="Research Inbox">📥</Link>
+        <Link to="/extractor" className={`mobile-nav-link ${page === 'extractor' ? 'active' : ''}`} title="Ontology Engine">🧠</Link>
+        <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
+      <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
+        <Link to="/rrg" className={`mobile-nav-link ${page === 'rrg' ? 'active' : ''}`} title="RRG">🧭</Link>
       </nav>
     </>
   );
@@ -2840,30 +2854,28 @@ function App() {
               <Route path="/decision/:decisionId" element={<h1 className="page-title">Stock Decision</h1>} />
               <Route path="/ledger" element={<h1 className="page-title">Decision Ledger</h1>} />
               <Route path="*" element={<h1 className="page-title">MRI Portfolio</h1>} />
+              <Route path="/canslim" element={<CanslimScreener />} />
+              <Route path="/rrg" element={<RRGPage />} />
             </Routes>
           </header>
           <div className="content-body">
             <Routes>
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardPage onSelectStock={setSelectedStock} />} />
+              <Route path="/dashboard" element={<V1Dashboard />} />
               <Route path="/decision/:decisionId" element={<StockDecisionPage />} />
               <Route path="/ledger" element={<HistoryPage onSelectStock={setSelectedStock} />} />
-              <Route path="/company/:symbol" element={<CompanyDossier />} />
-              <Route path="/company" element={<CompanyDossier />} />
-              <Route path="/mosi" element={<CompanyKnowledgePage />} />
-              <Route path="/canslim" element={<CanslimScreener />} />
+              <Route path="/company/:symbol" element={<CiwDebuggerPage />} />
               <Route path="/inbox" element={<ResearchInbox />} />
               <Route path="/extractor" element={<AkeDashboard />} />
               
               {/* Restored routes */}
               <Route path="/signals" element={<DashboardPage onSelectStock={setSelectedStock} />} />
-              <Route path="/caidashboard" element={<CaiV2Dashboard />} />
-              <Route path="/caiportfolio" element={<CaiV2Dashboard />} />
+              <Route path="/caidashboard" element={<CaiDashboard />} />
+              <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
+              <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
               <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />
               <Route path="/112co" element={<One12CoDashboard onViewResearch={() => {}} />} />
-              <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
-              <Route path="/rrg" element={<RRGPage />} />
               <Route path="/breakout" element={<BreakoutRadarPage onViewResearch={() => {}} />} />
               <Route path="/trend" element={<TrendScreen onViewResearch={() => {}} />} />
               <Route path="/perx" element={<PerxPage />} />
@@ -2876,6 +2888,8 @@ function App() {
               <Route path="/research" element={<ResearchReport symbol="" onBack={() => {}} />} />
               
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/canslim" element={<CanslimScreener />} />
+              <Route path="/rrg" element={<RRGPage />} />
             </Routes>
           </div>
         </main>
