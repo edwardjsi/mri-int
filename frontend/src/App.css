@@ -686,9 +686,21 @@
     height: 60px;
     background: #0f172a;
     border-top: 1px solid #1e293b;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     z-index: 100;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 16px;
+    padding: 0 16px;
+  }
+  
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-nav {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .mobile-nav-link {
