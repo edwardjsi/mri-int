@@ -71,6 +71,13 @@ A competent investment analyst should be able to review every change from a sing
 **Rule 8 — Mandatory UX and Benefit Documentation**
 Every PR must include a "Before" screenshot, an "After" screenshot, and a one-sentence "Investor Benefit". Example: "Investor Benefit: I can immediately identify whether a holding is fundamentally strong, technically improving, and well understood without opening another screen."
 
+For Knowledge PRs, also include an Evidence Added table:
+| Question                 | Before                    | After                                                 |
+| ------------------------ | ------------------------- | ----------------------------------------------------- |
+| Why should revenue grow? | 2 evidence-backed drivers | 7 evidence-backed drivers                             |
+| Unsupported claims       | 5                         | 0                                                     |
+| Source coverage          | 1 transcript              | Annual report + 2 transcripts + investor presentation |
+
 ### Definition of Value
 
 A change creates value if it improves at least one of the following:

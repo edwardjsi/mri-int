@@ -37,35 +37,17 @@ class MosiCompiler:
         If a value is not explicitly present, assign null.
         
         Extract information from the provided MOSI report into two JSON objects within a single JSON response:
-        1. "company_facts": A list of facts containing metrics, structural facts, or events.
-        2. "company_knowledge": The structural layout of the company (business model, management, etc.).
+        1. "company_facts": A list of explicit facts containing the evidence/quotes that support the business model.
+        2. "company_knowledge": The structural layout of the company answering the core business questions.
         
         Schema for company_facts:
         [
           {
             "fact_id": "KNW-<category>-<uuid>",
-            "entity_id": "ENT-<type>-<id>", (optional, or null)
-            "category": "FINANCIAL|BUSINESS|MANAGEMENT",
-            "metric_name": "Name of the metric or fact",
-            "value": numerical value or string,
-            "unit": "PERCENTAGE|CURRENCY|TEXT",
-            "temporal_context": {
-                "period_type": "MULTI_YEAR|QUARTERLY|ANNUAL|POINT_IN_TIME",
-                "period_label": "e.g., FY21-FY26",
-                "effective_date": "YYYY-MM-DD",
-                "source_date": "YYYY-MM-DD"
-            },
+            "category": "BUSINESS",
             "evidence": {
-                "heading": "Heading from the text",
-                "paragraph_index": integer,
-                "quote": "EXACT quote from the text that proves this fact."
-            },
-            "confidence": {
-                "value": 1.0,
-                "reason": "Explicit statement in text"
-            },
-            "status": "ACTIVE",
-            "version": 1
+                "quote": "EXACT quote from the text that proves the related structural fact."
+            }
           }
         ]
         
@@ -73,27 +55,40 @@ class MosiCompiler:
         {
           "entity_id": "ENT-COMP-<ticker>",
           "entity_name": "Company Name",
-          "business_model": {
-            "narrative_summary": "Summary text",
-            "structured_entities": {
-               "products": ["Prod1"],
-               "plants": ["Plant1"],
-               "customer_segments": ["Seg1"]
-            }
+          "g1_1_business": {
+            "what_it_does": "Two paragraphs in plain English explaining exactly what the company sells and how it makes money. Must be understandable by a non-investor.",
+            "products": [
+              { "category": "Group Name", "items": ["Item 1", "Item 2"] }
+            ],
+            "customers": [
+              { "segment": "Segment Name", "description": "Who they are" }
+            ],
+            "manufacturing": [
+              { "location": "City/Region", "description": "What happens here" }
+            ],
+            "revenue_mix": [
+              { "segment": "Segment Name", "percentage_str": "e.g., 40%" }
+            ],
+            "competitive_advantage": [
+              "Bullet 1: Why is this business difficult to replicate?",
+              "Bullet 2: Specific moat or advantage",
+              "Bullet 3", "Bullet 4", "Bullet 5"
+            ]
           },
-          "management": {
-            "capital_allocation_philosophy": { "narrative": "...", "facts": [] },
-            "execution_track_record": { "narrative": "...", "facts": [] },
-            "forward_guidance": { "narrative": "...", "facts": [] },
-            "communication_transparency": { "narrative": "...", "facts": [] },
-            "governance_and_board": { "narrative": "...", "facts": [] },
-            "promoter_skin_in_game": { "narrative": "...", "facts": [] },
-            "key_executives": [
-               { "entity_id": "ENT-EXEC-<uuid>", "name": "Name", "role": "Role" }
+          "g1_2_growth": {
+            "drivers": [
+              {
+                "category": "Capacity Expansion | New Products | New Geographies | Pricing Power | Market Share | Industry Tailwinds | Management Guidance | Growth Risks",
+                "title": "Title of the specific driver (e.g., Block 4 Capacity Expansion)",
+                "fact": "Fact describing what is happening.",
+                "why_it_matters": "Why this specifically leads to higher revenue or margin in the future.",
+                "evidence_quote": "EXACT quote from the text that proves this driver.",
+                "evidence_source": "Source name if specified in text, or general context",
+                "evidence_date": "Date if specified"
+              }
             ]
           }
         }
-        
         Output MUST be valid JSON containing exactly the keys "company_facts" and "company_knowledge".
         """
         
@@ -203,7 +198,7 @@ class MosiCompiler:
             "last_updated": datetime.utcnow().isoformat() + "Z",
             "stats": {
                 "total_facts": len(company_facts),
-                "total_entities": len(((company_knowledge.get("business_model") or {}).get("structured_entities") or {}).get("plants") or []) + 1,
+                "total_entities": len(company_knowledge.get("g1_1_business", {}).get("products", [])) + len(company_knowledge.get("g1_1_business", {}).get("manufacturing", [])) + len(company_knowledge.get("g1_1_business", {}).get("customers", [])),
                 "metrics_tracked": len(company_facts),
                 "missing_schema_fields": 0,
                 "knowledge_coverage_pct": 100.0

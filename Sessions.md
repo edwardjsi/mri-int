@@ -1,10 +1,21 @@
+## **August 3, 2026: G1.2 Future Growth and UX Validation**
+**Objective**: Execute the G1.2 milestone (Future Growth) and establish a UX validation gate for all dossier features before moving on.
+**Actions**:
+1. **Rule 8 Enhancement**: Updated `AGENTS.md` to require an 'Evidence Added' table for Knowledge PRs, evaluating work strictly on its ability to increase evidence-backed knowledge density for the investor.
+2. **Compiler Upgrade for Growth**: Re-prompted `engine_mosi/mosi_compiler.py` to target `g1_2_growth`. The schema now forces the LLM to identify specific growth drivers and extract: category, title, fact, why it matters, quote, and source.
+3. **Analyst-Grade UI for Growth**: Rewrote the 'Growth' tab in `CompanyDossier.tsx` to read like an analyst thesis. It displays clear, structured sections (e.g., '1. Capacity Expansion') with explicit links to revenue/margin impacts and exact source quotes.
+4. **Interactive Validation Environment**: Mocked G1.2 data in `company_knowledge.json`, imported it to the Postgres database via `knowledge_importer.py`, and started local Vite/FastAPI servers so the user can interactively test the UI at `http://localhost:5173/company/GRANULES`.
+**Result**: The Future Growth tab is complete, fully integrated, and awaiting manual user UX review. We have halted forward progress to G1.3 until this review gate is passed.
+
+---
+
 ## **August 3, 2026: Investment Model Platform Completion & Dossier Pivot**
 **Objective**: Finalize the Investment Model Platform infrastructure and pivot all engineering focus toward UX and the Living Company Dossier.
 **Actions**:
 1. **Model Infrastructure Complete**: Successfully deployed generic model runner, generic ModelResultRepository, and abstract `InvestmentModel` interface. 
 2. **Model Implementations**: Ported CANSLIM and introduced RRG as generic models producing deterministic results.
 3. **Ambient Intelligence Rendering**: Injected latest model results seamlessly into Portfolio, Watchlist, and Company Dossier APIs.
-4. **Strategic Pivot**: Declared model platform complete enough. Halted plans for Piotroski/Minervini. Reprioritized roadmap: P1 - Living Company Dossier, P2 - Knowledge extraction quality, P3 - Evidence-backed rules, P4 - Portfolio UX, P5 - Watchlist UX.
+4. **Strategic Pivot**: Declared model platform complete enough. Halted plans for Piotroski/Minervini. Reprioritized roadmap into a dual-track approach: Stream A (80% effort) - Product-visible Dossier (G1.1 -> G1.5), Stream B (20% effort) - Ambient Intelligence Everywhere.
 5. **New PR Rule**: Enforced mandatory `Before` (Screenshot), `After` (Screenshot), and `Investor Benefit` statement for all future pull requests.
 
 ---
@@ -3386,3 +3397,25 @@ The system successfully bridges pure deterministic facts and rules to actionable
 **Result**:
 The system successfully integrates the deterministic analytical core with the visualization layer, email system, and decision tracking system, fully satisfying the July 29 PortfolioOS PRD.
 
+
+## 📅 Session: August 3, 2026 — RRG Screener Implementation
+**Session Start:** ~19:00 IST
+**Session End:** ~19:35 IST
+
+### What Was Done This Session
+
+#### 1. RRG Screener Refinements ✅
+- [x] Refactored `api/screener.py` to support `sort`, `order`, and `quadrant` query parameters.
+- [x] Streamlined the API response DTO by removing `company_url` and nesting metrics under an `rrg` object for future-proofing.
+- [x] Integrated `client_portfolio` and `client_external_holdings` to surface an `owned` boolean flag directly in the API payload.
+- [x] Refactored `RRGPage.tsx` to drive all state (filtering, sorting, searching) via URL query parameters (`useSearchParams`).
+- [x] Handled ranking purely on the client side after filtering/sorting to maintain sequential row numbers (1, 2, 3...).
+- [x] Added a "Columns" dropdown with state persisted to `localStorage` (`rrg.columns`).
+- [x] Added a concise top summary strip for quadrant distribution (Leading, Improving, Weakening, Lagging).
+- [x] Created database composite index `idx_model_results_screener` (`model_id`, `symbol`, `evaluation_date DESC`) to ensure the latest model result query scales cleanly.
+
+### 📌 Current Milestone
+- **RRG Screener V1 Completed:** The feature is now a professional, analytical workspace optimized for the MRI portfolio approach.
+- **Next:** Proceed to the next feature on the roadmap (potentially Ambient Intelligence Everywhere).
+
+---

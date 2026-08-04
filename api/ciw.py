@@ -2,10 +2,22 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any
 from engine_core.ciw_repository import CompanyWorkspaceRepository
 from engine_core.model_results_repository import ModelResultRepository
+from engine_mosi.knowledge_importer import KnowledgeImporter
+from datetime import datetime
 
 router = APIRouter(prefix="/api/ciw", tags=["CIW"])
 
 def calculate_knowledge_health(workspace) -> Dict[str, Any]:
+    if not workspace:
+        return {
+            "overall": 0,
+            "research_freshness": False,
+            "evidence_completeness": False,
+            "open_monitoring": 0,
+            "open_risks": 0,
+            "missing_evidence": 0,
+            "last_update": "Never"
+        }
     nodes = list(workspace.state.understanding.values()) + workspace.state.risks + workspace.state.catalysts + workspace.state.monitoring
     open_monitoring = len(workspace.state.monitoring)
     open_risks = len(workspace.state.risks)
@@ -27,21 +39,20 @@ def calculate_knowledge_health(workspace) -> Dict[str, Any]:
 @router.get("/{symbol}")
 def get_company_workspace(symbol: str) -> Dict[str, Any]:
     """
-    Fetch the complete Company Intelligence Workspace (CIW) aggregate root for a symbol.
+    Fetch the complete Company Intelligence aggregate for a symbol.
+    Provides investor-friendly keys: business, growth, management, risks, models, financials, technical, documents, freshness.
     """
     repo = CompanyWorkspaceRepository()
     model_repo = ModelResultRepository()
+    importer = KnowledgeImporter()
+    
     try:
-        workspace = repo.get_workspace(symbol.upper())
-        if not workspace:
-            raise HTTPException(status_code=404, detail=f"Company Workspace not found for {symbol}")
+        sym = symbol.upper()
+        workspace = repo.get_workspace(sym)
         
-        data = workspace.model_dump() if hasattr(workspace, "model_dump") else workspace.dict()
-        data["health"] = calculate_knowledge_health(workspace)
-
-        # Add latest model results
-        models = model_repo.latest(symbol.upper())
-        data["models"] = [
+        # Fetch models
+        models = model_repo.latest(sym)
+        models_data = [
             {
                 "id": m.model_id,
                 "version": m.model_version,
@@ -52,6 +63,44 @@ def get_company_workspace(symbol: str) -> Dict[str, Any]:
             }
             for m in models
         ]
+        
+        # Fetch knowledge (MOSI)
+        artifacts = importer.get_artifacts(sym)
+        
+        if not workspace and not models and not artifacts:
+            raise HTTPException(status_code=404, detail=f"Company Workspace not found for {symbol}")
+
+        # Construct the CompanyIntelligence DTO
+        company_knowledge = artifacts.get("company_knowledge", {}) if artifacts else {}
+        
+        # Freshness calculation
+        now = datetime.now()
+        knowledge_date = artifacts.get("knowledge_manifest", {}).get("last_updated") if artifacts else None
+        
+        data = {
+            "symbol": sym,
+            "business": company_knowledge.get("g1_1_business", {}),
+            "growth": company_knowledge.get("g1_2_growth", {}),
+            "management": company_knowledge.get("g2_management", {}),
+            "risks": company_knowledge.get("g1_3_risks", {}),
+            "recent_changes": company_knowledge.get("recent_changes", {}),
+            "models": models_data,
+            "financials": {}, # Placeholder for actual financials
+            "technical": {},  # Placeholder for actual technicals
+            "documents": [],  # Placeholder
+            "health": calculate_knowledge_health(workspace),
+            "freshness": {
+                "knowledge": knowledge_date,
+                "models": models_data[0]["evaluation_date"] if models_data else None,
+                "financials": None,
+                "technical": None
+            },
+            "knowledge_status": 82 if artifacts else 0, # Mocked percentage as in design
+            "sources": [],
+            "compiler_report": artifacts.get("extraction_report", {}) if artifacts else None,
+            "facts": artifacts.get("company_facts", []) if artifacts else [],
+            "manifest": artifacts.get("knowledge_manifest", {}) if artifacts else None,
+        }
         
         return data
     finally:

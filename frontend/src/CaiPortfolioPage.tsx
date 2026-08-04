@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from './api';
 import { CaiPositionReview } from './CaiPositionReview';
 import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Mail } from 'lucide-react';
 import { ModelBadgeGroup } from './components/ModelBadge';
 
 export const CaiPortfolioPage: React.FC = () => {
+  const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +218,12 @@ export const CaiPortfolioPage: React.FC = () => {
                 <tr key={pos.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                   <td className="p-4 font-bold text-white">
                     <div className="flex flex-col gap-1">
-                      <span>{pos.symbol}</span>
+                      <span 
+                        className="cursor-pointer hover:text-emerald-400 hover:underline transition-colors"
+                        onClick={() => navigate(`/company/${pos.symbol}`)}
+                      >
+                        {pos.symbol}
+                      </span>
                       <ModelBadgeGroup models={pos.models} />
                     </div>
                   </td>

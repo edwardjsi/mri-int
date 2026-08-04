@@ -726,6 +726,7 @@ def ensure_required_tables(conn) -> None:
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_model_results_symbol_date ON model_results(symbol, evaluation_date DESC);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_model_results_model_date ON model_results(model_id, evaluation_date DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_model_results_screener ON model_results(model_id, symbol, evaluation_date DESC);")
     
     ensure_prde_tables(cur)
     ensure_aae_event_tables(cur)

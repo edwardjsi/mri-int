@@ -136,6 +136,28 @@ class ModelResultRepository:
         finally:
             self._close_if_needed(conn)
 
+    def latest_for_model_all_symbols(self, model_id: str) -> List[ModelResult]:
+        """Fetch the latest evaluation of a SPECIFIC model for ALL symbols."""
+        conn = self._get_conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT DISTINCT ON (symbol)
+                        symbol, model_id, model_version, evaluation_date, 
+                        status, score, payload, explain_node_id, execution_ms, error_message
+                    FROM model_results
+                    WHERE model_id = %s
+                    ORDER BY symbol, evaluation_date DESC, model_version DESC
+                    """,
+                    (model_id,)
+                )
+                rows = cur.fetchall()
+                return [ModelResult.from_row(dict(r)) for r in rows]
+        finally:
+            self._close_if_needed(conn)
+
+
     def history(self, symbol: str, days: int = 30) -> List[ModelResult]:
         """Fetch historical evaluations across all models for a given symbol."""
         conn = self._get_conn()

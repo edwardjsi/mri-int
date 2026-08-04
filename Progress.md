@@ -15,15 +15,14 @@
 
 #### 2. Strategic Pivot: Living Company Dossier ✅
 - [x] Declared model platform complete enough. Halted plans for Piotroski/Minervini.
-- [x] Reprioritized roadmap to focus on UX and the Living Company Dossier.
-- [x] **P1:** Living Company Dossier (★★★★★)
-- [x] **P2:** Knowledge extraction quality (★★★★★)
-- [x] **P3:** Evidence-backed rules (★★★★★)
-- [x] **P4:** Portfolio UX (★★★★☆)
-- [x] **P5:** Watchlist UX (★★★★☆)
-- [x] **P6:** Next investment model (★★☆☆☆)
-
-#### 3. PR Mandate Updated ✅
+- [x] Reprioritized roadmap into a dual-track approach:
+- **Stream A (80% effort):** Product-visible Dossier (G1.1 -> G1.5).
+- **Stream B (20% effort):** Ambient Intelligence Everywhere.
+- [x] **P1:** Investor understands the business (G1.1).
+- [x] **P2:** Every portfolio company opens to the same dossier.
+- [x] **P3:** Support multiple MOSI reports per company (latest synthesized view).
+- [x] **P4:** Ambient intelligence everywhere (CANSLIM, RRG, CAS, Fractal, MOSI status).
+- [x] **P5:** Expand the rule corpus (only after P1-P4).
 - [x] Updated `AGENTS.md` Rule 8 to mandate `Before` (Screenshot), `After` (Screenshot), and `Investor Benefit` statement for all future PRs.
 
 ### 📌 Current Milestone
@@ -3660,3 +3659,25 @@ The system successfully integrates the deterministic analytical core with the vi
 
 ### Updated Next Smallest Step
 - Implement the MRI Frontend V1 based on the `30 July 26 MRI Frontend V1.md` PRD. Start by updating the `WeeklyReviewDashboard.tsx` to include the Decision Ledger navigation, remove unsupported views, and implement the right-side Stock Decision Panel to parse and display the `ExplanationNode` tree.
+
+## 📅 Session: August 3, 2026 — RRG Screener Implementation
+**Session Start:** ~19:00 IST
+**Session End:** ~19:35 IST
+
+### What Was Done This Session
+
+#### 1. RRG Screener Refinements ✅
+- [x] Refactored `api/screener.py` to support `sort`, `order`, and `quadrant` query parameters.
+- [x] Streamlined the API response DTO by removing `company_url` and nesting metrics under an `rrg` object for future-proofing.
+- [x] Integrated `client_portfolio` and `client_external_holdings` to surface an `owned` boolean flag directly in the API payload.
+- [x] Refactored `RRGPage.tsx` to drive all state (filtering, sorting, searching) via URL query parameters (`useSearchParams`).
+- [x] Handled ranking purely on the client side after filtering/sorting to maintain sequential row numbers (1, 2, 3...).
+- [x] Added a "Columns" dropdown with state persisted to `localStorage` (`rrg.columns`).
+- [x] Added a concise top summary strip for quadrant distribution (Leading, Improving, Weakening, Lagging).
+- [x] Created database composite index `idx_model_results_screener` (`model_id`, `symbol`, `evaluation_date DESC`) to ensure the latest model result query scales cleanly.
+
+### 📌 Current Milestone
+- **RRG Screener V1 Completed:** The feature is now a professional, analytical workspace optimized for the MRI portfolio approach.
+- **Next:** Proceed to the next feature on the roadmap (potentially Ambient Intelligence Everywhere).
+
+---

@@ -28,6 +28,7 @@ import { ResearchInbox } from './ResearchInbox';
 import { AkeDashboard } from './AkeDashboard';
 import { CompanyKnowledgePage } from './CompanyKnowledgePage';
 import { CompanyDossier } from './CompanyDossier';
+import RRGPage from './RRGPage';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
@@ -1757,6 +1758,7 @@ function RiskAuditPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
 /* ─── Watchlist Page ─────────────────────────────────────── */
 function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
+  const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newSymbol, setNewSymbol] = useState('');
@@ -1993,7 +1995,12 @@ function WatchlistPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
                         {item.breakout_candidate && (
                           <span title="Breakout candidate today" style={{ marginRight: '4px' }}>🚀</span>
                         )}
-                        {item.symbol || 'N/A'}
+                        <span 
+                          className="cursor-pointer hover:text-emerald-400 hover:underline transition-colors text-white"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/company/${item.symbol}`); }}
+                        >
+                          {item.symbol || 'N/A'}
+                        </span>
                       </div>
                       <ModelBadgeGroup models={item.models} />
                     </div>
@@ -2753,6 +2760,7 @@ function Navigation() {
           <Link to="/mosi" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Research</Link>
           <Link to="/canslim" className={`nav-link ${page === 'canslim' ? 'active' : ''}`}><span className="nav-icon">⭐</span> Models</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
+          <Link to="/rrg" className={`nav-link ${page === 'rrg' ? 'active' : ''}`}><span className="nav-icon">🧭</span> Relative Rotation</Link>
 
           {isAdmin() && (
             <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #334155' }}>
@@ -2841,6 +2849,7 @@ function App() {
               <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />
               <Route path="/112co" element={<One12CoDashboard onViewResearch={() => {}} />} />
               <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
+              <Route path="/rrg" element={<RRGPage />} />
               <Route path="/breakout" element={<BreakoutRadarPage onViewResearch={() => {}} />} />
               <Route path="/trend" element={<TrendScreen onViewResearch={() => {}} />} />
               <Route path="/perx" element={<PerxPage />} />

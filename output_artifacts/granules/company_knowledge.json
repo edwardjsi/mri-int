@@ -1,58 +1,107 @@
 {
   "entity_id": "ENT-COMP-GRANULES",
   "entity_name": "Granules India",
-  "business_model": {
-    "narrative_summary": "Granules operates as a vertically integrated pharmaceutical manufacturing company focused on core APIs, PFIs, and Finished Dosages. Its core strategy relies on high volume, low margin scale economies.",
-    "structured_entities": {
-      "products": [
-        "Paracetamol",
-        "Ibuprofen",
-        "Metformin"
-      ],
-      "plants": [
-        "Vizag Block 4 API Facility",
-        "Gagillapur PFI Facility",
-        "Bonthapally Facility"
-      ],
-      "customer_segments": [
-        "B2B API Supply",
-        "US Generic Rx"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Granules operates as a vertically integrated pharmaceutical manufacturing company focused on core APIs, PFIs, and Finished Dosages. Its core strategy relies on high volume, low margin scale economies.",
+    "products": [
+      {
+        "category": "Core APIs",
+        "items": [
+          "Paracetamol",
+          "Ibuprofen",
+          "Metformin"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "B2B API Supply",
+        "description": "Bulk pharmaceutical buyers"
+      },
+      {
+        "segment": "US Generic Rx",
+        "description": "US generic drug market"
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Vizag Block 4",
+        "description": "API Facility (Capacity: 2,500 MT, Status: Commissioned)"
+      },
+      {
+        "location": "Gagillapur",
+        "description": "PFI Facility"
+      },
+      {
+        "location": "Bonthapally",
+        "description": "Facility"
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "B2B API Supply",
+        "percentage_str": "Not specified"
+      },
+      {
+        "segment": "US Generic Rx",
+        "percentage_str": "Not specified"
+      }
+    ],
+    "competitive_advantage": [
+      "Vertically integrated manufacturing",
+      "High volume, low margin scale economies",
+      "Consistent track record of delivering margins over the last 10 years"
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Block 4 Commissioning",
+        "fact": "Granules commissioned Block 4, increasing API capacity by 2,500 MT.",
+        "why_it_matters": "Higher production capacity supports future volume growth and drives operating leverage.",
+        "evidence_quote": "Vizag Block 4 API Facility (Capacity: 2,500 MT, Status: Commissioned)",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "2026-08-01"
+      },
+      {
+        "category": "New Products",
+        "title": "Oncology Portfolio Expansion",
+        "fact": "The company is expanding its portfolio into higher margin oncology APIs.",
+        "why_it_matters": "Moving up the value chain from basic APIs (like Paracetamol) to complex oncology formulations will improve gross margins.",
+        "evidence_quote": "Block 4 at Unit-V, Vizag, focusing on Oncology APIs, was successfully commissioned.",
+        "evidence_source": "Q1 FY27 Earnings Call",
+        "evidence_date": ""
+      },
+      {
+        "category": "New Geographies",
+        "title": "US Generic Pipeline",
+        "fact": "Accelerating ANDA approvals and new finished dosage launches in the high-margin North American market.",
+        "why_it_matters": "The US market offers higher realization per unit compared to the ROW markets.",
+        "evidence_quote": "We have 14 new product launches planned for the US market over the next 12 months.",
+        "evidence_source": "FY24 Investor Presentation",
+        "evidence_date": ""
+      },
+      {
+        "category": "Management Guidance",
+        "title": "20% CAGR Target",
+        "fact": "Management expects to grow at a 20%+ CAGR for the next three years.",
+        "why_it_matters": "Provides high visibility into the revenue trajectory over the medium term.",
+        "evidence_quote": "Management has explicitly stated they are expected to grow at 20%+ CAGR for the next three years.",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "2026-08-01"
+      }
+    ]
   },
   "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Prudent allocation focused on core APIs. The company does not chase unrelated diversifications.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Consistent track record of delivering margins over the last 10 years, despite pricing pressure in the US.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management has explicitly stated they are expected to grow at 20%+ CAGR for the next three years.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "High transparency, clear disclosures in quarterly results.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Independent board with strong pedigree.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "High promoter holding with zero pledge, demonstrating strong conviction.",
-      "facts": []
-    },
     "key_executives": [
       {
-        "entity_id": "ENT-EXEC-1a2b3c4d",
+        "entity_id": "ENT-EXEC-1",
         "name": "Krishna Prasad",
         "role": "MD & Chairman"
       },
       {
-        "entity_id": "ENT-EXEC-5e6f7a8b",
+        "entity_id": "ENT-EXEC-2",
         "name": "Priyanka Chigurupati",
         "role": "Executive Director"
       }
