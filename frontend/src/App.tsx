@@ -1027,8 +1027,8 @@ function ShadowMomentumPage({ onSelectStock }: { onSelectStock: (stock: any) => 
           return (
             <div
               key={s.symbol}
-              className={`signal-card ${s.is_breakout ? 'signal-buy' : ''} clickable-row`}
-              style={{ borderLeftWidth: s.is_breakout ? '4px' : '1px', borderLeftColor: s.is_breakout ? '#22c55e' : '#334155' }}
+              className={`signal-card ${isBreakout ? 'signal-buy' : ''} clickable-row`}
+              style={{ borderLeftWidth: isBreakout ? '4px' : '1px', borderLeftColor: isBreakout ? '#22c55e' : '#334155' }}
               onClick={() => onSelectStock(stockWithConditions)}
             >
               <div className="signal-header">

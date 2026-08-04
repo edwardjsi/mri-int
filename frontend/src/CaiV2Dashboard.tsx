@@ -162,7 +162,7 @@ export default function CaiV2Dashboard() {
       </div>
 
       {/* Middle Row: Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">Decision Distribution</h2>
           <div className="flex h-4 rounded overflow-hidden">
@@ -192,6 +192,20 @@ export default function CaiV2Dashboard() {
             {regime}
           </div>
         </div>
+
+        <Link to="/rrg" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center hover:bg-gray-50 transition-colors group cursor-pointer block no-underline">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 w-full text-left group-hover:text-emerald-600 transition-colors">Relative Rotation</h2>
+          <div className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full font-bold text-sm border border-emerald-200 w-full text-center group-hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2">
+            Open RRG <span>→</span>
+          </div>
+        </Link>
+        
+        <Link to="/shadow" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center hover:bg-gray-50 transition-colors group cursor-pointer block no-underline">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 w-full text-left group-hover:text-blue-600 transition-colors">Swing Momentum</h2>
+          <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full font-bold text-sm border border-blue-200 w-full text-center group-hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+            Open Shadow <span>→</span>
+          </div>
+        </Link>
       </div>
 
       {/* Holdings Table */}
