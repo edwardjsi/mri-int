@@ -1,6 +1,7 @@
 // @ts-nocheck
 // v2-build-fix
 import React, { useState, useEffect, useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { api, isAuthenticated, isAdmin, getClientName, clearAuth } from './api';
 import BreakoutBadge from './BreakoutBadge';
 import BreakoutRadarPage from './BreakoutRadarPage';
@@ -2755,7 +2756,6 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 
 function Navigation() {
   const location = useLocation();
