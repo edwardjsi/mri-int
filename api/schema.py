@@ -1341,8 +1341,8 @@ def ensure_guidance_tables(cur) -> None:
     try:
         from engine_core.ciw_db_schema import ensure_ciw_tables
         from engine_core.ake_db_schema import ensure_ake_tables
-        ensure_ciw_tables(conn)
-        ensure_ake_tables(conn)
+        ensure_ciw_tables(cur.connection)
+        ensure_ake_tables(cur.connection)
     except ImportError:
         pass
 
