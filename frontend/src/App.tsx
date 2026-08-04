@@ -2805,14 +2805,27 @@ function Navigation() {
           <button className="btn-logout" onClick={() => { clearAuth(); window.location.href = '/'; }}>Logout</button>
         </div>
       </nav>
-      <nav className="mobile-nav">
+            <nav className="mobile-nav">
         <Link to="/dashboard" className={`mobile-nav-link ${page === 'dashboard' ? 'active' : ''}`} title="Dashboard">🏠</Link>
-        <Link to="/inbox" className={`mobile-nav-link ${page === 'inbox' ? 'active' : ''}`} title="Research Inbox">📥</Link>
-        <Link to="/extractor" className={`mobile-nav-link ${page === 'extractor' ? 'active' : ''}`} title="Ontology Engine">🧠</Link>
+        <Link to="/signals" className={`mobile-nav-link ${page === 'signals' ? 'active' : ''}`} title="Signals">📈</Link>
+        <Link to="/caidashboard" className={`mobile-nav-link ${page === 'caidashboard' ? 'active' : ''}`} title="CAI">🧠</Link>
+        <Link to="/caiportfolio" className={`mobile-nav-link ${page === 'caiportfolio' ? 'active' : ''}`} title="CAI Port">💼</Link>
+        <Link to="/shadow" className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} title="Swing Momentum">🔄</Link>
         <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
-        <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
-      <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
+        <Link to="/riskaudit" className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} title="Risk Audit">🛡️</Link>
+        <Link to="/watchlist" className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} title="Watchlist">👀</Link>
+        <Link to="/breakout" className={`mobile-nav-link ${page === 'breakout' ? 'active' : ''}`} title="Breakout Radar">🚀</Link>
+        <Link to="/trend" className={`mobile-nav-link ${page === 'trend' ? 'active' : ''}`} title="Trend Screen">📊</Link>
+        <Link to="/perx" className={`mobile-nav-link ${page === 'perx' ? 'active' : ''}`} title="PERX">🏛️</Link>
+        <Link to="/peexpansion" className={`mobile-nav-link ${page === 'peexpansion' ? 'active' : ''}`} title="Expansion Lens">📈</Link>
+        <Link to="/aae" className={`mobile-nav-link ${page === 'aae' ? 'active' : ''}`} title="AAE Console">🧬</Link>
+        <Link to="/unified" className={`mobile-nav-link ${page === 'unified' ? 'active' : ''}`} title="Unified Scan">🧠</Link>
+        <Link to="/112co" className={`mobile-nav-link ${page === '112co' ? 'active' : ''}`} title="112Co">🦅</Link>
+        <Link to="/guidance" className={`mobile-nav-link ${page === 'guidance' ? 'active' : ''}`} title="GuidanceCheck">🔍</Link>
+        <Link to="/conviction" className={`mobile-nav-link ${page === 'conviction' ? 'active' : ''}`} title="Conviction Engine">🔥</Link>
+        <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
         <Link to="/rrg" className={`mobile-nav-link ${page === 'rrg' ? 'active' : ''}`} title="RRG">🧭</Link>
+        <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
     </>
   );
