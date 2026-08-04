@@ -20,6 +20,7 @@ COPY engine_debate/ ./engine_debate/
 COPY engine_knowledge/ ./engine_knowledge/
 COPY api/ ./api/
 COPY scripts/ ./scripts/
+COPY db.py ./db.py
 COPY Decisions.md ./Decisions.md
 
 # Expose the API port (default 8000, but Railway sets $PORT)

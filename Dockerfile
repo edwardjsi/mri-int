@@ -41,6 +41,7 @@ COPY engine_knowledge/ ./engine_knowledge/
 COPY api/ ./api/
 COPY config/ ./config/
 COPY scripts/ ./scripts/
+COPY db.py ./db.py
 COPY Decisions.md ./Decisions.md
 
 # Copy built frontend from Stage 1 into the api/static directory
