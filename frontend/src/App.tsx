@@ -1185,6 +1185,20 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
 
       <DailySummaryCard summary={summary} />
 
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+        <Link to="/canslim" className="card" style={{ flex: 1, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', cursor: 'pointer' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⭐</div>
+          <div className="card-label" style={{ fontSize: '16px', fontWeight: 'bold' }}>CANSLIM Model</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>View Top Quantitative Candidates</div>
+        </Link>
+        
+        <Link to="/rrg" className="card" style={{ flex: 1, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', cursor: 'pointer' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>🧭</div>
+          <div className="card-label" style={{ fontSize: '16px', fontWeight: 'bold' }}>Relative Rotation</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>Analyze Sector & Stock Momentum</div>
+        </Link>
+      </div>
+
       <section className="section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <div>
@@ -2758,7 +2772,9 @@ function Navigation() {
           <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> Portfolio</Link>
           <Link to="/watchlist" className={`nav-link ${page === 'watchlist' ? 'active' : ''}`}><span className="nav-icon">👀</span> Watchlist</Link>
           <Link to="/mosi" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Research</Link>
+          <Link to="/canslim" className={`nav-link ${page === 'canslim' ? 'active' : ''}`}><span className="nav-icon">⭐</span> Models</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
+          <Link to="/rrg" className={`nav-link ${page === 'rrg' ? 'active' : ''}`}><span className="nav-icon">🧭</span> Relative Rotation</Link>
 
           {isAdmin() && (
             <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #334155' }}>
@@ -2780,6 +2796,7 @@ function Navigation() {
         <Link to="/caiportfolio" className={`mobile-nav-link ${page === 'caiportfolio' ? 'active' : ''}`} title="Portfolio">💼</Link>
         <Link to="/watchlist" className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} title="Watchlist">👀</Link>
         <Link to="/mosi" className={`mobile-nav-link ${page === 'mosi' ? 'active' : ''}`} title="Research">📚</Link>
+        <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
         <Link to="/shadow" className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} title="Swing">🔄</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
