@@ -8,7 +8,7 @@ import logging
 # Ensure root is in python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from db import get_connection
+from engine_core.db import get_connection
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)

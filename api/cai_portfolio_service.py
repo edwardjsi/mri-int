@@ -115,15 +115,20 @@ def get_portfolio_endpoint(client=Depends(get_current_client), conn=Depends(get_
                 "evaluation_date": m.evaluation_date.isoformat() if m.evaluation_date else None,
             })
             
+        position_list = []
         for p in positions:
-            p['models'] = models_by_symbol.get(p['symbol'], [])
+            p_dict = dict(p)
+            p_dict['models'] = models_by_symbol.get(p['symbol'], [])
+            position_list.append(p_dict)
         
+        cash_val = portfolio["cash"]
+        health_val = portfolio["health"]
         return PortfolioResponse(
             id=portfolio["id"],
             owner=portfolio["owner"],
-            cash=float(portfolio["cash"]),
-            health=float(portfolio["health"]) if portfolio["health"] else None,
-            positions=[PositionResponse(**p) for p in positions]
+            cash=float(cash_val) if cash_val is not None else 0.0,
+            health=float(health_val) if health_val is not None else None,
+            positions=[PositionResponse(**p) for p in position_list]
         )
     except Exception as e:
         logger.error(f"Error fetching CAI portfolio: {e}")

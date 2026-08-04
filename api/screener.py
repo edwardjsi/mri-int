@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Dict, Any, List, Optional
 from engine_core.model_results_repository import ModelResultRepository
-from db import get_connection
+from engine_core.db import get_connection
 from api.auth import get_current_client
 
 router = APIRouter(prefix="/api/v1/screener", tags=["Screener"])
