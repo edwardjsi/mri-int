@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from typing import Dict, Any, List, Optional
 from engine_core.model_results_repository import ModelResultRepository
 from db import get_connection
-from api.auth import get_current_user
+from api.auth import get_current_client
 
 router = APIRouter(prefix="/api/v1/screener", tags=["Screener"])
 
@@ -11,7 +11,7 @@ def get_rrg_screener(
     sort: str = Query("rs_ratio"),
     order: str = Query("desc"),
     quadrant: Optional[str] = Query(None),
-    client: dict = Depends(get_current_user)
+    client: dict = Depends(get_current_client)
 ):
     model_repo = ModelResultRepository()
     results = model_repo.latest_for_model_all_symbols("RRG")
