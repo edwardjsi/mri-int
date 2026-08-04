@@ -2758,9 +2758,7 @@ function Navigation() {
           <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> Portfolio</Link>
           <Link to="/watchlist" className={`nav-link ${page === 'watchlist' ? 'active' : ''}`}><span className="nav-icon">👀</span> Watchlist</Link>
           <Link to="/mosi" className={`nav-link ${page === 'mosi' ? 'active' : ''}`}><span className="nav-icon">📚</span> Research</Link>
-          <Link to="/canslim" className={`nav-link ${page === 'canslim' ? 'active' : ''}`}><span className="nav-icon">⭐</span> Models</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
-          <Link to="/rrg" className={`nav-link ${page === 'rrg' ? 'active' : ''}`}><span className="nav-icon">🧭</span> Relative Rotation</Link>
 
           {isAdmin() && (
             <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #334155' }}>
@@ -2782,7 +2780,6 @@ function Navigation() {
         <Link to="/caiportfolio" className={`mobile-nav-link ${page === 'caiportfolio' ? 'active' : ''}`} title="Portfolio">💼</Link>
         <Link to="/watchlist" className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} title="Watchlist">👀</Link>
         <Link to="/mosi" className={`mobile-nav-link ${page === 'mosi' ? 'active' : ''}`} title="Research">📚</Link>
-        <Link to="/canslim" className={`mobile-nav-link ${page === 'canslim' ? 'active' : ''}`} title="Models">⭐</Link>
         <Link to="/shadow" className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} title="Swing">🔄</Link>
         <button className="mobile-nav-link" onClick={() => { clearAuth(); window.location.href = '/'; }} title="Logout">🚪</button>
       </nav>
