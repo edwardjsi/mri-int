@@ -7,8 +7,22 @@ logger = logging.getLogger("GoldenSeeder")
 
 def clear_existing(cur):
     logger.info("Clearing existing CIW data for golden symbols...")
-    symbols = ['NEULANDLAB', 'POLYCAB', 'DIVISLAB', 'DELHIVERY', 'TORNTPHARM', 'WELCORP', 'POONAWALLA', 'HOMEFIRST', 'SPARSECO']
+    symbols = ['NEULANDLAB', 'POLYCAB', 'DIVISLAB', 'DELHIVERY', 'TORNTPHARM', 'WELCORP', 'POONAWALLA', 'HOMEFIRST', 'SPARSECO', 'HSCL']
     cur.execute("DELETE FROM ciw_company WHERE symbol = ANY(%s)", (symbols,))
+
+# (existing company/node/timeline helpers omitted)
+
+def seed_hscl(cur):
+    cid = insert_company(cur, "HSCL", "Himadri Speciality Chemical", "Chemicals", "Owned", 0.05, 744.06)
+    insert_timeline(cur, cid, "RESEARCH", "2026-06-17", "MOSI deep-dive into LFP cathode transition.")
+    insert_node(cur, cid, "THESIS", "Transition of legacy coal tar distillator into high-margin specialty chemicals and advanced battery materials (LFP cathode, silicon-carbon anode).")
+    insert_node(cur, cid, "BUSINESS_QUALITY", "Establishing first commercial-scale LFP active material plant outside China, sticky OEM validation, high barriers to entry.")
+    insert_node(cur, cid, "RISK", "Dumping of subsidized Chinese battery active materials or global shift away from LFP chemistry.")
+    insert_node(cur, cid, "CATALYST", "Committed LFP Cathode plant commercialization in Q3 FY27 and Specialty Carbon Black brownfield payoff in late FY26.")
+    insert_node(cur, cid, "MONITORING", "EBITDA margin sustainability above 20% and Birla Tyres commercial scale-up.")
+
+# Keep other seeding functions...
+# (replacing run method calls below)
 
 def insert_company(cur, symbol, name, sector, status="Not Owned", alloc=0.0, cost=0.0):
     cur.execute("""
@@ -94,6 +108,7 @@ def run():
         seed_poonawalla(cur)
         seed_homefirst(cur)
         seed_sparseco(cur)
+        seed_hscl(cur)
         conn.commit()
         logger.info("✅ Golden Dataset Seeded successfully.")
     except Exception as e:
