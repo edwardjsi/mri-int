@@ -2770,12 +2770,12 @@ function Navigation() {
         </div>
                 <div className="nav-links">
           <Link to="/dashboard" className={`nav-link ${page === 'dashboard' ? 'active' : ''}`}><span className="nav-icon">📊</span> Dashboard</Link>
+          <Link to="/signals" className={`nav-link ${page === 'signals' ? 'active' : ''}`}><span className="nav-icon">📈</span> Signal Dashboard</Link>
           <Link to="/inbox" className={`nav-link ${page === 'inbox' ? 'active' : ''}`}><span className="nav-icon">📥</span> Research Inbox</Link>
           <Link to="/extractor" className={`nav-link ${page === 'extractor' ? 'active' : ''}`}><span className="nav-icon">🧠</span> Ontology Engine</Link>
           <Link to="/ledger" className={`nav-link ${page === 'ledger' ? 'active' : ''}`}><span className="nav-icon">📋</span> Decision Ledger</Link>
           
           {/* Restored links */}
-          <Link to="/signals" className={`nav-link ${page === 'signals' ? 'active' : ''}`}><span className="nav-icon">📈</span> Signal Dashboard</Link>
           <Link to="/caidashboard" className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`}><span className="nav-icon">🧠</span> CAI Dashboard</Link>
           <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> CAI Portfolio</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
