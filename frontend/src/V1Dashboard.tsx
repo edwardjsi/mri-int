@@ -15,7 +15,7 @@ export function V1Dashboard() {
       .catch((err) => {
         console.error(err);
         // Provide mock fallback data for development preview if API is missing
-        if (err.message.includes('404')) {
+        if (err.message.includes('404') || err.message.includes('Not Found')) {
           setData({
             cards: [
               { id: 'summary', title: 'Main Portfolio', value: '₹12,45,000', status: 'Positive', subtitle: '+12.4% PnL', priority: 1 },
