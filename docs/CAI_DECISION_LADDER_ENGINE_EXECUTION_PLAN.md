@@ -31,6 +31,14 @@ This execution plan operationalizes the strictly scoped, deterministic Decision 
 
 ---
 
+## Performance Requirements
+
+* **Batch Performance Target:** The engine shall complete a full portfolio calculation within an acceptable batch-processing window.
+  * *Target:* 500 holdings in < 30 seconds.
+* **Fault Tolerance:** The engine shall process holdings independently. A failure (or missing data) for one holding must not abort the remaining batch.
+
+---
+
 ## Versioning & Standards
 
 * **Decision Ladder Algorithm Version:**
@@ -106,13 +114,15 @@ React UI (Presentation Only)
   - Consume the flat payload from the API.
   - **Presentation Only:** React performs zero business logic. It reads `decision_state` directly from the backend and paints the corresponding colors.
   - Display `NOT_COMPUTED` only when the backend has not yet generated a Decision Ladder for the position, ensuring the UI doesn't crash if a batch fails.
+  - **UI Validation Constraints:**
+    - Test empty state inputs (`workspace.state = {}` and `workspace.state = null`) to ensure rendering resilience.
+    - Validate fallback when a position returns `NOT_COMPUTED`.
 
 ## Phase 5: Engine Validation
 * **Task:** Add deterministic test suite.
 * **Details:**
   - Ensure idempotency: run 1 -> levels -> run 2 -> identical levels (with the same weekly inputs).
   - Test edge cases: missing EMA, missing swing low, IPOs, suspended stock, and missing weekly candles to save enormous debugging time later.
-  - Test empty state inputs (e.g. `workspace.state = {}` and `workspace.state = null`) to ensure rendering resilience.
 
 ## Phase 6: Cron Job Hook
 * **Task:** Add execution hook to the existing weekly bash scripts.
