@@ -2,6 +2,18 @@
 
 ---
 
+## 📅 Session: August 5, 2026 — CIW Workspace Debugger Render Crash Fix
+**Session Start:** ~12:20 IST
+**Session End:** ~12:35 IST
+
+### What Was Done This Session
+- [x] Separated public Company Dossier `/api/ciw/{symbol}` from internal debugger `/api/ciw/{symbol}/workspace` API contracts.
+- [x] Implemented explicit `WorkspaceDebugSerializer` mapping with defensive attributes (`getattr`) to decouple domain layer models from external APIs and support partial workspace states.
+- [x] Structured HTTP 404 response details (`WORKSPACE_NOT_FOUND`) on the backend for clean parsing by the client.
+- [x] Refactored `CiwDebuggerPage.tsx` using local state components (`LoadingWorkspace`, `WorkspaceUnavailable`, `WorkspaceIncomplete`) and optional chaining to prevent any UI crashes on invalid or uncompiled companies.
+
+---
+
 ## 📅 Session: August 3, 2026 — Investment Model Platform Completion & Dossier Pivot
 **Session Start:** ~00:20 IST
 **Session End:** ~00:50 IST

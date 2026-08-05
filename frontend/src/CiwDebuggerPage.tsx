@@ -148,21 +148,62 @@ const NodeExpandable: React.FC<{ title: string, node: KnowledgeNode }> = ({ titl
     );
 };
 
+// --- Fallback State Components ---
+
+const LoadingWorkspace: React.FC = () => (
+    <div className="min-h-screen bg-black text-gray-400 p-8 flex items-center justify-center font-sans">
+        <div className="text-center animate-pulse">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500 mb-4"></div>
+            <div>Loading Company Workspace...</div>
+        </div>
+    </div>
+);
+
+const WorkspaceUnavailable: React.FC<{ symbol?: string; message?: string }> = ({ symbol, message }) => (
+    <div className="min-h-screen bg-black text-gray-200 p-8 flex items-center justify-center font-sans">
+        <div className="max-w-md w-full bg-gray-900 border border-gray-800 rounded-lg p-8 text-center shadow-2xl">
+            <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Workspace Unavailable</h2>
+            <p className="text-gray-400 mb-6">
+                {message || `No intelligence workspace has been generated for ${symbol || 'this company'} yet.`}
+            </p>
+            <Link to="/dashboard" className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">
+                Back to Dashboard
+            </Link>
+        </div>
+    </div>
+);
+
+const WorkspaceIncomplete: React.FC<{ symbol: string; message?: string }> = ({ symbol, message }) => (
+    <div className="min-h-screen bg-black text-gray-200 p-8 flex items-center justify-center font-sans">
+        <div className="max-w-md w-full bg-gray-900 border border-red-950/40 rounded-lg p-8 text-center shadow-2xl">
+            <div className="text-rose-500 text-4xl mb-4">🛑</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Incomplete Workspace</h2>
+            <p className="text-gray-400 mb-6">
+                {message || `The workspace was found for ${symbol}, but is missing core state or understanding structure.`}
+            </p>
+            <Link to="/dashboard" className="inline-block bg-gray-800 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">
+                Back to Dashboard
+            </Link>
+        </div>
+    </div>
+);
+
+
 export const CiwDebuggerPage: React.FC = () => {
-    const { symbol } = useParams<{ symbol: string }>();
+    const { symbol = '' } = useParams<{ symbol: string }>();
     const [workspace, setWorkspace] = useState<CompanyWorkspace | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<any>(null);
 
     useEffect(() => {
         const fetchWorkspace = async () => {
             try {
-                // Workaround for API fetch using standard fetch logic
-                const res = await apiFetch(`ciw/${symbol}`);
+                const res = await apiFetch(`ciw/${symbol}/workspace`);
                 setWorkspace(res);
                 setError(null);
             } catch (err: any) {
-                setError(err.message || "Failed to load workspace.");
+                setError(err);
             } finally {
                 setLoading(false);
             }
@@ -171,11 +212,49 @@ export const CiwDebuggerPage: React.FC = () => {
         if (symbol) fetchWorkspace();
     }, [symbol]);
 
-    if (loading) return <div className="p-8 text-gray-400">Loading CIW...</div>;
-    if (error) return <div className="p-8 text-red-400">Error: {error}</div>;
-    if (!workspace) return <div className="p-8 text-gray-400">No workspace data.</div>;
+    if (loading) return <LoadingWorkspace />;
 
-    const { thesis, business_quality } = workspace.state.understanding;
+    // Structured Error Parser
+    let structuredError: { code?: string; message?: string } | null = null;
+    if (error) {
+        try {
+            structuredError = JSON.parse(error.message);
+        } catch {
+            structuredError = { message: error.message || String(error) };
+        }
+    }
+
+    if (structuredError) {
+        if (structuredError.code === 'WORKSPACE_NOT_FOUND') {
+            return <WorkspaceUnavailable symbol={symbol} message={structuredError.message} />;
+        }
+        return (
+            <div className="min-h-screen bg-black text-gray-200 p-8 flex items-center justify-center font-sans">
+                <div className="max-w-lg w-full bg-red-950/20 border border-red-900/50 rounded-lg p-6">
+                    <h2 className="text-lg font-semibold text-red-400 mb-2">Connection / API Error</h2>
+                    <p className="text-sm text-gray-400 font-mono break-all">{structuredError.message}</p>
+                    <Link to="/dashboard" className="mt-4 inline-block text-sm text-indigo-400 hover:underline">
+                        &larr; Back to Dashboard
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (!workspace) {
+        return <WorkspaceUnavailable symbol={symbol} />;
+    }
+
+    if (!workspace.state) {
+        return <WorkspaceIncomplete symbol={symbol} />;
+    }
+
+    const { thesis, business_quality } = workspace.state.understanding || {};
+
+    const catalysts = workspace.state.catalysts || [];
+    const risks = workspace.state.risks || [];
+    const monitoring = workspace.state.monitoring || [];
+
 
     return (
         <div className="min-h-screen bg-black text-gray-200 p-8 font-sans">
@@ -219,17 +298,17 @@ export const CiwDebuggerPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h4 className="text-emerald-400 font-semibold mb-4 text-sm">CATALYSTS</h4>
-                            {workspace.state.catalysts.map(c => (
+                            {catalysts.map(c => (
                                 <NodeExpandable key={c.id} title="Catalyst" node={c} />
                             ))}
-                            {workspace.state.catalysts.length === 0 && <div className="text-gray-600 text-sm italic">No active catalysts.</div>}
+                            {catalysts.length === 0 && <div className="text-gray-600 text-sm italic">No active catalysts.</div>}
                         </div>
                         <div>
                             <h4 className="text-red-400 font-semibold mb-4 text-sm">RISKS</h4>
-                            {workspace.state.risks.map(r => (
+                            {risks.map(r => (
                                 <NodeExpandable key={r.id} title="Risk" node={r} />
                             ))}
-                            {workspace.state.risks.length === 0 && <div className="text-gray-600 text-sm italic">No active risks.</div>}
+                            {risks.length === 0 && <div className="text-gray-600 text-sm italic">No active risks.</div>}
                         </div>
                     </div>
                 </section>
@@ -237,10 +316,10 @@ export const CiwDebuggerPage: React.FC = () => {
                 {/* 5. Monitoring */}
                 <section className="mb-12">
                     <h3 className="text-gray-400 uppercase tracking-widest text-sm font-bold mb-6 border-b border-gray-800 pb-2">Monitoring</h3>
-                    {workspace.state.monitoring.map(m => (
+                    {monitoring.map(m => (
                         <NodeExpandable key={m.id} title="Monitor" node={m} />
                     ))}
-                    {workspace.state.monitoring.length === 0 && <div className="text-gray-600 text-sm italic">Nothing currently monitored.</div>}
+                    {monitoring.length === 0 && <div className="text-gray-600 text-sm italic">Nothing currently monitored.</div>}
                 </section>
 
                 {/* 6. Timeline */}

@@ -1,3 +1,14 @@
+## **August 5, 2026: CIW Workspace Debugger Render Crash Fix**
+**Objective**: Fix the page render crash on `/company/:symbol` (CiwDebuggerPage) due to missing `state` property when accessing the Company Dossier DTO.
+**Actions**:
+1. **API Responsibility Separation**: Documented and established two distinct contracts: `/api/ciw/{symbol}` for public stable Company Dossier summary data and `/api/ciw/{symbol}/workspace` for detailed workspace debugging.
+2. **Workspace Debug Serializer**: Implemented the `WorkspaceDebugSerializer` mapping functions (`serialize_debug_workspace`, `serialize_knowledge_node`) with defensive attribute lookups to isolate internal domain details from the API contract and support partially built workspaces.
+3. **Structured HTTP 404 Error Handling**: Configured the workspace endpoint to return a structured JSON response code (`WORKSPACE_NOT_FOUND`) on 404 instead of a generic 500 when workspace details are not generated yet.
+4. **React Defensive States**: Refactored `CiwDebuggerPage.tsx` using local layout routing components (`LoadingWorkspace`, `WorkspaceUnavailable`, `WorkspaceIncomplete`) and optional chaining to handle loading, missing, and partial state states safely without crashing the UI.
+**Result**: The workspace debugger page loads successfully and gracefully renders a clear unavailable workspace message for uncompiled symbols (e.g., `360ONE`) and full interactive grids for compiled symbols (e.g., `POLYCAB`).
+
+---
+
 ## **August 3, 2026: G1.2 Future Growth and UX Validation**
 **Objective**: Execute the G1.2 milestone (Future Growth) and establish a UX validation gate for all dossier features before moving on.
 **Actions**:
