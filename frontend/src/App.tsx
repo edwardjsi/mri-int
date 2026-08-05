@@ -1309,6 +1309,31 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         )}
       </section>
 
+      {/* ── Signals ── */}
+      <section className="section">
+        <h2 className="section-title">✨ MRI Signals (Daily Alignment)</h2>
+        {todaySignals.length > 0 ? (
+          <div className="signals-grid">
+            {todaySignals.map((s: any) => (
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">No new daily daily signals today. System is standing down.</div>
+        )}
+      </section>
+
+      {pendingOlder.length > 0 && (
+        <section className="section">
+          <h2 className="section-title">⏳ Open/Pending Signals</h2>
+          <div className="signals-grid">
+            {pendingOlder.map((s: any) => (
+              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Active Alpha Engine (AAE V3) Section ── */}
       <section className="section" style={{ marginTop: '24px' }}>
         <div style={{ 
@@ -1430,31 +1455,6 @@ function DashboardPage({ onSelectStock }: { onSelectStock: (stock: any) => void 
         <section className="section">
           <div className="empty-state">
             No active holdings detected. Upload your portfolio in <strong>Risk Audit</strong> to see your unified wealth here.
-          </div>
-        </section>
-      )}
-
-      {/* ── Signals ── */}
-      <section className="section">
-        <h2 className="section-title">✨ MRI Signals (Daily Alignment)</h2>
-        {todaySignals.length > 0 ? (
-          <div className="signals-grid">
-            {todaySignals.map((s: any) => (
-              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">No new daily signals today. System is standing down.</div>
-        )}
-      </section>
-
-      {pendingOlder.length > 0 && (
-        <section className="section">
-          <h2 className="section-title">⏳ Open/Pending Signals</h2>
-          <div className="signals-grid">
-            {pendingOlder.map((s: any) => (
-              <SignalCard key={s.id} signal={s} totalCapital={totalCapital} onAction={handleAction} onSelectStock={onSelectStock} />
-            ))}
           </div>
         </section>
       )}
