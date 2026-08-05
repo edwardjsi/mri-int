@@ -21,6 +21,7 @@ export const CaiPortfolioPage: React.FC = () => {
   const [tradeQty, setTradeQty] = useState('');
   const [tradePrice, setTradePrice] = useState('');
   const [tradePosId, setTradePosId] = useState('');
+  const [allowAvgDown, setAllowAvgDown] = useState(false);
 
   const [sortField, setSortField] = useState<string>('symbol');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -36,7 +37,11 @@ export const CaiPortfolioPage: React.FC = () => {
       } else if (tradeType === 'TRANCHE') {
         await apiFetch(`/cai/portfolio/positions/${tradePosId}/tranches`, {
           method: 'POST',
-          body: JSON.stringify({ quantity: Number(tradeQty), entry_price: Number(tradePrice) })
+          body: JSON.stringify({ 
+            quantity: Number(tradeQty), 
+            entry_price: Number(tradePrice),
+            allow_average_down: allowAvgDown
+          })
         });
       } else if (tradeType === 'SELL') {
         await apiFetch(`/cai/portfolio/positions/${tradePosId}/sell`, {
@@ -46,6 +51,7 @@ export const CaiPortfolioPage: React.FC = () => {
       }
       setShowManualTrade(false);
       setTradeSymbol(''); setTradeQty(''); setTradePrice(''); setTradePosId('');
+      setAllowAvgDown(false);
       fetchPortfolio();
     } catch (err: any) {
       alert(err.message);
@@ -322,6 +328,21 @@ export const CaiPortfolioPage: React.FC = () => {
                     <option key={p.id} value={p.id}>{p.symbol} (Tranche {p.tranche}/10)</option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {tradeType === 'TRANCHE' && (
+              <div className="mb-4 flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="allowAvgDown" 
+                  checked={allowAvgDown} 
+                  onChange={e => setAllowAvgDown(e.target.checked)} 
+                  className="mr-2 rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-0 cursor-pointer" 
+                />
+                <label htmlFor="allowAvgDown" className="text-sm text-gray-300 cursor-pointer select-none">
+                  Allow averaging down (AI Approved / Breakout Trigger)
+                </label>
               </div>
             )}
 

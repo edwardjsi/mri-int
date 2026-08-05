@@ -19,6 +19,7 @@ class PositionCreate(BaseModel):
 class TrancheAdd(BaseModel):
     quantity: Optional[int] = None
     entry_price: float
+    allow_average_down: Optional[bool] = False
 
 class SellRequest(BaseModel):
     quantity: Optional[int] = None
@@ -190,8 +191,8 @@ def add_tranche(position_id: str, req: TrancheAdd, client=Depends(get_current_cl
         if not pos:
             raise HTTPException(status_code=404, detail="Active position not found")
             
-        # 1. Enforce "NO averaging down"
-        if req.entry_price <= float(pos["average_price"]):
+        # 1. Enforce "NO averaging down" (unless explicitly allowed by override)
+        if req.entry_price <= float(pos["average_price"]) and not req.allow_average_down:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Averaging down is strictly prohibited. New entry price ({req.entry_price}) must be higher than current average ({pos['average_price']})."
