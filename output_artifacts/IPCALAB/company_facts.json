@@ -1,188 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "Current Share Price",
-    "value": 1846,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "Current Share Price (\u20b9) | 1,846 | User input",
+      "quote": "Ipca is a 75-year-old (founded 1949) Indian pharmaceutical company that crossed \u20b96,749 Cr standalone and \u20b99,032 Cr consolidated revenue in FY25 and is on track for ~\u20b99,646 Cr consolidated in FY26.",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "Current Market Cap",
-    "value": 46825,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "Current Market Cap (\u20b9 Cr) | 46,825 | User input",
+      "quote": "It is the 16th largest player in the Indian formulations market (IQVIA MAT March 2026) with 22 marketing divisions and ~174 brands.",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EPS",
-    "value": 45,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "TTM EPS (\u20b9) | 45.00 | User input",
+      "quote": "It already exports APIs and formulations to 100+ countries and supplies ~40% of US generic formulations and ~25% of UK medicines by volume.",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "TTM Revenue",
-    "value": 9646,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "TTM Revenue (\u20b9 Cr) | 9,646 | ipca1.md Q4 FY26 transcript",
+      "quote": "Revenue base is large (TTM \u20b99,646 Cr), but growth profile is re-accelerating: consolidated revenue growth picked up to ~8% YoY in FY26 vs prior years.",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EBITDA",
-    "value": 1999,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "TTM EBITDA (\u20b9 Cr) | 1,999 (derived: 20.72% \u00d7 9,646)",
+      "quote": "Profitability is structurally improving: standalone EBITDA margin expanded from 15.31% (FY24) \u2192 18.89% (FY25) \u2192 ~25.18% (FY26).",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-IPCALAB",
-    "category": "FINANCIAL",
-    "metric_name": "Enterprise Value",
-    "value": null,
-    "unit": null,
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-14",
-      "source_date": "2026-07-14"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "User Input Block (verified)",
-      "paragraph_index": 1,
-      "quote": "Enterprise Value (\u20b9 Cr) | null (not disclosed in sources)",
+      "quote": "The company's growth has shifted from 'volume + price' to 'complex generics + biosimilars + branded'.",
       "source": {
-        "document_id": "DOC-IPCALAB-4",
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-14"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The Hingni greenfield API plant (~\u20b9150 Cr) explicitly aims to reduce dependency on Chinese API imports.",
+      "source": {
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-14"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The annual report does not explicitly cite PLI sanction letters or specific benefits drawn.",
+      "source": {
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-14"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Ipca ranks 16th in IQVIA's MAT March 2026 ranking for domestic formulations with 2.09% market share.",
+      "source": {
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-14"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has 18,043 permanent employees (1,129 overseas), 7,000+ medical reps, R&D centres in Mumbai/Ratlam/Silvassa/Vadodara.",
+      "source": {
+        "document_id": "DOC-IPCALAB-1784005544.0426202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-14"
+      }
+    }
   }
 ]

@@ -1,188 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue growth",
-    "value": 14,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY26 Financial Performance \u2014 Strong Execution",
-      "paragraph_index": 2,
-      "quote": "Revenue growth: **~14%**",
+      "quote": "Arvind Fashions (AFL) is undergoing a structural transformation from a multi-brand distributor to a high-margin, direct-to-consumer (DTC) powerhouse.",
       "source": {
-        "document_id": "DOC-ARVINDFASN-0",
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-07"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "PAT growth",
-    "value": 62,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY26 Financial Performance \u2014 Strong Execution",
-      "paragraph_index": 2,
-      "quote": "PAT growth: **~62%**",
+      "quote": "With a streamlined portfolio of five marquee brands\u2014US Polo Assn, Tommy Hilfiger, Calvin Klein, Arrow, and Flying Machine.",
       "source": {
-        "document_id": "DOC-ARVINDFASN-0",
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-07"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "EBITDA margin",
-    "value": 13.4,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY26 Financial Performance \u2014 Strong Execution",
-      "paragraph_index": 2,
-      "quote": "EBITDA margin: **13.4%** (+40 bps)",
-      "source": {
-        "document_id": "DOC-ARVINDFASN-0",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "PAT",
-    "value": 124,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
-    "evidence": {
-      "heading": "FY26 Financial Performance \u2014 Strong Execution",
-      "paragraph_index": 2,
-      "quote": "PAT: **\u20b9124 crore**",
-      "source": {
-        "document_id": "DOC-ARVINDFASN-0",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "Gross margin",
-    "value": 55.4,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
-    "evidence": {
-      "heading": "TLDR",
-      "paragraph_index": 1,
       "quote": "AFL\u2019s inventory hedging and high gross margins (55.4%) provide a significant buffer.",
       "source": {
-        "document_id": "DOC-ARVINDFASN-0",
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-07"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-ARVINDFASN",
-    "category": "FINANCIAL",
-    "metric_name": "Debt to EBITDA ratio",
-    "value": 2,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-03-31",
-      "source_date": "2026-03-31"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Five-Dimension Equity Analysis",
-      "paragraph_index": 4,
-      "quote": "TD/EBITDA ~2x",
+      "quote": "AFL is adding 1.5 lakh sq. ft. of net retail space in FY26.",
       "source": {
-        "document_id": "DOC-ARVINDFASN-0",
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-07"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is betting heavily on premiumization in India, Tier-2/Tier-3 consumption growth, online D2C expansion, and operating leverage.",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Revenue growth: ~14%",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "PAT growth: ~62%",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Management targets: 12\u201315% revenue growth, continued EBITDA expansion.",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Gross margins are already strong (~55%).",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The single most important factor to monitor is Like-for-Like (LTL) growth sustainability in Tier-II and Tier-III cities.",
+      "source": {
+        "document_id": "DOC-ARVINDFASN-1778162160.500182",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-07"
+      }
+    }
   }
 ]

@@ -1,281 +1,106 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-544309",
-    "category": "FINANCIAL",
-    "metric_name": "Current Share Price",
-    "value": 1840,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-02",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
-    "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Current Share Price (\u20b9) | 1,840",
-      "source": {
-        "document_id": "DOC-IKS-25",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-544309",
-    "category": "FINANCIAL",
-    "metric_name": "Current Market Cap",
-    "value": 31570,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-02",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
-    "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Current Market Cap (\u20b9 Cr) | 31,570",
-      "source": {
-        "document_id": "DOC-IKS-25",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-544309",
-    "category": "FINANCIAL",
-    "metric_name": "TTM Revenue",
-    "value": 3193,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
-    "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "TTM Revenue (\u20b9 Cr) | 3,193 (FY26)",
-      "source": {
-        "document_id": "DOC-IKS-25",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-544309",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EBITDA",
-    "value": 1091,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
-    "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "TTM EBITDA (\u20b9 Cr) | 1,091 (FY26)",
-      "source": {
-        "document_id": "DOC-IKS-25",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-544309",
-    "category": "FINANCIAL",
-    "metric_name": "Enterprise Value",
-    "value": 31821,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-02",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
-    "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Enterprise Value (\u20b9 Cr) | ~31,821 (Market Cap + Net Debt \u20b9251 Cr)",
-      "source": {
-        "document_id": "DOC-IKS-25",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
     "fact_id": "KNW-BUSINESS-1",
-    "entity_id": "ENT-COMP-544309",
     "category": "BUSINESS",
-    "metric_name": "Revenue CAGR (FY16-25)",
-    "value": 28,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY16-FY25",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
     "evidence": {
-      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
-      "paragraph_index": 1,
-      "quote": "Revenue CAGR of ~28% over 10 years (FY16-25)",
+      "quote": "IKS Health provides a comprehensive AI-enabled Care Enablement Platform (System of Action) that delegates 16+ 'chore tasks' for US healthcare providers across the patient journey.",
       "source": {
-        "document_id": "DOC-IKS-25",
+        "document_id": "DOC-IKS-1782970357.1272388",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-02"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-2",
-    "entity_id": "ENT-COMP-544309",
     "category": "BUSINESS",
-    "metric_name": "EBITDA CAGR (FY16-25)",
-    "value": 33,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY16-FY25",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
     "evidence": {
-      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
-      "paragraph_index": 1,
-      "quote": "EBITDA CAGR of ~33% over 10 years",
+      "quote": "Revenue CAGR of ~28% over 10 years (FY16-25), 20% YoY in FY26.",
       "source": {
-        "document_id": "DOC-IKS-25",
+        "document_id": "DOC-IKS-1782970357.1272388",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-02"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-3",
-    "entity_id": "ENT-COMP-544309",
     "category": "BUSINESS",
-    "metric_name": "PAT CAGR (FY26)",
-    "value": 48,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
     "evidence": {
-      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
-      "paragraph_index": 1,
-      "quote": "PAT CAGR of ~48% YoY in FY26",
+      "quote": "EBITDA CAGR of ~33% over 10 years, 38% YoY in FY26.",
       "source": {
-        "document_id": "DOC-IKS-25",
+        "document_id": "DOC-IKS-1782970357.1272388",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-02"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-4",
-    "entity_id": "ENT-COMP-544309",
     "category": "BUSINESS",
-    "metric_name": "TAM Penetration",
-    "value": 0.01,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-02",
-      "effective_date": "2026-07-02",
-      "source_date": "2026-07-02"
-    },
     "evidence": {
-      "heading": "STEP 1: COMPANY STAGE & GROWTH CYCLE",
-      "paragraph_index": 1,
-      "quote": "TAM penetration: ~$316M revenue vs $35B outsourced TAM (<1% penetration)",
+      "quote": "PAT CAGR of ~48% YoY in FY26.",
       "source": {
-        "document_id": "DOC-IKS-25",
+        "document_id": "DOC-IKS-1782970357.1272388",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-02"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Major strategic acquisition (TruBridge) pending close \u2014 expands TAM by $164B rural hospital market.",
+      "source": {
+        "document_id": "DOC-IKS-1782970357.1272388",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-02"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "90% repeat revenue, 5-6 yr avg top-10 tenure, 98% documentation accuracy.",
+      "source": {
+        "document_id": "DOC-IKS-1782970357.1272388",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-02"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Current Market Cap (\u20b9 Cr) | 31,570.",
+      "source": {
+        "document_id": "DOC-IKS-1782970357.1272388",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-02"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Current Share Price (\u20b9) | 1,840.",
+      "source": {
+        "document_id": "DOC-IKS-1782970357.1272388",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-02"
+      }
+    }
   }
 ]

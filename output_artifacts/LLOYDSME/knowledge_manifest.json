@@ -2,11 +2,11 @@
   "company_ticker": "LLOYDS M",
   "company_name": "Lloyds Metals & Energy",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:49:56.612084Z",
+  "last_updated": "2026-08-05T14:45:51.165817Z",
   "stats": {
-    "total_facts": 13,
-    "total_entities": 3,
-    "metrics_tracked": 13,
+    "total_facts": 8,
+    "total_entities": 5,
+    "metrics_tracked": 8,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

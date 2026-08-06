@@ -1,54 +1,80 @@
 {
-  "entity_id": "ENT-COMP-NavinFluorine",
+  "entity_id": "ENT-COMP-NFIL",
   "entity_name": "Navin Fluorine International Limited",
-  "business_model": {
-    "narrative_summary": "Navin Fluorine operates as a specialized fluorine chemistry manufacturer, focusing on high-performance products, specialty chemicals, and contract development and manufacturing operations (CDMO). The company is transitioning from a mid-tier commodity chemical manufacturer to a research-driven partner for global innovators.",
-    "structured_entities": {
-      "products": [
-        "High Performance Products",
-        "Specialty Chemicals",
-        "Contract Development and Manufacturing Operations (CDMO)"
-      ],
-      "plants": [
-        "Dahej"
-      ],
-      "customer_segments": [
-        "Global innovators in crop protection",
-        "Pharmaceuticals",
-        "Next-generation environmental materials"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company focuses on funding capital expenditures through internal cash accruals and has plans for non-dilutive fundraising through qualified institutional placements.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Navin Fluorine has demonstrated strong execution capabilities with successful commissioning of new capacities and projects.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "The company is positioned for growth with a focus on high-margin products and expanding its market presence.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has consistently met or exceeded projections, indicating high corporate governance standards.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The company is managed by a professional team under strong corporate governance standards.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding stands at 27.1%, indicating a vested interest in the company's performance.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Navin Fluorine International Limited is a company that specializes in fluorine chemistry, providing advanced products and services primarily in the fields of crop protection, pharmaceuticals, and environmental materials. The company has transitioned from being a mid-tier commodity chemical manufacturer to a research-driven partner for global innovators, focusing on high-performance products and contract development and manufacturing operations.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Name",
-        "role": "Role"
+        "category": "Fluorine Chemistry",
+        "items": [
+          "High Performance Products (HPP)",
+          "Specialty Chemicals",
+          "Contract Development and Manufacturing Operations (CDMO)"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Global Innovators",
+        "description": "Companies in crop protection, pharmaceuticals, and environmental materials sectors."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Dahej",
+        "description": "Home to the largest fully integrated fluorination platform in India."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "High Performance Products",
+        "percentage_str": "48.7%"
+      },
+      {
+        "segment": "Specialty Chemicals",
+        "percentage_str": "34.8%"
+      },
+      {
+        "segment": "CDMO",
+        "percentage_str": "16.5%"
+      }
+    ],
+    "competitive_advantage": [
+      "Fluorine handling capabilities are highly specialized and difficult to replicate.",
+      "Strong partnerships with global innovators create high switching costs.",
+      "The company operates in a consolidated oligopoly with limited competition.",
+      "High barriers to entry due to regulatory requirements and technological expertise.",
+      "Significant market share in the growing low-GWP refrigerant sector."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "HFC Capacity Expansion (R32)",
+        "fact": "The company has committed \u20b9236.5 Cr for R32 capacity expansion.",
+        "why_it_matters": "This investment is expected to generate peak revenue potential of \u20b9600\u2013825 Cr per annum.",
+        "evidence_quote": "Peak revenue potential of \u20b9600\u2013825 Cr per annum on a committed investment of \u20b9236.5 Cr represents asset-turnover economics of over 2.5x.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
+      },
+      {
+        "category": "New Products",
+        "title": "CDMO Segment Growth",
+        "fact": "The CDMO segment is expanding at 59.2% YoY.",
+        "why_it_matters": "This growth is driven by the commencement of commercial supplies from the cGMP-4 Phase 1 facility.",
+        "evidence_quote": "The vertical is driven by the commencement of commercial supplies from the cGMP-4 Phase 1 facility for a major European partner.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
+      },
+      {
+        "category": "Market Share",
+        "title": "Specialty Chemicals Growth",
+        "fact": "The Specialty Chemicals segment grew 44.1% YoY.",
+        "why_it_matters": "This performance was driven by an increase in capacity utilization.",
+        "evidence_quote": "Utilization rising to approximately 55\u201360% in FY26, with guidance to reach 75% in FY27.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
       }
     ]
   }

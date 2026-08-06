@@ -1,53 +1,74 @@
 {
   "entity_id": "ENT-COMP-ARVINDFASN",
   "entity_name": "Arvind Fashions Ltd",
-  "business_model": {
-    "narrative_summary": "Arvind Fashions is transitioning from a traditional multi-brand apparel distributor into a premium direct-to-consumer fashion platform with stronger margins, better cash flows, and higher ROCE potential.",
-    "structured_entities": {
-      "products": [
-        "US Polo Assn",
-        "Tommy Hilfiger",
-        "Calvin Klein",
-        "Arrow",
-        "Flying Machine"
-      ],
-      "plants": null,
-      "customer_segments": [
-        "Tier-2 cities",
-        "Tier-3 cities"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management has focused on consolidating control over high-growth assets and exiting loss-making labels.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has delivered on the 'Power Brand' strategy, improving margins and reducing discounting.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management targets 12-15% revenue growth and continued EBITDA expansion.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "AFL maintains high transparency in its consolidation of joint ventures.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Management has a clean fraud/scandal history with no material regulatory issues reported.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": null,
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Arvind Fashions is transitioning from a traditional multi-brand apparel distributor into a premium direct-to-consumer fashion platform. The company focuses on high-margin products and aims to capture the growing demand for premium apparel in India. It operates a streamlined portfolio of five marquee brands, which allows it to leverage the premiumization trend in the Indian market.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Amisha Jain",
-        "role": "CEO"
+        "category": "Apparel Brands",
+        "items": [
+          "US Polo Assn",
+          "Tommy Hilfiger",
+          "Calvin Klein",
+          "Arrow",
+          "Flying Machine"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Premium Consumers",
+        "description": "Middle-class consumers in India looking for branded and aspirational apparel."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "AFL sources its products locally and has shifted to 100% ownership of Flying Machine."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Direct-to-Consumer",
+        "percentage_str": "56%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong brand portfolio with aspirational positioning.",
+      "High gross margins indicating pricing power.",
+      "Focus on direct-to-consumer sales improving margins and inventory control.",
+      "Management's commitment to consolidating high-growth assets.",
+      "Strategic inventory hedging to mitigate supply chain risks."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Retail Space Expansion",
+        "fact": "AFL is adding 1.5 lakh sq. ft. of net retail space in FY26.",
+        "why_it_matters": "This expansion will allow AFL to increase its market presence and capture more sales.",
+        "evidence_quote": "AFL is adding 1.5 lakh sq. ft. of net retail space in FY26.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "March 31, 2026"
+      },
+      {
+        "category": "New Products",
+        "title": "D2C Channel Growth",
+        "fact": "The Online B2C channel grew ~50%, now contributing significantly to the mix.",
+        "why_it_matters": "This growth in the D2C channel indicates a shift towards higher-margin sales.",
+        "evidence_quote": "The Online B2C channel grew ~50%, now contributing significantly to the mix.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "March 31, 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Premiumization Tailwind",
+        "fact": "Indian consumers are upgrading from unbranded to branded and from mass to premium casual wear.",
+        "why_it_matters": "AFL is positioned to benefit from this trend, capturing a larger market share.",
+        "evidence_quote": "Indian consumers are upgrading from unbranded \u2192 branded and from mass \u2192 premium casual wear.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "March 31, 2026"
       }
     ]
   }

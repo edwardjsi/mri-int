@@ -1,48 +1,84 @@
 {
   "entity_id": "ENT-COMP-APAR",
   "entity_name": "Apar Industries Limited",
-  "business_model": {
-    "narrative_summary": "Apar Industries Limited is transitioning from a high-volume, low-margin manufacturer of commodity electrical inputs to a high-value technology enabler for global grid infrastructure and clean energy value chains.",
-    "structured_entities": {
-      "products": [
-        "High-temperature low-sag (HTLS) conductors",
-        "Specialized renewable cables",
-        "Ultra-high-grade transformer oils"
-      ],
-      "plants": [
-        "Continuous Transposed Conductors (CTC) manufacturing facility"
-      ],
-      "customer_segments": [
-        "Global utilities",
-        "Project developers"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Apar Industries Limited is a manufacturer of electrical inputs and is transitioning from a low-margin commodity producer to a high-value technology enabler for global grid infrastructure and clean energy. The company focuses on premium products and has expanded its operations into regulated markets like the United States and Europe.",
+    "products": [
+      {
+        "category": "Conductors",
+        "items": [
+          "High-Temperature Low-Sag (HTLS) Conductors",
+          "Continuous Transposed Conductors (CTC)"
+        ]
+      },
+      {
+        "category": "Cables",
+        "items": [
+          "Specialized Renewable Cables",
+          "Cables for Data Centers"
+        ]
+      },
+      {
+        "category": "Oils",
+        "items": [
+          "Ultra-High-Grade Transformer Oils"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Utilities",
+        "description": "Global utilities and project developers requiring specialized electrical components."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing of conductors, cables, and oils to support domestic and international demand."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Conductor Division",
+        "percentage_str": "55.5%"
+      },
+      {
+        "segment": "Cable Division",
+        "percentage_str": "27.2%"
+      },
+      {
+        "segment": "Specialty Oils & Lubricants",
+        "percentage_str": "23.5%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong technological partnerships with global leaders.",
+      "High barriers to entry in the regulated utility market.",
+      "Leading position in the aluminum alloy conductor market.",
+      "Significant experience in high-margin product manufacturing.",
+      "Strategic alignment with global energy transition trends."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Apar Industries is focused on aggressive capacity expansion funded through internal accruals and low-cost debt.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has successfully executed on its commitments, including tripling CTC capacity and scaling U.S. exports.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "The company is positioned for long-term growth with a focus on high-margin products and expanding market share.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management maintains a realistic and execution-focused tone, discussing risks and growth opportunities.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Promoter shareholding is stable at 57.77%, with zero pledges, indicating strong governance.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter shareholding is stable, reflecting confidence in the company's future.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "CTC Capacity Tripling",
+        "fact": "The company has committed \u20b973 crores to triple its Continuous Transposed Conductor (CTC) capacity to 20,490 MT per year by Q3 FY26.",
+        "why_it_matters": "This expansion will allow Apar to meet increasing demand for high-margin products and enhance revenue.",
+        "evidence_quote": "The conductor business continues to act as the primary operational engine, with revenues growing 32.7% YoY in FY26 to reach \u20b912,712 crores.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "FY26"
+      },
+      {
+        "category": "New Products",
+        "title": "Specialized Renewable Cables",
+        "fact": "The cable division grew 25.8% YoY to \u20b96,220 crores in FY26, propelled by renewable energy cable exports.",
+        "why_it_matters": "This growth indicates strong demand in the renewable energy sector, which is expected to continue.",
+        "evidence_quote": "To capture this momentum, the company has planned a substantial CapEx of \u20b91,500 crores for FY27.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "FY26"
+      }
+    ]
   }
 }

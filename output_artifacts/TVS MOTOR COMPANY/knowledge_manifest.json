@@ -1,11 +1,11 @@
 {
-  "company_ticker": "MOSI AI",
-  "company_name": "MOSI AI",
+  "company_ticker": "NULL",
+  "company_name": "null",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:45:09.300499Z",
+  "last_updated": "2026-08-05T14:35:59.176030Z",
   "stats": {
     "total_facts": 0,
-    "total_entities": 1,
+    "total_entities": 0,
     "metrics_tracked": 0,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0

@@ -2,11 +2,11 @@
   "company_ticker": "ARVIND F",
   "company_name": "Arvind Fashions Ltd",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:44:47.727662Z",
+  "last_updated": "2026-08-05T14:31:33.457514Z",
   "stats": {
-    "total_facts": 6,
-    "total_entities": 1,
-    "metrics_tracked": 6,
+    "total_facts": 10,
+    "total_entities": 3,
+    "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

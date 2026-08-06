@@ -1,57 +1,71 @@
 {
   "entity_id": "ENT-COMP-PGEL",
   "entity_name": "PGEL",
-  "business_model": {
-    "narrative_summary": "PGEL is evolving into India's leading integrated consumer durable manufacturing platform, benefiting from structural outsourcing, backward integration, and disciplined capacity expansion.",
-    "structured_entities": {
-      "products": [
-        "Room Air Conditioners",
-        "Washing Machines",
-        "Air Coolers",
-        "LED Televisions",
-        "Plastic Injection Moulding",
-        "Sheet Metal Components",
-        "Printed Circuit Board Assemblies",
-        "Automotive Components",
-        "Consumer Electronics",
-        "Bathroom Fittings"
-      ],
-      "plants": [
-        "South India refrigerator campus",
-        "Greater Noida washing machine expansion",
-        "West India RAC expansion"
-      ],
-      "customer_segments": [
-        "Indian brands",
-        "Global brands"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "PGEL is a leading integrated consumer durable manufacturing platform in India. The company specializes in manufacturing for major brands rather than selling directly to consumers. It focuses on producing a wide range of consumer electronics and appliances, including air conditioners, washing machines, and refrigerators, leveraging India's growing outsourcing trend in manufacturing.",
+    "products": [
+      {
+        "category": "Consumer Electronics",
+        "items": [
+          "Room Air Conditioners",
+          "Washing Machines",
+          "Air Coolers",
+          "LED Televisions",
+          "Plastic Injection Moulding",
+          "Sheet Metal Components",
+          "Printed Circuit Board Assemblies",
+          "Automotive Components",
+          "Consumer Electronics",
+          "Bathroom Fittings"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "OEM Brands",
+        "description": "PGEL serves over 70 Indian and global brands, acting as a manufacturing partner."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "PGEL operates multiple manufacturing facilities across India, focusing on backward integration and capacity expansion."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Product Revenue",
+        "percentage_str": "77%"
+      }
+    ],
+    "competitive_advantage": [
+      "Backward integration reduces supplier dependence and improves margins.",
+      "Scale improves purchasing power and manufacturing efficiency.",
+      "Manufacturing expertise accumulated over decades.",
+      "High customer switching costs due to tooling and process validation.",
+      "Capacity leadership with aggressive investment in new facilities."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "PGEL's deployment appears focused on businesses that reinforce existing competitive strengths.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has remained strategically consistent, focusing on backward integration, capacity expansion, and product development.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management's FY26 guidance is relatively measured, indicating a normalization of growth expectations.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management discusses both opportunities and risks, providing a balanced disclosure.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Strong internal control framework with active oversight.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": null,
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Simultaneous Investment in Multiple Manufacturing Facilities",
+        "fact": "The company is investing in refrigerator manufacturing, washing machine capacity, and other expansions.",
+        "why_it_matters": "This significantly expands the addressable revenue opportunity over the next several years.",
+        "evidence_quote": "The company is simultaneously investing in refrigerator manufacturing, washing machine capacity, RAC expansion, plastics, South India expansion, Greater Noida expansion, West India AC campus.",
+        "evidence_source": "PGEL MOSI 3.0",
+        "evidence_date": "25 July 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Increasing Demand for Consumer Electronics",
+        "fact": "India remains underpenetrated across several appliance categories while incomes, urbanization, and electrification continue to improve.",
+        "why_it_matters": "This creates a rare combination of structural demand and manufacturing capacity expansion.",
+        "evidence_quote": "Government initiatives such as PLI, Make in India, and Digital India further reinforce domestic manufacturing.",
+        "evidence_source": "PGEL MOSI 3.0",
+        "evidence_date": "25 July 2026"
+      }
+    ]
   }
 }

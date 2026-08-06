@@ -2,11 +2,11 @@
   "company_ticker": "APAR IND",
   "company_name": "Apar Industries Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:50:20.794128Z",
+  "last_updated": "2026-08-05T14:35:56.163449Z",
   "stats": {
-    "total_facts": 7,
-    "total_entities": 2,
-    "metrics_tracked": 7,
+    "total_facts": 8,
+    "total_entities": 5,
+    "metrics_tracked": 8,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

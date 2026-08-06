@@ -1,188 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "Current Price",
-    "value": 973,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "ANALYSIS METADATA",
-      "paragraph_index": 1,
-      "quote": "Current Price (\u20b9): 973",
+      "quote": "RateGain is a structurally re-rated travel-tech SaaS company riding the global AI + travel digitisation wave.",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "Market Cap",
-    "value": 11525,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "ANALYSIS METADATA",
-      "paragraph_index": 1,
-      "quote": "Market Cap (\u20b9 Cr): 11,525",
+      "quote": "Revenue doubled from \u20b91,077 Cr (FY25) \u2192 \u20b91,824 Cr (FY26) \u2014 69.4% YoY growth.",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "TTM Revenue",
-    "value": 1823.6,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "ANALYSIS METADATA",
-      "paragraph_index": 1,
-      "quote": "TTM Revenue (\u20b9 Cr): 1,823.6",
+      "quote": "RateGain's core is AI-powered travel and hospitality technology.",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EBITDA",
-    "value": 337.5,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "ANALYSIS METADATA",
-      "paragraph_index": 1,
-      "quote": "TTM EBITDA (\u20b9 Cr): 337.5 (Adj. 358.3)",
+      "quote": "MarTech grew 146% YoY (organic MarTech ex-Sojern: ~18.9%).",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "D/E Ratio",
-    "value": 0.01,
-    "unit": "TEXT",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "EXECUTIVE SUMMARY",
-      "paragraph_index": 1,
-      "quote": "0.01 D/E",
+      "quote": "RateGain is the OEM/core provider of travel tech.",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-RATEG",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue Growth Rate",
-    "value": "69.4%",
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY25-FY26",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 1 \u2014 COMPANY STAGE & GROWTH CYCLE",
-      "paragraph_index": 1,
-      "quote": "Revenue doubled from \u20b91,077 Cr (FY25) \u2192 \u20b91,824 Cr (FY26) \u2014 69.4% YoY growth",
+      "quote": "The company generates ~95% of its revenue outside India.",
       "source": {
-        "document_id": "DOC-RATEGAIN-16",
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "RateGain is uniquely positioned \u2014 India's only pure-play travel tech SaaS listed company.",
+      "source": {
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is at the inflection point where CapEx is flattening.",
+      "source": {
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Institutional re-rating is in its early phase \u2014 PE went from ~25x (FY22) to ~59x (current).",
+      "source": {
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "RateGain is approaching the institutional re-rating phase.",
+      "source": {
+        "document_id": "DOC-RATEGAIN-1784182950.598857",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
   }
 ]

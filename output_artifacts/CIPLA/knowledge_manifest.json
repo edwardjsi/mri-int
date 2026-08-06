@@ -2,10 +2,10 @@
   "company_ticker": "NULL",
   "company_name": "null",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:49:59.510462Z",
+  "last_updated": "2026-08-05T07:50:39.761541Z",
   "stats": {
     "total_facts": 0,
-    "total_entities": 1,
+    "total_entities": 0,
     "metrics_tracked": 0,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0

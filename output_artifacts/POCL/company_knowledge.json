@@ -1,49 +1,72 @@
 {
   "entity_id": "ENT-COMP-POCL",
   "entity_name": "Pondy Oxides & Chemicals Ltd",
-  "business_model": {
-    "narrative_summary": "POCL appears to be transitioning from a commodity recycling company to an organized circular-materials platform with forward integration and structural margin expansion.",
-    "structured_entities": {
-      "products": [
-        "Copper cathode",
-        "Lead",
-        "Plastics",
-        "Aluminum"
-      ],
-      "plants": [
-        "Mundra"
-      ],
-      "customer_segments": [
-        "Institutional investors",
-        "Recycling industry"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Pondy Oxides & Chemicals Ltd (POCL) is transitioning from a commodity recycling company to an organized circular-materials platform. The company focuses on recycling materials such as lead and copper, and is expanding its operations to include a wider range of materials, thereby improving its margins and value addition. This strategic shift aims to reduce cyclicality and enhance the company's relevance in the market.",
+    "products": [
+      {
+        "category": "Recycled Materials",
+        "items": [
+          "Lead",
+          "Copper",
+          "Plastics",
+          "Aluminum"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Industrial Clients",
+        "description": "Companies that require recycled materials for manufacturing."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Mundra",
+        "description": "Site for copper cathode project and other recycling operations."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Recycled Copper",
+        "percentage_str": null
+      },
+      {
+        "segment": "Recycled Lead",
+        "percentage_str": null
+      },
+      {
+        "segment": "Plastics",
+        "percentage_str": null
+      }
+    ],
+    "competitive_advantage": [
+      "Value-added alloys with customer-specific products and sole-source relationships.",
+      "Regulatory formalization benefits as India formalizes recycling.",
+      "Multi-metal platform advantage improving sourcing efficiency and customer integration.",
+      "High export relationships diversifying demand and improving institutional credibility."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management emphasizes internal accrual funding, no long-term debt, and conservative leverage structure.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has demonstrated operational understanding and capital discipline.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management has provided guidance on EBITDA and ROCE targets.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "The company has improved its communication quality and strategic clarity.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Management has shown no reckless leverage or unrelated diversification.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Management's behavior indicates a commitment to shareholder value.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Copper Cathode Project",
+        "fact": "Management guided \u20b9180\u2013200 crore planned capex largely for copper cathode project.",
+        "why_it_matters": "This project is expected to vertically integrate existing copper recycling, improve margins, and deepen value addition.",
+        "evidence_quote": "The copper cathode expansion is strategically logical.",
+        "evidence_source": "MOSI AI Final Institutional Analysis",
+        "evidence_date": "27 May 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Emerging Institutional Interest",
+        "fact": "POCL appears to be entering the 'emerging institutional discovery' stage.",
+        "why_it_matters": "This stage often leads to PE expansion as institutions begin to recognize the company's potential.",
+        "evidence_quote": "Institutions screen for: revenue acceleration, EBITDA acceleration, PAT acceleration. POCL qualifies.",
+        "evidence_source": "MOSI AI Final Institutional Analysis",
+        "evidence_date": "27 May 2026"
+      }
+    ]
   }
 }

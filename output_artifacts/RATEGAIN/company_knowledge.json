@@ -1,52 +1,71 @@
 {
   "entity_id": "ENT-COMP-RATEG",
   "entity_name": "RateGain Travel Technologies Ltd",
-  "business_model": {
-    "narrative_summary": "RateGain is a structurally re-rated travel-tech SaaS company riding the global AI + travel digitisation wave, with its Sojern acquisition creating a Martech super-cycle.",
-    "structured_entities": {
-      "products": [
-        "DaaS (Data/Analytics/Intelligence)",
-        "Distribution (GDS connectivity, channel management)",
-        "MarTech (Social media management, paid digital marketing)"
-      ],
-      "plants": null,
-      "customer_segments": [
-        "Hotels",
-        "Airlines",
-        "OTAs"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company is at the inflection point where CapEx is flattening and ROCE is rising.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has been conservative and transparent about segment weaknesses.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Expect margin expansion and PE from current ~59x to sustainable 30\u201340x as earnings catch up.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management acknowledges risks and has been candid about the distribution decline.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "RateGain is professionally managed with a stable promoter holding.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is ~46.2% (Bhanu Chopra + family).",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "RateGain Travel Technologies Ltd is a travel technology company that provides AI-powered solutions for the hospitality industry. The company specializes in data analytics, distribution, and marketing technology, helping hotels, airlines, and online travel agencies optimize their pricing and marketing strategies. By leveraging advanced technology, RateGain enables its clients to enhance their operational efficiency and drive revenue growth.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Bhanu Chopra",
-        "role": "Chairman & MD"
+        "category": "Core Offerings",
+        "items": [
+          "DaaS (Data/Analytics/Intelligence)",
+          "Distribution",
+          "MarTech"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Hospitality Industry",
+        "description": "Includes hotels, airlines, and online travel agencies (OTAs) that utilize RateGain's technology for pricing and marketing."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "RateGain develops its software solutions and technology infrastructure in India, leveraging local engineering talent."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "MarTech",
+        "percentage_str": "31%"
+      },
+      {
+        "segment": "DaaS",
+        "percentage_str": "42%"
+      },
+      {
+        "segment": "Distribution",
+        "percentage_str": "21%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong data network effects from processing vast amounts of travel data.",
+      "Long-term contracts with clients ensure stable revenue streams.",
+      "Unique position as India's only pure-play travel tech SaaS listed company.",
+      "Integration of AI technology enhances product offerings and customer value.",
+      "Established reputation and market presence in the travel technology sector."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Sojern Acquisition Integration",
+        "fact": "The Sojern acquisition has added a new growth engine and is expected to contribute significantly to revenue.",
+        "why_it_matters": "This integration is crucial for expanding RateGain's market share and enhancing its product offerings.",
+        "evidence_quote": "Acquired Sojern (MarTech) in mid-FY26, adding a new growth engine.",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "16 July 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Growth in Indian Travel Market",
+        "fact": "India's travel market is projected to grow significantly, providing a favorable environment for RateGain.",
+        "why_it_matters": "As the market expands, RateGain is well-positioned to capture a larger share of the growing demand.",
+        "evidence_quote": "India's travel market: $75B (2023) \u2192 $125B by 2030 \u2014 10%+ CAGR.",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "16 July 2026"
       }
     ]
   }

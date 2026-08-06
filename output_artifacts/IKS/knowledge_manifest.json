@@ -2,11 +2,11 @@
   "company_ticker": "INVENTUR",
   "company_name": "Inventurus Knowledge Solutions Limited (IKS Health)",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:57:42.429997Z",
+  "last_updated": "2026-08-05T14:44:29.734546Z",
   "stats": {
-    "total_facts": 9,
-    "total_entities": 1,
-    "metrics_tracked": 9,
+    "total_facts": 8,
+    "total_entities": 3,
+    "metrics_tracked": 8,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

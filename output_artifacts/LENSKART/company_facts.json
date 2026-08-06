@@ -1,219 +1,93 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "Current Share Price",
-    "value": 556,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Current Share Price (\u20b9) | 556",
+      "quote": "Lenskart is an AI-powered, vertically integrated eyewear technology platform compounding earnings at >50% annually by converting India's massive unorganized optical market into a high-margin recurring subscription ecosystem.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "Current Market Cap",
-    "value": 96500,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Current Market Cap (\u20b9 Cr) | 96,500",
+      "quote": "Lenskart is transitioning from an early rollout model into a high-return compounding machine.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "TTM Revenue",
-    "value": 9002.3,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "TTM Revenue (\u20b9 Cr) | 9,002.3",
+      "quote": "Revenue >32% CAGR alongside >50% EBITDA CAGR places it in elite retail/D2C growth percentile.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EBITDA",
-    "value": 1789.5,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "TTM EBITDA (\u20b9 Cr) | 1,789.5",
+      "quote": "Lenskart is replicating this disruption at 10x scale through AI-driven site selection (GeoIQ), remote optometry, and fast delivery.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "Enterprise Value",
-    "value": 92619,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "Enterprise Value (\u20b9 Cr) | 92,619 *(Market Cap minus Net Cash of \u20b93,881 Cr)*",
+      "quote": "Lenskart's consolidated EBITDA margin (21.3% Post-IndAS / 12.8% Pre-IndAS) is Above Norm, driven by its 69.3% product margin resulting from 100% private-label vertical integration.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EPS",
-    "value": 2.84,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "USER INPUT BLOCK",
-      "paragraph_index": 1,
-      "quote": "TTM EPS (\u20b9) | 2.84",
+      "quote": "Lenskart displays the classic institutional re-rating signature: High Store Expansion (+603 stores) + Rising ROCE (23.1%) + Expanding Operating Cash Flow (\u20b9886.7 Cr).",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": "ENT-COMP-544600",
-    "category": "FINANCIAL",
-    "metric_name": "ROCE",
-    "value": 23.1,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-27",
-      "source_date": "2026-07-27"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 8A \u2014 FINANCIAL HEALTH: QUANTITATIVE CHECKS (1\u20137)",
-      "paragraph_index": 5,
-      "quote": "FY26 ROCE (ex-IPO proceeds) reached 23.1% (up from 13.8% in FY25).",
+      "quote": "Lenskart is an institutional-grade omnichannel eyewear platform compounding cash flows at >50% annually by creating market demand through free AI eye testing and 100% vertically integrated automated manufacturing.",
       "source": {
-        "document_id": "DOC-LENSKART-15",
+        "document_id": "DOC-LENSKART-1785119738.3751912",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-27"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   }
 ]

@@ -2,11 +2,11 @@
   "company_ticker": "PONDY OX",
   "company_name": "Pondy Oxides & Chemicals Ltd",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:46:27.364831Z",
+  "last_updated": "2026-08-05T14:32:29.401418Z",
   "stats": {
-    "total_facts": 8,
-    "total_entities": 2,
-    "metrics_tracked": 8,
+    "total_facts": 6,
+    "total_entities": 3,
+    "metrics_tracked": 6,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

@@ -1,52 +1,104 @@
 {
   "entity_id": "ENT-COMP-cgpower",
   "entity_name": "CG Power and Industrial Solutions Limited",
-  "business_model": {
-    "narrative_summary": "CG Power is transitioning from a traditional capital equipment supplier to a high-technology industrial powerhouse through massive transformer capacity scaling, entry into railway safety electronics, and strategic foray into semiconductor design and OSAT packaging.",
-    "structured_entities": {
-      "products": [
-        "Heavy Electrical Power Transformers",
-        "High Voltage Switchgears",
-        "Industrial Low/Medium Voltage Motors",
-        "Railway Traction & Propulsion Systems",
-        "Semiconductor Design/OSAT"
-      ],
-      "plants": [
-        "Greenfield Transformer Plant",
-        "Brownfield Transformer Expansion"
-      ],
-      "customer_segments": [
-        "Utilities",
-        "Railways",
-        "Industrial OEMs"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "CG Power and Industrial Solutions Limited is a leading manufacturer of heavy electrical equipment, specializing in power transformers, switchgears, and industrial motors. The company has transitioned from a traditional capital equipment supplier to a high-technology industrial powerhouse, focusing on innovative solutions in the energy sector. It generates revenue through the sale of these products and services, catering to both domestic and international markets.",
+    "products": [
+      {
+        "category": "Power Systems",
+        "items": [
+          "Heavy Electrical Power Transformers",
+          "High Voltage Switchgears"
+        ]
+      },
+      {
+        "category": "Industrial Systems",
+        "items": [
+          "Low Voltage Motors",
+          "Medium Voltage Motors"
+        ]
+      },
+      {
+        "category": "Railway Systems",
+        "items": [
+          "Railway Traction & Propulsion Systems"
+        ]
+      },
+      {
+        "category": "Semiconductor",
+        "items": [
+          "Semiconductor Design",
+          "OSAT Packaging"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Utilities",
+        "description": "Electricity providers and grid operators."
+      },
+      {
+        "segment": "Industrial",
+        "description": "Manufacturers in sectors like cement, metals, and mining."
+      },
+      {
+        "segment": "Railways",
+        "description": "Indian Railways and related infrastructure projects."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing facilities for transformers and motors."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Power Systems",
+        "percentage_str": "37.6%"
+      },
+      {
+        "segment": "Industrial Systems",
+        "percentage_str": "62.4%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong brand recognition and market leadership in low voltage motors and transformers.",
+      "Established relationships with utility companies and government contracts.",
+      "Innovative product offerings in semiconductor and railway safety systems.",
+      "Zero debt balance sheet providing financial stability.",
+      "High operational efficiency with superior ROCE."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Dynamic capital allocation with a focus on greenfield and brownfield expansions.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Sustained execution over 4 consecutive profitable years (FY22\u2013FY25).",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "High revenue visibility backed by a significant unexecuted order book.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Exemplary corporate governance under the Murugappa Group.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Professional board with a stable promoter stake of ~58%.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Murugappa Group maintains a controlling stake, ensuring alignment with shareholder interests.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Massive transformer capacity scaling",
+        "fact": "CG Power is scaling transformer capacity from 25,000 MVA to 85,000 MVA by FY28.",
+        "why_it_matters": "This expansion will significantly increase production capabilities and revenue potential.",
+        "evidence_quote": "Massive transformer capacity scaling (from 25,000 MVA to 85,000 MVA by FY28).",
+        "evidence_source": "MOSI report",
+        "evidence_date": "24 July 2026"
+      },
+      {
+        "category": "New Products",
+        "title": "Entry into railway safety electronics",
+        "fact": "Acquisition of 55.6% stake in G.G. Tronics for KAVACH implementation.",
+        "why_it_matters": "This strategic move diversifies CG Power's product offerings and taps into the growing railway safety market.",
+        "evidence_quote": "Entry into railway safety electronics via acquisition of 55.6% stake in G.G. Tronics (KAVACH implementation).",
+        "evidence_source": "MOSI report",
+        "evidence_date": "24 July 2026"
+      },
+      {
+        "category": "New Products",
+        "title": "Strategic foray into semiconductor design",
+        "fact": "Acquisition of Axiro Semiconductor for OSAT packaging.",
+        "why_it_matters": "This positions CG Power in the high-growth semiconductor market, enhancing revenue streams.",
+        "evidence_quote": "Strategic foray into semiconductor design and OSAT packaging (Axiro Semiconductor / Renesas RF acquisition).",
+        "evidence_source": "MOSI report",
+        "evidence_date": "24 July 2026"
+      }
+    ]
   }
 }

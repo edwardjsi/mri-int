@@ -1,188 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "PAT CAGR over 3 years",
-    "value": 40,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY23-FY26",
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TL;DR",
-      "paragraph_index": 1,
-      "quote": "The business has delivered a 40% PAT CAGR over 3 years.",
+      "quote": "Radico Khaitan is a quality compounding story at a rich valuation.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "Operating Margin Expansion",
-    "value": "11% to 17%",
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY23-FY26",
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TL;DR",
-      "paragraph_index": 1,
-      "quote": "Operating margins expanding from 11% to 17%.",
+      "quote": "The business has delivered a 40% PAT CAGR over 3 years, operating margins expanding from 11% to 17%.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "Debt Reduction",
-    "value": 498,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Buffett Lens",
-      "paragraph_index": 1,
-      "quote": "Management has demonstrated capital discipline by reducing debt (\u20b9750 Cr \u2192 \u20b9498 Cr).",
+      "quote": "Management has demonstrated capital discipline by reducing debt (\u20b9750 Cr \u2192 \u20b9498 Cr) while growing reserves at 20%+ annually.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "EPS Growth",
-    "value": "\u20b925.83 \u2192 \u20b945.14",
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY24-FY26",
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TL;DR",
-      "paragraph_index": 1,
-      "quote": "EPS doubling in two years (\u20b925.83 \u2192 \u20b945.14).",
+      "quote": "Radico has durable advantages \u2014 80+ years of operational history, the largest malt distillery in India, a near-monopoly on armed forces canteen supply, and an export footprint across 102+ countries.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "Market Capitalization",
-    "value": 46865,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Technical Analysis (Price / Volume)",
-      "paragraph_index": 1,
-      "quote": "Market Cap: \u20b946,865 Cr.",
+      "quote": "The premiumisation strategy is exactly the kind of product-led moat expansion Fisher valued.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-RADICO",
-    "category": "FINANCIAL",
-    "metric_name": "PE Ratio",
-    "value": 76,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-05-18",
-      "source_date": "2026-05-18"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "PE Rerating Potential (3-5 Quarters)",
-      "paragraph_index": 1,
-      "quote": "PE (TTM) | 76x.",
+      "quote": "Radico's core business (85-90%) is domestic IMFL.",
       "source": {
-        "document_id": "DOC-RADICO-6",
+        "document_id": "DOC-RADICO-1784523194.437854",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Exports to Middle East ~8-12% of revenue (estimated).",
+      "source": {
+        "document_id": "DOC-RADICO-1784523194.437854",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-20"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Management runs a tight ship. Debt reduction concurrent with 25% revenue growth signals capital discipline.",
+      "source": {
+        "document_id": "DOC-RADICO-1784523194.437854",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-20"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "No SEBI enforcement actions against Radico or promoters.",
+      "source": {
+        "document_id": "DOC-RADICO-1784523194.437854",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-20"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Radico trades at a premium because it earns it: higher growth, better margins, superior returns.",
+      "source": {
+        "document_id": "DOC-RADICO-1784523194.437854",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-20"
+      }
+    }
   }
 ]

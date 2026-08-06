@@ -1,58 +1,81 @@
 {
-  "entity_id": "ENT-COMP-544309",
+  "entity_id": "ENT-COMP-IKS",
   "entity_name": "Inventurus Knowledge Solutions Limited (IKS Health)",
-  "business_model": {
-    "narrative_summary": "IKS Health provides a comprehensive AI-enabled Care Enablement Platform that delegates various administrative tasks for US healthcare providers across the patient journey.",
-    "structured_entities": {
-      "products": [
-        "AI-enabled Care Enablement Platform",
-        "Scribble Suite",
-        "Q CODE",
-        "IKS EVE\u2122",
-        "AssuRx\u2122",
-        "MyCare Hub"
-      ],
-      "plants": [],
-      "customer_segments": [
-        "US healthcare providers"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "IKS Health focuses on strategic acquisitions and investments in technology to enhance its service offerings.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "The company has demonstrated strong revenue and EBITDA growth, indicating effective execution of its business strategy.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "IKS Health anticipates continued revenue growth and margin expansion as it integrates TruBridge and scales AI-driven solutions.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been transparent about risks and operational challenges, providing clear guidance on future expectations.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The board consists of high-caliber independent directors with experience in healthcare and technology.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is approximately 45-50%, indicating significant alignment with shareholder interests.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "IKS Health is a company that specializes in providing a comprehensive AI-enabled Care Enablement Platform designed for US healthcare providers. This platform automates various administrative tasks throughout the patient journey, including scheduling, clinical documentation, coding, billing, and care management. By leveraging AI technology, IKS Health aims to enhance operational efficiency and improve patient care.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Sachin Gupta",
-        "role": "Founder & CEO"
+        "category": "Care Enablement Platform",
+        "items": [
+          "Scribble Suite",
+          "Q CODE",
+          "IKS EVE\u2122",
+          "AssuRx\u2122",
+          "MyCare Hub"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "US Healthcare Providers",
+        "description": "Healthcare organizations in the United States that require administrative support and automation in patient care processes."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "The company operates delivery centers in India, where a skilled workforce provides AI-enabled healthcare administrative services."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Revenue Optimization (RCM)",
+        "percentage_str": "55-60%"
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Joseph Benardello",
-        "role": "Co-Founder"
+        "segment": "Clinical Support (Documentation/Coding)",
+        "percentage_str": "25-30%"
+      },
+      {
+        "segment": "Value-Based Care",
+        "percentage_str": "5-10%"
+      },
+      {
+        "segment": "Digital Health / Patient Engagement",
+        "percentage_str": "5-10%"
+      },
+      {
+        "segment": "EHR / IT Support (TruBridge - post-close)",
+        "percentage_str": "New"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong technology platform with AI capabilities that automate healthcare administrative tasks.",
+      "High customer retention with 90% repeat revenue.",
+      "Cost leadership through India-based operations providing services at a lower cost.",
+      "Long-term contracts with clients ensuring stable revenue streams.",
+      "Integration of multiple services into a single platform, creating a comprehensive solution for healthcare providers."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "TruBridge Acquisition",
+        "fact": "The acquisition of TruBridge is expected to expand the total addressable market by $164B in the rural hospital market.",
+        "why_it_matters": "This acquisition will significantly increase IKS Health's market presence and revenue potential.",
+        "evidence_quote": "Major strategic acquisition (TruBridge) pending close \u2014 expands TAM by $164B rural hospital market.",
+        "evidence_source": "MOSI PE Expansion & Multi-Bagger Detection Analysis",
+        "evidence_date": "02 July 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Gaining Market Share",
+        "fact": "IKS Health is gaining market share with a growth rate exceeding 12% in the outsourced TAM.",
+        "why_it_matters": "This indicates strong demand for IKS Health's services and potential for future revenue growth.",
+        "evidence_quote": "Growing faster than 12% outsourced TAM = gaining share.",
+        "evidence_source": "Q4 FY26 Call",
+        "evidence_date": "02 July 2026"
       }
     ]
   }

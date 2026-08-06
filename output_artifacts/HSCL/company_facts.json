@@ -1,157 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Return on Capital Employed (ROCE)",
-    "value": 33,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2023-06-13"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Executive Summary and Institutional Context",
-      "paragraph_index": 1,
-      "quote": "the company demonstrates that its recent ROCE expansion from a mere 6% in FY22 to an exceptional 33% in FY26",
+      "quote": "The transition of a traditionally cyclical, commodity-based enterprise into a high-margin specialty chemicals and advanced materials conglomerate represents one of the most lucrative setups in institutional equity investing.",
       "source": {
-        "document_id": "DOC-HSCL-1",
+        "document_id": "DOC-HSCL-1781702144.0615487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-17"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Revenue CAGR from FY23 to FY26",
-    "value": 3.7,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY23-FY26",
-      "effective_date": null,
-      "source_date": "2023-06-13"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 4 SEGMENT-LEVEL GROWTH ANALYSIS",
-      "paragraph_index": 11,
-      "quote": "The 3-year consolidated revenue CAGR from FY23 to FY26 stands at approximately 3.7%",
+      "quote": "Himadri Speciality Chemical Ltd has definitively exited its early maturity phase as a traditional coal tar pitch distillator and has forcefully entered a high-velocity Expansion Stage.",
       "source": {
-        "document_id": "DOC-HSCL-1",
+        "document_id": "DOC-HSCL-1781702144.0615487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-17"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "PAT for FY26",
-    "value": 755,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2023-06-13"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 11 NARRATIVE vs FINANCIAL REALITY",
-      "paragraph_index": 1,
-      "quote": "the company delivered a consolidated PAT of \u20b9755 Cr in FY26",
+      "quote": "The legacy core product of the enterprise is customized coal tar pitch and standard carbon black, primarily serving the global aluminum and tire industries.",
       "source": {
-        "document_id": "DOC-HSCL-1",
+        "document_id": "DOC-HSCL-1781702144.0615487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-17"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Operating Profit Margin (OPM) in Q4 FY26",
-    "value": 21.7,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "Q4 FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2023-06-13"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 6 MARGIN EXPANSION: STRUCTURAL OR CYCLICAL?",
-      "paragraph_index": 1,
-      "quote": "By Q4 FY26, this metric expanded dramatically to a consolidated 21.7%",
+      "quote": "The emerging core products\u2014which act as the primary catalysts for the current expansion phase\u2014are specialty carbon blacks used in high-voltage cables, engineering plastics, and conductive inks, alongside advanced active materials for lithium-ion batteries.",
       "source": {
-        "document_id": "DOC-HSCL-1",
+        "document_id": "DOC-HSCL-1781702144.0615487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-17"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Debt to Equity Ratio",
-    "value": 0.21,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2023-06-13"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 8A \u2014 FINANCIAL HEALTH: QUANTITATIVE CHECKS (1\u20137)",
-      "paragraph_index": 7,
-      "quote": "0.20 - 0.21",
+      "quote": "The company is positioning itself as an immediate, localized, and geopolitically secure substitute for global and domestic cell manufacturers who are desperately seeking to bypass Chinese supply chain dependencies.",
       "source": {
-        "document_id": "DOC-HSCL-1",
+        "document_id": "DOC-HSCL-1781702144.0615487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-17"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company acts as a critical Tier-1 supplier of active materials (cathode and anode powders) directly to cell manufacturers (OEMs).",
+      "source": {
+        "document_id": "DOC-HSCL-1781702144.0615487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-17"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The primary growth engine currently is the 'Others' segment, driven by the rapid commercial scale-up of Birla Tyres.",
+      "source": {
+        "document_id": "DOC-HSCL-1781702144.0615487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-17"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is currently executing multiple massive capital expenditure projects to fuel its new segments.",
+      "source": {
+        "document_id": "DOC-HSCL-1781702144.0615487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-17"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The economic moat surrounding this enterprise is derived from a highly complex matrix of deep technological integration, long-term ecosystem partnerships, and extreme cost leadership.",
+      "source": {
+        "document_id": "DOC-HSCL-1781702144.0615487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-17"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The total addressable market (TAM) is staggering in its scale. The Indian lithium-ion battery market alone is projected to reach USD 16.09 billion by 2030.",
+      "source": {
+        "document_id": "DOC-HSCL-1781702144.0615487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-17"
+      }
+    }
   }
 ]

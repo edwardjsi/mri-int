@@ -1,53 +1,81 @@
 {
-  "entity_id": "ENT-COMP-DFPCL",
+  "entity_id": "ENT-COMP-DEEPAKFERT",
   "entity_name": "Deepak Fertilisers and Petrochemicals Corporation Limited",
-  "business_model": {
-    "narrative_summary": "Deepak Fertilisers and Petrochemicals Corporation Limited operates in the mining chemicals and fertilizer sectors, focusing on high-margin products and stable supply contracts.",
-    "structured_entities": {
-      "products": [
-        "Mining Chemicals",
-        "Fertilizers"
-      ],
-      "plants": [
-        "Gopalpur",
-        "Dahej"
-      ],
-      "customer_segments": [
-        "B2B Mining Chemicals",
-        "Agriculture"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company aims to redirect cash flows toward deleveraging post FY27.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has a mixed track record with execution, particularly regarding project timelines.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management guidance is viewed as risky due to past performance.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "The company has been criticized for lacking clear target prices in its communications.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The board's governance practices are not detailed in the report.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter pledge at 5.04% is considered small but not alarming.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Deepak Fertilisers and Petrochemicals Corporation Limited is involved in the manufacturing and marketing of fertilizers and petrochemicals. The company primarily focuses on the production of ammonia, urea, and other chemical products that are essential for agriculture and industrial applications. It generates revenue through the sale of these products to various sectors, including agriculture, mining, and chemicals.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Mukul Agrawal",
-        "role": "Investor"
+        "category": "Fertilizers",
+        "items": [
+          "Urea",
+          "Ammonium Nitrate"
+        ]
+      },
+      {
+        "category": "Chemicals",
+        "items": [
+          "Ammonia",
+          "Nitric Acid"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Agriculture",
+        "description": "Farmers and agricultural businesses that require fertilizers for crop production."
+      },
+      {
+        "segment": "Mining",
+        "description": "Companies in the mining sector that utilize chemicals for processing."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Gopalpur",
+        "description": "Production facility for ammonia and other chemicals."
+      },
+      {
+        "location": "Dahej",
+        "description": "Manufacturing site for nitric acid and other chemical products."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Fertilizers",
+        "percentage_str": "58%"
+      },
+      {
+        "segment": "Mining Chemicals",
+        "percentage_str": "20%"
+      }
+    ],
+    "competitive_advantage": [
+      "The company has a long-term gas supply contract with Equinor, which stabilizes feedstock costs.",
+      "Deepak Fertilisers has established relationships with key customers in the agriculture and mining sectors.",
+      "The company benefits from a captive ammonia plant that insulates it from price volatility.",
+      "It has a diversified product mix that includes high-margin mining chemicals.",
+      "The company has a strong brand presence and reputation in the Indian market."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Market Share",
+        "title": "Expansion in Mining Chemicals Segment",
+        "fact": "The company is gradually shifting its product mix towards higher-margin mining chemicals.",
+        "why_it_matters": "This shift is expected to improve overall margins and profitability.",
+        "evidence_quote": "The mix shift toward Mining Chemicals is happening \u2014 but slowly.",
+        "evidence_source": "MOSI Defense Report",
+        "evidence_date": null
+      },
+      {
+        "category": "Capacity Expansion",
+        "title": "Gopalpur and Dahej Projects",
+        "fact": "The company is investing in capacity expansion projects at Gopalpur and Dahej.",
+        "why_it_matters": "Successful commissioning of these projects is crucial for future revenue growth.",
+        "evidence_quote": "Gopalpur + Dahej must commission in Q2 FY27.",
+        "evidence_source": "MOSI Defense Report",
+        "evidence_date": null
       }
     ]
   }

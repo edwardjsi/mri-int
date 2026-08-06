@@ -1,157 +1,106 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-3BBLACKBIO",
-    "category": "FINANCIAL",
-    "metric_name": "Consolidated Revenue FY26",
-    "value": 131,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-06-01",
-      "source_date": "2026-06-01"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Core Financial Data (from Tijori)",
-      "paragraph_index": 1,
-      "quote": "Consolidated Revenue | ~Rs.131 Cr + agro",
+      "quote": "India's leading open-system MDx kit maker with 55% standalone EBITDA margins and 70-country exports.",
       "source": {
-        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-01"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-3BBLACKBIO",
-    "category": "FINANCIAL",
-    "metric_name": "Consolidated EBITDA FY26",
-    "value": 69,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-06-01",
-      "source_date": "2026-06-01"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Core Financial Data (from Tijori)",
-      "paragraph_index": 1,
-      "quote": "Consolidated EBITDA | ~Rs.69 Cr",
+      "quote": "3B India (Standalone) | ~Rs.86.48 Cr | **55%** | Core profit engine, 10.4% organic growth.",
       "source": {
-        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-01"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-3BBLACKBIO",
-    "category": "FINANCIAL",
-    "metric_name": "3B India EBITDA Margin FY26",
-    "value": 55,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-06-01",
-      "source_date": "2026-06-01"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Segments & FY26 Performance",
-      "paragraph_index": 1,
-      "quote": "3B India (Standalone) | EBITDA Margin | **55%**",
+      "quote": "Consolidated MDx | ~Rs.131.12 Cr | ~45-50% blended | Rs.69 Cr EBITDA FY26 (est.).",
       "source": {
-        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-01"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-3BBLACKBIO",
-    "category": "FINANCIAL",
-    "metric_name": "Exports Growth FY26",
-    "value": 26,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-06-01",
-      "source_date": "2026-06-01"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Core Financial Data (from Tijori)",
-      "paragraph_index": 1,
-      "quote": "Exports growth | +26%",
+      "quote": "Management credibility \u2014 strategic flip-flops, conflicting numbers on key contracts, and missed guidance blamed on external factors after the fact.",
       "source": {
-        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-01"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-3BBLACKBIO",
-    "category": "FINANCIAL",
-    "metric_name": "Consolidated Revenue Growth FY27 Guidance",
-    "value": "15-20%",
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY27",
-      "effective_date": "2026-06-01",
-      "source_date": "2026-06-01"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Core Financial Data (from Tijori)",
-      "paragraph_index": 1,
-      "quote": "Consolidated Revenue | 15-20% growth",
+      "quote": "3B India EBITDA Margin | 55% | Sustained.",
       "source": {
-        "document_id": "DOC-3B BLACKBIO DX-20",
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-01"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Consolidated Revenue | ~Rs.131 Cr + agro | 15-20% growth.",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-01"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "India MDx TAM: Rs.500-600 Cr.",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-01"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "3B share: 12-15% \u2192 near ceiling for organic growth.",
+      "source": {
+        "document_id": "DOC-3B BLACKBIO DX-1780316675.8301716",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-01"
+      }
+    }
   }
 ]

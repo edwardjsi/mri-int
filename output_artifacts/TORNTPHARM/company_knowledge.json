@@ -1,54 +1,97 @@
 {
-  "entity_id": "ENT-COMP-500420",
+  "entity_id": "ENT-COMP-TORNTPHARM",
   "entity_name": "Torrent Pharmaceuticals Limited",
-  "business_model": {
-    "narrative_summary": "Torrent Pharma is a diversified global branded generics business with a strong presence across multiple markets, primarily focusing on pharmaceutical formulations.",
-    "structured_entities": {
-      "products": [
-        "Branded Generics",
-        "Generic Generics",
-        "Consumer Health"
-      ],
-      "plants": [
-        "Manufacturing facilities in India, USA, Germany"
-      ],
-      "customer_segments": [
-        "Pharmacies",
-        "Hospitals",
-        "Healthcare Providers"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Focus on strategic acquisitions and organic growth through market share gains and product launches.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Consistent revenue growth and margin expansion, with a strong performance in the Indian market.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Expect continued growth driven by patent expiries and integration of JB Pharma.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management provides clear and detailed updates on performance and strategic direction.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Strong governance practices with a focus on shareholder value.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter family holds a significant controlling stake in the company.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Torrent Pharmaceuticals Limited is a pharmaceutical company that develops, manufactures, and markets a wide range of pharmaceutical formulations. The company primarily focuses on branded generics, which account for 74% of its revenue. It also produces generic formulations in the US and Germany, and has a growing Consumer Health segment. The company has a strong presence in various markets, including India, the USA, Brazil, and Germany.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Sudhir Menon",
-        "role": "CFO"
+        "category": "Pharmaceutical Formulations",
+        "items": [
+          "Branded Generics",
+          "Generic Generics",
+          "Consumer Health Products"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Healthcare Providers",
+        "description": "Hospitals, clinics, and pharmacies that require pharmaceutical products."
+      },
+      {
+        "segment": "Patients",
+        "description": "Individuals who need medications for various health conditions."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Primary manufacturing hub for a wide range of pharmaceutical products."
+      },
+      {
+        "location": "Germany",
+        "description": "Manufactures generic products and biosimilars."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Branded Generics",
+        "percentage_str": "74%"
+      },
+      {
+        "segment": "Generic Generics",
+        "percentage_str": "10%"
+      },
+      {
+        "segment": "Consumer Health",
+        "percentage_str": "16%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong brand loyalty in chronic therapies.",
+      "Extensive distribution network with 7,100 field representatives.",
+      "Diverse product portfolio with several iconic brands.",
+      "Established manufacturing capabilities with USFDA-approved plants.",
+      "Strategic acquisitions enhancing market position."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Market Share",
+        "title": "Market share gains within existing large TAM",
+        "fact": "Torrent is growing 1.7x the market in India.",
+        "why_it_matters": "This indicates strong competitive positioning and potential for revenue growth.",
+        "evidence_quote": "Torrent grew 15% in FY26 with EBITDA margins at 32.7%.",
+        "evidence_source": "Q4 FY26 Earnings Transcript",
+        "evidence_date": "16 July 2026"
+      },
+      {
+        "category": "Acquisition Synergies",
+        "title": "JB Pharma acquisition synergies",
+        "fact": "Target of \u20b9400\u2013450 Cr by year 3.",
+        "why_it_matters": "Realizing these synergies will enhance profitability.",
+        "evidence_quote": "The JB Pharma acquisition is transformational.",
+        "evidence_source": "Q4 FY26 Earnings Transcript",
+        "evidence_date": "16 July 2026"
+      },
+      {
+        "category": "Patent Expiry",
+        "title": "Patent expiry-driven launches",
+        "fact": "Torrent has lined up launches for key molecules post-patent expiry.",
+        "why_it_matters": "This creates significant revenue opportunities.",
+        "evidence_quote": "Torrent is well-positioned for the current patent cliff.",
+        "evidence_source": "Q4 FY26 Earnings Transcript",
+        "evidence_date": "16 July 2026"
+      },
+      {
+        "category": "Margin Expansion",
+        "title": "Operating leverage and synergy realization",
+        "fact": "Margins are expected to improve as synergies are realized.",
+        "why_it_matters": "Higher margins will lead to increased profitability.",
+        "evidence_quote": "Management expects margin improvement trajectory continues.",
+        "evidence_source": "Q4 FY26 Earnings Transcript",
+        "evidence_date": "16 July 2026"
       }
     ]
   }

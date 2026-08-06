@@ -1,71 +1,77 @@
 {
   "entity_id": "ENT-COMP-544600",
   "entity_name": "Lenskart Solutions Limited",
-  "business_model": {
-    "narrative_summary": "Lenskart is an AI-powered, vertically integrated eyewear technology platform compounding earnings at >50% annually by converting India's massive unorganized optical market into a high-margin recurring subscription ecosystem.",
-    "structured_entities": {
-      "products": [
-        "Prescription eyewear",
-        "Sunglasses",
-        "Contact lenses",
-        "AI-enabled vision testing"
-      ],
-      "plants": [
-        "Bhiwadi",
-        "Hyderabad"
-      ],
-      "customer_segments": [
-        "Tier 1 cities",
-        "Tier 2 cities",
-        "International markets"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Lenskart Solutions Limited is a direct-to-consumer omnichannel eyewear company that specializes in prescription eyewear, sunglasses, and contact lenses. The company leverages technology to provide AI-enabled vision testing and has a vertically integrated manufacturing process, allowing it to control costs and quality. Lenskart operates both online and offline, with a significant number of retail stores across India and international markets.",
+    "products": [
+      {
+        "category": "Eyewear",
+        "items": [
+          "Prescription Eyewear",
+          "Sunglasses",
+          "Contact Lenses",
+          "Smart Eyewear"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "General Consumers",
+        "description": "Individuals seeking eyewear solutions, including first-time buyers and repeat customers."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Bhiwadi/Hyderabad",
+        "description": "Central manufacturing facilities for eyewear production, including automated lens edging."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "India",
+        "percentage_str": "58.5%"
+      },
+      {
+        "segment": "International",
+        "percentage_str": "42.1%"
+      }
+    ],
+    "competitive_advantage": [
+      "Proprietary technology for site selection and remote optometry.",
+      "Vertical integration leading to lower costs and higher margins.",
+      "Strong brand loyalty with high Net Promoter Score (NPS).",
+      "Rapid expansion in both domestic and international markets.",
+      "Significant market share growth potential in a fragmented industry."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Lenskart is investing heavily in expanding its store network and enhancing its technological capabilities.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "The company has demonstrated strong growth metrics and operational efficiency.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Lenskart expects continued growth driven by store expansion and technological advancements.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management provides clear and detailed updates on performance and strategy.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The company is led by a professional founder-led team with strong governance practices.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter group holding stands at ~17.8%, indicating significant personal investment in the company's success.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_2_growth": {
+    "drivers": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Peyush Bansal",
-        "role": "Founder & CEO"
+        "category": "Capacity Expansion",
+        "title": "Store Expansion",
+        "fact": "Lenskart added 603 net new stores in FY26.",
+        "why_it_matters": "This expansion allows for increased market penetration and revenue growth.",
+        "evidence_quote": "Driven by 603 net new stores added in FY26 compounding at 20%+ SSSG and scaling international margins.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "27 July 2026"
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Neha Bansal",
-        "role": "Co-Founder"
+        "category": "New Products",
+        "title": "Smart Eyewear Launch",
+        "fact": "B Smart Glasses soft launched in Q4 FY26 with 30,000+ waitlist.",
+        "why_it_matters": "This product diversification can attract new customers and increase sales.",
+        "evidence_quote": "B Smart Glasses soft launched in Q4 FY26 with 30,000+ waitlist.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "27 July 2026"
       },
       {
-        "entity_id": "ENT-EXEC-3",
-        "name": "Amit Chaudhary",
-        "role": "Co-Founder"
-      },
-      {
-        "entity_id": "ENT-EXEC-4",
-        "name": "Sumeet Kapahi",
-        "role": "Co-Founder"
+        "category": "Market Share",
+        "title": "Increasing Market Penetration",
+        "fact": "Lenskart targets to increase its market share from ~5% to 15-20% over 5-7 years.",
+        "why_it_matters": "Achieving this target would significantly boost revenue and brand presence.",
+        "evidence_quote": "targeting 15\u201320% over 5\u20137 years.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "27 July 2026"
       }
     ]
   }

@@ -2,10 +2,10 @@
   "company_ticker": "POONAWAL",
   "company_name": "Poonawalla Fincorp Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:58:31.875316Z",
+  "last_updated": "2026-08-05T14:47:06.625721Z",
   "stats": {
     "total_facts": 8,
-    "total_entities": 1,
+    "total_entities": 4,
     "metrics_tracked": 8,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0

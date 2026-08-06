@@ -1,48 +1,101 @@
 {
   "entity_id": "ENT-COMP-POONAWALLA",
   "entity_name": "Poonawalla Fincorp Limited",
-  "business_model": {
-    "narrative_summary": "Poonawalla Fincorp is a tech-enabled NBFC offering a digital-first retail lending platform with various loan products.",
-    "structured_entities": {
-      "products": [
-        "Personal loans",
-        "Gold loans",
-        "Consumer durable financing",
-        "Commercial vehicle loans",
-        "Education loans",
-        "Loan against property",
-        "Business loans",
-        "MSME lending"
-      ],
-      "plants": [],
-      "customer_segments": []
-    }
+  "g1_1_business": {
+    "what_it_does": "Poonawalla Fincorp is a tech-enabled non-banking financial company (NBFC) that provides a range of financial products including personal loans, gold loans, consumer durable financing, commercial vehicle loans, education loans, and business loans. The company operates a digital-first retail lending platform, leveraging technology to enhance customer experience and streamline loan processing.",
+    "products": [
+      {
+        "category": "Lending Products",
+        "items": [
+          "Personal Loans",
+          "Gold Loans",
+          "Consumer Durable Financing",
+          "Commercial Vehicle Loans",
+          "Education Loans",
+          "Business Loans",
+          "MSME Lending"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Corporate Employees",
+        "description": "Salaried individuals seeking personal loans."
+      },
+      {
+        "segment": "Small and Medium Enterprises",
+        "description": "Businesses looking for loans and financing options."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "The company operates 400 gold branches and a digital platform for loan disbursement."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Personal Loans",
+        "percentage_str": "19%"
+      },
+      {
+        "segment": "Loan Against Property",
+        "percentage_str": "28%"
+      },
+      {
+        "segment": "Gold Loans",
+        "percentage_str": "2%"
+      },
+      {
+        "segment": "Consumer Durable Financing",
+        "percentage_str": "1%"
+      },
+      {
+        "segment": "Commercial Vehicle Loans",
+        "percentage_str": "2%"
+      },
+      {
+        "segment": "Education Loans",
+        "percentage_str": "1%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong technology integration with 76 AI projects deployed.",
+      "Established brand legacy through the Poonawalla Group.",
+      "Regulatory compliance with AAA/Stable rating.",
+      "Extensive distribution network with 400 branches and 12,500 dealers.",
+      "Data-driven decision-making through AI/ML models."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management targets ROA to move 'strength to strength' from 1.81% baseline.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has consistently hit every guidance milestone across all 6 quarters.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Next phase: Scale \u2014 compounding AUM at 35-40% CAGR.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management openly discusses risks and acknowledges potential challenges.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Poonawalla Group has strong brand and effective control.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holds >50% effective control.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "New Product Launches",
+        "fact": "The company launched 6 new product lines that contribute significantly to disbursements.",
+        "why_it_matters": "These new products are expected to drive revenue growth and increase market share.",
+        "evidence_quote": "New products contributed 24% of total disbursements in Q4FY26.",
+        "evidence_source": "Q4 FY26 Investor Presentation",
+        "evidence_date": "May 05, 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Growing AUM",
+        "fact": "AUM grew 69.4% YoY.",
+        "why_it_matters": "This growth indicates strong demand for Poonawalla's products and services.",
+        "evidence_quote": "AUM grew 69.4% YoY to \u20b960,348 Cr.",
+        "evidence_source": "Q4 FY26 Earnings Call Transcript",
+        "evidence_date": "May 05, 2026"
+      },
+      {
+        "category": "Pricing Power",
+        "title": "NIM Expansion",
+        "fact": "NIM increased to 9.05%.",
+        "why_it_matters": "Higher NIM indicates improved profitability and pricing power.",
+        "evidence_quote": "NIM is structurally expanding (9.05% vs 8.62%).",
+        "evidence_source": "Q4 FY26 Analysis",
+        "evidence_date": "July 01, 2026"
+      }
+    ]
   }
 }

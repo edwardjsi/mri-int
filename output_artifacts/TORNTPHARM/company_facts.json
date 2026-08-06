@@ -1,312 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-500420",
-    "category": "FINANCIAL",
-    "metric_name": "Market Cap",
-    "value": 165185,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
-    "evidence": {
-      "heading": "Company",
-      "paragraph_index": 1,
-      "quote": "Torrent Pharmaceuticals Limited | Symbol: TORNTPHARM (BSE: 500420) | Price: \u20b94,881 | Market Cap: \u20b9165,185 Cr",
-      "source": {
-        "document_id": "DOC-TORNTPHARM-26",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-500420",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EPS",
-    "value": 63.9,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
-    "evidence": {
-      "heading": "Company",
-      "paragraph_index": 1,
-      "quote": "TTM EPS: \u20b963.9",
-      "source": {
-        "document_id": "DOC-TORNTPHARM-26",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-500420",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue",
-    "value": 13980,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-07-16"
-    },
-    "evidence": {
-      "heading": "Quarterly data",
-      "paragraph_index": 1,
-      "quote": "Total: **13,980**",
-      "source": {
-        "document_id": "DOC-TORNTPHARM-26",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-500420",
-    "category": "FINANCIAL",
-    "metric_name": "EBITDA Margin",
-    "value": 32.6,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-07-16"
-    },
-    "evidence": {
-      "heading": "Margin trends",
-      "paragraph_index": 1,
-      "quote": "FY26: **32.6%** (+30 bps)",
-      "source": {
-        "document_id": "DOC-TORNTPHARM-26",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-500420",
-    "category": "FINANCIAL",
-    "metric_name": "PAT",
-    "value": 2138,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-07-16"
-    },
-    "evidence": {
-      "heading": "Full year trends",
-      "paragraph_index": 1,
-      "quote": "PAT (\u20b9 Cr): 2,138",
-      "source": {
-        "document_id": "DOC-TORNTPHARM-26",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
     "fact_id": "KNW-BUSINESS-1",
-    "entity_id": "ENT-COMP-500420",
     "category": "BUSINESS",
-    "metric_name": "Revenue Share from India",
-    "value": 54,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "India (largest market, 54% of revenue \u2014 #5 in IPM)",
+      "quote": "Torrent Pharma is a 53-year-old pharmaceutical company that has evolved from a domestic player into a diversified global branded generics business.",
       "source": {
-        "document_id": "DOC-TORNTPHARM-26",
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-2",
-    "entity_id": "ENT-COMP-500420",
     "category": "BUSINESS",
-    "metric_name": "Revenue Share from USA",
-    "value": 10,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "USA (10% \u2014 branded + generic formulations)",
+      "quote": "It is the flagship company of the Torrent Group with a strong presence across: India (largest market, 54% of revenue \u2014 #5 in IPM), USA (10% \u2014 branded + generic formulations), Brazil (10% \u2014 branded generics), Germany (9% \u2014 generics), Others (17% \u2014 includes emerging markets).",
       "source": {
-        "document_id": "DOC-TORNTPHARM-26",
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-3",
-    "entity_id": "ENT-COMP-500420",
     "category": "BUSINESS",
-    "metric_name": "Revenue Share from Brazil",
-    "value": 10,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Brazil (10% \u2014 branded generics)",
+      "quote": "Torrent Pharma develops, manufactures, and markets pharmaceutical formulations \u2014 primarily branded generics (74% of revenue), plus generic generics in the US and Germany, and a growing Consumer Health (CHC) segment.",
       "source": {
-        "document_id": "DOC-TORNTPHARM-26",
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-4",
-    "entity_id": "ENT-COMP-500420",
     "category": "BUSINESS",
-    "metric_name": "Revenue Share from Germany",
-    "value": 9,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Germany (9% \u2014 generics)",
+      "quote": "The JB Pharma acquisition (Jan 2026) is transformational \u2014 moved them from #7 to #5 in IPM, added 6 iconic brands, and opened new therapy areas.",
       "source": {
-        "document_id": "DOC-TORNTPHARM-26",
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-5",
-    "entity_id": "ENT-COMP-500420",
     "category": "BUSINESS",
-    "metric_name": "Revenue Share from Others",
-    "value": 17,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "2026-07-16",
-      "effective_date": "2026-07-16",
-      "source_date": "2026-07-16"
-    },
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Others (17% \u2014 includes emerging markets)",
+      "quote": "Revenue 5-year CAGR of ~12% is healthy for a company of this scale.",
       "source": {
-        "document_id": "DOC-TORNTPHARM-26",
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-16"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The Indian pharmaceutical industry's rise is itself a proven global precedent: Indian pharma exports grew from ~$3B (2000) to ~$28B+ (2025).",
+      "source": {
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The Patent Cliff Wave (2023\u20132028): Global patents worth an estimated $200B+ are expiring between 2023 and 2028.",
+      "source": {
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Torrent is well-positioned for the current patent cliff: Semaglutide (GLP-1 for diabetes/obesity) \u2014 Torrent has launched both oral and injectable formulations post-patent expiry.",
+      "source": {
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Torrent's own US business grew 31% in FY26, proving market access.",
+      "source": {
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is an integrated pharma company (manufacturing + marketing + distribution).",
+      "source": {
+        "document_id": "DOC-TORNTPHARM-1784195650.175117",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-16"
+      }
+    }
   }
 ]

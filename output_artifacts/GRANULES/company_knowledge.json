@@ -1,64 +1,102 @@
 {
   "entity_id": "ENT-COMP-GRANULES",
-  "entity_name": "Granules India Ltd",
-  "business_model": {
-    "narrative_summary": "Granules India Ltd operates in the pharmaceuticals sector, focusing on generics and contract development and manufacturing organization (CDMO) services, particularly in peptides.",
-    "structured_entities": {
-      "products": [
-        "Generics",
-        "Peptide CDMO"
-      ],
-      "plants": [
-        "Gagillapur",
-        "Genome Valley",
-        "GPI Virginia"
-      ],
-      "customer_segments": [
-        "Pharmaceutical companies",
-        "Healthcare providers"
-      ]
-    }
+  "entity_name": "Granules India Limited",
+  "g1_1_business": {
+    "what_it_does": "Granules India Limited is a pharmaceutical company that specializes in the production of generic drugs. The company operates across various segments including Active Pharmaceutical Ingredients (API), Pharmaceutical Formulations Intermediates (PFI), and Finished Dosages (FD). It is recognized as the fourth-largest player in the US controlled-substance market and has been transitioning towards complex generics and peptide Contract Development and Manufacturing Organization (CDMO) services.",
+    "products": [
+      {
+        "category": "Finished Dosages",
+        "items": [
+          "Complex Generics",
+          "Controlled Substances"
+        ]
+      },
+      {
+        "category": "APIs",
+        "items": [
+          "Paracetamol",
+          "Metformin"
+        ]
+      },
+      {
+        "category": "PFIs",
+        "items": [
+          "Pharmaceutical Formulations Intermediates"
+        ]
+      },
+      {
+        "category": "CDMO",
+        "items": [
+          "Ascelis Peptides",
+          "Senn Chemicals"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Pharmaceutical Companies",
+        "description": "Companies that require generic drugs and active pharmaceutical ingredients."
+      },
+      {
+        "segment": "Healthcare Providers",
+        "description": "Providers that utilize finished dosages in patient care."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Genome Valley",
+        "description": "Facility for producing finished dosages with a capacity increase of ~40%."
+      },
+      {
+        "location": "Gagillapur",
+        "description": "Site undergoing remediation with 9 launches waiting for FDA clearance."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Finished Dosages",
+        "percentage_str": "74%"
+      },
+      {
+        "segment": "API",
+        "percentage_str": "13%"
+      },
+      {
+        "segment": "PFI",
+        "percentage_str": "10%"
+      },
+      {
+        "segment": "CDMO",
+        "percentage_str": "3%"
+      }
+    ],
+    "competitive_advantage": [
+      "Backward integration from API to FD, creating a strong supply chain.",
+      "Regulatory barriers in the controlled substances market provide a competitive edge.",
+      "Established reputation with a 40-year quality record and zero critical observations in audits.",
+      "Diverse product portfolio with a focus on complex generics and peptides.",
+      "Strong promoter backing and institutional interest."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management focuses on strategic investments in R&D and capacity expansion to support growth in higher-value products.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has shown a commitment to transitioning the business model towards complex generics and CDMO services, with recent improvements in financial metrics.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management aims to achieve profitability in the peptide CDMO segment while maintaining growth in complex generics.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has improved transparency in communications, openly discussing challenges and operational details.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The board is focused on strategic oversight and ensuring compliance with regulatory standards.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is at 38%, with recent selling activity raising concerns about commitment.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_2_growth": {
+    "drivers": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Dr. K.P. Chigurupati",
-        "role": "Chairman and Managing Director"
+        "category": "Capacity Expansion",
+        "title": "Genome Valley Capacity Increase",
+        "fact": "Genome Valley adds ~40% formulation capacity.",
+        "why_it_matters": "This capacity increase allows Granules to meet growing demand and expand its market share in the complex generics segment.",
+        "evidence_quote": "Genome Valley adds ~40% formulation capacity.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "05 Aug 2026"
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Mukesh Surana",
-        "role": "CFO"
-      },
-      {
-        "entity_id": "ENT-EXEC-3",
-        "name": "Sanjay Kumar",
-        "role": "Strategy Head"
+        "category": "New Products",
+        "title": "Peptide CDMO Target",
+        "fact": "Peptide CDMO FY27 target = PAT-positive annual / $50 Mn @ 30%+ EBITDA by mid-FY29.",
+        "why_it_matters": "Achieving this target will significantly enhance profitability and diversify revenue streams.",
+        "evidence_quote": "Peptide CDMO FY27 target = PAT-positive annual / $50 Mn @ 30%+ EBITDA by mid-FY29.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "05 Aug 2026"
       }
     ]
   }

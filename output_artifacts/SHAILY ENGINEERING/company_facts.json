@@ -1,312 +1,184 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "Current share price",
-    "value": 3397,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-001",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Current share price",
-      "paragraph_index": 3,
-      "quote": "~\u20b93,397 (estimated from \u20b98,397.6 Cr mcap)",
+      "quote": "Shaily Engineering Plastics is a high-quality healthcare CDMO play in drug delivery devices, primarily pen injectors for GLP-1 therapies.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "Current market cap",
-    "value": 8397.6,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-002",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Current market cap",
-      "paragraph_index": 3,
-      "quote": "~\u20b98,397.6",
+      "quote": "Dominant position in generic GLP-1 pen market (70%+ first-wave filers in Canada, India).",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EPS",
-    "value": 57.7,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-003",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TTM EPS",
-      "paragraph_index": 3,
-      "quote": "~\u20b957.7 (PAT \u20b9170 Cr \u00f7 29.5 Cr shares approx.)",
+      "quote": "23-24 GLP-1 partners globally with take-or-pay contracts.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "TTM Revenue",
-    "value": 991,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-004",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TTM Revenue",
-      "paragraph_index": 3,
-      "quote": "TTM Revenue (\u20b9 Cr) | \u20b9991 Cr",
+      "quote": "Strong operating leverage (EBITDA growing 2x revenue).",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EBITDA",
-    "value": 288,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-005",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TTM EBITDA",
-      "paragraph_index": 3,
-      "quote": "TTM EBITDA (\u20b9 Cr) | \u20b9288 Cr",
+      "quote": "Expanding margins driven by structural mix shift to Healthcare.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "Enterprise Value",
-    "value": 8500,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-006",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Enterprise Value",
-      "paragraph_index": 3,
-      "quote": "~\u20b98,500 (estimated)",
+      "quote": "Near-term catalysts: Canada + India launches, Brazil approval, capacity doubling.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue CAGR (3yr)",
-    "value": 15.4,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY23-FY26",
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-007",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Revenue CAGR (3yr)",
-      "paragraph_index": 6,
-      "quote": "Revenue CAGR (3yr): (991/644)^(1/3) - 1 = **~15.4%**",
+      "quote": "New Abu Dhabi facility (75 Mn capacity) to be operational FY28.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-8",
-    "entity_id": "ENT-COMP-501423",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue CAGR (5yr)",
-    "value": 10.3,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "FY23-FY26",
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
+    "fact_id": "KNW-BUSINESS-008",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Revenue CAGR (5yr)",
-      "paragraph_index": 6,
-      "quote": "Revenue CAGR (5yr): (991/607)^(1/5) - 1 = **~10.3%**",
+      "quote": "Management delivers on financial substance \u2014 consistently beats on earnings, honest on quality of earnings.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-9",
-    "entity_id": "ENT-COMP-501423",
+    "fact_id": "KNW-BUSINESS-009",
     "category": "FINANCIAL",
-    "metric_name": "Debt/Equity Ratio",
-    "value": 0.3,
-    "unit": "TEXT",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
     "evidence": {
-      "heading": "Debt/Equity Ratio",
-      "paragraph_index": 8,
-      "quote": "Debt/Equity | 0.3",
+      "quote": "Current share price (\u20b9) ~\u20b93,397 (estimated from \u20b98,397.6 Cr mcap).",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-10",
-    "entity_id": "ENT-COMP-501423",
+    "fact_id": "KNW-BUSINESS-010",
     "category": "FINANCIAL",
-    "metric_name": "Interest Coverage Ratio",
-    "value": 12,
-    "unit": "TEXT",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-08",
-      "source_date": "2026-06-08"
-    },
     "evidence": {
-      "heading": "Interest Coverage Ratio",
-      "paragraph_index": 8,
-      "quote": "Interest Coverage (EBIT/Interest) | ~12x (est.)",
+      "quote": "Current market cap (\u20b9 Cr) ~\u20b98,397.6.",
       "source": {
-        "document_id": "DOC-SHAILY ENGINEERING-12",
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-011",
+    "category": "FINANCIAL",
+    "evidence": {
+      "quote": "TTM Revenue (\u20b9 Cr) \u20b9991 Cr.",
+      "source": {
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-012",
+    "category": "FINANCIAL",
+    "evidence": {
+      "quote": "TTM EBITDA (\u20b9 Cr) \u20b9288 Cr.",
+      "source": {
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-013",
+    "category": "FINANCIAL",
+    "evidence": {
+      "quote": "TTM EPS (\u20b9) ~\u20b957.7 (PAT \u20b9170 Cr \u00f7 29.5 Cr shares approx.).",
+      "source": {
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-014",
+    "category": "FINANCIAL",
+    "evidence": {
+      "quote": "Enterprise Value (\u20b9 Cr) ~\u20b98,500 (estimated).",
+      "source": {
+        "document_id": "DOC-SHAILY ENGINEERING-1785909045.080445",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
   }
 ]

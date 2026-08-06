@@ -1,57 +1,53 @@
 {
   "entity_id": "ENT-COMP-VOLTAMP",
   "entity_name": "Voltamp Transformers Limited",
-  "business_model": {
-    "narrative_summary": "Voltamp Transformers Limited is a dominant player in the Indian heavy electrical equipment industry, focusing on industrial and dry-type transformers. The company is transitioning from a capacity-constrained market leader to a scaled manufacturer through the commissioning of its Jarod greenfield facility.",
-    "structured_entities": {
-      "products": [
-        "Industrial Transformers",
-        "Dry-Type Transformers"
-      ],
-      "plants": [
-        "Jarod Greenfield Facility"
-      ],
-      "customer_segments": [
-        "Listed Indian Corporates",
-        "Multinational Companies"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Voltamp Transformers Limited is a leading manufacturer of transformers in India, specializing in industrial and dry-type transformers. The company has a strong focus on high-margin products and operates with a debt-free balance sheet, ensuring financial stability and operational excellence. It is positioned to benefit from the growing demand for electrical infrastructure in India, driven by renewable energy integration and industrial electrification.",
+    "products": [
+      {
+        "category": "Transformers",
+        "items": [
+          "Industrial Transformers",
+          "Dry-Type Transformers"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Corporate Clients",
+        "description": "95% of listed Indian corporates and multinational companies."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Vadodara, Gujarat",
+        "description": "Manufacturing facility producing high-efficiency transformers."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Private Sector",
+        "percentage_str": "85%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong market share in the dry-type transformer segment (35-40%).",
+      "Debt-free balance sheet allowing for conservative capital allocation.",
+      "Established relationships with major corporate clients.",
+      "Technological superiority in transformer manufacturing.",
+      "Ability to adapt to market changes with a conservative bidding strategy."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The management prioritizes a debt-free balance sheet and uses internal accruals for expansion, minimizing financial risk and avoiding dilution of shareholder equity.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "The management has a strong track record of navigating economic cycles while maintaining operational excellence and a zero-debt status.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "The company is expected to stabilize margins and ramp up new capacity in the 220kV class, with a focus on maintaining high dividend payouts.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been noted for its disciplined but detached communication style, which has led to some criticism regarding transparency.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Voltamp Transformers maintains a high standard of governance with no major scandals or accounting irregularities reported.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "The promoter shareholding has decreased from approximately 38% to 30% by March 2026, coinciding with an increase in Domestic Institutional Investor holdings.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_2_growth": {
+    "drivers": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Kanubhai S. Patel",
-        "role": "CEO"
-      },
-      {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Kunjal L. Patel",
-        "role": "Director"
+        "category": "Capacity Expansion",
+        "title": "Jarod Greenfield Expansion",
+        "fact": "The company is investing \u20b9200 crore in a new state-of-the-art facility at Jarod, Vadodara.",
+        "why_it_matters": "This expansion will increase production capacity and enable the manufacture of higher voltage transformers, positioning the company for future growth.",
+        "evidence_quote": "Capacity Addition: 6,000 MVA per annum in the first phase, bringing total capacity to 20,000 MVA.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "06 May 26"
       }
     ]
   }

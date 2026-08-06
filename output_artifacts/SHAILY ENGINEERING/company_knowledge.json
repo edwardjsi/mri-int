@@ -1,59 +1,95 @@
 {
   "entity_id": "ENT-COMP-501423",
   "entity_name": "Shaily Engineering Plastics Limited",
-  "business_model": {
-    "narrative_summary": "Shaily Engineering Plastics is a high-quality healthcare CDMO play in drug delivery devices, primarily pen injectors for GLP-1 therapies.",
-    "structured_entities": {
-      "products": [
-        "GLP-1 pen injectors",
-        "Healthcare IP-led platforms"
-      ],
-      "plants": [
-        "India",
-        "Abu Dhabi"
-      ],
-      "customer_segments": [
-        "Healthcare",
-        "Consumer Electronics",
-        "Industrial"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management is focused on funding capex for healthcare expansion while maintaining a strong balance sheet.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management consistently delivers on financial performance but has a pattern of optimistic timelines.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management has provided guidance on revenue growth and capacity expansion, but timelines have been optimistic.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management is transparent about financial performance and operational challenges.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The board is focused on maintaining regulatory compliance and operational excellence.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holds a significant stake in the company, aligning interests with shareholders.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Shaily Engineering Plastics Limited specializes in the manufacturing of precision engineering plastics, focusing primarily on healthcare applications such as drug delivery devices. The company is a key player in the production of pen injectors for GLP-1 therapies, which are used in the treatment of diabetes and obesity. By leveraging its expertise in engineering and regulatory compliance, Shaily has established itself as a leader in the healthcare CDMO (Contract Development and Manufacturing Organization) sector.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Amit Sanghvi",
-        "role": "Managing Director"
+        "category": "Healthcare Devices",
+        "items": [
+          "GLP-1 Pen Injectors",
+          "Teriparatide Delivery Devices"
+        ]
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Sanjay Shah",
-        "role": "Chief Financial Officer"
+        "category": "Consumer Electronics",
+        "items": [
+          "Precision Components for Consumer Products"
+        ]
+      },
+      {
+        "category": "Industrial Applications",
+        "items": [
+          "Semiconductor Trays"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Pharmaceutical Companies",
+        "description": "Companies that require drug delivery devices for their products."
+      },
+      {
+        "segment": "Consumer Electronics Brands",
+        "description": "Brands that utilize precision components in their products."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Main manufacturing hub for pen injectors and other healthcare devices."
+      },
+      {
+        "location": "Abu Dhabi",
+        "description": "New facility expected to enhance production capacity for healthcare devices."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Healthcare",
+        "percentage_str": "40%"
+      },
+      {
+        "segment": "Consumer",
+        "percentage_str": "60%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong regulatory certifications that take years to replicate.",
+      "Established relationships with major pharmaceutical companies.",
+      "Proprietary designs and technology in pen injector manufacturing.",
+      "Significant market share in the GLP-1 pen market.",
+      "Ability to scale production rapidly in response to demand."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Doubling Pen Production Capacity",
+        "fact": "Capacity being scaled from 40 Mn to 80 Mn pens in India + 75 Mn in Abu Dhabi.",
+        "why_it_matters": "This expansion will allow Shaily to meet increasing demand for GLP-1 pen injectors, driving revenue growth.",
+        "evidence_quote": "Capacity being scaled from 40 Mn to 80 Mn pens in India + 75 Mn in Abu Dhabi.",
+        "evidence_source": "MOSI DEEP ANALYSIS",
+        "evidence_date": "June 8, 2026"
+      },
+      {
+        "category": "New Products",
+        "title": "Launch of New GLP-1 Products",
+        "fact": "India Semaglutide launch (Harmony + Neo) confirmed.",
+        "why_it_matters": "New product launches will enhance market presence and revenue streams.",
+        "evidence_quote": "India semaglutide launched by Harmony and Neo in March 2026.",
+        "evidence_source": "MOSI DEEP ANALYSIS",
+        "evidence_date": "June 8, 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Strong Position in GLP-1 Market",
+        "fact": "Shaily holds a significant market share in the GLP-1 pen market.",
+        "why_it_matters": "This strong position allows for pricing power and customer loyalty.",
+        "evidence_quote": "70%+ market share in first-wave filers (Canada, India).",
+        "evidence_source": "MOSI DEEP ANALYSIS",
+        "evidence_date": "June 8, 2026"
       }
     ]
   }

@@ -1,312 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Net Sales FY2024",
-    "value": 1616.22,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2024",
-      "effective_date": "2024-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Net Sales (\u20b9 Cr): 1,616.22",
+      "quote": "Voltamp Transformers Limited occupies a distinct leadership position within the Indian heavy electrical equipment industry, specifically as a dominant player in the industrial and dry-type transformer segments.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Net Sales FY2025",
-    "value": 1934.23,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Net Sales (\u20b9 Cr): 1,934.23",
+      "quote": "The company\u2019s investment thesis is anchored by a pristine, debt-free balance sheet and a 60-year track record of operational excellence.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Operating Profit Margin FY2024",
-    "value": 19.9,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2024",
-      "effective_date": "2024-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Operating Profit Margin: 19.9%",
+      "quote": "Voltamp holds a commanding 15% share of the organized industrial transformer market and a dominant 35-40% share in the dry-type transformer segment.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Operating Profit Margin FY2025",
-    "value": 18.9,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Operating Profit Margin: 18.9%",
+      "quote": "The company has also acquired an additional plot of land near Vadodara for \u20b925 crore to maintain a 'land bank' for future expansion beyond the Jarod project.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Net Profit Margin FY2024",
-    "value": 19.0,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2024",
-      "effective_date": "2024-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Net Profit Margin: 19.0%",
+      "quote": "In FY2025, the board proposed a record-high dividend of 1000% (\u20b9100 per share), representing a total payout of \u20b9101.17 crore, or approximately 43% of after-tax profit when adjusted for non-cash mark-to-market gains.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Net Profit Margin FY2025",
-    "value": 16.8,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Net Profit Margin: 16.8%",
+      "quote": "The company has confirmed it is not identified as a 'Large Corporate' (LC) under SEBI\u2019s specific regulatory framework, further suggesting a clean compliance record regarding debt and listing obligations.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Order Book FY2024",
-    "value": 841,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2024",
-      "effective_date": "2024-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Order Book (\u20b9 Cr): 841",
+      "quote": "The company\u2019s litigation profile is consistent with a large-scale manufacturing enterprise. Most cases are concentrated in the areas of tax disputes and legacy commercial contracts.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-8",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Order Book FY2025",
-    "value": 1129,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Operational Metric",
-      "paragraph_index": 1,
-      "quote": "Order Book (\u20b9 Cr): 1,129",
+      "quote": "The stock reached a 52-week high of \u20b912,863 in early 2026, marking a significant outperformance against the S&P BSE Capital Goods index.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-9",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Dividend Per Share FY2025",
-    "value": 100,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Capital Allocation and Shareholder Returns",
-      "paragraph_index": 1,
-      "quote": "In FY2025, the board proposed a record-high dividend of 1000% (\u20b9100 per share)",
+      "quote": "The company is investing \u20b9200 crore in a new state-of-the-art facility at Jarod, Vadodara.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-10",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Total Dividend Payout FY2025",
-    "value": 101.17,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY2025",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-05-06"
-    },
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Capital Allocation and Shareholder Returns",
-      "paragraph_index": 1,
-      "quote": "representing a total payout of \u20b9101.17 crore",
+      "quote": "The national electricity demand is projected to require a total generation capacity of 623 GW by FY2027, up from 382 GW in FY2022.",
       "source": {
-        "document_id": "DOC-VOLTAMP TRANSFORMERS-8",
+        "document_id": "DOC-VOLTAMP TRANSFORMERS-1778069890.5980403",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-05-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   }
 ]

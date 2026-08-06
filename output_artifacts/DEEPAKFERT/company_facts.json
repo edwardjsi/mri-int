@@ -1,219 +1,119 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Multi-Bagger Probability Score",
-    "value": 2.75,
-    "unit": "SCORE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Where My MOSI Findings Hold \u2014 And The Bull Case Doesn't Change Them",
-      "paragraph_index": 1,
-      "quote": "The bull case makes a compelling qualitative argument for the business. But it never addresses the Multi-Bagger Probability Score of 2.75/10.",
+      "quote": "The bull case makes a compelling qualitative argument for the business.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Probability-weighted 3-year return",
-    "value": -14.5,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "3 Years",
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "My Bear Case Is Mathematically Valid And The Article Doesn't Refute It",
-      "paragraph_index": 1,
-      "quote": "My scenario analysis produced: Probability-weighted 3-year return: -14.5% annualized.",
+      "quote": "Probability-weighted 3-year return: -14.5% annualized.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Debtor days",
-    "value": 74,
-    "unit": "DAYS",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Working Capital Deterioration Is Real \u2014 The Article Doesn't Address It",
-      "paragraph_index": 1,
-      "quote": "Debtor days: 57 \u2192 74 (+17 days YoY)",
+      "quote": "Debtor days: 57 \u2192 74 (+17 days YoY).",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Inventory days",
-    "value": 79,
-    "unit": "DAYS",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Working Capital Deterioration Is Real \u2014 The Article Doesn't Address It",
-      "paragraph_index": 1,
-      "quote": "Inventory days: 58 \u2192 79 (+21 days YoY)",
+      "quote": "CFO/PAT ratio from 2020-2025 runs at approximately 160%.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Cash Conversion Score",
-    "value": 4,
-    "unit": "SCORE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "The Earnings Quality Picture Is Worse Than The Article Admits",
-      "paragraph_index": 1,
-      "quote": "Cash Conversion Score 4/10 is validated by the data.",
+      "quote": "The article mentions Q4 had 'skills labor shortages' and 'project delays'.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "CFO/PAT ratio for FY2026",
-    "value": 0.28,
-    "unit": "SCORE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY2026",
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "The Earnings Quality Picture Is Worse Than The Article Admits",
-      "paragraph_index": 1,
-      "quote": "FY2026 was 28%.",
+      "quote": "The multi-year average is distorted by FY2024-25, which had exceptional CFO.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Net debt/EBITDA",
-    "value": 2.86,
-    "unit": "SCORE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-07",
-      "source_date": "2026-06-07"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "The Debt Trajectory Assumes FY2027 FCF Turns Positive",
-      "paragraph_index": 1,
-      "quote": "The net debt/EBITDA of 2.86x is the PEAK \u2014 valid.",
+      "quote": "The article adds: Mukul Agrawal (ace investor) entered September 2024 at 1.19% and maintained through March 2026.",
       "source": {
-        "document_id": "DOC-DEEPAKFERT-14",
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-08"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The article acknowledges the fertilizer segment (58% revenue) is 'low-margin, subsidy-dependent, monsoon-sensitive.'",
+      "source": {
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-08"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "FY2026 FCF was -\u20b91,386 crore.",
+      "source": {
+        "document_id": "DOC-DEEPAKFERT-1780891362.4453304",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-08"
+      }
+    }
   }
 ]

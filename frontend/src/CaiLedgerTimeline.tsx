@@ -52,12 +52,12 @@ export const CaiLedgerTimeline: React.FC<{ positionId: string }> = ({ positionId
               onClick={() => setSelectedEvent(event)}
             >
               <div className="flex justify-between items-center mb-1">
-                <span className="font-bold text-blue-400">{event.allocation_reason}</span>
-                <span className="text-gray-400 text-xs">{event.execution_date.split(' ')[0]}</span>
+                <span className="text-base font-bold text-blue-300">{event.allocation_reason}</span>
+                <span className="text-gray-300 text-sm font-medium">{event.execution_date.split(' ')[0]}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span>{event.quantity} shares @ ₹{event.price}</span>
-                <span className="text-gray-500 text-xs">Vol: ₹{event.capital_allocated}</span>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-white text-lg font-semibold">{event.quantity} shares @ ₹{event.price}</span>
+                <span className="text-gray-400 text-sm font-medium">Vol: ₹{Number(event.capital_allocated).toLocaleString()}</span>
               </div>
             </div>
           </div>

@@ -1,12 +1,12 @@
 {
   "company_ticker": "GRANULES",
-  "company_name": "Granules India Ltd",
+  "company_name": "Granules India Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:56:21.274959Z",
+  "last_updated": "2026-08-05T14:43:05.560157Z",
   "stats": {
-    "total_facts": 7,
-    "total_entities": 4,
-    "metrics_tracked": 7,
+    "total_facts": 9,
+    "total_entities": 8,
+    "metrics_tracked": 9,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

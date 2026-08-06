@@ -1,58 +1,67 @@
 {
   "entity_id": "ENT-COMP-532966",
   "entity_name": "Welspun Corp Limited",
-  "business_model": {
-    "narrative_summary": "Welspun Corp Limited is India's largest carbon-steel welded pipe manufacturer, focusing on large-diameter pipes for oil & gas pipelines, water transmission, and structural applications. The company is positioned to benefit from the global gas pipeline super-cycle.",
-    "structured_entities": {
-      "products": [
-        "Large-diameter carbon-steel welded pipes",
-        "Line pipes",
-        "HSAW",
-        "ERW",
-        "Coated"
-      ],
-      "plants": [
-        "India",
-        "USA",
-        "Saudi Arabia"
-      ],
-      "customer_segments": [
-        "Oil & gas pipelines",
-        "Water transmission",
-        "Structural applications"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Welspun Corp focuses on maintaining a strong balance sheet and prioritizing high returns on capital employed.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "The company has consistently met or exceeded market expectations, demonstrating strong operational performance.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management maintains a conservative approach to guidance, emphasizing realistic expectations.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management is candid about challenges in the domestic market while highlighting strengths in international operations.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The board is committed to maintaining high standards of governance and operational integrity.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoters hold a significant stake in the company, aligning their interests with those of shareholders.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Welspun Corp Limited is a leading manufacturer of large-diameter carbon-steel welded pipes, which are primarily used in oil and gas pipelines, water transmission, and structural applications. The company operates in a global market, focusing on providing high-quality and cost-effective solutions to meet the increasing demand for gas pipelines driven by the global energy transition.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Vipul Mathur",
-        "role": "MD & CEO"
+        "category": "Pipes",
+        "items": [
+          "Line pipes",
+          "HSAW",
+          "ERW",
+          "Coated"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Energy and Infrastructure",
+        "description": "Includes major gas pipeline companies and government entities such as GAIL, ONGC, and IOCL."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India, USA, Saudi Arabia",
+        "description": "Manufacturing facilities produce a range of welded pipes for domestic and international markets."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Line Pipes",
+        "percentage_str": "70%"
+      },
+      {
+        "segment": "HSAW",
+        "percentage_str": "18%"
+      },
+      {
+        "segment": "ERW",
+        "percentage_str": "9%"
+      },
+      {
+        "segment": "Coated",
+        "percentage_str": "3%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong market position as India's largest carbon-steel welded pipe manufacturer.",
+      "Cost advantages due to lower labor and steel costs in India.",
+      "Established relationships with major clients in the energy sector.",
+      "Technological expertise in manufacturing processes.",
+      "Geographical diversification with operations in multiple countries."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Market Share",
+        "title": "Global Gas Pipeline Demand",
+        "fact": "WELCORP is positioned to benefit from the global gas pipeline super-cycle driven by US shale and India's gas demand.",
+        "why_it_matters": "Increased demand for gas pipelines leads to higher revenue and profitability for WELCORP.",
+        "evidence_quote": "The thesis is: global energy transition \u2192 gas demand \u2192 pipeline demand \u2192 WELCORP as the lowest-cost, highest-quality producer.",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "2026-07-02"
       }
     ]
   }

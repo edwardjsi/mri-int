@@ -1,7 +1,13 @@
 {
-  "execution_time_ms": 19842,
+  "execution_time_ms": 15022,
   "missing_fields": 0,
   "coverage_pct": 100.0,
-  "hallucinations_flagged": 0,
-  "warnings": []
+  "hallucinations_flagged": 5,
+  "warnings": [
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact",
+    "Quote hallucination detected in fact"
+  ]
 }

@@ -1,250 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "Current Share Price",
-    "value": 868,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-24",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Current Share Price",
-      "paragraph_index": 1,
-      "quote": "Current Share Price: \u20b9868",
+      "quote": "CG Power has completed its operational turnaround (Phase 1) and is currently in the Expansion Stage (Phase 2).",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "Current Market Cap",
-    "value": 136625,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-24",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Current Market Cap",
-      "paragraph_index": 1,
-      "quote": "Current Market Cap: \u20b9136,625 Cr",
+      "quote": "Consolidated revenue grew 23.15% YoY to \u20b99,909 Cr; PBT grew 16.4% YoY to \u20b91,348 Cr.",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "TTM EPS (Diluted)",
-    "value": 7.94,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-24",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "TTM EPS (Diluted)",
-      "paragraph_index": 1,
-      "quote": "TTM EPS (Diluted): \u20b97.94",
+      "quote": "Consolidated EBITDA expanded from \u20b91,234 Cr to \u20b91,467 Cr (+18.88% YoY).",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "FY25 Consolidated Revenue",
-    "value": 9909,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY25 Consolidated Revenue",
-      "paragraph_index": 1,
-      "quote": "FY25 Consolidated Revenue: \u20b99,909 Cr",
+      "quote": "Market leader in Low Voltage Motors and Power Transformers in India.",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "FY25 Consolidated EBITDA",
-    "value": 1467,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY25 Consolidated EBITDA",
-      "paragraph_index": 1,
-      "quote": "FY25 Consolidated EBITDA: \u20b91,467 Cr",
+      "quote": "Promoter holding stable at ~58% under the Murugappa Group.",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "FY25 Consolidated PAT",
-    "value": 975,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "FY25 Consolidated PAT",
-      "paragraph_index": 1,
-      "quote": "FY25 Consolidated PAT: \u20b9975 Cr",
+      "quote": "Consolidated EBITDA margin sustained at 14.8% (industry leading).",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "Enterprise Value",
-    "value": 136000,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-24",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Enterprise Value",
-      "paragraph_index": 1,
-      "quote": "Enterprise Value: ~\u20b9136,000 Cr (Net cash position)",
+      "quote": "Order backlog expanded significantly to \u20b910,631 Cr (+32% YoY).",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-8",
-    "entity_id": "ENT-COMP-cgpower",
-    "category": "FINANCIAL",
-    "metric_name": "ROCE",
-    "value": 33.0,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-24",
-      "source_date": "2026-07-24"
-    },
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "ROCE",
-      "paragraph_index": 1,
-      "quote": "ROCE stands at a superior **33.0%**.",
+      "quote": "Consolidated PAT maintained near record high at \u20b9975 Cr.",
       "source": {
-        "document_id": "DOC-CGCL-29",
+        "document_id": "DOC-CGCL-1784906038.5479202",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "ROCE stands at a superior 33.0%.",
+      "source": {
+        "document_id": "DOC-CGCL-1784906038.5479202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-24"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Current share price: \u20b9868.",
+      "source": {
+        "document_id": "DOC-CGCL-1784906038.5479202",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-07-24"
+      }
+    }
   }
 ]

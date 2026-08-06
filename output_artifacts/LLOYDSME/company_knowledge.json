@@ -1,52 +1,78 @@
 {
   "entity_id": "ENT-COMP-LLOYDMET",
   "entity_name": "Lloyds Metals & Energy",
-  "business_model": {
-    "narrative_summary": "Lloyds Metals & Energy has transformed from a small-cap sponge iron producer into a fully integrated mining-to-metals platform, focusing on iron ore, pellets, DRI, steel, and copper.",
-    "structured_entities": {
-      "products": [
-        "Iron ore",
-        "Pellets",
-        "DRI/Sponge iron",
-        "Steel",
-        "Copper"
-      ],
-      "plants": [
-        "Pellet Plant",
-        "Steel Plant"
-      ],
-      "customer_segments": [
-        "Mining services",
-        "Steel manufacturers",
-        "Copper producers"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Lloyds Metals & Energy is a fully integrated mining-to-metals platform that produces iron ore, pellets, DRI, steel, and copper. The company has transformed from a small-cap sponge iron producer into a significant player in the metals industry, focusing on both upstream mining and downstream processing.",
+    "products": [
+      {
+        "category": "Metals",
+        "items": [
+          "Iron ore",
+          "Pellets",
+          "DRI/Sponge iron",
+          "Steel",
+          "Copper"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Industrial Manufacturers",
+        "description": "Companies that require raw materials for steel production and other metal applications."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Surjagarh",
+        "description": "Iron ore mining and processing operations."
+      },
+      {
+        "location": "Pellet Plant",
+        "description": "Manufacturing of pellets with 100% utilization within 4 months."
+      },
+      {
+        "location": "Steel Plant",
+        "description": "Commissioning of a wire rod mill."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Iron Ore (incl. Pellets)",
+        "percentage_str": "68%"
+      },
+      {
+        "segment": "Value-Added Products (DRI, Pellets, Power)",
+        "percentage_str": "32%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong resource base with iron ore reserves valid to 2057.",
+      "Captive logistics infrastructure, including an 85 km slurry pipeline.",
+      "Cost leadership through logistics savings of \u20b9500+/tonne.",
+      "Largest merchant pellet player with 8 MTPA capacity.",
+      "Diversification into copper and gold, reducing reliance on a single commodity."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company is focused on executing mega-projects on time and capturing earnings growth.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Lloyds Metals has demonstrated exceptional execution capabilities, with projects like the pellet plant reaching 100% capacity within 4 months.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "The company is positioned to benefit from India's steel demand growth and has a multi-decade resource advantage.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been transparent about risks and provides specific, verifiable guidance.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "No red flags identified in governance.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding data not extracted but management tone is confident and transparent.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Iron Ore Production Growth",
+        "fact": "Iron ore production increased by 119.6% YoY, from 10 MnT to 22 MnT.",
+        "why_it_matters": "This significant increase in production capacity supports revenue growth and market share expansion.",
+        "evidence_quote": "Iron ore production up 119.6% YoY (from 10 MnT to 22 MnT).",
+        "evidence_source": "MOSI report",
+        "evidence_date": "20 July 2026"
+      },
+      {
+        "category": "New Products",
+        "title": "Pellet Plant Utilization",
+        "fact": "The pellet plant reached 100% utilization within 4 months of commissioning.",
+        "why_it_matters": "This rapid ramp-up demonstrates the company's operational efficiency and ability to meet market demand.",
+        "evidence_quote": "Pellet plant at 100% utilization within 4 months demonstrates execution capability.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "20 July 2026"
+      }
+    ]
   }
 }

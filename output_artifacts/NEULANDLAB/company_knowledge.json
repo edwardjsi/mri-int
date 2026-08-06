@@ -1,51 +1,83 @@
 {
   "entity_id": "ENT-COMP-NEULANDLAB",
   "entity_name": "Neuland Laboratories Limited",
-  "business_model": {
-    "narrative_summary": "Neuland Laboratories is positioned in the Expansion Stage of its life cycle, transitioning from a generic API manufacturer to a high-margin Custom Manufacturing Solutions (CMS) provider.",
-    "structured_entities": {
-      "products": [
-        "High-barrier Active Pharmaceutical Ingredients (APIs)",
-        "Custom Manufacturing Solutions (CMS)",
-        "Prime APIs",
-        "Specialty APIs"
-      ],
-      "plants": [
-        "Unit 1",
-        "Unit 2",
-        "Unit 3"
-      ],
-      "customer_segments": [
-        "Global pharmaceutical innovators",
-        "Western pharmaceutical companies"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Neuland Laboratories Limited is a pharmaceutical company that specializes in the manufacturing of Active Pharmaceutical Ingredients (APIs) and Custom Manufacturing Solutions (CMS). The company has transitioned from being a generic API manufacturer to focusing on high-margin custom synthesis, which allows it to cater to the specific needs of pharmaceutical innovators. This shift enables Neuland to generate higher profit margins and establish long-term partnerships with clients.",
+    "products": [
+      {
+        "category": "Custom Manufacturing Solutions",
+        "items": [
+          "High-barrier APIs",
+          "Advanced intermediates"
+        ]
+      },
+      {
+        "category": "Prime APIs",
+        "items": [
+          "Commoditized APIs"
+        ]
+      },
+      {
+        "category": "Specialty APIs",
+        "items": [
+          "Complex molecules like Paliperidone"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Pharmaceutical Innovators",
+        "description": "Companies that require custom synthesis and high-quality APIs for their drug development."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Hyderabad, India",
+        "description": "State-of-the-art manufacturing facilities for peptide synthesis and API production."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Custom Manufacturing Solutions",
+        "percentage_str": "61%"
+      },
+      {
+        "segment": "Prime APIs",
+        "percentage_str": "23%"
+      },
+      {
+        "segment": "Specialty APIs",
+        "percentage_str": "11%"
+      }
+    ],
+    "competitive_advantage": [
+      "Protected by deep chemical process complexity and proprietary DMF filings.",
+      "Strong regulatory track record with the US-FDA.",
+      "High customer stickiness due to specialized services.",
+      "Ability to scale operations rapidly in response to market demand.",
+      "Positioned in a growing market with significant TAM headroom."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Neuland is fully capitalized with strong internal cash generation supporting expansion plans.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has successfully pivoted the company towards high-margin custom synthesis.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management claims FY26 would be a year of strong growth.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management handles cyclical lumpiness transparently.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The company is highly professionally run with top-tier institutional governance.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoters hold 32.63% of the company.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "New Peptide Manufacturing Line",
+        "fact": "A state-of-the-art dedicated peptide manufacturing line and an advanced 140,000 sq ft R&D center are scheduled to become fully operational in July 2026.",
+        "why_it_matters": "This expansion will enable Neuland to meet increasing demand for high-margin peptide products, driving revenue growth.",
+        "evidence_quote": "A state-of-the-art dedicated peptide manufacturing line and an advanced 140,000 sq ft R&D center are scheduled to become fully operational in July 2026.",
+        "evidence_source": "MOSI AI Report",
+        "evidence_date": "24 June 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Growing Demand for Custom Synthesis",
+        "fact": "Neuland is uniquely leveraged to capture this wave owing to an immaculate regulatory track record with the US-FDA.",
+        "why_it_matters": "As global pharma prioritizes asset-light models, Neuland's capabilities position it to gain market share in the custom synthesis space.",
+        "evidence_quote": "Neuland is uniquely leveraged to capture this wave owing to an immaculate regulatory track record with the US-FDA.",
+        "evidence_source": "MOSI AI Report",
+        "evidence_date": "24 June 2026"
+      }
+    ]
   }
 }

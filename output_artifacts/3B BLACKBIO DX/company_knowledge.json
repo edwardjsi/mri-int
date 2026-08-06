@@ -1,49 +1,65 @@
 {
   "entity_id": "ENT-COMP-3BBLACKBIO",
   "entity_name": "3B BlackBio Dx Ltd",
-  "business_model": {
-    "narrative_summary": "India's leading open-system MDx kit maker with 55% standalone EBITDA margins and 70-country exports.",
-    "structured_entities": {
-      "products": [
-        "MDx kits"
-      ],
-      "plants": [],
-      "customer_segments": [
-        "Healthcare providers",
-        "Diagnostic laboratories"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management has shown a strategic approach to capital allocation but faces challenges with integration and credibility.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management's execution has been questioned due to inconsistent contract numbers and missed guidance.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management has provided guidance for 15-20% growth for FY27, but credibility is in question.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has faced criticism for retroactive guidance justification and selective disclosure.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The governance structure is in place, but management credibility issues raise concerns.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "The company is founder-led, indicating a level of commitment from the management.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "3B BlackBio Dx Ltd is a leading manufacturer of molecular diagnostics kits in India. The company specializes in open-system MDx kits, which are used for various diagnostic purposes. It generates revenue primarily through the sale of these diagnostic kits, which are exported to over 70 countries, contributing significantly to its overall revenue.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Founder Name",
-        "role": "CEO"
+        "category": "Molecular Diagnostics Kits",
+        "items": [
+          "Open-system MDx kits"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Healthcare Providers",
+        "description": "Hospitals and laboratories that require diagnostic testing solutions."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing of molecular diagnostics kits."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Domestic Sales",
+        "percentage_str": "Approximately 66%"
+      },
+      {
+        "segment": "Exports",
+        "percentage_str": "Approximately 34%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong EBITDA margins of 55% indicate operational efficiency.",
+      "Established presence in 70 countries enhances market reach.",
+      "Expertise in molecular diagnostics creates a specialized niche.",
+      "Regulatory compliance with CE-IVD and CDSCO certifications.",
+      "Asset-light business model reduces capital expenditure."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Market Share",
+        "title": "3B India market share",
+        "fact": "3B BlackBio holds a 12-15% market share in the Indian molecular diagnostics market.",
+        "why_it_matters": "This market share indicates a strong position in a growing industry, providing opportunities for revenue growth.",
+        "evidence_quote": "3B share: 12-15% \u2192 near ceiling for organic growth.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "01 June 2026"
+      },
+      {
+        "category": "Revenue Growth",
+        "title": "Consolidated Revenue Growth",
+        "fact": "The company is guiding for a 15-20% growth in consolidated revenue for FY27.",
+        "why_it_matters": "This growth guidance reflects the company's expectations for increased sales and market expansion.",
+        "evidence_quote": "Consolidated Revenue | ~Rs.131 Cr + agro | 15-20% growth.",
+        "evidence_source": "Tijori Conference Call Summary Report",
+        "evidence_date": "01 June 2026"
       }
     ]
   }

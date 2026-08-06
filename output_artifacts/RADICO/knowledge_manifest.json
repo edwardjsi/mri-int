@@ -2,11 +2,11 @@
   "company_ticker": "RADICO K",
   "company_name": "Radico Khaitan Ltd",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:46:08.010189Z",
+  "last_updated": "2026-08-05T14:45:24.131482Z",
   "stats": {
-    "total_facts": 6,
-    "total_entities": 2,
-    "metrics_tracked": 6,
+    "total_facts": 10,
+    "total_entities": 6,
+    "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

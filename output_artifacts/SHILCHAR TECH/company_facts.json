@@ -1,343 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "FY25 Revenue",
-    "value": 397,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
+      "quote": "Shilchar manufactures: Power Transformers, Distribution Transformers, Renewable Energy Transformers, Furnace Transformers, Converter Duty Transformers, Earthing & Isolation Transformers.",
+      "source": {
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-06"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "India targets 500 GW renewable capacity by 2030.",
+      "source": {
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-06"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Shilchar spent nearly 20 years building expertise in: Renewable energy transformers, Industrial transformers, Export markets.",
+      "source": {
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-06"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Shilchar is a core equipment provider.",
+      "source": {
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-06"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
+    "evidence": {
       "quote": "Revenue: \u20b9397 Cr \u2192 \u20b9623 Cr (+57%)",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "FY25 EBITDA",
-    "value": 113,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
       "quote": "EBITDA: \u20b9113 Cr \u2192 \u20b9185 Cr (+63%)",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "FY25 PAT",
-    "value": 92,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
       "quote": "PAT: \u20b992 Cr \u2192 \u20b9147 Cr (+60%)",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Q1 FY26 Revenue",
-    "value": 107,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "Q1 FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
-      "quote": "Revenue: \u20b9107 Cr \u2192 \u20b9159 Cr (+49%)",
+      "quote": "Management expanded capacity from 4,000 to 7,500 MVA.",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "H1 FY26 Revenue",
-    "value": 238,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "H1 FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
-      "quote": "Revenue: \u20b9238 Cr \u2192 \u20b9330 Cr (+39%)",
+      "quote": "Debt-free balance sheet with substantial cash reserves.",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "9M FY26 Revenue",
-    "value": 391,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "9M FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Performance & Strategic Position",
-      "paragraph_index": 1,
-      "quote": "Revenue: \u20b9391 Cr \u2192 \u20b9500 Cr (+28%)",
+      "quote": "Exports contribute approximately 43% of revenue.",
       "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
+        "document_id": "DOC-SHILCHAR TECH-1780715495.0050466",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-06"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "EBITDA Margin FY24",
-    "value": 29,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY24",
-      "effective_date": "2024-03-31",
-      "source_date": "2026-06-06"
-    },
-    "evidence": {
-      "heading": "Margin Expansion Drivers",
-      "paragraph_index": 1,
-      "quote": "EBITDA Margin FY24: 29%",
-      "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-8",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "EBITDA Margin FY25",
-    "value": 30,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-06-06"
-    },
-    "evidence": {
-      "heading": "Margin Expansion Drivers",
-      "paragraph_index": 1,
-      "quote": "EBITDA Margin FY25: 30%",
-      "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-9",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Q1 FY26 EBITDA Margin",
-    "value": 33,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "Q1 FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
-    "evidence": {
-      "heading": "Margin Expansion Drivers",
-      "paragraph_index": 1,
-      "quote": "Q1 FY26: 33%",
-      "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-10",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "H1 FY26 EBITDA Margin",
-    "value": 32,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "H1 FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
-    "evidence": {
-      "heading": "Margin Expansion Drivers",
-      "paragraph_index": 1,
-      "quote": "H1 FY26: 32%",
-      "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-11",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "9M FY26 EBITDA Margin",
-    "value": null,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "9M FY26",
-      "effective_date": "2026-06-06",
-      "source_date": "2026-06-06"
-    },
-    "evidence": {
-      "heading": "Margin Expansion Drivers",
-      "paragraph_index": 1,
-      "quote": null,
-      "source": {
-        "document_id": "DOC-SHILCHAR TECH-13",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "No explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   }
 ]

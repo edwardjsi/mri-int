@@ -1,219 +1,119 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Current Market Price (CMP)",
-    "value": 773,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "MOSI 14-Step Analysis \u2014 Granules India Ltd",
-      "paragraph_index": 1,
-      "quote": "CMP: \u20b9773",
+      "quote": "Granules today is no longer a company defined by volume and cost alone. It is becoming an innovation-led complex and differentiated pharmaceutical platform.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Market Capitalization",
-    "value": 19166,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "MOSI 14-Step Analysis \u2014 Granules India Ltd",
-      "paragraph_index": 1,
-      "quote": "MCap: \u20b919,166 Cr",
+      "quote": "Core integrated generics (API\u2192PFI\u2192FD; #4 US controlled-substance player; #27 US generic company from #74 five years ago) is Early Maturity.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Return on Capital Employed (ROCE)",
-    "value": 12.8,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 4 \u2014 Return Ratios",
-      "paragraph_index": 1,
-      "quote": "ROCE: 12.8%",
+      "quote": "Complex Gx 50% of FD, 25 ANDAs ~$40 Bn, peptide CDMO, Europe +81%.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Return on Equity (ROE)",
-    "value": 10.5,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 4 \u2014 Return Ratios",
-      "paragraph_index": 1,
-      "quote": "ROE: 10.5%",
+      "quote": "Genome Valley adds ~40% formulation capacity.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Debt to Equity Ratio (D/E)",
-    "value": 0.39,
-    "unit": "TEXT",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 5 \u2014 Balance Sheet Quality",
-      "paragraph_index": 1,
-      "quote": "D/E: 0.39",
+      "quote": "Promoter stake 38.02% FY26 (FPI 15.31%).",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Promoter Holding",
-    "value": 38.0,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 7 \u2014 Shareholding Pattern",
-      "paragraph_index": 1,
-      "quote": "Promoter: 38.0%",
+      "quote": "FY26 D/E 0.26 / current ratio 1.80 / interest cover 7.95\u00d7.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": "ENT-COMP-GRANULES",
-    "category": "FINANCIAL",
-    "metric_name": "Quarterly Revenue Growth (FY26)",
-    "value": 19.1,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "QUARTERLY",
-      "period_label": "Q4 FY26",
-      "effective_date": "2026-06-02",
-      "source_date": "2026-06-02"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "STEP 2 \u2014 Revenue Growth",
-      "paragraph_index": 1,
-      "quote": "YoY: 19.1%",
+      "quote": "FY27 capex guide \u20b9600 Cr.",
       "source": {
-        "document_id": "DOC-GRANULES-22",
+        "document_id": "DOC-GRANULES-1785940901.2632487",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-08-05"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Peptide CDMO FY27 target = PAT-positive annual / $50 Mn @ 30%+ EBITDA by mid-FY29.",
+      "source": {
+        "document_id": "DOC-GRANULES-1785940901.2632487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "CDMO (Ascelis Peptides + Senn Chemicals): \u20b91,593 Mn (3%, new; FY26 EBITDA \u2212\u20b9445 Mn).",
+      "source": {
+        "document_id": "DOC-GRANULES-1785940901.2632487",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-08-05"
+      }
+    }
   }
 ]

@@ -1,70 +1,79 @@
 {
   "entity_id": "ENT-COMP-IPCALAB",
   "entity_name": "Ipca Laboratories Limited",
-  "business_model": {
-    "narrative_summary": "Ipca Laboratories Limited is an Indian pharmaceutical company focused on generic pharmaceuticals and active pharmaceutical ingredients (APIs). It exports to over 100 countries and is a significant player in the US and UK markets.",
-    "structured_entities": {
-      "products": [
-        "Generic pharmaceuticals",
-        "Active Pharmaceutical Ingredients (APIs)"
-      ],
-      "plants": [
-        "Hingni API plant",
-        "Dewas formulations plant",
-        "Pithampur mAbs plant",
-        "Pisgah Labs USA"
-      ],
-      "customer_segments": [
-        "Domestic market",
-        "International market"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Ipca Laboratories Limited is an Indian pharmaceutical company that specializes in the manufacturing and export of generic pharmaceuticals and active pharmaceutical ingredients (APIs). The company has a strong presence in both domestic and international markets, supplying a significant portion of generic formulations to the US and UK. It has a diverse product portfolio that includes over 174 brands across various therapeutic segments.",
+    "products": [
+      {
+        "category": "Pharmaceuticals",
+        "items": [
+          "Generic Formulations",
+          "Active Pharmaceutical Ingredients (APIs)"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Healthcare Providers",
+        "description": "Hospitals, pharmacies, and healthcare institutions in India and over 100 countries."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing facilities for formulations and APIs, including a greenfield API plant in Hingni."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Domestic Formulations",
+        "percentage_str": "51%"
+      },
+      {
+        "segment": "Export Formulations",
+        "percentage_str": "28.5%"
+      },
+      {
+        "segment": "APIs",
+        "percentage_str": "19%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong backward integration in APIs, providing cost leadership.",
+      "Established brand portfolio with several top brands in the Indian market.",
+      "Extensive distribution network with over 7,000 medical representatives.",
+      "Robust R&D capabilities with multiple DSIR-recognized centers.",
+      "Compliance with international regulatory standards, including USFDA."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company funds its capital expenditures primarily through internal accruals, maintaining a disciplined approach to capital allocation.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Ipca has demonstrated a consistent improvement in its EBITDA margins and revenue growth, particularly in the last financial year.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management expects revenue growth of 12-13% for FY27, with EBITDA margins projected to be around 22-22.3%.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been transparent about the risks and challenges facing the company, including material cost increases and regulatory risks.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "The company is managed by the founding Godha family, ensuring continuity and stability in governance.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is at 44.72%, indicating significant skin in the game.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_2_growth": {
+    "drivers": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Premchand Godha",
-        "role": "Executive Chairman"
+        "category": "Capacity Expansion",
+        "title": "New Manufacturing Facilities",
+        "fact": "Ipca is commissioning a major CapEx wave (~\u20b9845 Cr across Hingni, Dewas, Pithampur mAbs, Pisgah USA).",
+        "why_it_matters": "This expansion is expected to enhance production capacity and support revenue growth.",
+        "evidence_quote": "A major CapEx wave (~\u20b9845 Cr across Hingni, Dewas, Pithampur mAbs, Pisgah USA) is being commissioned.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "2026-07-14"
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Pranay Godha",
-        "role": "MD/CEO"
+        "category": "New Products",
+        "title": "Biosimilars and mAbs",
+        "fact": "The company is focusing on developing biosimilars and monoclonal antibodies.",
+        "why_it.matters": "These products are expected to drive future revenue growth and improve margins.",
+        "evidence_quote": "Biosimilars and mAbs represent the 'value-to-volume' transition described in the MD&A.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "2026-07-14"
       },
       {
-        "entity_id": "ENT-EXEC-3",
-        "name": "Prashant Godha",
-        "role": "Executive Director"
-      },
-      {
-        "entity_id": "ENT-EXEC-4",
-        "name": "Ajit Kumar Jain",
-        "role": "MD/CFO"
+        "category": "Market Share",
+        "title": "Expansion in US and UK Markets",
+        "fact": "Ipca supplies ~40% of US generic formulations and ~25% of UK medicines by volume.",
+        "why_it.matters": "This strong market presence provides a solid foundation for revenue growth.",
+        "evidence_quote": "It already exports APIs and formulations to 100+ countries and supplies ~40% of US generic formulations and ~25% of UK medicines by volume.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "2026-07-14"
       }
     ]
   }

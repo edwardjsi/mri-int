@@ -1,39 +1,15 @@
 {
   "entity_id": "ENT-COMP-null",
   "entity_name": "null",
-  "business_model": {
-    "narrative_summary": "null",
-    "structured_entities": {
-      "products": [],
-      "plants": [],
-      "customer_segments": []
-    }
+  "g1_1_business": {
+    "what_it_does": "null",
+    "products": [],
+    "customers": [],
+    "manufacturing": [],
+    "revenue_mix": [],
+    "competitive_advantage": []
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "null",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "null",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "null",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "null",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "null",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "null",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": []
   }
 }

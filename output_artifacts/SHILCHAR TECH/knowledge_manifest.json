@@ -2,11 +2,11 @@
   "company_ticker": "SHILCHAR",
   "company_name": "Shilchar Technologies",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:52:45.490217Z",
+  "last_updated": "2026-08-05T14:35:25.627503Z",
   "stats": {
-    "total_facts": 11,
-    "total_entities": 2,
-    "metrics_tracked": 11,
+    "total_facts": 10,
+    "total_entities": 3,
+    "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

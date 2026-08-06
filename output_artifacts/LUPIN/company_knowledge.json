@@ -1,52 +1,77 @@
 {
   "entity_id": "ENT-COMP-500257",
   "entity_name": "LUPIN Ltd",
-  "business_model": {
-    "narrative_summary": "LUPIN is focused on complex generics, including inhalation, injectables, and GLP-1, with a strategy of API backward integration.",
-    "structured_entities": {
-      "products": [
-        "Complex generics",
-        "Inhalation products",
-        "Injectables",
-        "GLP-1"
-      ],
-      "plants": null,
-      "customer_segments": [
-        "Pharmaceutical companies",
-        "Healthcare providers"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": null,
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management guidance broadly matches numbers, indicating a reliable execution track record.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management has provided guidance that aligns with expected financial performance.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": null,
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": null,
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is at 46.9%, which is below 50%.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "LUPIN Ltd is a pharmaceutical company that specializes in complex generics, including inhalation and injectable products, as well as active pharmaceutical ingredients (APIs). The company focuses on backward integration to enhance its manufacturing capabilities and product offerings. It generates revenue primarily through the sale of these pharmaceutical products in various markets, including India and the United States.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Nilesh Gupta",
-        "role": "Professional Management"
+        "category": "Complex Generics",
+        "items": [
+          "Inhalation Products",
+          "Injectables",
+          "GLP-1"
+        ]
+      },
+      {
+        "category": "Active Pharmaceutical Ingredients",
+        "items": [
+          "APIs"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Pharmaceutical Distributors",
+        "description": "Companies that distribute pharmaceutical products to healthcare providers."
+      },
+      {
+        "segment": "Healthcare Providers",
+        "description": "Hospitals and clinics that purchase medications for patient care."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing of complex generics and APIs."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Domestic Market",
+        "percentage_str": "e.g., 40%"
+      },
+      {
+        "segment": "International Market",
+        "percentage_str": "e.g., 60%"
+      }
+    ],
+    "competitive_advantage": [
+      "Expertise in complex generics that are difficult to replicate.",
+      "Strong backward integration in manufacturing.",
+      "Established relationships with healthcare providers and distributors.",
+      "Diverse product portfolio across various therapeutic areas.",
+      "Strong financial health with net cash position."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Self-funded CapEx",
+        "fact": "\u20b91,682 Cr FY26 (+81%); funded by internal accruals.",
+        "why_it_matters": "This indicates that the company is investing in its growth without relying on external debt, which can lead to higher revenue and margin in the future.",
+        "evidence_quote": "\u20b91,682 Cr FY26 (+81%); funded by internal accruals.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
+      },
+      {
+        "category": "Market Share",
+        "title": "Rank in India and US",
+        "fact": "India #8, US #14",
+        "why_it_matters": "This shows that there is significant room for growth in both domestic and international markets.",
+        "evidence_quote": "India #8, US #14",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
       }
     ]
   }

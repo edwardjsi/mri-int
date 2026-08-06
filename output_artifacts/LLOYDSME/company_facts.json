@@ -1,405 +1,106 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Market Capitalization",
-    "value": 100000,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "In FY26, it crossed \u20b91,00,000 Cr market cap.",
+      "quote": "Lloyds Metals & Energy has transformed from a small-cap sponge iron producer into a fully integrated mining-to-metals platform.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Consolidated Revenue",
-    "value": 17000,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "\u20b917,000 Cr consolidated revenue.",
+      "quote": "In FY26, it crossed \u20b91,00,000 Cr market cap, \u20b917,000 Cr consolidated revenue, and \u20b93,900 Cr consolidated PAT.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Consolidated PAT",
-    "value": 3900,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "\u20b93,900 Cr consolidated PAT.",
+      "quote": "The company operates across: Iron ore mining (21.96 MnT production, 119.6% YoY growth), Pellet manufacturing (3.03 MnT, 4 MTPA capacity, 100% utilization within 4 months), DRI/Sponge iron (ramping 360 KTPA expansion), Steel (1.2 MTPA wire rod mill commissioning in Q4FY26), Copper (DRC assets, 50% stake in CHEMAF, 12,000 TPA SX-EW plant), Mining services through Thriveni (\u20b98,000 Cr revenue, ranked #1 coal mine in India).",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Iron Ore Production",
-    "value": 21.96,
-    "unit": "MILLION_TON",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Iron ore mining (21.96 MnT production, 119.6% YoY growth)",
+      "quote": "VAP share doubled from 20% to 32% of revenue and from 11% to 30% of EBIT.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Pellet Manufacturing Capacity",
-    "value": 4,
-    "unit": "MTPA",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Pellet manufacturing (3.03 MnT, 4 MTPA capacity, 100% utilization within 4 months)",
-      "source": {
-        "document_id": "DOC-LLOYDSME-9",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-6",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "DRI/Sponge Iron Expansion",
-    "value": 360,
-    "unit": "KTPA",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
-    "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "DRI/Sponge iron (ramping 360 KTPA expansion)",
-      "source": {
-        "document_id": "DOC-LLOYDSME-9",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-7",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Steel Production Capacity",
-    "value": 1.2,
-    "unit": "MTPA",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
-    "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Steel (1.2 MTPA wire rod mill commissioning in Q4FY26)",
-      "source": {
-        "document_id": "DOC-LLOYDSME-9",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-8",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Copper Production Capacity",
-    "value": 12000,
-    "unit": "TPA",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
-    "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Copper (DRC assets, 50% stake in CHEMAF, 12,000 TPA SX-EW plant)",
-      "source": {
-        "document_id": "DOC-LLOYDSME-9",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-9",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Mining Services Revenue",
-    "value": 8000,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
-    "evidence": {
-      "heading": "Company Stage & Growth Cycle",
-      "paragraph_index": 1,
-      "quote": "Mining services through Thriveni (\u20b98,000 Cr revenue, ranked #1 coal mine in India)",
-      "source": {
-        "document_id": "DOC-LLOYDSME-9",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-10",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Iron Ore Reserves Validity",
-    "value": 2057,
-    "unit": "YEAR",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
-    "evidence": {
-      "heading": "Global Trend & Historical Precedent",
-      "paragraph_index": 1,
       "quote": "LLOYDMET's iron ore reserves (55 MnT EC at Surjagarh, valid to 2057) give it a multi-decade resource advantage.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-11",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Revenue FY26",
-    "value": 13838,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Quarterly Growth Acceleration Test",
-      "paragraph_index": 1,
-      "quote": "Full year FY26: Revenue \u20b913,838 Cr",
+      "quote": "India targets 300 MTPA steel capacity by 2030 and 500 MTPA by 2047.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-12",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "EBITDA FY26",
-    "value": 4673,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Quarterly Growth Acceleration Test",
-      "paragraph_index": 1,
-      "quote": "Full year FY26: EBITDA \u20b94,673 Cr",
+      "quote": "The \u20b913,500 Cr capex has been funded with debt.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-13",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "PAT FY26",
-    "value": 3194,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-07-20",
-      "source_date": "2026-07-20"
-    },
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Quarterly Growth Acceleration Test",
-      "paragraph_index": 1,
-      "quote": "Full year FY26: PAT \u20b93,194 Cr",
+      "quote": "LLOYDMET's 34% EBITDA margin and 56% ROCE are best-in-class among Indian metals and mining companies.",
       "source": {
-        "document_id": "DOC-LLOYDSME-9",
+        "document_id": "DOC-LLOYDSME-1784555678.5160806",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-07-20"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   }
 ]

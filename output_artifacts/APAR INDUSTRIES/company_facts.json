@@ -1,219 +1,106 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Revenue for FY26",
-    "value": 22902,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-13"
-    },
-    "evidence": {
-      "heading": "Valuation Context and Target Price Formulation",
-      "paragraph_index": 1,
-      "quote": "Apar\u2019s FY26 revenue of \u20b922,902 crores (approximately USD 2.54 billion) represents less than 1% of this global TAM.",
-      "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Operating Profit Margin (OPM) for FY26",
-    "value": 9.0,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-13"
-    },
-    "evidence": {
-      "heading": "Peer Benchmarking",
-      "paragraph_index": 1,
-      "quote": "Apar's operational performance is benchmarked against its direct peers.",
-      "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Return on Capital Employed (ROCE) as of Sep 2025",
-    "value": 32.7,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "Sep 2025",
-      "effective_date": "2025-09-30",
-      "source_date": "2026-06-13"
-    },
-    "evidence": {
-      "heading": "Financial Health Quantitative and Qualitative Checks",
-      "paragraph_index": 1,
-      "quote": "Apar's financial position is evaluated against the seven core institutional benchmarks.",
-      "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Debt to Equity Ratio",
-    "value": 0.14,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-13"
-    },
-    "evidence": {
-      "heading": "Financial Health Quantitative and Qualitative Checks",
-      "paragraph_index": 1,
-      "quote": "The debt-to-equity ratio remains very low at 0.14.",
-      "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": null,
-    "category": "FINANCIAL",
-    "metric_name": "Free Cash Flow for FY25",
-    "value": 1291,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY25",
-      "effective_date": "2025-03-31",
-      "source_date": "2026-06-13"
-    },
-    "evidence": {
-      "heading": "Financial Health Quantitative and Qualitative Checks",
-      "paragraph_index": 1,
-      "quote": "Positive (FY25 OCF: \u20b91,291 Cr)",
-      "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
-        "document_type": "MOSI",
-        "version": "1.0",
-        "published_on": "2026-08-01"
-      }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
-  },
-  {
     "fact_id": "KNW-BUSINESS-1",
-    "entity_id": null,
     "category": "BUSINESS",
-    "metric_name": "CapEx for FY27",
-    "value": 1500,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY27",
-      "effective_date": "2027-03-31",
-      "source_date": "2026-06-13"
-    },
     "evidence": {
-      "heading": "The CapEx-ROCE Cycle and Re-Rating Setup",
-      "paragraph_index": 1,
-      "quote": "For FY27, the company has targeted a total CapEx of \u20b91,500 crores (up from \u20b9740 crores in FY26).",
+      "quote": "Apar Industries Limited is structurally positioned in the Expansion Stage of its corporate and market life cycle.",
       "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-13"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
     "fact_id": "KNW-BUSINESS-2",
-    "entity_id": null,
     "category": "BUSINESS",
-    "metric_name": "Current Ratio",
-    "value": 1.45,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-13"
-    },
     "evidence": {
-      "heading": "Financial Health Quantitative and Qualitative Checks",
-      "paragraph_index": 1,
-      "quote": "The current ratio stands at 1.45, providing a comfortable buffer.",
+      "quote": "The company is currently situated at the inflection point of this multi-year re-rating cycle.",
       "source": {
-        "document_id": "DOC-APAR INDUSTRIES-11",
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-13"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Apar Industries serves several core national priorities, directly enabling India's infrastructure expansion, renewable energy transition, domestic manufacturing self-reliance, and logistics optimization.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The conductor business continues to act as the primary operational engine, with revenues growing 32.7% YoY in FY26 to reach \u20b912,712 crores.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Apar is the world\u2019s largest manufacturer of aluminum alloy conductors.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The global wire and cable industry is expected to reach USD 314.96 billion by 2030.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Apar\u2019s FY26 revenue of \u20b922,902 crores (approximately USD 2.54 billion) represents less than 1% of this global TAM.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has committed \u20b973 crores to triple its Continuous Transposed Conductor (CTC) capacity to 20,490 MT per year by Q3 FY26.",
+      "source": {
+        "document_id": "DOC-APAR INDUSTRIES-1781345862.0378144",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-13"
+      }
+    }
   }
 ]

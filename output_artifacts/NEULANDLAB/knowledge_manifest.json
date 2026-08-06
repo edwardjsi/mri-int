@@ -2,11 +2,11 @@
   "company_ticker": "NEULAND ",
   "company_name": "Neuland Laboratories Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:45:50.620392Z",
+  "last_updated": "2026-08-05T14:46:43.333479Z",
   "stats": {
-    "total_facts": 5,
-    "total_entities": 4,
-    "metrics_tracked": 5,
+    "total_facts": 10,
+    "total_entities": 5,
+    "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

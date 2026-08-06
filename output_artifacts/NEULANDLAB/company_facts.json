@@ -1,157 +1,132 @@
 [
   {
-    "fact_id": "KNW-FINANCIAL-1",
-    "entity_id": "ENT-COMP-NEULANDLAB",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue for Q4 FY26",
-    "value": 788.7,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "QUARTERLY",
-      "period_label": "Q4 FY26",
-      "effective_date": "2026-06-30",
-      "source_date": "2026-06-24"
-    },
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Quarterly Growth Acceleration Test",
-      "paragraph_index": 5,
-      "quote": "Q4 FY26: 788.7",
+      "quote": "Neuland Laboratories is firmly positioned in the Expansion Stage of its life cycle.",
       "source": {
-        "document_id": "DOC-NEULANDLAB-5",
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-2",
-    "entity_id": "ENT-COMP-NEULANDLAB",
-    "category": "FINANCIAL",
-    "metric_name": "PAT for FY26",
-    "value": 363.1,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-24"
-    },
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Financial Health: Quantitative Checks",
-      "paragraph_index": 8,
-      "quote": "Core full-year PAT up 40% to \u20b9363.1 Cr",
+      "quote": "The company has completed a multi-year pivot toward a high-margin, intellectually sticky Custom Manufacturing Solutions (CMS / CDMO) engine.",
       "source": {
-        "document_id": "DOC-NEULANDLAB-5",
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-3",
-    "entity_id": "ENT-COMP-NEULANDLAB",
-    "category": "FINANCIAL",
-    "metric_name": "Revenue CAGR (3-Year)",
-    "value": 24,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "MULTI_YEAR",
-      "period_label": "3-Year",
-      "effective_date": null,
-      "source_date": "2026-06-24"
-    },
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Financial Health: Quantitative Checks",
-      "paragraph_index": 8,
-      "quote": "Revenue CAGR (3-Year): Pass (~24% normalized tier, backed by a 37.1% step-up in FY26)",
+      "quote": "Neuland breaks down its operations into three core business verticals: Custom Manufacturing Solutions (CMS), Prime APIs, and Specialty APIs.",
       "source": {
-        "document_id": "DOC-NEULANDLAB-5",
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-4",
-    "entity_id": "ENT-COMP-NEULANDLAB",
-    "category": "FINANCIAL",
-    "metric_name": "Full-year EBITDA margin FY26",
-    "value": 29.4,
-    "unit": "PERCENTAGE",
-    "temporal_context": {
-      "period_type": "ANNUAL",
-      "period_label": "FY26",
-      "effective_date": "2026-03-31",
-      "source_date": "2026-06-24"
-    },
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Margin Expansion: Structural or Cyclical?",
-      "paragraph_index": 6,
-      "quote": "Full year FY26 blended EBITDA margin at 29.4%",
+      "quote": "Custom Manufacturing Solutions (CMS): Contributes ~61% of total revenues.",
       "source": {
-        "document_id": "DOC-NEULANDLAB-5",
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
   },
   {
-    "fact_id": "KNW-FINANCIAL-5",
-    "entity_id": "ENT-COMP-NEULANDLAB",
-    "category": "FINANCIAL",
-    "metric_name": "Debt / Equity",
-    "value": -156.8,
-    "unit": "CURRENCY",
-    "temporal_context": {
-      "period_type": "POINT_IN_TIME",
-      "period_label": null,
-      "effective_date": null,
-      "source_date": "2026-06-24"
-    },
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
     "evidence": {
-      "heading": "Financial Health: Quantitative Checks",
-      "paragraph_index": 8,
-      "quote": "Net debt remains entirely negative at -\u20b9156.8 Cr",
+      "quote": "Prime APIs: Contributes ~23% of revenues.",
       "source": {
-        "document_id": "DOC-NEULANDLAB-5",
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
         "document_type": "MOSI",
         "version": "1.0",
-        "published_on": "2026-08-01"
+        "published_on": "2026-06-24"
       }
-    },
-    "confidence": {
-      "value": 1.0,
-      "reason": "Explicit statement in text"
-    },
-    "status": "ACTIVE",
-    "version": 1
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Specialty APIs: Contributes ~11% of revenues.",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-24"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "A state-of-the-art dedicated peptide manufacturing line and an advanced 140,000 sq ft R&D center are scheduled to become fully operational in July 2026.",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-24"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Neuland works directly as a synthesis partner embedded within the regulatory filings of foreign innovators.",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-24"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Neuland is uniquely leveraged to capture this wave owing to an immaculate regulatory track record with the US-FDA.",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-24"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The global CRDMO addressable market is expanding rapidly toward $300Bn by 2028.",
+      "source": {
+        "document_id": "DOC-NEULANDLAB-1782315964.5504563",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-06-24"
+      }
+    }
   }
 ]

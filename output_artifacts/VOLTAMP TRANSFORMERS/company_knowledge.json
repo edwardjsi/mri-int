@@ -1,57 +1,62 @@
 {
   "entity_id": "ENT-COMP-VOLTAMP",
   "entity_name": "Voltamp Transformers Limited",
-  "business_model": {
-    "narrative_summary": "Voltamp Transformers Limited is a dominant player in the Indian heavy electrical equipment industry, focusing on industrial and dry-type transformers. The company is transitioning from a capacity-constrained market leader to a scaled manufacturer through the commissioning of its Jarod greenfield facility.",
-    "structured_entities": {
-      "products": [
-        "Industrial Transformers",
-        "Dry-Type Transformers"
-      ],
-      "plants": [
-        "Jarod Facility"
-      ],
-      "customer_segments": [
-        "Listed Indian Corporates",
-        "Multinational Companies"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The management prioritizes a debt-free balance sheet and conservative capital allocation, using internal accruals for expansion and maintaining high dividend payouts.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Voltamp has a 60-year track record of operational excellence and has navigated multiple economic cycles without compromising its zero-debt status.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "The company is expected to stabilize margins and ramp up new capacity in the 220kV class, with a focus on maintaining high dividend payouts.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been noted for its disciplined but detached communication style, avoiding quarterly earnings calls and investor presentations.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Voltamp maintains a high standard of governance with no major scandals or accounting irregularities reported.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "The promoter shareholding has decreased from approximately 38% to 30% by March 2026, coinciding with an increase in Domestic Institutional Investor holdings.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Voltamp Transformers Limited is a leading manufacturer of transformers in India, specializing in industrial and dry-type transformers. The company has established itself as a dominant player in the market, leveraging its 60 years of operational excellence and a debt-free balance sheet to deliver high-quality products to its customers. Voltamp's focus on innovation and technology allows it to meet the growing demand for transformers in various sectors, including renewable energy and industrial electrification.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Kanubhai S. Patel",
-        "role": "CEO"
+        "category": "Transformers",
+        "items": [
+          "Industrial Transformers",
+          "Dry-Type Transformers"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Corporate Clients",
+        "description": "95% of listed Indian corporates and multinational companies."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Vadodara, Gujarat",
+        "description": "Headquarters and manufacturing facility for transformers."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Private Sector",
+        "percentage_str": "85%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong market share in the dry-type transformer segment (35-40%).",
+      "Debt-free balance sheet allowing for conservative capital allocation.",
+      "Established relationships with major corporate clients.",
+      "Technological superiority in transformer manufacturing.",
+      "Ability to adapt to market demands and regulatory changes."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Jarod Greenfield Expansion",
+        "fact": "The company is investing \u20b9200 crore in a new state-of-the-art facility at Jarod, Vadodara.",
+        "why_it_matters": "This expansion will increase the company's manufacturing capacity and enable it to meet the growing demand for high-voltage transformers.",
+        "evidence_quote": "Capacity Addition: 6,000 MVA per annum in the first phase, bringing total capacity to 20,000 MVA.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "06 May 26"
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Kunjal L. Patel",
-        "role": "Director"
+        "category": "Market Share",
+        "title": "Strong Market Position",
+        "fact": "Voltamp holds a commanding 15% share of the organized industrial transformer market.",
+        "why_it.matters": "This strong market position allows Voltamp to leverage economies of scale and maintain pricing power.",
+        "evidence_quote": "Voltamp holds a commanding 15% share of the organized industrial transformer market and a dominant 35-40% share in the dry-type transformer segment.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "06 May 26"
       }
     ]
   }

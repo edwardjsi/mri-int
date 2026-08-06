@@ -1,61 +1,105 @@
 {
   "entity_id": "ENT-COMP-POLYCAB",
   "entity_name": "Polycab India Ltd",
-  "business_model": {
-    "narrative_summary": "Polycab has transitioned from a market-leading wires & cables manufacturer into a diversified electrical goods powerhouse.",
-    "structured_entities": {
-      "products": [
-        "Wires and Cables",
-        "Fast-Moving Electrical Goods (FMEG)",
-        "EPC services"
-      ],
-      "plants": [
-        "Waghodia plant"
-      ],
-      "customer_segments": [
-        "Electrical infrastructure",
-        "Real estate",
-        "Renewables",
-        "Data centers",
-        "Industrial segments"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Polycab is deploying aggressive capex while maintaining a fortress balance sheet.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management consistently under-promises and over-delivers.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management maintains 1.5x industry growth directional guidance through FY30.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management openly discusses risks and has a strong governance structure.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Promoter holding at 61% provides stability and alignment.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter next generation redesignated as Joint Managing Directors in Q3 FY26.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Polycab India Ltd is a leading manufacturer of wires and cables, as well as a provider of fast-moving electrical goods (FMEG) and engineering, procurement, and construction (EPC) services. The company has transitioned from being primarily focused on wires and cables to becoming a diversified electrical goods powerhouse, serving various sectors including electrical infrastructure, real estate, renewables, data centers, and industrial segments.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Bharat Jaisinghani",
-        "role": "Joint Managing Director"
+        "category": "Wires and Cables",
+        "items": [
+          "Electrical Wires",
+          "Cables"
+        ]
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Nikhil Jaisinghani",
-        "role": "Joint Managing Director"
+        "category": "Fast-Moving Electrical Goods",
+        "items": [
+          "Switches",
+          "Lighting"
+        ]
+      },
+      {
+        "category": "EPC Services",
+        "items": [
+          "Infrastructure Projects",
+          "Renewable Energy Projects"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Infrastructure Developers",
+        "description": "Companies involved in building electrical infrastructure and renewable energy projects."
+      },
+      {
+        "segment": "Real Estate Developers",
+        "description": "Builders and developers of residential and commercial properties."
+      },
+      {
+        "segment": "Industrial Clients",
+        "description": "Manufacturers and industrial facilities requiring electrical solutions."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Waghodia",
+        "description": "Commissioning EHV capacity for import substitution."
+      },
+      {
+        "location": "Various Locations",
+        "description": "Manufacturing of wires, cables, and FMEG products."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Wires & Cables",
+        "percentage_str": "87%"
+      },
+      {
+        "segment": "FMEG",
+        "percentage_str": "7%"
+      },
+      {
+        "segment": "EPC",
+        "percentage_str": "7%"
+      }
+    ],
+    "competitive_advantage": [
+      "Massive scale (2\u00d7 the next largest competitor \u2014 KEI).",
+      "Near-total backward integration (100% in W&C, 90% in FMEG).",
+      "Extensive distribution network with 3,900+ authorized dealers.",
+      "Established brand and trust over 50+ years in the industry.",
+      "Strong market share (30-31%) in the organized W&C market."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "EHV Capacity Commissioning",
+        "fact": "CapEx committed for EHV capacity commissioning at Waghodia plant by end-CY26.",
+        "why_it_matters": "This will enable import substitution and is expected to contribute to revenue from FY28.",
+        "evidence_quote": "EHV is currently 50% imported; import substitution play.",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "17 July 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Increasing Market Share",
+        "fact": "Polycab gained ~4% market share in FY26 alone.",
+        "why_it_matters": "This positions Polycab to capture a larger portion of the growing organized W&C market.",
+        "evidence_quote": "Market share at 30-31% (up from 18-19% at listing).",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "17 July 2026"
+      },
+      {
+        "category": "Government Initiatives",
+        "title": "BharatNet and RDSS Projects",
+        "fact": "Polycab is a direct beneficiary of government schemes like BharatNet and RDSS.",
+        "why_it_matters": "These projects provide significant revenue opportunities and enhance infrastructure.",
+        "evidence_quote": "BharatNet (\u20b98,000 Cr order for Polycab).",
+        "evidence_source": "MOSI Report",
+        "evidence_date": "17 July 2026"
       }
     ]
   }

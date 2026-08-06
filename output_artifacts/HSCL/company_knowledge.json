@@ -1,50 +1,79 @@
 {
   "entity_id": "ENT-COMP-HSCL",
   "entity_name": "Himadri Speciality Chemical Ltd",
-  "business_model": {
-    "narrative_summary": "Himadri Speciality Chemical Ltd is transitioning from a commodity coal tar distiller to a high-margin specialty chemicals and advanced materials conglomerate, focusing on specialty carbon blacks and lithium-ion battery materials.",
-    "structured_entities": {
-      "products": [
-        "Specialty carbon blacks",
-        "Lithium Iron Phosphate (LFP) cathode active materials",
-        "Silicon-carbon (SiCx) synthetic anodes"
-      ],
-      "plants": [
-        "LFP Cathode Active Material Plant",
-        "Specialty Carbon Black Facility"
-      ],
-      "customer_segments": [
-        "Global aluminum industry",
-        "Tire industry",
-        "Electric vehicle manufacturers"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Himadri Speciality Chemical Ltd is transitioning from a traditional coal tar distillation business to a high-margin specialty chemicals and advanced materials company. The company focuses on producing specialty carbon blacks and advanced materials for lithium-ion batteries, which are in high demand due to the global shift towards electric vehicles and energy storage solutions.",
+    "products": [
+      {
+        "category": "Core Products",
+        "items": [
+          "Customized coal tar pitch",
+          "Standard carbon black"
+        ]
+      },
+      {
+        "category": "Emerging Products",
+        "items": [
+          "Specialty carbon blacks",
+          "Lithium Iron Phosphate (LFP) cathode active materials",
+          "Silicon-carbon (SiCx) synthetic anodes"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "OEMs",
+        "description": "Original Equipment Manufacturers in the electric vehicle and energy storage sectors."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "India",
+        "description": "Manufacturing facilities for specialty carbon blacks and lithium-ion battery materials."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Carbon Materials and Chemicals",
+        "percentage_str": "85.9%"
+      },
+      {
+        "segment": "Others",
+        "percentage_str": "12.0%"
+      },
+      {
+        "segment": "Power",
+        "percentage_str": "1.9%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong technological integration and partnerships.",
+      "High barriers to entry due to complex manufacturing processes.",
+      "Exclusive licensing agreements for advanced technologies.",
+      "Geopolitical advantages in localizing supply chains.",
+      "High customer stickiness due to specialized products."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "The company is focused on funding growth through internal cash accruals and targeted promoter equity infusions.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has consistently under-promised and over-delivered on profitability metrics.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management targets a sustainable EBITDA margin profile of over 20% as the product mix shifts.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management openly acknowledges risks and emphasizes margin-per-ton insulation through contractual pass-throughs.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Promoter holding stands at 52.50%, ensuring alignment of interests.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "The recent warrant conversion reflects promoter confidence in the company's growth trajectory.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "LFP Cathode Active Material Plant",
+        "fact": "The company is executing a capital expenditure of \u20b91,125 Cr for a 40,000 MTPA LFP cathode plant.",
+        "why_it_matters": "This facility is expected to significantly enhance revenue and margin as it begins operations.",
+        "evidence_quote": "Commercial operations are firmly targeted for Q3 FY27.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
+      },
+      {
+        "category": "New Products",
+        "title": "Specialty Carbon Black Expansion",
+        "fact": "The company is expanding its specialty carbon black capacity by 70,000 MTPA.",
+        "why_it_matters": "This expansion will immediately augment the earnings profile in the upcoming fiscal year.",
+        "evidence_quote": "This brownfield CapEx is substantially complete, with trial runs executed and commercial production initiated in late FY26.",
+        "evidence_source": "MOSI report",
+        "evidence_date": null
+      }
+    ]
   }
 }

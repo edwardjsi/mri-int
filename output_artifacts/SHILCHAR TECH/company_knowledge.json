@@ -1,51 +1,67 @@
 {
-  "entity_id": "ENT-COMP-<ticker>",
+  "entity_id": "ENT-COMP-531201",
   "entity_name": "Shilchar Technologies",
-  "business_model": {
-    "narrative_summary": "Shilchar manufactures various types of transformers including power, distribution, renewable energy, furnace, converter duty, and earthing & isolation transformers, specializing in transformers up to 50 MVA and 132 kV class.",
-    "structured_entities": {
-      "products": [
-        "Power Transformers",
-        "Distribution Transformers",
-        "Renewable Energy Transformers",
-        "Furnace Transformers",
-        "Converter Duty Transformers",
-        "Earthing & Isolation Transformers"
-      ],
-      "plants": [
-        "Gavasad"
-      ],
-      "customer_segments": [
-        "Renewable Energy",
-        "Industrial"
-      ]
-    }
+  "g1_1_business": {
+    "what_it_does": "Shilchar Technologies is a manufacturer specializing in various types of transformers, including power, distribution, renewable energy, and industrial transformers. The company has built a strong reputation over nearly four decades, focusing on high-quality engineering and custom solutions for its clients. It plays a crucial role in the energy sector, providing essential equipment that supports renewable energy projects and grid modernization efforts.",
+    "products": [
+      {
+        "category": "Transformers",
+        "items": [
+          "Power Transformers",
+          "Distribution Transformers",
+          "Renewable Energy Transformers",
+          "Furnace Transformers",
+          "Converter Duty Transformers",
+          "Earthing & Isolation Transformers"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Energy Sector",
+        "description": "Includes solar plants, wind farms, factories, transmission lines, and distribution networks."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Gavasad",
+        "description": "The facility has expanded capacity from 4,000 MVA to 7,500 MVA."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Exports",
+        "percentage_str": "43%"
+      }
+    ],
+    "competitive_advantage": [
+      "Strong expertise in renewable transformers built over two decades.",
+      "Established export relationships across 25+ countries.",
+      "High-quality reputation in the transformer manufacturing industry.",
+      "Significant capacity availability compared to competitors.",
+      "Debt-free balance sheet allowing for flexible growth."
+    ]
   },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management has a debt-free balance sheet and funds growth through internal accruals.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "Management has successfully expanded capacity and delivered revenue and profit growth.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management targets FY27 revenue of \u20b9800\u2013900 Cr.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management has been clear about growth drivers and expansion plans.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Management has no major governance controversies.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Management is family-led with a history of execution.",
-      "facts": []
-    },
-    "key_executives": []
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Expansion of Gavasad Facility",
+        "fact": "Management expanded capacity from 4,000 to 7,500 MVA.",
+        "why_it_matters": "This expansion allows Shilchar to meet increasing demand in the renewable energy sector and improve revenue potential.",
+        "evidence_quote": "Management expanded capacity from 4,000 to 7,500 MVA.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "06 Jun 26"
+      },
+      {
+        "category": "Market Share",
+        "title": "Growing Demand for Renewable Energy",
+        "fact": "India targets 500 GW renewable capacity by 2030.",
+        "why_it_matters": "This ambitious target indicates a significant market opportunity for Shilchar's products.",
+        "evidence_quote": "India targets 500 GW renewable capacity by 2030.",
+        "evidence_source": "MOSI report",
+        "evidence_date": "06 Jun 26"
+      }
+    ]
   }
 }

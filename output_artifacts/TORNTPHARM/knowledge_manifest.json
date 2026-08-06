@@ -2,10 +2,10 @@
   "company_ticker": "TORRENT ",
   "company_name": "Torrent Pharmaceuticals Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:58:09.374650Z",
+  "last_updated": "2026-08-05T14:44:47.478565Z",
   "stats": {
     "total_facts": 10,
-    "total_entities": 2,
+    "total_entities": 5,
     "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0

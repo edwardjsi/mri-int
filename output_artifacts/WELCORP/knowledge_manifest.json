@@ -2,11 +2,11 @@
   "company_ticker": "WELSPUN ",
   "company_name": "Welspun Corp Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:55:00.156332Z",
+  "last_updated": "2026-08-05T14:47:38.416100Z",
   "stats": {
-    "total_facts": 10,
-    "total_entities": 4,
-    "metrics_tracked": 10,
+    "total_facts": 8,
+    "total_entities": 3,
+    "metrics_tracked": 8,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

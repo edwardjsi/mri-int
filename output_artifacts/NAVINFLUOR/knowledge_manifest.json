@@ -2,11 +2,11 @@
   "company_ticker": "NAVIN FL",
   "company_name": "Navin Fluorine International Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:57:16.394447Z",
+  "last_updated": "2026-08-05T14:45:08.383855Z",
   "stats": {
-    "total_facts": 10,
-    "total_entities": 2,
-    "metrics_tracked": 10,
+    "total_facts": 9,
+    "total_entities": 3,
+    "metrics_tracked": 9,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0
   },

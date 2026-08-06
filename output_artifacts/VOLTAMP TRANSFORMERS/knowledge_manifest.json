@@ -2,10 +2,10 @@
   "company_ticker": "VOLTAMP ",
   "company_name": "Voltamp Transformers Limited",
   "knowledge_version": 1,
-  "last_updated": "2026-08-01T11:48:26.427804Z",
+  "last_updated": "2026-08-05T14:34:00.177070Z",
   "stats": {
     "total_facts": 10,
-    "total_entities": 2,
+    "total_entities": 3,
     "metrics_tracked": 10,
     "missing_schema_fields": 0,
     "knowledge_coverage_pct": 100.0

@@ -1,58 +1,90 @@
 {
   "entity_id": "ENT-COMP-RADICO",
   "entity_name": "Radico Khaitan Ltd",
-  "business_model": {
-    "narrative_summary": "Radico Khaitan is a leading player in the Indian alcobev sector, focusing on premiumization and growth through its diverse product portfolio, including Rampur single malt and Jaisalmer gin.",
-    "structured_entities": {
-      "products": [
-        "Rampur single malt",
-        "Jaisalmer gin",
-        "Magic Moments vodka"
-      ],
-      "plants": [
-        "Rampur distillery"
-      ],
-      "customer_segments": [
-        "Domestic IMFL consumers",
-        "International markets"
-      ]
-    }
-  },
-  "management": {
-    "capital_allocation_philosophy": {
-      "narrative": "Management has demonstrated capital discipline by reducing debt while investing in capacity expansion and maintaining a consistent dividend policy.",
-      "facts": []
-    },
-    "execution_track_record": {
-      "narrative": "The company has shown strong revenue growth and margin expansion, indicating effective execution of its business strategy.",
-      "facts": []
-    },
-    "forward_guidance": {
-      "narrative": "Management aims to continue expanding operating margins and revenue through premium product offerings and market expansion.",
-      "facts": []
-    },
-    "communication_transparency": {
-      "narrative": "Management provides clear quarterly results but has limited investor day events.",
-      "facts": []
-    },
-    "governance_and_board": {
-      "narrative": "Radico has a clean governance record with no SEBI enforcement actions or accounting restatements in the last 10 years.",
-      "facts": []
-    },
-    "promoter_skin_in_game": {
-      "narrative": "Promoter holding is approximately 40%, with no significant dilution or offloading in the last three years.",
-      "facts": []
-    },
-    "key_executives": [
+  "g1_1_business": {
+    "what_it_does": "Radico Khaitan Ltd is a leading player in the Indian alcobev sector, primarily engaged in the production and sale of Indian Made Foreign Liquor (IMFL). The company has a strong focus on premiumization, offering products such as Rampur single malt, Jaisalmer gin, and Magic Moments vodka. It generates revenue through both domestic sales and exports, with a significant portion of its business coming from the domestic market.",
+    "products": [
       {
-        "entity_id": "ENT-EXEC-1",
-        "name": "Abhishek Khaitan",
-        "role": "Managing Director"
+        "category": "Whiskey",
+        "items": [
+          "Rampur single malt"
+        ]
       },
       {
-        "entity_id": "ENT-EXEC-2",
-        "name": "Lalit Khaitan",
-        "role": "Chairman"
+        "category": "Gin",
+        "items": [
+          "Jaisalmer gin"
+        ]
+      },
+      {
+        "category": "Vodka",
+        "items": [
+          "Magic Moments vodka"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Domestic Consumers",
+        "description": "Individuals purchasing IMFL for personal consumption."
+      },
+      {
+        "segment": "Export Markets",
+        "description": "International consumers in over 102 countries."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Rampur, Uttar Pradesh",
+        "description": "Home to one of India's largest malt distilleries."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Domestic IMFL",
+        "percentage_str": "85-90%"
+      },
+      {
+        "segment": "Exports",
+        "percentage_str": "8-12%"
+      }
+    ],
+    "competitive_advantage": [
+      "80+ years of operational history.",
+      "Largest malt distillery in India.",
+      "Near-monopoly on armed forces canteen supply.",
+      "Strong premiumization strategy.",
+      "Demonstrated capital discipline with reduced debt."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Premium portfolio scale-up",
+        "fact": "Rampur single malt + Jaisalmer gin growing 30-40% YoY.",
+        "why_it_matters": "This growth in premium products contributes significantly to revenue and margin expansion.",
+        "evidence_quote": "The premiumisation thesis \u2014 Rampur single malt, Jaisalmer gin, premium vodka \u2014 is a classic Lynch 'growth at a reasonable price' play.",
+        "evidence_source": "Investment Research",
+        "evidence_date": "18 May 2026"
+      },
+      {
+        "category": "Operational Efficiency",
+        "title": "OPM expansion to 20%",
+        "fact": "Expected increase of 200-250 bps from scale and mix.",
+        "why_it_matters": "Higher operating margins will lead to improved profitability.",
+        "evidence_quote": "The OPM expansion from 11% to 17% confirms the mix shift is real.",
+        "evidence_source": "Investment Research",
+        "evidence_date": "18 May 2026"
+      },
+      {
+        "category": "Market Expansion",
+        "title": "New international markets",
+        "fact": "5-10 new country registrations targeted.",
+        "why_it.matters": "Entering new markets will diversify revenue streams and reduce dependency on domestic sales.",
+        "evidence_quote": "Exports are a growth vector, not the earnings driver.",
+        "evidence_source": "Investment Research",
+        "evidence_date": "18 May 2026"
       }
     ]
   }
