@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from './api';
-import { CaiPositionReview } from './CaiPositionReview';
 import { Briefcase, FileText, Database, ArrowUpDown } from 'lucide-react';
 import { CaiCommittee } from './CaiCommittee';
 import { CaiLedger } from './CaiLedger';
@@ -13,7 +12,6 @@ export const CaiPortfolioPage: React.FC = () => {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reviewPositionId, setReviewPositionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'committee' | 'ledger'>('portfolio');
   const [showManualTrade, setShowManualTrade] = useState(false);
   const [tradeType, setTradeType] = useState<'NEW' | 'TRANCHE' | 'SELL'>('NEW');
@@ -253,7 +251,7 @@ export const CaiPortfolioPage: React.FC = () => {
                   </td>
                   <td className="p-4 text-center">
                     <button 
-                      onClick={() => setReviewPositionId(pos.id)}
+                      onClick={() => navigate(`/caiposition/${pos.id}`)}
                       className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       Review
@@ -276,21 +274,6 @@ export const CaiPortfolioPage: React.FC = () => {
           )}
         </table>
       </div>
-      )}
-
-      {reviewPositionId && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-700 shadow-2xl">
-            <CaiPositionReview 
-              positionId={reviewPositionId} 
-              onClose={() => setReviewPositionId(null)}
-              onReviewSaved={() => {
-                fetchPortfolio();
-                setReviewPositionId(null);
-              }}
-            />
-          </div>
-        </div>
       )}
       {showManualTrade && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
