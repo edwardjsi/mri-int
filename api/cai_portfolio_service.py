@@ -6,6 +6,8 @@ import logging
 import uuid
 from api.deps import get_db, get_current_client
 from engine_core.cai_replay import fetch_replay_data
+from engine_core.cai_decision_ladder_engine import load_mri_inputs, compute_thresholds, resolve_state, ALGORITHM_VERSION
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +289,31 @@ def get_replay(review_id: str, client=Depends(get_current_client)):
     if not data:
         raise HTTPException(status_code=404, detail="Review not found or access denied")
     return data
+
+@router.get("/debug/{symbol}")
+def debug_symbol_decision_ladder(symbol: str, conn=Depends(get_db)):
+    """
+    Developer Truth Table endpoint.
+    Returns the exact inputs, computed thresholds, and final decision state for a single symbol.
+    """
+    try:
+        inputs = load_mri_inputs(conn, symbol.upper())
+        if not inputs:
+            raise HTTPException(status_code=404, detail="No technical data found for symbol.")
+            
+        thresholds = compute_thresholds(inputs)
+        state = resolve_state(inputs["current_price"], thresholds)
+        
+        return {
+            "symbol": symbol.upper(),
+            "inputs": inputs,
+            "outputs": thresholds,
+            "decision_state": state,
+            "algorithm": ALGORITHM_VERSION,
+            "calculated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error debugging {symbol}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to compute debug inputs")
