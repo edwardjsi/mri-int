@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode, IChartApi } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, IChartApi, LineStyle } from 'lightweight-charts';
 import { getAuthHeaders } from './api';
 
 interface CaiWeeklyChartProps {
   symbol: string;
+  positionData?: any;
 }
 
-export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol }) => {
+export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, positionData }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +97,69 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol }) => {
         ema40Series.setData(ema40);
         
         chart.timeScale().fitContent();
+
+        if (positionData) {
+          if (positionData.entry_price) {
+            candlestickSeries.createPriceLine({
+              price: positionData.entry_price,
+              color: '#3B82F6', // MAINTAIN color (blue)
+              lineWidth: 2,
+              lineStyle: LineStyle.Dashed,
+              axisLabelVisible: true,
+              title: 'ENTRY (Avg Price)',
+            });
+          }
+          if (positionData.add_level) {
+            candlestickSeries.createPriceLine({
+              price: positionData.add_level,
+              color: '#10B981', // ADD color (green)
+              lineWidth: 2,
+              lineStyle: LineStyle.Dotted,
+              axisLabelVisible: true,
+              title: 'NEXT TRANCHE',
+            });
+          }
+          if (positionData.pullback_level) {
+            candlestickSeries.createPriceLine({
+              price: positionData.pullback_level,
+              color: '#8b5cf6', // Purple color for pullback
+              lineWidth: 2,
+              lineStyle: LineStyle.Dashed,
+              axisLabelVisible: true,
+              title: 'PULLBACK ENTRY',
+            });
+          }
+          if (positionData.alert_level) {
+            candlestickSeries.createPriceLine({
+              price: positionData.alert_level,
+              color: '#F59E0B', // ALERT color (yellow)
+              lineWidth: 2,
+              lineStyle: LineStyle.Dotted,
+              axisLabelVisible: true,
+              title: 'ALERT',
+            });
+          }
+          if (positionData.structure_level) {
+            candlestickSeries.createPriceLine({
+              price: positionData.structure_level,
+              color: '#F97316', // STRUCTURE color (orange)
+              lineWidth: 2,
+              lineStyle: LineStyle.Solid,
+              axisLabelVisible: true,
+              title: 'STRUCTURE BREAK',
+            });
+          }
+          if (positionData.quit_level) {
+            candlestickSeries.createPriceLine({
+              price: positionData.quit_level,
+              color: '#EF4444', // QUIT color (red)
+              lineWidth: 2,
+              lineStyle: LineStyle.Solid,
+              axisLabelVisible: true,
+              title: 'QUIT',
+            });
+          }
+        }
         
       } catch (err: any) {
         setError(err.message);
@@ -134,6 +198,19 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol }) => {
         </div>
       )}
       <div ref={chartContainerRef} className="w-full h-full" />
+      {positionData && (
+        <div className="absolute top-4 left-4 bg-gray-900/90 backdrop-blur border border-gray-700 rounded-lg p-3 text-xs font-mono text-gray-300 z-20 pointer-events-auto shadow-xl select-text">
+          <div className="text-gray-400 font-bold mb-2 border-b border-gray-700 pb-1 tracking-wider uppercase">Key Levels (Selectable)</div>
+          <div className="flex flex-col gap-1.5">
+            {positionData.entry_price && <div><span className="text-blue-400 inline-block w-24">ENTRY:</span> {positionData.entry_price.toFixed(2)}</div>}
+            {positionData.add_level && <div><span className="text-emerald-400 inline-block w-24">NEXT TRANCHE:</span> {positionData.add_level.toFixed(2)}</div>}
+            {positionData.pullback_level && <div><span className="text-purple-400 inline-block w-24">PULLBACK:</span> {positionData.pullback_level.toFixed(2)}</div>}
+            {positionData.alert_level && <div><span className="text-yellow-400 inline-block w-24">ALERT:</span> {positionData.alert_level.toFixed(2)}</div>}
+            {positionData.structure_level && <div><span className="text-orange-400 inline-block w-24">STRUCTURE:</span> {positionData.structure_level.toFixed(2)}</div>}
+            {positionData.quit_level && <div><span className="text-red-400 inline-block w-24">QUIT:</span> {positionData.quit_level.toFixed(2)}</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

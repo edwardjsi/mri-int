@@ -17,7 +17,8 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
             # 1. Fetch Position and Portfolio Data
             cur.execute(
                 """
-                SELECT p.symbol, p.quantity, p.average_price, p.tranche, p.status, port.id as portfolio_id
+                SELECT p.symbol, p.quantity, p.average_price, p.tranche, p.status, port.id as portfolio_id,
+                       p.add_level, p.alert_level, p.structure_level, p.quit_level
                 FROM cai_position p
                 JOIN cai_portfolio port ON p.portfolio_id = port.id
                 WHERE p.id = %s AND port.owner = %s AND p.status = 'ACTIVE'
@@ -34,12 +35,13 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
             tranche = pos['tranche']
             
             # 2. Fetch live price and health
-            cur.execute("SELECT close, ema_50, ema_200 FROM daily_prices WHERE symbol = %s ORDER BY date DESC LIMIT 1", (symbol,))
+            cur.execute("SELECT close, ema_20, ema_50, ema_200 FROM daily_prices WHERE symbol = %s ORDER BY date DESC LIMIT 1", (symbol,))
             price_data = cur.fetchone()
             if not price_data:
                 return {"recommendation": "HOLD", "reason": "Missing live data"}
                 
             close_price = float(price_data['close'])
+            ema_20 = float(price_data['ema_20']) if price_data['ema_20'] else close_price
             ema_50 = float(price_data['ema_50']) if price_data['ema_50'] else close_price
             ema_200 = float(price_data['ema_200']) if price_data['ema_200'] else close_price
             
@@ -75,7 +77,13 @@ def evaluate_position(position_id: str, client_id: str) -> Dict[str, Any]:
                 "tranche": tranche,
                 "profit_pct": round(float(profit_pct), 2),
                 "recommendation": recommendation,
-                "reason": reason
+                "reason": reason,
+                "entry_price": avg_price,
+                "pullback_level": ema_20,
+                "add_level": float(pos['add_level']) if pos.get('add_level') is not None else None,
+                "alert_level": float(pos['alert_level']) if pos.get('alert_level') is not None else None,
+                "structure_level": float(pos['structure_level']) if pos.get('structure_level') is not None else None,
+                "quit_level": float(pos['quit_level']) if pos.get('quit_level') is not None else None
             }
     except Exception as e:
         logger.error(f"Error evaluating position {position_id}: {e}")

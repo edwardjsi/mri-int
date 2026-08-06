@@ -108,7 +108,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
 
       {data && (
         <div className="w-full">
-          <CaiWeeklyChart symbol={data.symbol} />
+          <CaiWeeklyChart symbol={data.symbol} positionData={data} />
         </div>
       )}
 
