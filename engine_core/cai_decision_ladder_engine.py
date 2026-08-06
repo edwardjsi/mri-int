@@ -132,9 +132,10 @@ def compute_thresholds(inputs: dict):
         "add_level": r(add_level)
     }
 
-def resolve_state(current_price: float, thresholds: dict) -> str:
+def evaluate_position_health(current_price: float, thresholds: dict) -> dict:
     """
-    Resolve the deterministic state hierarchy.
+    Position Evaluation Layer: Diagnoses the health and structural state
+    of the position without making execution choices.
     """
     ql = thresholds["quit_level"]
     sl = thresholds["structure_level"]
@@ -142,22 +143,60 @@ def resolve_state(current_price: float, thresholds: dict) -> str:
     add = thresholds["add_level"]
     
     if ql is None and sl is None:
+        return {
+            "trend": "Unknown",
+            "is_broken": False,
+            "is_structurally_weak": False,
+            "is_alert": False,
+            "eligible_for_add": False,
+            "missing_data": True
+        }
+        
+    evaluation = {
+        "trend": "Healthy",
+        "is_broken": False,
+        "is_structurally_weak": False,
+        "is_alert": False,
+        "eligible_for_add": False,
+        "missing_data": False
+    }
+    
+    if ql is not None and current_price < ql:
+        evaluation["trend"] = "Broken"
+        evaluation["is_broken"] = True
+    elif ql is not None and sl is not None and ql <= current_price < sl:
+        evaluation["trend"] = "Weak"
+        evaluation["is_structurally_weak"] = True
+    elif sl is not None and al is not None and sl <= current_price < al:
+        evaluation["trend"] = "Alert"
+        evaluation["is_alert"] = True
+    elif add is not None and current_price >= add:
+        evaluation["eligible_for_add"] = True
+        
+    return evaluation
+
+def resolve_state(evaluation: dict) -> str:
+    """
+    Decision Engine: Resolves the deterministic state hierarchy based purely
+    on the Position Evaluation result.
+    """
+    if evaluation.get("missing_data"):
         return 'NOT_COMPUTED'
         
     # Priority 1: QUIT
-    if ql is not None and current_price < ql:
+    if evaluation.get("is_broken"):
         return 'QUIT'
         
     # Priority 2: STRUCTURE
-    if ql is not None and sl is not None and ql <= current_price < sl:
+    if evaluation.get("is_structurally_weak"):
         return 'STRUCTURE'
         
     # Priority 3: ALERT
-    if sl is not None and al is not None and sl <= current_price < al:
+    if evaluation.get("is_alert"):
         return 'ALERT'
         
     # Priority 4: ADD
-    if add is not None and current_price >= add:
+    if evaluation.get("eligible_for_add"):
         return 'ADD'
         
     # Priority 5: HOLD
@@ -246,8 +285,11 @@ def run_decision_engine():
                 # Compute
                 thresholds = compute_thresholds(inputs)
                 
-                # Resolve
-                state = resolve_state(inputs["current_price"], thresholds)
+                # Evaluate
+                evaluation = evaluate_position_health(inputs["current_price"], thresholds)
+                
+                # Resolve Decision
+                state = resolve_state(evaluation)
                 
                 # Quality flag (Stage 1 checking / basic implementation)
                 quality = 'NORMAL' if state != 'NOT_COMPUTED' else 'LOW'

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAuthHeaders } from './api';
 import { CaiWeeklyChart } from './CaiWeeklyChart';
+import { CaiLedgerTimeline } from './CaiLedgerTimeline';
 import { AlertTriangle, TrendingUp, TrendingDown, RefreshCw, XCircle, PlusCircle } from 'lucide-react';
 
 interface CaiPositionReviewProps {
@@ -162,6 +163,9 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             >
               {saving ? 'Saving Review...' : 'Commit Review Decision'}
             </button>
+            
+            {/* Embed the Timeline below */}
+            <CaiLedgerTimeline positionId={positionId} />
           </div>
         </div>
       )}
