@@ -44,7 +44,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             mode: CrosshairMode.Normal,
           },
           width: chartContainerRef.current.clientWidth,
-          height: 1800,
+          height: 900,
           timeScale: {
             timeVisible: true,
             borderColor: '#374151',
