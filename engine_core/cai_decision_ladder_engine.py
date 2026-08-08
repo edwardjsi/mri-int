@@ -39,9 +39,10 @@ def load_mri_inputs(conn, symbol: str):
     """
     with conn.cursor() as cur:
         cur.execute(query, (symbol,))
+        columns = [desc[0] for desc in cur.description]
         data = cur.fetchall()
         
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns=columns)
     
     if df.empty:
         return None
