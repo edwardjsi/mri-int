@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import logging
 from typing import Optional, List, Dict
@@ -44,17 +45,17 @@ def _get_admin_client(cur):
         raise HTTPException(status_code=400, detail="Admin client not found")
     return str(row["id"])
 
-def _get_position_id(cur, client_id, symbol):
+def _get_position_id(cur, symbol):
     cur.execute("""
         SELECT p.id 
         FROM cai_position p
         JOIN cai_portfolio port ON p.portfolio_id = port.id
-        WHERE port.owner = %s AND p.symbol = %s AND p.status = 'ACTIVE'
-    """, (client_id, symbol))
+        WHERE p.symbol = %s AND p.status = 'ACTIVE'
+    """, (symbol,))
     row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=400, detail=f"No active MRI position found for {symbol}")
-    return str(row["id"])
+    return str(row["id"]) if isinstance(row, dict) else str(row[0])
 
 @router.get("/{symbol}")
 def get_alert_configs(symbol: str, conn = Depends(get_db)):
@@ -214,7 +215,7 @@ def preview_sync(symbol: str, conn = Depends(get_db)):
 def approve_and_sync(symbol: str, conn = Depends(get_db)):
     cur = conn.cursor()
     client_id = _get_admin_client(cur)
-    pos_id = _get_position_id(cur, client_id, symbol)
+    pos_id = _get_position_id(cur, symbol)
     
     cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'DRAFT'", (client_id, symbol))
     draft = cur.fetchone()

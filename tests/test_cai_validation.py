@@ -101,7 +101,7 @@ def test_approve_sync_blocked_on_duplicate_threshold():
     mock_cur = MagicMock()
     mock_conn.cursor.return_value = mock_cur
     
-    # Mock _get_admin_client and _get_position_id
+    # Mock _get_admin_client, _get_position_id, and draft config
     mock_cur.fetchone.side_effect = [
         {"id": "admin-id"},  # _get_admin_client
         {"id": "pos-id"},    # _get_position_id
@@ -125,6 +125,119 @@ def test_approve_sync_blocked_on_duplicate_threshold():
         # Must return HTTP 400
         assert response.status_code == 400
         assert "Breakout equals Next ADD" in response.json()["detail"]
+        
+        # Kite adapter must NOT be invoked
+        mock_kite.assert_not_called()
+        
+    app.dependency_overrides = {}
+
+def test_approve_sync_position_resolution_success():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    # Mock _get_admin_client, _get_position_id, draft config
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},  # _get_admin_client
+        {"id": "pos-id"},    # _get_position_id
+        {                    # The DRAFT config
+            "id": "draft-id",
+            "symbol": "IPCALAB",
+            "status": "DRAFT",
+            "pullback_lower_bound": 1680.00,
+            "pullback_upper_bound": 1750.00,
+            "breakout_confirmation_price": 1945.00,
+            "next_add_price": 1970.00,
+            "structural_break_price": 1615.00
+        }
+    ]
+    
+    mock_cur.fetchall.return_value = [] # obsolete mappings
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as mock_kite_class:
+        mock_kite = MagicMock()
+        mock_kite.create_alert.return_value = {"data": {"alert_uuid": "mock_uuid"}}
+        mock_kite_class.return_value = mock_kite
+        
+        response = client.post("/api/cai/alerts/IPCALAB/approve-sync")
+        
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+        
+        # Kite adapter must be invoked 4 times for the 4 alerts
+        assert mock_kite.create_alert.call_count == 4
+        
+    app.dependency_overrides = {}
+
+
+def test_approve_sync_fake_symbol_fails_cleanly():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    # Mock _get_admin_client, and _get_position_id returns None
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},  # _get_admin_client
+        None                 # _get_position_id (not found)
+    ]
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as mock_kite:
+        response = client.post("/api/cai/alerts/FAKE_SYMBOL/approve-sync")
+        
+        # Must return HTTP 400
+        assert response.status_code == 400
+        assert "No active MRI position found for FAKE_SYMBOL" in response.json()["detail"]
+        
+        # Kite adapter must NOT be invoked
+        mock_kite.assert_not_called()
+        
+    app.dependency_overrides = {}
+
+
+def test_approve_sync_inactive_position_fails_cleanly():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    # Mock _get_admin_client, and _get_position_id returns None (since query filters by status='ACTIVE')
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},  # _get_admin_client
+        None                 # _get_position_id (not active)
+    ]
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as mock_kite:
+        response = client.post("/api/cai/alerts/CLOSED_POS/approve-sync")
+        
+        # Must return HTTP 400
+        assert response.status_code == 400
+        assert "No active MRI position found for CLOSED_POS" in response.json()["detail"]
         
         # Kite adapter must NOT be invoked
         mock_kite.assert_not_called()
