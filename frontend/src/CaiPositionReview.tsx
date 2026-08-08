@@ -73,8 +73,10 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
               next_add_price: activeConfig.next_add_price || '',
               structural_break_price: activeConfig.structural_break_price || ''
             });
+            setCaiConfigError(false);
           } else {
-             setCaiConfigError(true);
+             setCaiConfig(null);
+             setCaiConfigError(false);
           }
         } else {
           setCaiConfigError(true);
