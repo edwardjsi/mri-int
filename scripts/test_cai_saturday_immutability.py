@@ -1,3 +1,7 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from scripts.test_db_guard import require_test_db
+require_test_db()
 import os
 import sys
 from pydantic import BaseModel
