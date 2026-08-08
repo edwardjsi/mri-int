@@ -13,6 +13,7 @@ interface CaiPositionReviewProps {
 export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId, onReviewSaved, onClose }) => {
   const [data, setData] = useState<any>(null);
   const [caiConfig, setCaiConfig] = useState<any>(null);
+  const [caiConfigError, setCaiConfigError] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
@@ -72,10 +73,15 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
               next_add_min_price: activeConfig.next_add_min_price || '',
               structural_break_price: activeConfig.structural_break_price || ''
             });
+          } else {
+             setCaiConfigError(true);
           }
+        } else {
+          setCaiConfigError(true);
         }
       } catch (err: any) {
         console.error("Failed to fetch CAI config", err);
+        setCaiConfigError(true);
       }
     };
     fetchCaiConfig();
@@ -137,8 +143,8 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
   };
 
   return (
-    <div className="flex flex-col space-y-4 bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col space-y-6 w-full pb-8">
+      <div className="flex justify-between items-center border-b border-gray-800 pb-4">
         <h3 className="text-xl font-bold text-white">Position Review: {data?.symbol || 'Loading...'}</h3>
         {onClose && (
           <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -159,11 +165,12 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
             <h4 className="text-lg font-bold text-white">CAI Alert Orchestration</h4>
             <div className={`px-3 py-1 rounded text-xs font-bold ${
+              caiConfigError ? 'bg-red-900/50 text-red-200' :
               !caiConfig ? 'bg-gray-700 text-gray-300' : 
               caiConfig.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' : 
               'bg-orange-500/20 text-orange-400'
             }`}>
-              Status: {!caiConfig ? 'UNCONFIGURED' : caiConfig.status === 'DRAFT' ? 'DRAFT — Human Edited / Auto Generated' : caiConfig.status}
+              Status: {caiConfigError ? 'CAI CONFIG LOAD ERROR' : !caiConfig ? 'UNCONFIGURED' : caiConfig.status === 'DRAFT' ? 'DRAFT — Human Edited / Auto Generated' : caiConfig.status}
             </div>
           </div>
           
@@ -216,27 +223,33 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             >
               VIEW SYNC PREVIEW
             </button>
-            <button 
-              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold transition-colors ml-auto"
-              onClick={async () => {
-                if (window.confirm('Are you sure you want to approve and synchronize with Zerodha?')) {
-                  const res = await fetch(`/api/cai/alerts/${data.symbol}/approve-sync`, { method: 'POST', headers: getAuthHeaders() });
-                  if (res.ok) {
-                    alert('Synchronized successfully!');
-                    const reloadRes = await fetch(`/api/cai/alerts/${data.symbol}`, { headers: getAuthHeaders() });
-                    if (reloadRes.ok) {
-                      const reloadJson = await reloadRes.json();
-                      setCaiConfig(reloadJson.draft || reloadJson.approved);
+            {caiConfig?.status === 'DRAFT' && (
+              <button 
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold transition-colors ml-auto"
+                onClick={async () => {
+                  if (confirm('Approve these CAI levels and sync to Zerodha?')) {
+                    try {
+                      const res = await fetch(`/api/cai/alerts/${data.symbol}/approve-sync`, { method: 'POST', headers: getAuthHeaders() });
+                      if (res.ok) {
+                        alert('Synchronized successfully!');
+                        const reloadRes = await fetch(`/api/cai/alerts/${data.symbol}`, { headers: getAuthHeaders() });
+                        if (reloadRes.ok) {
+                          const reloadJson = await reloadRes.json();
+                          setCaiConfig(reloadJson.draft || reloadJson.approved);
+                        }
+                      } else {
+                        const err = await res.json();
+                        alert('Sync failed: ' + err.detail);
+                      }
+                    } catch (err: any) {
+                      alert('Error: ' + err.message);
                     }
-                  } else {
-                    alert('Sync failed: ' + (await res.json()).detail);
                   }
-                }
-              }}
-              disabled={!caiConfig || caiConfig.status === 'APPROVED'}
-            >
-              APPROVE & SYNC ZERODHA
-            </button>
+                }}
+              >
+                APPROVE & SYNC ZERODHA
+              </button>
+            )}
           </div>
         </div>
       )}

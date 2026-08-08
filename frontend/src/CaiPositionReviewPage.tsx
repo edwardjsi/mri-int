@@ -10,7 +10,7 @@ export const CaiPositionReviewPage: React.FC = () => {
   if (!id) return <div className="p-8 text-center text-red-500 bg-gray-900 h-full">Invalid Position ID</div>;
 
   return (
-    <div className="flex flex-col h-full bg-[#0B0F19] p-6 min-h-screen">
+    <div className="flex flex-col h-full bg-[#0B0F19] p-2 sm:p-6 min-h-screen">
       <div className="flex items-center mb-6 w-full">
         <button 
           onClick={() => navigate('/caiportfolio')}
@@ -20,7 +20,7 @@ export const CaiPositionReviewPage: React.FC = () => {
           <span className="font-semibold">Back to Portfolio</span>
         </button>
       </div>
-      <div className="flex-1 w-full mx-auto drop-shadow-2xl">
+      <div className="flex-1 w-full flex flex-col">
         <CaiPositionReview 
           positionId={id} 
           onReviewSaved={() => navigate('/caiportfolio')}
