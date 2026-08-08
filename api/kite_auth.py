@@ -172,3 +172,65 @@ def kite_config_status():
         "raw_secret_length": len(api_secret) if api_secret else 0,
         "available_env_keys": all_keys,
     }
+
+import httpx
+
+@router.get("/test-read")
+def test_read_alerts(conn=Depends(get_db)):
+    """
+    Test reading alerts from Kite. Zero-mutation. Returns only non-sensitive fields.
+    """
+    api_key = os.getenv("KITE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="KITE_API_KEY not configured")
+        
+    cur = conn.cursor()
+    # Fetch admin client
+    cur.execute("SELECT id FROM clients WHERE is_active = TRUE AND is_admin = TRUE ORDER BY created_at ASC LIMIT 1")
+    admin = cur.fetchone()
+    if not admin:
+        raise HTTPException(status_code=500, detail="No active admin client found")
+        
+    client_id = str(admin["id"] if isinstance(admin, dict) else admin[0])
+    
+    cur.execute("SELECT access_token FROM kite_credentials WHERE client_id = %s", (client_id,))
+    row = cur.fetchone()
+    if not row or not row["access_token"]:
+        raise HTTPException(status_code=400, detail="No access token found for admin client")
+        
+    access_token = row["access_token"] if isinstance(row, dict) else row[0]
+    
+    url = "https://api.kite.trade/alerts"
+    headers = {
+        "X-Kite-Version": "3",
+        "Authorization": f"token {api_key}:{access_token}"
+    }
+    
+    try:
+        resp = httpx.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        
+        if data.get("status") != "success":
+            return {"error": data}
+            
+        alerts = data.get("data", [])
+        formatted_alerts = []
+        for alert in alerts:
+            formatted_alerts.append({
+                "uuid": alert.get("uuid"),
+                "name": alert.get("name"),
+                "symbol": alert.get("lhs_tradingsymbol"),
+                "type": alert.get("type"),
+                "status": alert.get("status"),
+                "condition": f"{alert.get('operator')} {alert.get('rhs_constant') or alert.get('rhs_tradingsymbol')}"
+            })
+            
+        return {
+            "status": "success",
+            "total_alerts": len(formatted_alerts),
+            "mutation_calls_made": 0,
+            "alerts": formatted_alerts
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
