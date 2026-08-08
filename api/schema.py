@@ -1411,6 +1411,8 @@ def ensure_cai_tables(cur) -> None:
     
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_min_price NUMERIC(15,4);")
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_max_price NUMERIC(15,4);")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_price NUMERIC(15,4);")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS next_add_price NUMERIC(15,4);")
     cur.execute("ALTER TABLE cai_alert_config_versions ALTER COLUMN structural_break_price DROP NOT NULL;")
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'DRAFT';")
 

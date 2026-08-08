@@ -7,9 +7,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
 from api.main import app
+from api.deps import get_current_client
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+app.dependency_overrides[get_current_client] = lambda: {"id": "test_client", "is_admin": True}
 client = TestClient(app)
 
 def get_db():
