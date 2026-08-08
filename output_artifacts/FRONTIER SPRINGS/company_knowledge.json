@@ -1,0 +1,88 @@
+{
+  "entity_id": "ENT-COMP-FRONTSP",
+  "entity_name": "Frontier Springs Ltd",
+  "g1_1_business": {
+    "what_it_does": "Frontier Springs Ltd specializes in manufacturing components for the railway industry, including hot-coiled compression springs, air springs, and forged components. The company primarily serves Indian Railways, providing essential parts for wagons, carriages, and locomotives, including the modern Vande Bharat Express. By focusing on high-quality manufacturing and meeting international standards, Frontier Springs has established itself as a key player in the railway component market.",
+    "products": [
+      {
+        "category": "Springs",
+        "items": [
+          "Hot-coiled compression springs",
+          "Air springs"
+        ]
+      },
+      {
+        "category": "Forged Components",
+        "items": [
+          "Anti-Roll Bar",
+          "Screw Couplings",
+          "Draft Gear",
+          "BSS Hangers"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Indian Railways",
+        "description": "The primary customer, requiring components for various railway vehicles."
+      },
+      {
+        "segment": "International Markets",
+        "description": "Supplies to over 102 countries, including OEMs."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Kanpur (UP)",
+        "description": "One of the two manufacturing plants where springs and components are produced."
+      },
+      {
+        "location": "Poanta Sahib (HP)",
+        "description": "The second manufacturing plant focused on producing railway components."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Coil Springs",
+        "percentage_str": "null"
+      },
+      {
+        "segment": "Air Springs",
+        "percentage_str": "null"
+      },
+      {
+        "segment": "Forgings",
+        "percentage_str": "null"
+      }
+    ],
+    "competitive_advantage": [
+      "Regulatory moat due to RDSO certification, which requires long qualification cycles.",
+      "Only three approved suppliers for air springs in India, creating a protected oligopoly.",
+      "Strong relationships with Indian Railways built over 30+ years.",
+      "IRIS certification for exports, enhancing international market access.",
+      "Significant headroom for growth with less than 1% of railway capex captured."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Earmarked Capex for Growth",
+        "fact": "The company has earmarked \u20b915-20 crores for capex to enhance capacity.",
+        "why_it_matters": "This investment is expected to alleviate capacity constraints and support revenue growth.",
+        "evidence_quote": "The company has earmarked a capex of \u20b915\u201320 crores during the current financial year to further enhance capacity.",
+        "evidence_source": "Investor Presentation Q4 FY26",
+        "evidence_date": "29 May 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Strong Order Book",
+        "fact": "The company has a strong order book of over ~\u20b9370 crores entering FY27.",
+        "why_it_matters": "A robust order book indicates future revenue growth potential.",
+        "evidence_quote": "The company has a strong order book of over ~\u20b9370 crores entering FY27.",
+        "evidence_source": "Investor Presentation Q4 FY26",
+        "evidence_date": "29 May 2026"
+      }
+    ]
+  }
+}

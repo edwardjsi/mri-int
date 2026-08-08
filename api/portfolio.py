@@ -84,9 +84,18 @@ def get_open_positions(
     try:
         cur.execute(
             """
-            SELECT symbol, quantity, avg_cost
+            SELECT symbol, 
+                   SUM(quantity) as quantity, 
+                   CASE WHEN SUM(quantity) > 0 THEN SUM(quantity * avg_cost) / SUM(quantity) ELSE 0 END as avg_cost,
+                   json_agg(json_build_object(
+                       'source_type', source_type,
+                       'account_source', account_source,
+                       'quantity', quantity,
+                       'avg_cost', avg_cost
+                   )) as accounts
             FROM client_external_holdings
             WHERE client_id = %s
+            GROUP BY symbol
             """,
             (client_id,),
         )
@@ -354,9 +363,12 @@ def get_daily_summary(
     try:
         cur.execute(
             """
-            SELECT symbol, quantity, avg_cost
+            SELECT symbol, 
+                   SUM(quantity) as quantity, 
+                   CASE WHEN SUM(quantity) > 0 THEN SUM(quantity * avg_cost) / SUM(quantity) ELSE 0 END as avg_cost
             FROM client_external_holdings
             WHERE client_id = %s
+            GROUP BY symbol
             """,
             (client_id,),
         )

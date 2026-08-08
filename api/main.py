@@ -29,6 +29,7 @@ from api.v2.positions import router as cai_v2_positions_router
 from api.v2.portfolios import router as cai_v2_portfolios_router
 from api.v2.notifications import router as cai_v2_notifications_router
 from api.aae import router as aae_router
+from api.cai_alert_orchestrator import router as cai_alert_orchestrator_router
 from api.breakout_status import router as breakout_router
 from api.cas import router as cas_router  # Decision 103 P4c — CAS Recommendations API
 from api.one12co import router as one12co_router
@@ -207,6 +208,7 @@ app.include_router(cai_v2_positions_router, prefix="/api/v2")
 app.include_router(cai_v2_portfolios_router, prefix="/api/v2")
 app.include_router(cai_v2_notifications_router, prefix="/api/v2")
 app.include_router(aae_router)
+app.include_router(cai_alert_orchestrator_router)
 app.include_router(breakout_router)
 app.include_router(cas_router)
 app.include_router(one12co_router)

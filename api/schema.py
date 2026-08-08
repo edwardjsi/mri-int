@@ -51,13 +51,30 @@ def ensure_required_tables(conn) -> None:
     quantity NUMERIC(15,4) DEFAULT 0,
     avg_cost NUMERIC(12,4) DEFAULT 0,
     breakout_candidate BOOLEAN DEFAULT FALSE,
+    source_type VARCHAR(50) DEFAULT 'MANUAL',
+    account_source VARCHAR(100) DEFAULT 'MANUAL_MAIN',
+    last_verified_at TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(client_id, symbol)
+    UNIQUE(client_id, symbol, account_source)
     );
     """
     )
     cur.execute("ALTER TABLE client_external_holdings ADD COLUMN IF NOT EXISTS breakout_candidate BOOLEAN DEFAULT FALSE;")
+    cur.execute("ALTER TABLE client_external_holdings ADD COLUMN IF NOT EXISTS source_type VARCHAR(50) DEFAULT 'MANUAL';")
+    cur.execute("ALTER TABLE client_external_holdings ADD COLUMN IF NOT EXISTS account_source VARCHAR(100) DEFAULT 'MANUAL_MAIN';")
+    cur.execute("ALTER TABLE client_external_holdings ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMPTZ DEFAULT NOW();")
+    
+    # Try dropping old constraint if it exists
+    try:
+        cur.execute("ALTER TABLE client_external_holdings DROP CONSTRAINT IF EXISTS client_external_holdings_client_id_symbol_key;")
+    except Exception:
+        pass
+    
+    try:
+        cur.execute("ALTER TABLE client_external_holdings ADD CONSTRAINT client_external_holdings_client_id_symbol_account_source_key UNIQUE (client_id, symbol, account_source);")
+    except Exception:
+        pass
 
     # 3. Watchlist
     cur.execute(
@@ -1377,17 +1394,26 @@ def ensure_cai_tables(cur) -> None:
             client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
             symbol VARCHAR(20) NOT NULL,
             version INTEGER NOT NULL DEFAULT 1,
-            structural_break_price NUMERIC(15,4) NOT NULL,
+            structural_break_price NUMERIC(15,4),
             pullback_lower_bound NUMERIC(15,4),
             pullback_upper_bound NUMERIC(15,4),
+            breakout_confirmation_min_price NUMERIC(15,4),
+            breakout_confirmation_max_price NUMERIC(15,4),
             next_add_min_price NUMERIC(15,4),
             next_add_max_price NUMERIC(15,4),
             target_tranche VARCHAR(20),
+            status VARCHAR(20) DEFAULT 'DRAFT',
             created_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, symbol, version)
         );
         """
     )
+    
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_min_price NUMERIC(15,4);")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_max_price NUMERIC(15,4);")
+    cur.execute("ALTER TABLE cai_alert_config_versions ALTER COLUMN structural_break_price DROP NOT NULL;")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'DRAFT';")
+
     
     # 2. CAI Positions
     cur.execute(
@@ -1405,7 +1431,27 @@ def ensure_cai_tables(cur) -> None:
         """
     )
     
-    # 3. CAI Alert Events
+    # 3. CAI Alert Mappings
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cai_alert_mappings (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            cai_position_id UUID REFERENCES cai_positions(id) ON DELETE CASCADE,
+            alert_role VARCHAR(50) NOT NULL,
+            config_version_id UUID REFERENCES cai_alert_config_versions(id) ON DELETE CASCADE,
+            kite_uuid VARCHAR(100) NOT NULL,
+            status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+            active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            superseded_at TIMESTAMPTZ,
+            deleted_at TIMESTAMPTZ,
+            last_verified_at TIMESTAMPTZ
+        );
+        """
+    )
+    
+    # 4. CAI Alert Events
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS cai_alert_events (

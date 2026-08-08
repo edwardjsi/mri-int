@@ -1,0 +1,132 @@
+[
+  {
+    "fact_id": "KNW-BUSINESS-1",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Frontier Springs Ltd manufactures hot-coiled compression springs, air springs, and forged components for Indian Railways.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-2",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has two manufacturing plants located in Kanpur (UP) and Poanta Sahib (HP).",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-3",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Frontier Springs is IRIS-certified and supplies to 102+ countries.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-4",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has key certifications including ISO 9001, ISO 14001, and IRIS.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-5",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "Revenue grew from \u20b9135 Cr in FY24 to \u20b9322 Cr in FY26, representing a 2.4x increase in two years.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-6",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has a strong order book of over ~\u20b9370 crores entering FY27.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-7",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is one of only three RDSO-approved air spring manufacturers.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-8",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company has earmarked a capex of \u20b915\u201320 crores during the current financial year to further enhance capacity.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-9",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The EBITDA margin expanded from 15.3% to 26.8% from FY24 to FY26.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  },
+  {
+    "fact_id": "KNW-BUSINESS-10",
+    "category": "BUSINESS",
+    "evidence": {
+      "quote": "The company is classified as being in the expansion stage.",
+      "source": {
+        "document_id": "DOC-FRONTIER SPRINGS-1780055827.7214909",
+        "document_type": "MOSI",
+        "version": "1.0",
+        "published_on": "2026-05-29"
+      }
+    }
+  }
+]

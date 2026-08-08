@@ -1,0 +1,88 @@
+{
+  "entity_id": "ENT-COMP-FRONTSP",
+  "entity_name": "Frontier Springs Ltd",
+  "g1_1_business": {
+    "what_it_does": "Frontier Springs Ltd specializes in manufacturing components for the railway industry, including hot-coiled compression springs, air springs, and forged components. The company primarily serves Indian Railways, providing essential parts for wagons, carriages, and locomotives, including the modern Vande Bharat Express. By focusing on this niche market, Frontier Springs has established itself as a key supplier in the railway sector.",
+    "products": [
+      {
+        "category": "Springs",
+        "items": [
+          "Hot-coiled compression springs",
+          "Air springs"
+        ]
+      },
+      {
+        "category": "Forged Components",
+        "items": [
+          "Anti-Roll Bar",
+          "Screw Couplings",
+          "Draft Gear",
+          "BSS Hangers"
+        ]
+      }
+    ],
+    "customers": [
+      {
+        "segment": "Indian Railways",
+        "description": "The primary customer, requiring components for various railway vehicles."
+      },
+      {
+        "segment": "International Markets",
+        "description": "Supplies to over 102 countries, leveraging IRIS certification."
+      }
+    ],
+    "manufacturing": [
+      {
+        "location": "Kanpur (UP)",
+        "description": "Manufacturing plant for springs and forged components."
+      },
+      {
+        "location": "Poanta Sahib (HP)",
+        "description": "Manufacturing plant for springs and forged components."
+      }
+    ],
+    "revenue_mix": [
+      {
+        "segment": "Coil Springs",
+        "percentage_str": null
+      },
+      {
+        "segment": "Air Springs",
+        "percentage_str": null
+      },
+      {
+        "segment": "Forgings",
+        "percentage_str": null
+      }
+    ],
+    "competitive_advantage": [
+      "Strong regulatory moat as one of only three RDSO-approved air spring manufacturers.",
+      "Established relationships with Indian Railways over 30+ years.",
+      "IRIS certification for exports, allowing access to international markets.",
+      "Specialization in railway components, reducing competition.",
+      "Capacity to scale production without significant capital expenditure."
+    ]
+  },
+  "g1_2_growth": {
+    "drivers": [
+      {
+        "category": "Capacity Expansion",
+        "title": "Earmarked Capex for Growth",
+        "fact": "The company has earmarked a capex of \u20b915\u201320 crores to enhance capacity.",
+        "why_it_matters": "This investment is expected to alleviate current capacity constraints and support revenue growth.",
+        "evidence_quote": "Earmarked a capex of \u20b915\u201320 crores during the current financial year to further enhance our capacity.",
+        "evidence_source": "Investor Presentation Q4 FY26",
+        "evidence_date": "29 May 2026"
+      },
+      {
+        "category": "Market Share",
+        "title": "Strong Order Book",
+        "fact": "The company has a strong order book of over ~\u20b9370 crores entering FY27.",
+        "why_it_matters": "A robust order book indicates sustained demand and revenue visibility for the upcoming fiscal year.",
+        "evidence_quote": "Strong order book of over ~\u20b9370 crores entering FY27.",
+        "evidence_source": "Investor Presentation Q4 FY26",
+        "evidence_date": "29 May 2026"
+      }
+    ]
+  }
+}

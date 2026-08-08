@@ -179,9 +179,9 @@ async def add_single_holding(
         cost = req.avg_cost
         
         cur.execute("""
-            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
-            VALUES (%s::uuid, %s, %s, %s)
-            ON CONFLICT (client_id, symbol) 
+            INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, source_type, account_source)
+            VALUES (%s::uuid, %s, %s, %s, 'MANUAL', 'MANUAL_MAIN')
+            ON CONFLICT (client_id, symbol, account_source) 
             DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
         """, (str(client["id"]), sym, qty, cost))
         
@@ -224,9 +224,9 @@ async def save_holdings_bulk(
         for h in holdings:
             sym = h.symbol.upper().strip()
             cur.execute("""
-                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
-                VALUES (%s::uuid, %s, %s, %s)
-                ON CONFLICT (client_id, symbol) DO UPDATE SET 
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, source_type, account_source)
+                VALUES (%s::uuid, %s, %s, %s, 'MANUAL', 'MANUAL_MAIN')
+                ON CONFLICT (client_id, symbol, account_source) DO UPDATE SET 
                     quantity = EXCLUDED.quantity, 
                     avg_cost = EXCLUDED.avg_cost,
                     updated_at = NOW()
@@ -253,7 +253,7 @@ async def delete_holding(
 ):
     cur = conn.cursor()
     try:
-        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s AND symbol = %s", (str(client["id"]), symbol.upper().strip()))
+        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s AND symbol = %s AND source_type = 'MANUAL'", (str(client["id"]), symbol.upper().strip()))
         conn.commit()
         return {"status": "success"}
     finally:
@@ -266,7 +266,7 @@ async def delete_all_holdings(
 ):
     cur = conn.cursor()
     try:
-        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s", (str(client["id"]),))
+        cur.execute("DELETE FROM client_external_holdings WHERE client_id = %s AND source_type = 'MANUAL'", (str(client["id"]),))
         conn.commit()
         return {"status": "success"}
     finally:
@@ -380,9 +380,9 @@ async def upload_csv(
             processed_symbols.append(sym)
             cur.execute(
                 """
-                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost)
-                VALUES (%s::uuid, %s, %s, %s)
-                ON CONFLICT (client_id, symbol)
+                INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, source_type, account_source)
+                VALUES (%s::uuid, %s, %s, %s, 'MANUAL', 'MANUAL_MAIN')
+                ON CONFLICT (client_id, symbol, account_source)
                 DO UPDATE SET quantity = EXCLUDED.quantity, avg_cost = EXCLUDED.avg_cost, updated_at = NOW()
                 """,
                 (client_id, sym, qty, cost),
