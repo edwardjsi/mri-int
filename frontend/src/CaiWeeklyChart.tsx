@@ -115,7 +115,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.entry_price) {
             candlestickSeries.createPriceLine({
               price: positionData.entry_price,
-              color: '#3B82F6', // MAINTAIN color (blue)
+              color: '#3B82F6',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
               axisLabelVisible: true,
@@ -125,7 +125,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.add_level) {
             candlestickSeries.createPriceLine({
               price: positionData.add_level,
-              color: '#10B981', // ADD color (green)
+              color: '#10B981',
               lineWidth: 1,
               lineStyle: LineStyle.Dotted,
               axisLabelVisible: true,
@@ -135,7 +135,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.pullback_level) {
             candlestickSeries.createPriceLine({
               price: positionData.pullback_level,
-              color: '#8b5cf6', // Purple color for pullback
+              color: '#8b5cf6',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
               axisLabelVisible: true,
@@ -145,7 +145,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.alert_level) {
             candlestickSeries.createPriceLine({
               price: positionData.alert_level,
-              color: '#F59E0B', // ALERT color (yellow)
+              color: '#F59E0B',
               lineWidth: 1,
               lineStyle: LineStyle.Dotted,
               axisLabelVisible: true,
@@ -155,7 +155,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.structure_level) {
             candlestickSeries.createPriceLine({
               price: positionData.structure_level,
-              color: '#F97316', // STRUCTURE color (orange)
+              color: '#F97316',
               lineWidth: 1,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
@@ -165,7 +165,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (positionData.quit_level) {
             candlestickSeries.createPriceLine({
               price: positionData.quit_level,
-              color: '#EF4444', // QUIT color (red)
+              color: '#EF4444',
               lineWidth: 1,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
@@ -178,7 +178,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (caiConfig.pullback_upper_bound) {
             candlestickSeries.createPriceLine({
               price: caiConfig.pullback_upper_bound,
-              color: '#22c55e', // Green
+              color: '#22c55e',
               lineWidth: 2,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
@@ -200,7 +200,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             const bcLine = {
               price: caiConfig.breakout_confirmation_price,
               color: '#3b82f6',
-              lineWidth: 2,
+              lineWidth: 2 as const,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
               title: `BREAKOUT ${caiConfig.breakout_confirmation_price}`,
@@ -212,7 +212,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             const naLine = {
               price: caiConfig.next_add_price,
               color: '#a855f7',
-              lineWidth: 2,
+              lineWidth: 2 as const,
               lineStyle: LineStyle.Dotted,
               axisLabelVisible: true,
               title: `NEXT ADD ${caiConfig.next_add_price}`,
@@ -223,7 +223,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           if (caiConfig.structural_break_price) {
             candlestickSeries.createPriceLine({
               price: caiConfig.structural_break_price,
-              color: '#ef4444', // Red, very prominent
+              color: '#ef4444',
               lineWidth: 3,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
@@ -231,7 +231,6 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             });
           }
         }
-        
         
       } catch (err: any) {
         setError(err.message);
@@ -284,8 +283,6 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           </div>
         )}
         <div ref={chartContainerRef} className="w-full h-full" />
-        
-        {/* Only show the key levels overlay if showMriLevels is true or there's no CAI config (fallback) */}
         {positionData && (showMriLevels || !caiConfig) && (
           <div className="absolute top-4 left-4 bg-gray-900/90 backdrop-blur border border-gray-700 rounded-lg p-3 text-xs font-mono text-gray-300 z-20 pointer-events-auto shadow-xl select-text">
             <div className="text-gray-400 font-bold mb-2 border-b border-gray-700 pb-1 tracking-wider uppercase">MRI Levels</div>
