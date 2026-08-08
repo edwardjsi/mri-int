@@ -24,17 +24,20 @@ def kite_login():
     return RedirectResponse(url=login_url)
 
 
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Cookie
+# ...
 @router.get("/callback")
 def kite_callback(
     request_token: str = Query(None),
     status: str = Query(None),
     error_type: str = Query(None),
-    client=Depends(get_current_client),
     conn=Depends(get_db)
 ):
     """
     Receives request_token from Zerodha.
     Exchanges it for access_token and stores it securely.
+    Auth is bypassed here because the browser cannot send an Authorization header on redirect.
+    It links the token to the primary admin client.
     """
     if status != "success" or not request_token:
         logger.error(f"Kite Auth Failed: status={status}, error={error_type}")
@@ -87,7 +90,13 @@ def kite_callback(
             from api.schema import ensure_kite_credentials_table
             ensure_kite_credentials_table(cur)
             
-        client_id = str(client["id"])
+        # Fetch the primary admin client to link the credentials to
+        cur.execute("SELECT id FROM clients WHERE is_active = TRUE AND is_admin = TRUE ORDER BY created_at ASC LIMIT 1")
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=500, detail="No active admin client found to link credentials to")
+            
+        client_id = str(row["id"] if isinstance(row, dict) else row[0])
         
         # Upsert
         cur.execute(
