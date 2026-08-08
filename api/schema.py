@@ -1403,6 +1403,8 @@ def ensure_cai_tables(cur) -> None:
             next_add_max_price NUMERIC(15,4),
             target_tranche VARCHAR(20),
             status VARCHAR(20) DEFAULT 'DRAFT',
+            origin VARCHAR(50) DEFAULT 'AUTO_GENERATED',
+            validation_status VARCHAR(50) DEFAULT 'PASS',
             created_at TIMESTAMPTZ DEFAULT NOW(),
             UNIQUE(client_id, symbol, version)
         );
@@ -1413,6 +1415,8 @@ def ensure_cai_tables(cur) -> None:
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_max_price NUMERIC(15,4);")
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS breakout_confirmation_price NUMERIC(15,4);")
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS next_add_price NUMERIC(15,4);")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS origin VARCHAR(50) DEFAULT 'AUTO_GENERATED';")
+    cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS validation_status VARCHAR(50) DEFAULT 'PASS';")
     cur.execute("ALTER TABLE cai_alert_config_versions ALTER COLUMN structural_break_price DROP NOT NULL;")
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'DRAFT';")
 

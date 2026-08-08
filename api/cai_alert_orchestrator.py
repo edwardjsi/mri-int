@@ -87,7 +87,7 @@ def get_alert_configs(symbol: str, conn = Depends(get_db)):
 @router.post("/{symbol}/draft")
 def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     draft_data = req.dict()
-    warnings = validate_config(draft_data)
+    warnings, val_status = validate_config(draft_data)
     
     cur = conn.cursor()
     client_id = _get_admin_client(cur)
@@ -98,24 +98,23 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     # Insert new draft
     cur.execute("""
         INSERT INTO cai_alert_config_versions 
-        (client_id, symbol, status, 
-         pullback_lower_bound, pullback_upper_bound, 
-         breakout_confirmation_price, 
-         next_add_price, structural_break_price)
-        VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s)
+        (client_id, symbol, status, pullback_lower_bound, pullback_upper_bound, breakout_confirmation_price, next_add_price, structural_break_price, origin, validation_status)
+        VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s, 'HUMAN_EDITED', %s)
         RETURNING *
-    """, (
-        client_id, symbol,
-        req.pullback_lower_bound, req.pullback_upper_bound,
-        req.breakout_confirmation_price,
-        req.next_add_price, req.structural_break_price
-    ))
+    """, (client_id, symbol, 
+          draft_data.get("pullback_lower_bound"),
+          draft_data.get("pullback_upper_bound"),
+          draft_data.get("breakout_confirmation_price"),
+          draft_data.get("next_add_price"),
+          draft_data.get("structural_break_price"),
+          val_status))
     new_draft = cur.fetchone()
     conn.commit()
-    return {"status": "success", "draft": new_draft, "warnings": warnings}
+    return {"status": "success", "draft": new_draft, "warnings": warnings, "validation_status": val_status}
 
 def validate_config(config):
     warnings = []
+    validation_status = "PASS"
     sb = config.get("structural_break_price")
     pl = config.get("pullback_lower_bound")
     pu = config.get("pullback_upper_bound")
@@ -129,8 +128,11 @@ def validate_config(config):
     if pu is not None and bc is not None and pu >= bc:
         raise HTTPException(status_code=400, detail="Pullback upper bound must be strictly below breakout confirmation")
     
-    if bc is not None and na is not None and bc == na:
-        warnings.append("⚠️ Breakout and Next ADD share the same threshold.")
+    from decimal import Decimal
+    if bc is not None and na is not None:
+        if Decimal(str(bc)) == Decimal(str(na)):
+            warnings.append("⚠️ Breakout and Next ADD share the same threshold.")
+            validation_status = "WARNING_DUPLICATE_THRESHOLD"
         
     prices = [p for p in [sb, pl, pu, bc, na] if p is not None]
     if any(p <= 0 for p in prices):
@@ -141,7 +143,7 @@ def validate_config(config):
     if len(values) != len(set(values)):
         warnings.append("⚠️ Multiple alerts share the same price threshold.")
         
-    return warnings
+    return warnings, validation_status
 
 def create_kite_alert_payloads(symbol: str, config: dict) -> List[dict]:
     payloads = []
@@ -190,7 +192,7 @@ def preview_sync(symbol: str, conn = Depends(get_db)):
     if not draft:
         raise HTTPException(status_code=404, detail="No draft configuration found for symbol")
     
-    warnings = validate_config(draft)
+    warnings, val_status = validate_config(draft)
     
     cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'APPROVED'", (client_id, symbol))
     approved = cur.fetchone()
@@ -219,7 +221,10 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     if not draft:
         raise HTTPException(status_code=400, detail="No draft configuration available to approve.")
         
-    validate_config(draft)
+    warnings, val_status = validate_config(draft)
+    
+    if val_status == 'WARNING_DUPLICATE_THRESHOLD':
+        raise HTTPException(status_code=400, detail="Cannot approve and sync because Breakout equals Next ADD. Please manually resolve duplicate thresholds.")
     
     # 1. Update State to SYNC_IN_PROGRESS
     cur.execute("UPDATE cai_alert_config_versions SET status = 'SYNC_IN_PROGRESS' WHERE id = %s", (draft["id"],))

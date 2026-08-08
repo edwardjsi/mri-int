@@ -195,11 +195,15 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             </div>
           </div>
           
-          {caiConfig?.breakout_confirmation_price && caiConfig?.next_add_price && 
-           caiConfig.breakout_confirmation_price === caiConfig.next_add_price && (
-            <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded text-orange-400 text-sm flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              Warning: Breakout and Next ADD share threshold
+          {caiConfig && Number(caiConfig.breakout_confirmation_price) === Number(caiConfig.next_add_price) && (
+            <div className="mb-4 p-4 bg-yellow-900/40 border border-yellow-500/50 rounded text-yellow-400 text-sm">
+              <div className="flex items-center font-bold text-base mb-1">
+                <AlertTriangle className="w-5 h-5 mr-2 text-yellow-500" />
+                BREAKOUT = NEXT ADD
+              </div>
+              <div className="ml-7 text-yellow-200">
+                Breakout confirms strength; Next ADD authorizes the next tranche. Review whether these should remain at the same price.
+              </div>
             </div>
           )}
 
@@ -227,7 +231,12 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             </button>
             {caiConfig?.status === 'DRAFT' && (
               <button 
-                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-bold transition-colors ml-auto"
+                className={`px-4 py-2 rounded text-sm font-bold transition-colors ml-auto ${
+                  Number(caiConfig.breakout_confirmation_price) === Number(caiConfig.next_add_price)
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
+                    : 'bg-green-600 hover:bg-green-500 text-white'
+                }`}
+                disabled={Number(caiConfig.breakout_confirmation_price) === Number(caiConfig.next_add_price)}
                 onClick={async () => {
                   if (confirm('Approve these CAI levels and sync to Zerodha?')) {
                     try {
@@ -249,7 +258,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                   }
                 }}
               >
-                APPROVE & SYNC ZERODHA
+                {Number(caiConfig.breakout_confirmation_price) === Number(caiConfig.next_add_price) ? 'APPROVE & SYNC ZERODHA — BLOCKED' : 'APPROVE & SYNC ZERODHA'}
               </button>
             )}
           </div>
