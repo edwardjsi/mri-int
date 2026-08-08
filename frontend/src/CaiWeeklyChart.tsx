@@ -13,6 +13,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showMriLevels, setShowMriLevels] = useState(false);
+  const [latestDate, setLatestDate] = useState<string | null>(null);
 
   useEffect(() => {
     let chart: IChartApi | null = null;
@@ -76,21 +77,31 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           title: 'EMA 40',
         });
 
+        const formatTime = (t: any) => {
+          if (typeof t === 'string') return t.split('T')[0];
+          if (typeof t === 'number' && t > 9999999999) return Math.floor(t / 1000);
+          return t;
+        };
+
         const candles = data.map((d: any) => ({
-          time: d.time,
+          time: formatTime(d.time),
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
+
+        if (candles.length > 0) {
+          setLatestDate(candles[candles.length - 1].time);
+        }
         
         const ema10 = data.filter((d: any) => d.ema10 !== null).map((d: any) => ({
-          time: d.time,
+          time: formatTime(d.time),
           value: d.ema10
         }));
         
         const ema40 = data.filter((d: any) => d.ema40 !== null).map((d: any) => ({
-          time: d.time,
+          time: formatTime(d.time),
           value: d.ema40
         }));
 
@@ -253,8 +264,13 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   }
 
   return (
-    <div className="flex flex-col space-y-2">
-      <div className="flex justify-end">
+    <div className="flex flex-col space-y-2 relative w-full h-[600px] md:h-[700px]">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-4">
+        {latestDate && (
+          <div className="px-3 py-1.5 bg-gray-800/80 rounded border border-gray-700 text-sm text-gray-300 font-medium">
+            Reviewing Week: {latestDate}
+          </div>
+        )}
         <button 
           onClick={() => setShowMriLevels(!showMriLevels)}
           className={`px-3 py-1 text-xs rounded border transition-colors ${showMriLevels ? 'bg-gray-700 text-white border-gray-600' : 'bg-transparent text-gray-400 border-gray-700 hover:text-gray-300'}`}
