@@ -11,7 +11,7 @@ export const CaiPositionReviewPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#0B0F19] p-6 min-h-screen">
-      <div className="flex items-center mb-6 max-w-7xl mx-auto w-full">
+      <div className="flex items-center mb-6 w-full">
         <button 
           onClick={() => navigate('/caiportfolio')}
           className="flex items-center text-gray-400 hover:text-white transition-colors bg-gray-800/50 hover:bg-gray-800 px-4 py-2 rounded-lg border border-gray-700"
@@ -20,7 +20,7 @@ export const CaiPositionReviewPage: React.FC = () => {
           <span className="font-semibold">Back to Portfolio</span>
         </button>
       </div>
-      <div className="flex-1 w-full max-w-7xl mx-auto drop-shadow-2xl">
+      <div className="flex-1 w-full mx-auto drop-shadow-2xl">
         <CaiPositionReview 
           positionId={id} 
           onReviewSaved={() => navigate('/caiportfolio')}

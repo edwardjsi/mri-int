@@ -62,14 +62,15 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
         });
         if (res.ok) {
           const json = await res.json();
-          if (json && json.length > 0) {
-            setCaiConfig(json[0]); // most recent version
+          const activeConfig = json.draft || json.approved;
+          if (activeConfig) {
+            setCaiConfig(activeConfig);
             setEditForm({
-              pullback_lower_bound: json[0].pullback_lower_bound || '',
-              pullback_upper_bound: json[0].pullback_upper_bound || '',
-              breakout_confirmation_min_price: json[0].breakout_confirmation_min_price || '',
-              next_add_min_price: json[0].next_add_min_price || '',
-              structural_break_price: json[0].structural_break_price || ''
+              pullback_lower_bound: activeConfig.pullback_lower_bound || '',
+              pullback_upper_bound: activeConfig.pullback_upper_bound || '',
+              breakout_confirmation_min_price: activeConfig.breakout_confirmation_min_price || '',
+              next_add_min_price: activeConfig.next_add_min_price || '',
+              structural_break_price: activeConfig.structural_break_price || ''
             });
           }
         }
@@ -222,9 +223,11 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                   const res = await fetch(`/api/cai/alerts/${data.symbol}/approve-sync`, { method: 'POST', headers: getAuthHeaders() });
                   if (res.ok) {
                     alert('Synchronized successfully!');
-                    // reload config
                     const reloadRes = await fetch(`/api/cai/alerts/${data.symbol}`, { headers: getAuthHeaders() });
-                    if (reloadRes.ok) setCaiConfig((await reloadRes.json())[0]);
+                    if (reloadRes.ok) {
+                      const reloadJson = await reloadRes.json();
+                      setCaiConfig(reloadJson.draft || reloadJson.approved);
+                    }
                   } else {
                     alert('Sync failed: ' + (await res.json()).detail);
                   }
@@ -342,7 +345,10 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                 if (res.ok) {
                   setShowEditModal(false);
                   const reloadRes = await fetch(`/api/cai/alerts/${data.symbol}`, { headers: getAuthHeaders() });
-                  if (reloadRes.ok) setCaiConfig((await reloadRes.json())[0]);
+                  if (reloadRes.ok) {
+                    const reloadJson = await reloadRes.json();
+                    setCaiConfig(reloadJson.draft || reloadJson.approved);
+                  }
                 } else {
                   alert('Failed to save draft');
                 }
