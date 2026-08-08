@@ -140,3 +140,20 @@ def kite_status(client=Depends(get_current_client), conn=Depends(get_db)):
         "kite_user_id": user_id,
         "last_updated": updated_at.isoformat()
     }
+
+
+@router.get("/config-status")
+def kite_config_status():
+    """
+    Diagnostic endpoint to verify if environment variables are injected successfully.
+    Never exposes the actual values.
+    """
+    api_key = os.getenv("KITE_API_KEY")
+    api_secret = os.getenv("KITE_API_SECRET")
+    
+    return {
+        "KITE_API_KEY_configured": bool(api_key and len(api_key.strip()) > 0),
+        "KITE_API_SECRET_configured": bool(api_secret and len(api_secret.strip()) > 0),
+        "raw_key_length": len(api_key) if api_key else 0,
+        "raw_secret_length": len(api_secret) if api_secret else 0,
+    }
