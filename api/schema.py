@@ -1417,21 +1417,7 @@ def ensure_cai_tables(cur) -> None:
     cur.execute("ALTER TABLE cai_alert_config_versions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'DRAFT';")
 
     
-    # 2. CAI Positions
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS cai_positions (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-            symbol VARCHAR(20) NOT NULL,
-            tranche VARCHAR(20) NOT NULL DEFAULT 'T0',
-            status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            UNIQUE(client_id, symbol)
-        );
-        """
-    )
+
     
     # 3. CAI Alert Mappings
     cur.execute(
@@ -1439,7 +1425,7 @@ def ensure_cai_tables(cur) -> None:
         CREATE TABLE IF NOT EXISTS cai_alert_mappings (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-            cai_position_id UUID REFERENCES cai_positions(id) ON DELETE CASCADE,
+            cai_position_id VARCHAR(255) REFERENCES cai_position(id) ON DELETE CASCADE,
             alert_role VARCHAR(50) NOT NULL,
             config_version_id UUID REFERENCES cai_alert_config_versions(id) ON DELETE CASCADE,
             kite_uuid VARCHAR(100) NOT NULL,

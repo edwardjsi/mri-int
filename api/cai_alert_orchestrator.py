@@ -45,11 +45,15 @@ def _get_admin_client(cur):
     return str(row["id"])
 
 def _get_position_id(cur, client_id, symbol):
-    cur.execute("SELECT id FROM cai_positions WHERE client_id = %s AND symbol = %s", (client_id, symbol))
+    cur.execute("""
+        SELECT p.id 
+        FROM cai_position p
+        JOIN cai_portfolio port ON p.portfolio_id = port.id
+        WHERE port.owner = %s AND p.symbol = %s AND p.status = 'ACTIVE'
+    """, (client_id, symbol))
     row = cur.fetchone()
     if not row:
-        cur.execute("INSERT INTO cai_positions (client_id, symbol) VALUES (%s, %s) RETURNING id", (client_id, symbol))
-        return str(cur.fetchone()["id"])
+        raise HTTPException(status_code=400, detail=f"No active MRI position found for {symbol}")
     return str(row["id"])
 
 @router.get("/{symbol}")
@@ -304,7 +308,12 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
     
     try:
         # 1. Fetch Active Positions
-        cur.execute("SELECT id, symbol FROM cai_positions WHERE status = 'ACTIVE' AND client_id = %s", (client_id,))
+        cur.execute("""
+            SELECT p.id, p.symbol 
+            FROM cai_position p
+            JOIN cai_portfolio port ON p.portfolio_id = port.id
+            WHERE port.owner = %s AND p.status = 'ACTIVE'
+        """, (client_id,))
         positions = cur.fetchall()
         
         for pos in positions:

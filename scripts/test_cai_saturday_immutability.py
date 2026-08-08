@@ -33,10 +33,19 @@ def setup_test_data(conn):
         
     client_id = admin["id"]
     
+    # 0. Setup Mock Portfolio
+    cur.execute("SELECT id FROM cai_portfolio WHERE owner = %s", (client_id,))
+    port = cur.fetchone()
+    if not port:
+        cur.execute("INSERT INTO cai_portfolio (id, owner, cash, health) VALUES (gen_random_uuid(), %s, 0, 0) RETURNING id", (client_id,))
+        port_id = cur.fetchone()["id"]
+    else:
+        port_id = port["id"]
+        
     # 1. Setup HSCL (Human-edited Draft)
     cur.execute("DELETE FROM cai_alert_config_versions WHERE symbol = 'HSCL'")
-    cur.execute("DELETE FROM cai_positions WHERE symbol = 'HSCL'")
-    cur.execute("INSERT INTO cai_positions (client_id, symbol, status) VALUES (%s, 'HSCL', 'ACTIVE')", (client_id,))
+    cur.execute("DELETE FROM cai_position WHERE symbol = 'HSCL'")
+    cur.execute("INSERT INTO cai_position (id, portfolio_id, symbol, status, tranche) VALUES (gen_random_uuid(), %s, 'HSCL', 'ACTIVE', 1)", (port_id,))
     
     cur.execute("""
         INSERT INTO cai_alert_config_versions 
@@ -48,8 +57,8 @@ def setup_test_data(conn):
     
     # 2. Setup TCS (Approved Config)
     cur.execute("DELETE FROM cai_alert_config_versions WHERE symbol = 'TCS'")
-    cur.execute("DELETE FROM cai_positions WHERE symbol = 'TCS'")
-    cur.execute("INSERT INTO cai_positions (client_id, symbol, status) VALUES (%s, 'TCS', 'ACTIVE')", (client_id,))
+    cur.execute("DELETE FROM cai_position WHERE symbol = 'TCS'")
+    cur.execute("INSERT INTO cai_position (id, portfolio_id, symbol, status, tranche) VALUES (gen_random_uuid(), %s, 'TCS', 'ACTIVE', 1)", (port_id,))
     
     cur.execute("""
         INSERT INTO cai_alert_config_versions 
@@ -60,8 +69,14 @@ def setup_test_data(conn):
     
     # 3. Setup RELIANCE (Unconfigured)
     cur.execute("DELETE FROM cai_alert_config_versions WHERE symbol = 'RELIANCE'")
-    cur.execute("DELETE FROM cai_positions WHERE symbol = 'RELIANCE'")
-    cur.execute("INSERT INTO cai_positions (client_id, symbol, status) VALUES (%s, 'RELIANCE', 'ACTIVE')", (client_id,))
+    cur.execute("DELETE FROM cai_position WHERE symbol = 'RELIANCE'")
+    cur.execute("INSERT INTO cai_position (id, portfolio_id, symbol, status, tranche) VALUES (gen_random_uuid(), %s, 'RELIANCE', 'ACTIVE', 1)", (port_id,))
+    
+    # 4. Setup INFY (Passive Zerodha holding, NOT in cai_position)
+    cur.execute("DELETE FROM cai_alert_config_versions WHERE symbol = 'INFY'")
+    cur.execute("DELETE FROM client_external_holdings WHERE symbol = 'INFY' AND client_id = %s", (client_id,))
+    cur.execute("INSERT INTO client_external_holdings (client_id, symbol, quantity, avg_cost, source) VALUES (%s, 'INFY', 10, 1500, 'KITE')", (client_id,))
+
     
     conn.commit()
     cur.close()
@@ -104,6 +119,11 @@ def run_tests():
     cur.execute("SELECT * FROM cai_alert_config_versions WHERE symbol = 'RELIANCE' ORDER BY created_at DESC")
     reliance_configs = cur.fetchall()
     assert len(reliance_configs) == 1, "RELIANCE did not receive a new auto-generated DRAFT! Generation failed silently."
+    
+    # Verify INFY was NOT processed
+    cur.execute("SELECT * FROM cai_alert_config_versions WHERE symbol = 'INFY'")
+    infy_configs = cur.fetchall()
+    assert len(infy_configs) == 0, "INFY is a passive holding not in cai_position and should not receive a config!"
     assert reliance_configs[0]["status"] == "DRAFT", "RELIANCE should have status DRAFT"
     
     print("SUCCESS: Immutability rules verified! DRAFT and APPROVED configurations were protected, and UNCONFIGURED received a draft.")
