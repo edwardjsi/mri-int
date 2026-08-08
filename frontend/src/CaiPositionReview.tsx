@@ -21,8 +21,8 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
   const [editForm, setEditForm] = useState({
     pullback_lower_bound: '',
     pullback_upper_bound: '',
-    breakout_confirmation_min_price: '',
-    next_add_min_price: '',
+    breakout_confirmation_price: '',
+    next_add_price: '',
     structural_break_price: ''
   });
   const [loading, setLoading] = useState(true);
@@ -69,8 +69,8 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             setEditForm({
               pullback_lower_bound: activeConfig.pullback_lower_bound || '',
               pullback_upper_bound: activeConfig.pullback_upper_bound || '',
-              breakout_confirmation_min_price: activeConfig.breakout_confirmation_min_price || '',
-              next_add_min_price: activeConfig.next_add_min_price || '',
+              breakout_confirmation_price: activeConfig.breakout_confirmation_price || '',
+              next_add_price: activeConfig.next_add_price || '',
               structural_break_price: activeConfig.structural_break_price || ''
             });
           } else {
@@ -181,11 +181,11 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             </div>
             <div className="bg-gray-900 p-3 rounded border border-gray-800">
               <div className="text-gray-400 text-xs mb-1">🚀 Breakout Confirmation</div>
-              <div className="text-white font-mono">{caiConfig?.breakout_confirmation_min_price ? `₹${caiConfig.breakout_confirmation_min_price}` : '—'}</div>
+              <div className="text-white font-mono">{caiConfig?.breakout_confirmation_price ? `₹${caiConfig.breakout_confirmation_price}` : '—'}</div>
             </div>
             <div className="bg-gray-900 p-3 rounded border border-gray-800">
               <div className="text-gray-400 text-xs mb-1">➕ Next ADD</div>
-              <div className="text-white font-mono">{caiConfig?.next_add_min_price ? `₹${caiConfig.next_add_min_price}` : '—'}</div>
+              <div className="text-white font-mono">{caiConfig?.next_add_price ? `₹${caiConfig.next_add_price}` : '—'}</div>
             </div>
             <div className="bg-gray-900 p-3 rounded border border-red-900/50">
               <div className="text-red-400 text-xs mb-1">🔴 Structure Break</div>
@@ -193,8 +193,8 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             </div>
           </div>
           
-          {caiConfig?.breakout_confirmation_min_price && caiConfig?.next_add_min_price && 
-           caiConfig.breakout_confirmation_min_price === caiConfig.next_add_min_price && (
+          {caiConfig?.breakout_confirmation_price && caiConfig?.next_add_price && 
+           caiConfig.breakout_confirmation_price === caiConfig.next_add_price && (
             <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded text-orange-400 text-sm flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2" />
               Warning: Breakout and Next ADD share threshold
@@ -329,11 +329,11 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Breakout Confirmation</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={editForm.breakout_confirmation_min_price} onChange={e => setEditForm({...editForm, breakout_confirmation_min_price: e.target.value})} />
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={editForm.breakout_confirmation_price} onChange={e => setEditForm({...editForm, breakout_confirmation_price: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Next ADD</label>
-                <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={editForm.next_add_min_price} onChange={e => setEditForm({...editForm, next_add_min_price: e.target.value})} />
+                <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={editForm.next_add_price} onChange={e => setEditForm({...editForm, next_add_price: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm text-red-400 mb-1">Structure Break</label>
@@ -346,8 +346,8 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                 const payload = {
                   pullback_lower_bound: editForm.pullback_lower_bound ? parseFloat(editForm.pullback_lower_bound) : null,
                   pullback_upper_bound: editForm.pullback_upper_bound ? parseFloat(editForm.pullback_upper_bound) : null,
-                  breakout_confirmation_min_price: editForm.breakout_confirmation_min_price ? parseFloat(editForm.breakout_confirmation_min_price) : null,
-                  next_add_min_price: editForm.next_add_min_price ? parseFloat(editForm.next_add_min_price) : null,
+                  breakout_confirmation_price: editForm.breakout_confirmation_price ? parseFloat(editForm.breakout_confirmation_price) : null,
+                  next_add_price: editForm.next_add_price ? parseFloat(editForm.next_add_price) : null,
                   structural_break_price: editForm.structural_break_price ? parseFloat(editForm.structural_break_price) : null
                 };
                 const res = await fetch(`/api/cai/alerts/${data.symbol}/draft`, {

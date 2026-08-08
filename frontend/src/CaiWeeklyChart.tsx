@@ -196,29 +196,28 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             }
           }
           
-          if (caiConfig.breakout_confirmation_min_price) {
-            candlestickSeries.createPriceLine({
-              price: caiConfig.breakout_confirmation_min_price,
-              color: '#3b82f6', // Blue
+          if (caiConfig.breakout_confirmation_price) {
+            const bcLine = {
+              price: caiConfig.breakout_confirmation_price,
+              color: '#3b82f6',
               lineWidth: 2,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
-              title: `BREAKOUT ${caiConfig.breakout_confirmation_min_price}`,
-            });
+              title: `BREAKOUT ${caiConfig.breakout_confirmation_price}`,
+            };
+            candlestickSeries.createPriceLine(bcLine);
           }
           
-          if (caiConfig.next_add_min_price) {
-            // Offset slightly if they are identical so both lines don't perfectly overlap in a confusing way
-            // But we already show a warning in the UI, so overlapping is actually expected. 
-            // We just draw it.
-            candlestickSeries.createPriceLine({
-              price: caiConfig.next_add_min_price,
-              color: '#a855f7', // Purple
+          if (caiConfig.next_add_price) {
+            const naLine = {
+              price: caiConfig.next_add_price,
+              color: '#a855f7',
               lineWidth: 2,
               lineStyle: LineStyle.Dotted,
               axisLabelVisible: true,
-              title: `NEXT ADD ${caiConfig.next_add_min_price}`,
-            });
+              title: `NEXT ADD ${caiConfig.next_add_price}`,
+            };
+            candlestickSeries.createPriceLine(naLine);
           }
           
           if (caiConfig.structural_break_price) {

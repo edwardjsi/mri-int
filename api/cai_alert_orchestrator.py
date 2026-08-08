@@ -27,10 +27,8 @@ def get_db():
 class CAIConfigDraft(BaseModel):
     pullback_lower_bound: Optional[float] = None
     pullback_upper_bound: Optional[float] = None
-    breakout_confirmation_min_price: Optional[float] = None
-    breakout_confirmation_max_price: Optional[float] = None
-    next_add_min_price: Optional[float] = None
-    next_add_max_price: Optional[float] = None
+    breakout_confirmation_price: Optional[float] = None
+    next_add_price: Optional[float] = None
     structural_break_price: Optional[float] = None
 
 class PreviewResponse(BaseModel):
@@ -98,15 +96,15 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
         INSERT INTO cai_alert_config_versions 
         (client_id, symbol, status, 
          pullback_lower_bound, pullback_upper_bound, 
-         breakout_confirmation_min_price, breakout_confirmation_max_price, 
-         next_add_min_price, next_add_max_price, structural_break_price)
-        VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s, %s, %s)
+         breakout_confirmation_price, 
+         next_add_price, structural_break_price)
+        VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s)
         RETURNING *
     """, (
         client_id, symbol,
         req.pullback_lower_bound, req.pullback_upper_bound,
-        req.breakout_confirmation_min_price, req.breakout_confirmation_max_price,
-        req.next_add_min_price, req.next_add_max_price, req.structural_break_price
+        req.breakout_confirmation_price,
+        req.next_add_price, req.structural_break_price
     ))
     new_draft = cur.fetchone()
     conn.commit()
@@ -117,8 +115,8 @@ def validate_config(config):
     sb = config.get("structural_break_price")
     pl = config.get("pullback_lower_bound")
     pu = config.get("pullback_upper_bound")
-    bc = config.get("breakout_confirmation_min_price")
-    na = config.get("next_add_min_price")
+    bc = config.get("breakout_confirmation_price")
+    na = config.get("next_add_price")
     
     if sb is not None and pl is not None and sb >= pl:
         raise HTTPException(status_code=400, detail="Structure break must be strictly below pullback zone")
@@ -160,20 +158,20 @@ def create_kite_alert_payloads(symbol: str, config: dict) -> List[dict]:
             "price": float(config["pullback_upper_bound"])
         })
         
-    if config.get("breakout_confirmation_min_price"):
+    if config.get("breakout_confirmation_price"):
         payloads.append({
             "role": "BREAKOUT_CONFIRMATION",
             "name": f"{symbol} - 🚀 Breakout Confirmation",
             "condition": ">=",
-            "price": float(config["breakout_confirmation_min_price"])
+            "price": float(config["breakout_confirmation_price"])
         })
         
-    if config.get("next_add_min_price"):
+    if config.get("next_add_price"):
         payloads.append({
             "role": "NEXT_ADD",
             "name": f"{symbol} - ➕ Next ADD",
             "condition": ">=",
-            "price": float(config["next_add_min_price"])
+            "price": float(config["next_add_price"])
         })
         
     return payloads
@@ -199,8 +197,8 @@ def preview_sync(symbol: str, conn = Depends(get_db)):
         "changes": [
             {"role": "STRUCTURE_BREAK", "old": approved.get("structural_break_price") if approved else None, "new": draft.get("structural_break_price")},
             {"role": "HEALTHY_PULLBACK", "old": approved.get("pullback_upper_bound") if approved else None, "new": draft.get("pullback_upper_bound")},
-            {"role": "BREAKOUT_CONFIRMATION", "old": approved.get("breakout_confirmation_min_price") if approved else None, "new": draft.get("breakout_confirmation_min_price")},
-            {"role": "NEXT_ADD", "old": approved.get("next_add_min_price") if approved else None, "new": draft.get("next_add_min_price")}
+            {"role": "BREAKOUT_CONFIRMATION", "old": approved.get("breakout_confirmation_price") if approved else None, "new": draft.get("breakout_confirmation_price")},
+            {"role": "NEXT_ADD", "old": approved.get("next_add_price") if approved else None, "new": draft.get("next_add_price")}
         ],
         "unchanged_count": 0,
         "unrelated_count": 51 # Mock total existing alerts
@@ -318,22 +316,35 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
                     
                 thresholds = compute_thresholds(inputs)
                 
-                # 3. Map to CAI Draft
-                # Healthy Pullback: lower = structure_level, upper = alert_level
-                # Breakout Confirmation: min = add_level
-                # Next ADD: min = add_level
-                # Structure Break: min = quit_level
+                # 3. Map to CAI Draft using Canonical Schema
+                pl = thresholds.get("structure_level")
+                pu = thresholds.get("alert_level")
+                bc = thresholds.get("add_level")
+                na = thresholds.get("add_level")
+                sb = thresholds.get("quit_level")
                 
-                draft_payload = CAIConfigDraft(
-                    pullback_lower_bound=thresholds.get("structure_level"),
-                    pullback_upper_bound=thresholds.get("alert_level"),
-                    breakout_confirmation_min_price=thresholds.get("add_level"),
-                    next_add_min_price=thresholds.get("add_level"),
-                    structural_break_price=thresholds.get("quit_level")
-                )
+                # 4. Enforce Immutability Lifecycle
+                cur.execute("SELECT status FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s", (client_id, symbol))
+                versions = cur.fetchall()
                 
-                # 4. Save as Draft (will overwrite any existing draft)
-                save_draft(symbol, draft_payload, conn)
+                has_approved = any(v["status"] == "APPROVED" for v in versions)
+                has_draft = any(v["status"] == "DRAFT" for v in versions)
+                
+                if has_approved or has_draft:
+                    continue # Lifecycle rule: never overwrite DRAFT or APPROVED
+                    
+                # 5. Save as Auto-Generated Draft
+                cur.execute("""
+                    INSERT INTO cai_alert_config_versions 
+                    (client_id, symbol, status, 
+                     pullback_lower_bound, pullback_upper_bound, 
+                     breakout_confirmation_price, 
+                     next_add_price, structural_break_price)
+                    VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s)
+                """, (
+                    client_id, symbol,
+                    pl, pu, bc, na, sb
+                ))
                 generated_count += 1
                 
             except Exception as inner_e:
