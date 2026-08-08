@@ -165,25 +165,22 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         
         if (caiConfig) {
           if (caiConfig.pullback_upper_bound) {
-            const pbLabel = caiConfig.pullback_lower_bound 
-              ? `PULLBACK ${caiConfig.pullback_lower_bound}-${caiConfig.pullback_upper_bound}` 
-              : `PULLBACK ${caiConfig.pullback_upper_bound}`;
             candlestickSeries.createPriceLine({
               price: caiConfig.pullback_upper_bound,
               color: '#22c55e', // Green
               lineWidth: 2,
               lineStyle: LineStyle.Solid,
               axisLabelVisible: true,
-              title: pbLabel,
+              title: `PULLBACK ZONE HIGH ${caiConfig.pullback_upper_bound}`,
             });
             if (caiConfig.pullback_lower_bound) {
                candlestickSeries.createPriceLine({
                  price: caiConfig.pullback_lower_bound,
                  color: '#22c55e',
-                 lineWidth: 1,
-                 lineStyle: LineStyle.Dashed,
-                 axisLabelVisible: false,
-                 title: '',
+                 lineWidth: 2,
+                 lineStyle: LineStyle.Solid,
+                 axisLabelVisible: true,
+                 title: `PULLBACK ZONE LOW ${caiConfig.pullback_lower_bound}`,
                });
             }
           }
