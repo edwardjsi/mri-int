@@ -47,7 +47,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             mode: CrosshairMode.Normal,
           },
           width: chartContainerRef.current.clientWidth,
-          height: 900,
+          height: chartContainerRef.current.clientHeight,
           timeScale: {
             timeVisible: true,
             borderColor: '#374151',
@@ -241,16 +241,21 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
 
     fetchAndRender();
 
-    const handleResize = () => {
+    const resizeObserver = new ResizeObserver(() => {
       if (chart && chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
       }
-    };
+    });
 
-    window.addEventListener('resize', handleResize);
+    if (chartContainerRef.current) {
+      resizeObserver.observe(chartContainerRef.current);
+    }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       if (chart) {
         chart.remove();
       }
@@ -262,7 +267,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   }
 
   return (
-    <div className="flex flex-col space-y-2 relative w-full h-[600px] md:h-[700px]">
+    <div className="flex flex-col space-y-2 relative w-full h-[650px] md:h-[750px] mb-8">
       <div className="absolute top-4 right-4 z-10 flex items-center gap-4">
         {latestDate && (
           <div className="px-3 py-1.5 bg-gray-800/80 rounded border border-gray-700 text-sm text-gray-300 font-medium">
