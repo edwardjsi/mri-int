@@ -222,7 +222,8 @@ app.include_router(workspace_router)
 app.include_router(mosi_router)
 app.include_router(canslim_router, prefix="/api/v1/canslim")
 app.include_router(screener_router)
-
+from api.kite_auth import router as kite_auth_router
+app.include_router(kite_auth_router)
 
 # Explicit Health Check (Must be before catch-all)
 @app.api_route("/api/health", methods=["GET", "POST"])

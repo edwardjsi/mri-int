@@ -734,9 +734,28 @@ def ensure_required_tables(conn) -> None:
     ensure_alert_preferences_table(cur)
     ensure_intonation_table(cur)
     ensure_debate_cache_table(cur)
+    ensure_cai_tables(cur)
+    ensure_kite_credentials_table(cur)
 
     conn.commit()
     cur.close()
+
+
+def ensure_kite_credentials_table(cur) -> None:
+    """Ensure table for Kite Connect OAuth token storage exists."""
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.kite_credentials (
+            id SERIAL PRIMARY KEY,
+            client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+            access_token TEXT NOT NULL,
+            kite_user_id VARCHAR(50),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(client_id)
+        );
+        """
+    )
+
 
 
 def ensure_prde_tables(cur) -> None:
@@ -1345,4 +1364,105 @@ def ensure_guidance_tables(cur) -> None:
         ensure_ake_tables(cur.connection)
     except ImportError:
         pass
+
+
+def ensure_cai_tables(cur) -> None:
+    """Ensure CAI Engine Phase 1 tables exist."""
+    
+    # 1. Alert Config Versions (Immutable history of configs)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cai_alert_config_versions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol VARCHAR(20) NOT NULL,
+            version INTEGER NOT NULL DEFAULT 1,
+            structural_break_price NUMERIC(15,4) NOT NULL,
+            pullback_lower_bound NUMERIC(15,4),
+            pullback_upper_bound NUMERIC(15,4),
+            next_add_min_price NUMERIC(15,4),
+            next_add_max_price NUMERIC(15,4),
+            target_tranche VARCHAR(20),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(client_id, symbol, version)
+        );
+        """
+    )
+    
+    # 2. CAI Positions
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cai_positions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            symbol VARCHAR(20) NOT NULL,
+            tranche VARCHAR(20) NOT NULL DEFAULT 'T0',
+            status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(client_id, symbol)
+        );
+        """
+    )
+    
+    # 3. CAI Alert Events
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cai_alert_events (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            config_id UUID REFERENCES cai_alert_config_versions(id) ON DELETE CASCADE,
+            state VARCHAR(50) NOT NULL,
+            triggered_at TIMESTAMPTZ DEFAULT NOW(),
+            resolved_at TIMESTAMPTZ
+        );
+        """
+    )
+
+    # 4. CAI Decision Ledger (Append-only)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cai_decision_ledger (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            config_id UUID REFERENCES cai_alert_config_versions(id) ON DELETE CASCADE,
+            event_id UUID REFERENCES cai_alert_events(id) ON DELETE CASCADE,
+            trigger_price NUMERIC(15,4) NOT NULL,
+            user_choice VARCHAR(50) NOT NULL,
+            reasoning TEXT,
+            recorded_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    # Ensure config_id exists in case table was created previously without it
+    cur.execute("ALTER TABLE cai_decision_ledger ADD COLUMN IF NOT EXISTS config_id UUID REFERENCES cai_alert_config_versions(id) ON DELETE CASCADE;")
+
+    # 5. Immutability Trigger for Decision Ledger
+    cur.execute(
+        """
+        CREATE OR REPLACE FUNCTION prevent_update_delete_function()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            RAISE EXCEPTION 'cai_decision_ledger is append-only. Updates and deletes are not allowed.';
+        END;
+        $$ LANGUAGE plpgsql;
+        """
+    )
+
+    cur.execute(
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_trigger
+                WHERE tgname = 'prevent_update_delete_cai_ledger'
+            ) THEN
+                CREATE TRIGGER prevent_update_delete_cai_ledger
+                BEFORE UPDATE OR DELETE ON cai_decision_ledger
+                FOR EACH ROW
+                EXECUTE FUNCTION prevent_update_delete_function();
+            END IF;
+        END
+        $$;
+        """
+    )
 
