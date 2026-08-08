@@ -38,7 +38,7 @@ class PreviewResponse(BaseModel):
 
 # Helpers
 def _get_admin_client(cur):
-    cur.execute("SELECT id FROM clients WHERE is_active = TRUE AND is_admin = TRUE ORDER BY created_at ASC LIMIT 1")
+    cur.execute("SELECT id FROM clients WHERE is_admin = TRUE ORDER BY created_at ASC LIMIT 1")
     row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=400, detail="Admin client not found")
@@ -298,6 +298,8 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
     client_id = _get_admin_client(cur)
     
     generated_count = 0
+    skipped_approved = 0
+    skipped_draft = 0
     errors = []
     
     try:
@@ -311,6 +313,7 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
             try:
                 # 2. Load technicals and compute
                 inputs = load_mri_inputs(conn, symbol)
+                print(f"DEBUG: symbol={symbol}, inputs={inputs}")
                 if not inputs or inputs.get("current_price") is None:
                     continue # Leaves it UNRESOLVED / UNCONFIGURED
                     
@@ -330,7 +333,11 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
                 has_approved = any(v["status"] == "APPROVED" for v in versions)
                 has_draft = any(v["status"] == "DRAFT" for v in versions)
                 
-                if has_approved or has_draft:
+                if has_approved:
+                    skipped_approved += 1
+                    continue
+                if has_draft:
+                    skipped_draft += 1
                     continue # Lifecycle rule: never overwrite DRAFT or APPROVED
                     
                 # 5. Save as Auto-Generated Draft
@@ -352,10 +359,22 @@ def generate_saturday_drafts(client=Depends(get_current_client), conn=Depends(ge
                 errors.append(symbol)
                 
         conn.commit()
+        
+        summary = {
+            "CREATED": generated_count,
+            "SKIPPED_APPROVED": skipped_approved,
+            "SKIPPED_DRAFT": skipped_draft,
+            "FAILED": len(errors),
+            "failed_symbols": errors
+        }
+        
+        if len(errors) > 0:
+            raise HTTPException(status_code=500, detail={"message": "Saturday generator completed with failures.", "summary": summary})
+            
         return {
             "status": "success",
-            "message": f"Generated drafts for {generated_count} positions.",
-            "errors": errors
+            "message": "Saturday generator completed successfully.",
+            "summary": summary
         }
     except Exception as e:
         conn.rollback()

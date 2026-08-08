@@ -71,6 +71,7 @@ def run_tests():
     
     # Call the generator
     response = client.post("/api/cai/alerts/generate-saturday-drafts")
+    print(f"DEBUG Response: {response.json()}")
     assert response.status_code == 200, f"Generator failed: {response.text}"
     
     print("Generator completed successfully. Verifying immutability...")
@@ -98,9 +99,10 @@ def run_tests():
     # Verify RELIANCE generated a new DRAFT
     cur.execute("SELECT * FROM cai_alert_config_versions WHERE symbol = 'RELIANCE' ORDER BY created_at DESC")
     reliance_configs = cur.fetchall()
-    # It might not generate if MRI inputs are missing, but we assume it either generates 1 or 0
-    # The key is we didn't crash and we didn't overwrite.
-    print("SUCCESS: Immutability rules verified! DRAFT and APPROVED configurations were protected.")
+    assert len(reliance_configs) == 1, "RELIANCE did not receive a new auto-generated DRAFT! Generation failed silently."
+    assert reliance_configs[0]["status"] == "DRAFT", "RELIANCE should have status DRAFT"
+    
+    print("SUCCESS: Immutability rules verified! DRAFT and APPROVED configurations were protected, and UNCONFIGURED received a draft.")
 
 if __name__ == "__main__":
     run_tests()

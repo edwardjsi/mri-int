@@ -37,13 +37,22 @@ def load_mri_inputs(conn, symbol: str):
         ORDER BY date DESC
         LIMIT 300
     """
-    df = pd.read_sql_query(query, conn, params=(symbol,))
+    with conn.cursor() as cur:
+        cur.execute(query, (symbol,))
+        data = cur.fetchall()
+        
+    df = pd.DataFrame(data)
+    
     if df.empty:
         return None
-    
+        
+    for col in ['open', 'high', 'low', 'close']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        
     # Sort chronological
     df = df.sort_values('date').reset_index(drop=True)
-    df['date'] = pd.to_datetime(df['date'])
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df = df.dropna(subset=['date'])
     
     # Resample to weekly (Friday close)
     df_weekly = df.set_index('date').resample('W-FRI').agg({
