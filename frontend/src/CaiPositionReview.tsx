@@ -284,7 +284,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             >
               VIEW SYNC PREVIEW
             </button>
-            {caiConfig?.status === 'DRAFT' && (
+            {(caiConfig?.status === 'DRAFT' || caiConfig?.status === 'SYNC_FAILED') && caiConfig?.validation_status === 'PASS' && (
               <button
                 className={`px-5 py-2 rounded text-sm font-bold transition-colors ml-auto ${
                   duplicateThreshold || syncing
