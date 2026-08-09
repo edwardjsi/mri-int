@@ -232,36 +232,77 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     conn.commit()
     
     adapter = KiteAlertAdapter()
+    if not adapter.authenticate(client_id, conn):
+        raise HTTPException(status_code=401, detail="Zerodha authentication failed.")
+        
     payloads = create_kite_alert_payloads(symbol, draft)
     
-    created_alerts = []
+    # Pre-sync: fetch all active mappings
+    cur.execute("SELECT * FROM cai_alert_mappings WHERE client_id = %s AND cai_position_id = %s AND active = TRUE", (client_id, pos_id))
+    active_mappings = cur.fetchall()
     
     try:
-        # 2. Create new alerts on Kite FIRST
+        active_zerodha_alerts = adapter.get_all_alerts()
+    except Exception as e:
+        conn.rollback()
+        cur.execute("UPDATE cai_alert_config_versions SET status = 'SYNC_FAILED' WHERE id = %s", (draft["id"],))
+        conn.commit()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch active alerts from Zerodha: {str(e)}")
+        
+    if len(active_zerodha_alerts) + len(payloads) > 500:
+        conn.rollback()
+        cur.execute("UPDATE cai_alert_config_versions SET status = 'SYNC_FAILED' WHERE id = %s", (draft["id"],))
+        conn.commit()
+        raise HTTPException(status_code=400, detail="Cannot synchronize CAI alerts: Zerodha active-alert limit would be exceeded.")
+    
+    created_alerts = []
+    new_alerts_to_rollback = []
+    
+    try:
+        # 2. Reconcile new alerts on Kite FIRST
         for p in payloads:
-            resp = adapter.create_alert(alert_name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
-            if not isinstance(resp, str) or not resp:
+            mapped_role = next((m for m in active_mappings if m["alert_role"] == p["role"]), None)
+            uuid_for_payload = None
+            
+            if mapped_role:
+                # MRI mapping exists -> UPDATE that exact UUID with PUT
+                uuid_for_payload = mapped_role["kite_uuid"]
+                success = adapter.modify_alert(alert_uuid=uuid_for_payload, new_condition=p["condition"], new_price=p["price"], new_name=p["name"])
+                if not success:
+                    # Not found in Zerodha, recreate
+                    uuid_for_payload = adapter.create_alert(alert_name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
+                    new_alerts_to_rollback.append(uuid_for_payload)
+            else:
+                # No MRI mapping exists -> check for matching CAI name
+                matching_orphan = next((a for a in active_zerodha_alerts if a["name"] == p["name"]), None)
+                if matching_orphan:
+                    raise RuntimeError(f"Orphaned CAI alert found in Zerodha matching name '{p['name']}'. Please reconcile manually.")
+                    
+                # Create a new alert
+                uuid_for_payload = adapter.create_alert(alert_name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
+                new_alerts_to_rollback.append(uuid_for_payload)
+                
+            if not isinstance(uuid_for_payload, str) or not uuid_for_payload:
                 raise RuntimeError("Kite adapter returned invalid alert UUID")
-            uuid_created = resp
+                
             created_alerts.append({
                 "role": p["role"],
-                "kite_uuid": uuid_created
+                "kite_uuid": uuid_for_payload
             })
             
         # 3. Retrieve + Verify ALL 4
-        # (In reality we would call Kite to retrieve them and assert they exist. Here we simulate success if the UUIDs were returned).
-        if len(created_alerts) != len(payloads):
-            raise Exception("Failed to verify all new alerts.")
+        for ca in created_alerts:
+            verified = adapter.retrieve_alert(ca["kite_uuid"])
+            if not verified:
+                raise RuntimeError(f"Failed to verify alert {ca['kite_uuid']} in Zerodha")
             
         # 4. Remove obsolete CAI-owned alerts for this symbol
-        cur.execute("SELECT * FROM cai_alert_mappings WHERE client_id = %s AND cai_position_id = %s AND active = TRUE", (client_id, pos_id))
-        obsolete_mappings = cur.fetchall()
-        
-        for om in obsolete_mappings:
-            try:
-                adapter.delete_alert(om["kite_uuid"])
-            except Exception as e:
-                logging.warning(f"Failed to delete obsolete alert {om['kite_uuid']}: {str(e)}")
+        for om in active_mappings:
+            if om["kite_uuid"] not in [ca["kite_uuid"] for ca in created_alerts]:
+                try:
+                    adapter.delete_alert(om["kite_uuid"])
+                except Exception as e:
+                    logging.warning(f"Failed to delete obsolete alert {om['kite_uuid']}: {str(e)}")
             
             cur.execute("""
                 UPDATE cai_alert_mappings 
@@ -281,14 +322,18 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
         cur.execute("UPDATE cai_alert_config_versions SET status = 'SUPERSEDED' WHERE client_id = %s AND symbol = %s AND status = 'APPROVED'", (client_id, symbol))
         cur.execute("UPDATE cai_alert_config_versions SET status = 'APPROVED' WHERE id = %s", (draft["id"],))
         
-
-        
         conn.commit()
         
         return {"status": "success", "message": f"Successfully synchronized {len(created_alerts)} alerts"}
         
     except Exception as e:
         # If it fails, update draft to SYNC_FAILED
+        for u in new_alerts_to_rollback:
+            try:
+                adapter.delete_alert(u)
+            except Exception as del_err:
+                logging.error(f"Failed to cleanup orphaned alert {u} during rollback: {str(del_err)}")
+                
         conn.rollback()
         cur.execute("UPDATE cai_alert_config_versions SET status = 'SYNC_FAILED' WHERE id = %s", (draft["id"],))
         conn.commit()

@@ -1,6 +1,8 @@
 import time
 import uuid
 import logging
+import os
+import requests
 from typing import Dict, Any, List, Optional
 from enum import Enum
 
@@ -38,13 +40,17 @@ class RateLimiter:
 
 class KiteAlertAdapter:
     """
-    Adapter strictly for managing simple Kite price alerts via the free Kite Connect Personal API.
+    Adapter for managing Kite price alerts via the official Kite Connect Alerts API.
     Zero execution capabilities.
     """
+    BASE_URL = "https://api.kite.trade/alerts"
+
     def __init__(self):
         self.rate_limiter = RateLimiter()
-        # Mocking the internal state of active alerts
-        self._alerts: Dict[str, Dict[str, Any]] = {}
+        self.api_key = os.getenv("KITE_API_KEY")
+        if not self.api_key:
+            raise ValueError("KITE_API_KEY is not configured in the environment.")
+        self.access_token = None
 
     def authenticate(self, client_id: str, conn) -> bool:
         """Authentication using Kite Connect Personal via securely stored DB token."""
@@ -68,49 +74,106 @@ class KiteAlertAdapter:
             return None
         return row["access_token"] if isinstance(row, dict) else row[0]
 
+    def _get_headers(self) -> Dict[str, str]:
+        if not self.access_token:
+            raise ValueError("Adapter not authenticated. Call authenticate() first.")
+        return {
+            "X-Kite-Version": "3",
+            "Authorization": f"token {self.api_key}:{self.access_token}"
+        }
+
+    def _map_condition(self, condition: str) -> str:
+        valid_conditions = {">=", ">", "<=", "<", "=="}
+        if condition not in valid_conditions:
+            raise ValueError(f"Invalid CAI condition: '{condition}'. Must be one of {valid_conditions}")
+        return condition
+
+    def _handle_response(self, response) -> Any:
+        try:
+            data = response.json()
+        except ValueError:
+            raise RuntimeError("Zerodha API returned non-JSON response.")
+            
+        if response.status_code != 200 or data.get("status") != "success":
+            err_msg = data.get("message", "Unknown API error")
+            raise RuntimeError(f"Zerodha API Error: {err_msg}")
+            
+        return data
+
     def create_alert(self, symbol: str, condition: str, price: float, alert_name: str, alert_type: str = "simple") -> str:
         """Creates a price alert. Strictly hard-blocks type=ato."""
         if alert_type == "ato":
             raise ValueError("HARD BLOCK: type=ato is strictly forbidden in CAI V1. Only simple alerts are permitted.")
             
+        mapped_condition = self._map_condition(condition)
         self.rate_limiter.wait(EndpointCategory.ALERT)
-        alert_uuid = str(uuid.uuid4())
         
-        self._alerts[alert_uuid] = {
-            "uuid": alert_uuid,
-            "symbol": symbol,
-            "condition": condition,
-            "price": price,
+        payload = {
             "name": alert_name,
-            "type": alert_type,
-            "status": "ACTIVE"
+            "lhs_exchange": "NSE",
+            "lhs_tradingsymbol": symbol,
+            "lhs_attribute": "LastTradedPrice",
+            "operator": mapped_condition,
+            "rhs_type": "constant",
+            "type": "simple",
+            "rhs_constant": str(price)
         }
-        logging.info(f"KiteAlertAdapter: Created alert '{alert_name}' (UUID: {alert_uuid}) for {symbol} ({condition} {price})")
-        return alert_uuid
+        
+        resp = requests.post(self.BASE_URL, data=payload, headers=self._get_headers())
+        data = self._handle_response(resp)
+        
+        uuid_created = data.get("data", {}).get("uuid")
+        if not uuid_created:
+            raise RuntimeError("Zerodha API did not return a UUID for the created alert.")
+            
+        logging.info(f"KiteAlertAdapter: Created alert '{alert_name}' (UUID: {uuid_created}) for {symbol}")
+        return str(uuid_created)
 
     def retrieve_alert(self, alert_uuid: str) -> Optional[Dict[str, Any]]:
         self.rate_limiter.wait(EndpointCategory.ALERT)
-        return self._alerts.get(alert_uuid)
+        resp = requests.get(f"{self.BASE_URL}/{alert_uuid}", headers=self._get_headers())
+        if resp.status_code == 404:
+            return None
+        data = self._handle_response(resp)
+        return data.get("data")
 
     def get_all_alerts(self) -> List[Dict[str, Any]]:
         self.rate_limiter.wait(EndpointCategory.ALERT)
-        return list(self._alerts.values())
+        resp = requests.get(self.BASE_URL, headers=self._get_headers())
+        data = self._handle_response(resp)
+        return data.get("data", [])
 
-    def modify_alert(self, alert_uuid: str, new_condition: str, new_price: float) -> bool:
+    def modify_alert(self, alert_uuid: str, new_condition: str, new_price: float, new_name: Optional[str] = None) -> bool:
+        mapped_condition = self._map_condition(new_condition)
         self.rate_limiter.wait(EndpointCategory.ALERT)
-        if alert_uuid in self._alerts:
-            self._alerts[alert_uuid].update({
-                "condition": new_condition,
-                "price": new_price
-            })
-            logging.info(f"KiteAlertAdapter: Modified alert UUID: {alert_uuid}")
-            return True
-        return False
+        
+        # We need to send all required fields for a PUT. 
+        # Retrieve the existing alert first to get symbol/exchange.
+        existing = self.retrieve_alert(alert_uuid)
+        if not existing:
+            return False
+            
+        payload = {
+            "name": new_name or existing.get("name"),
+            "lhs_exchange": existing.get("lhs_exchange", "NSE"),
+            "lhs_tradingsymbol": existing.get("lhs_tradingsymbol"),
+            "lhs_attribute": existing.get("lhs_attribute", "LastTradedPrice"),
+            "operator": mapped_condition,
+            "rhs_type": existing.get("rhs_type", "constant"),
+            "type": existing.get("type", "simple"),
+            "rhs_constant": str(new_price)
+        }
+        
+        resp = requests.put(f"{self.BASE_URL}/{alert_uuid}", data=payload, headers=self._get_headers())
+        self._handle_response(resp)
+        logging.info(f"KiteAlertAdapter: Modified alert UUID: {alert_uuid}")
+        return True
 
     def delete_alert(self, alert_uuid: str) -> bool:
         self.rate_limiter.wait(EndpointCategory.ALERT)
-        if alert_uuid in self._alerts:
-            del self._alerts[alert_uuid]
-            logging.info(f"KiteAlertAdapter: Deleted alert UUID: {alert_uuid}")
-            return True
-        return False
+        resp = requests.delete(f"{self.BASE_URL}?uuid={alert_uuid}", headers=self._get_headers())
+        if resp.status_code == 404:
+            return False
+        self._handle_response(resp)
+        logging.info(f"KiteAlertAdapter: Deleted alert UUID: {alert_uuid}")
+        return True
