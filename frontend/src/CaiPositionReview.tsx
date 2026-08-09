@@ -260,7 +260,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
             <div className="mb-4 p-4 bg-yellow-900/40 border border-yellow-500/50 rounded text-yellow-400 text-sm">
               <div className="flex items-center font-bold text-base mb-1">
                 <AlertTriangle className="w-5 h-5 mr-2 text-yellow-500" />
-                BREAKOUT = NEXT ADD — REVIEW REQUIRED
+                CONFIGURATION ERROR: BREAKOUT PRICE = NEXT ADD PRICE
               </div>
               <div className="ml-7 text-yellow-200">
                 Breakout confirms strength; Next ADD authorizes the next tranche. These must be deliberately separated before alerts can be sent.
@@ -293,7 +293,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                 }`}
                 disabled={duplicateThreshold || syncing}
                 onClick={sendAlertsToZerodha}
-                title={duplicateThreshold ? 'Resolve BREAKOUT = NEXT ADD before sending alerts' : 'Create/replace the four CAI-owned Zerodha alerts'}
+                title={duplicateThreshold ? 'Resolve configuration error before sending alerts' : 'Create/replace the four CAI-owned Zerodha alerts'}
               >
                 {duplicateThreshold ? 'SEND ALERTS TO ZERODHA — BLOCKED' : syncing ? 'SENDING ALERTS…' : 'SEND ALERTS TO ZERODHA'}
               </button>
