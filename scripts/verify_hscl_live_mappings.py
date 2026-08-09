@@ -86,17 +86,22 @@ def main():
         print(f"MRI UUID:   {kite_uuid}")
         print(f"STATUS:     {status}")
         print(f"VERSION ID: {config_version_id}")
+        import sys
+        sys.stdout.flush()
 
-        alert = adapter.retrieve_alert(kite_uuid)
+        try:
+            alert = adapter.retrieve_alert(kite_uuid)
 
-        if alert is None:
-            print("❌ NOT FOUND IN ZERODHA")
+            if alert is None:
+                print("❌ NOT FOUND IN ZERODHA")
+                all_real = False
+            else:
+                print("✅ EXISTS IN ZERODHA")
+                # Print useful identity information without credentials.
+                print(f"Zerodha alert: {alert}")
+        except Exception as e:
+            print(f"❌ ERROR COMMUNICATING WITH ZERODHA: {e}")
             all_real = False
-        else:
-            print("✅ EXISTS IN ZERODHA")
-
-            # Print useful identity information without credentials.
-            print(f"Zerodha alert: {alert}")
 
         print("----------------------------------------------")
 
