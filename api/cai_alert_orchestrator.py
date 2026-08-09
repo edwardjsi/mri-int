@@ -281,11 +281,7 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
         cur.execute("UPDATE cai_alert_config_versions SET status = 'SUPERSEDED' WHERE client_id = %s AND symbol = %s AND status = 'APPROVED'", (client_id, symbol))
         cur.execute("UPDATE cai_alert_config_versions SET status = 'APPROVED' WHERE id = %s", (draft["id"],))
         
-        # 7. Record Ledger
-        cur.execute("""
-            INSERT INTO cai_alert_events (client_id, symbol, event_type, old_status, new_status, metadata)
-            VALUES (%s, %s, 'APPROVE_SYNC', 'DRAFT', 'APPROVED', %s)
-        """, (client_id, symbol, json.dumps({"config_id": str(draft["id"])})))
+
         
         conn.commit()
         
