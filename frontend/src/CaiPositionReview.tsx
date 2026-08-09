@@ -261,6 +261,17 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
                 {Number(caiConfig.breakout_confirmation_price) === Number(caiConfig.next_add_price) ? 'APPROVE & SYNC ZERODHA — BLOCKED' : 'APPROVE & SYNC ZERODHA'}
               </button>
             )}
+            
+            {caiConfig?.status === 'APPROVED' && (
+              <button 
+                className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/30 rounded text-sm font-bold transition-colors ml-auto"
+                onClick={() => {
+                  if (onClose) onClose();
+                }}
+              >
+                BACK TO SATURDAY REVIEW
+              </button>
+            )}
           </div>
         </div>
       )}

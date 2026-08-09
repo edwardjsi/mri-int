@@ -22,6 +22,7 @@ import ResearchReport from './ResearchReport';
 import EmbeddedDebateSection from './EmbeddedDebateSection';
 import { CaiPortfolioPage } from './CaiPortfolioPage';
 import { CaiPositionReviewPage } from './CaiPositionReviewPage';
+import { CaiSaturdayReviewPage } from './CaiSaturdayReviewPage';
 import { CaiPortfolioInit } from './CaiPortfolioInit';
 import { CaiDebugPage } from './CaiDebugPage';
 import { CaiDashboard } from './CaiDashboard';
@@ -2890,6 +2891,7 @@ function App() {
               <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
               <Route path="/caiportfolio/init" element={<CaiPortfolioInit />} />
               <Route path="/caiposition/:id" element={<CaiPositionReviewPage />} />
+              <Route path="/cai/saturday-review" element={<CaiSaturdayReviewPage />} />
               <Route path="/caidebug/:symbol" element={<CaiDebugPage />} />
               <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
