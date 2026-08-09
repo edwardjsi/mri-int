@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 import psycopg2
 
 from api.zerodha_adapter import KiteAlertAdapter
@@ -35,6 +36,11 @@ def main():
         )
 
         mappings = cur.fetchall()
+        
+        print("\n--- EXACT DB QUERY RESULT ---")
+        print(repr(mappings))
+        print("-----------------------------\n")
+        sys.stdout.flush()
 
         print("\n==============================================")
         print("HSCL LIVE MAPPING VERIFICATION")
@@ -44,8 +50,6 @@ def main():
 
         if len(mappings) != 4:
             print("❌ FAIL: Expected exactly 4 active HSCL mappings.")
-            for row in mappings:
-                print(row)
             return
 
         cur.execute(
@@ -63,7 +67,11 @@ def main():
             print("❌ Error: No active admin client found")
             return
 
-        client_id = client_row[0]
+        # Handle DictCursor gracefully just in case
+        if isinstance(client_row, dict):
+            client_id = client_row['id']
+        else:
+            client_id = client_row[0]
 
         print("Initializing KiteAlertAdapter...")
         sys.stdout.flush()
@@ -79,57 +87,60 @@ def main():
 
         for row in mappings:
             try:
-                # Avoid unpacking directly just in case the row shape changed
-                role = str(row[0])
-                kite_uuid = str(row[1])
-                active = row[2]
-                status = str(row[3])
-                config_version_id = str(row[4])
+                # Handle both tuple and dictionary cursors safely
+                if isinstance(row, dict):
+                    role = str(row['alert_role'])
+                    kite_uuid = str(row['kite_uuid'])
+                else:
+                    role = str(row[0])
+                    kite_uuid = str(row[1])
 
-                print(f"ROLE:       {role}")
-                print(f"MRI UUID:   {kite_uuid}")
-                print(f"STATUS:     {status}")
-                print(f"VERSION ID: {config_version_id}")
+                print(f"ROLE: {role}")
+                print(f"MRI UUID: {kite_uuid}")
                 sys.stdout.flush()
 
                 try:
                     alert = adapter.retrieve_alert(kite_uuid)
 
                     if alert is None:
-                        print("❌ NOT FOUND IN ZERODHA")
-                        results.append((role, kite_uuid, "NO", None, None))
+                        print("ZERODHA EXISTS: NO")
+                        results.append((role, kite_uuid, "NO", None))
                     else:
-                        print("✅ EXISTS IN ZERODHA")
+                        print("ZERODHA EXISTS: YES")
                         name = alert.get("name", "Unknown Name")
                         operator = alert.get("operator", "")
                         rhs_constant = alert.get("rhs_constant", "")
                         cond = f"{operator} {rhs_constant}"
-                        print(f"Zerodha alert: {name} | {cond}")
-                        results.append((role, kite_uuid, "YES", name, cond))
+                        results.append((role, kite_uuid, "YES", f"{name} | {cond}"))
                 except Exception as e:
-                    print(f"❌ ERROR COMMUNICATING WITH ZERODHA for UUID {kite_uuid}: {e}")
-                    results.append((role, kite_uuid, f"ERROR: {e}", None, None))
+                    print(f"ERROR: {e}")
+                    traceback.print_exc()
+                    results.append((role, kite_uuid, f"ERROR: {e}", None))
                 
                 print("----------------------------------------------")
                 sys.stdout.flush()
+
             except Exception as e:
-                print(f"❌ ERROR PROCESSING ROW {row}: {e}")
+                print(f"ERROR processing row setup: {e}")
+                traceback.print_exc()
                 sys.stdout.flush()
 
         print("\n==============================================")
         print("FINAL MATRIX")
         print("==============================================")
-        print(f"{'Role':<25} | {'MRI UUID':<40} | {'Zerodha UUID EXISTS?':<20} | {'Alert Name & Condition'}")
-        print("-" * 120)
+        print(f"{'MRI UUID':<40} | {'Zerodha UUID EXISTS?':<20} | {'Alert Name & Condition'}")
+        print("-" * 100)
         for r in results:
-            role, uuid, exists, name, cond = r
-            name_cond = f"{name} ({cond})" if name else ""
-            print(f"{role:<25} | {uuid:<40} | {exists:<20} | {name_cond}")
+            role, uuid, exists, name_cond = r
+            details = name_cond if name_cond else ""
+            print(f"{uuid:<40} | {exists:<20} | {details}")
         print("==============================================\n")
+        
+        print("VERIFICATION COMPLETE")
+        sys.stdout.flush()
 
     except Exception as e:
         print(f"\n❌ FATAL SCRIPT ERROR: {e}")
-        import traceback
         traceback.print_exc()
         sys.stdout.flush()
     finally:
