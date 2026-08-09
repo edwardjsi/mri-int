@@ -185,7 +185,7 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
   };
 
   const sendAlertsToZerodha = async () => {
-    if (!data?.symbol || !caiConfig || caiConfig.status !== 'DRAFT' || duplicateThreshold) return;
+    if (!data?.symbol || !caiConfig || (caiConfig.status !== 'DRAFT' && caiConfig.status !== 'SYNC_FAILED') || duplicateThreshold) return;
     const confirmed = window.confirm(
       `Send the 4 CAI alerts for ${data.symbol} to Zerodha?\n\n` +
       'This creates/replaces only CAI-owned alerts. No orders, GTTs, or ATOs will be placed.'
