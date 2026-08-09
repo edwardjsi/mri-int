@@ -70,10 +70,8 @@ def main():
 
     client_id = client_row[0]
 
-    adapter = KiteAlertAdapter(
-        client_id=client_id,
-        db_connection=conn,
-    )
+    adapter = KiteAlertAdapter()
+    adapter.authenticate(client_id, conn)
 
     # ------------------------------------------------------------
     # 3. Retrieve every mapped UUID directly from Zerodha
