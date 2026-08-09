@@ -96,13 +96,18 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     # Delete existing draft or failed sync
     cur.execute("DELETE FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status IN ('DRAFT', 'SYNC_FAILED')", (client_id, symbol))
     
+    # Calculate next version number for this client_id and symbol
+    cur.execute("SELECT MAX(version) FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s", (client_id, symbol))
+    max_version = cur.fetchone()["max"]
+    next_version = (max_version or 0) + 1
+    
     # Insert new draft
     cur.execute("""
         INSERT INTO cai_alert_config_versions 
-        (client_id, symbol, status, pullback_lower_bound, pullback_upper_bound, breakout_confirmation_price, next_add_price, structural_break_price, origin, validation_status)
-        VALUES (%s, %s, 'DRAFT', %s, %s, %s, %s, %s, 'HUMAN_EDITED', %s)
+        (client_id, symbol, version, status, pullback_lower_bound, pullback_upper_bound, breakout_confirmation_price, next_add_price, structural_break_price, origin, validation_status)
+        VALUES (%s, %s, %s, 'DRAFT', %s, %s, %s, %s, %s, 'HUMAN_EDITED', %s)
         RETURNING *
-    """, (client_id, symbol, 
+    """, (client_id, symbol, next_version,
           draft_data.get("pullback_lower_bound"),
           draft_data.get("pullback_upper_bound"),
           draft_data.get("breakout_confirmation_price"),
