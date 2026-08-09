@@ -278,7 +278,7 @@ def test_approve_sync_adapter_call_signature():
         adapter_instance = MockKite.return_value
         
         def strict_create_alert(alert_name, symbol, condition, price, alert_type="simple"):
-            return {"data": {"alert_uuid": f"mock-{alert_name}"}}
+            return f"mock-{alert_name}"
             
         adapter_instance.create_alert.side_effect = strict_create_alert
         
@@ -391,7 +391,7 @@ def test_approve_sync_retry_sync_failed():
         adapter_instance = MockKite.return_value
         
         def strict_create_alert(alert_name, symbol, condition, price, alert_type="simple"):
-            return {"data": {"alert_uuid": f"mock-{alert_name}"}}
+            return f"mock-{alert_name}"
             
         adapter_instance.create_alert.side_effect = strict_create_alert
         
@@ -445,6 +445,58 @@ def test_approve_sync_retry_sync_failed_failure_remains_failed():
         assert "Kite API Error during Retry" in response.json()["detail"]
         
         # Verify it went to SYNC_IN_PROGRESS then back to SYNC_FAILED
+        update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status =" in call[0][0]]
+        assert len(update_calls) == 2
+        assert "SYNC_IN_PROGRESS" in update_calls[0][0][0]
+        assert "SYNC_FAILED" in update_calls[1][0][0]
+
+def test_approve_sync_partial_success():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},
+        {"id": "pos-id"},
+        {
+            "id": "draft-id",
+            "symbol": "HSCL",
+            "status": "DRAFT",
+            "pullback_lower_bound": 720.0,
+            "pullback_upper_bound": 730.0,
+            "breakout_confirmation_price": 800.0,
+            "next_add_price": 820.0,
+            "structural_break_price": 670.0
+        }
+    ]
+    mock_cur.fetchall.return_value = []
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as MockKite:
+        adapter_instance = MockKite.return_value
+        
+        call_count = [0]
+        def partial_create_alert(alert_name, symbol, condition, price, alert_type="simple"):
+            call_count[0] += 1
+            if call_count[0] == 2:
+                raise Exception("Failure on second alert")
+            return f"mock-{alert_name}"
+            
+        adapter_instance.create_alert.side_effect = partial_create_alert
+        
+        response = client.post("/api/cai/alerts/HSCL/approve-sync")
+        
+        assert response.status_code == 500
+        assert "Failure on second alert" in response.json()["detail"]
+        
         update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status =" in call[0][0]]
         assert len(update_calls) == 2
         assert "SYNC_IN_PROGRESS" in update_calls[0][0][0]

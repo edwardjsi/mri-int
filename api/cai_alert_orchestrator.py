@@ -240,7 +240,9 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
         # 2. Create new alerts on Kite FIRST
         for p in payloads:
             resp = adapter.create_alert(alert_name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
-            uuid_created = resp["data"]["alert_uuid"] if "data" in resp else resp.get("alert_uuid", "mock_uuid")
+            if not isinstance(resp, str) or not resp:
+                raise RuntimeError("Kite adapter returned invalid alert UUID")
+            uuid_created = resp
             created_alerts.append({
                 "role": p["role"],
                 "kite_uuid": uuid_created
