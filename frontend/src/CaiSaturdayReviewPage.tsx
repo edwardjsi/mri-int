@@ -143,12 +143,28 @@ export const CaiSaturdayReviewPage: React.FC = () => {
                     )}
 
                     <td className="px-6 py-4">
-                      {hasDuplicateWarning ? (
-                        <span className="flex items-center text-yellow-500 font-bold text-xs bg-yellow-500/10 px-2 py-1 rounded">
-                          <AlertTriangle className="w-3 h-3 mr-1" /> ⚠ WARNING
+                      {pos.validation_status === 'READY' ? (
+                        <span className="flex items-center text-green-400 font-bold text-xs bg-green-500/10 px-2 py-1 rounded w-fit">
+                          <CheckCircle className="w-3 h-3 mr-1" /> READY
                         </span>
+                      ) : pos.validation_status === 'INVALID' ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="flex items-center text-red-500 font-bold text-xs bg-red-500/10 px-2 py-1 rounded w-fit">
+                            <AlertTriangle className="w-3 h-3 mr-1" /> INVALID
+                          </span>
+                          {(pos.validation_reasons || []).map((reason: string) => (
+                            <span key={reason} className="text-red-400/80 text-[10px] uppercase font-mono">{reason}</span>
+                          ))}
+                        </div>
                       ) : (
-                         <span className="text-gray-500">—</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="flex items-center text-yellow-500 font-bold text-xs bg-yellow-500/10 px-2 py-1 rounded w-fit">
+                            <AlertTriangle className="w-3 h-3 mr-1" /> REVIEW REQUIRED
+                          </span>
+                          {(pos.validation_reasons || []).map((reason: string) => (
+                            <span key={reason} className="text-yellow-500/80 text-[10px] uppercase font-mono">{reason}</span>
+                          ))}
+                        </div>
                       )}
                     </td>
 

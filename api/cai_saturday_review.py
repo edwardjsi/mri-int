@@ -87,7 +87,8 @@ def get_saturday_review(client=Depends(get_current_client), conn=Depends(get_db)
                 "symbol": sym,
                 "tranche": pos.get("tranche", 1),
                 "config_status": "UNCONFIGURED",
-                "validation_status": None,
+                "validation_status": "INVALID",
+                "validation_reasons": ["UNCONFIGURED"],
                 "pullback_lower": None,
                 "pullback_upper": None,
                 "breakout": None,
@@ -104,13 +105,12 @@ def get_saturday_review(client=Depends(get_current_client), conn=Depends(get_db)
                 pos_data["next_add"] = selected_config["next_add_price"]
                 pos_data["structure_break"] = selected_config["structural_break_price"]
                 
-                # Check duplicate thresholds
+                # Check duplicate thresholds and validate structure
                 config_dict = dict(selected_config)
-                try:
-                    warnings, val_status = validate_config(config_dict)
-                    pos_data["validation_status"] = val_status
-                except HTTPException:
-                    pos_data["validation_status"] = "FAIL"
+                
+                validation_result = validate_config(config_dict, pos.get("tranche", 1))
+                pos_data["validation_status"] = validation_result["validation_status"]
+                pos_data["validation_reasons"] = validation_result["validation_reasons"]
                 
                 if selected_config["status"] == "APPROVED":
                     if selected_config["id"] in synced_config_ids:

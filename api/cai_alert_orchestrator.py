@@ -88,10 +88,22 @@ def get_alert_configs(symbol: str, conn = Depends(get_db)):
 @router.post("/{symbol}/draft")
 def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     draft_data = req.dict()
-    warnings, val_status = validate_config(draft_data)
     
     cur = conn.cursor()
     client_id = _get_admin_client(cur)
+    
+    # Get the position's current tranche
+    cur.execute("SELECT tranche FROM cai_position WHERE symbol = %s AND status = 'ACTIVE'", (symbol,))
+    pos_row = cur.fetchone()
+    if not pos_row:
+        raise HTTPException(status_code=404, detail="Active position not found for symbol")
+    tranche = pos_row["tranche"] or 1
+    
+    validation_result = validate_config(draft_data, tranche)
+    if validation_result["validation_status"] == "INVALID":
+        raise HTTPException(status_code=400, detail=" | ".join(validation_result["validation_reasons"]))
+        
+    val_status = validation_result["validation_status"]
     
     # Delete existing draft or failed sync
     cur.execute("DELETE FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status IN ('DRAFT', 'SYNC_FAILED')", (client_id, symbol))
@@ -116,40 +128,65 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
           val_status))
     new_draft = cur.fetchone()
     conn.commit()
-    return {"status": "success", "draft": new_draft, "warnings": warnings, "validation_status": val_status}
+    return {"status": "success", "draft": new_draft, "validation_result": validation_result}
 
-def validate_config(config):
-    warnings = []
-    validation_status = "PASS"
+def validate_config(config: dict, tranche: int) -> dict:
+    reasons = []
+    status = "READY"
+    
     sb = config.get("structural_break_price")
     pl = config.get("pullback_lower_bound")
     pu = config.get("pullback_upper_bound")
     bc = config.get("breakout_confirmation_price")
     na = config.get("next_add_price")
     
-    if sb is not None and pl is not None and sb >= pl:
-        raise HTTPException(status_code=400, detail="Structure break must be strictly below pullback zone")
-    if pl is not None and pu is not None and pl > pu:
-        raise HTTPException(status_code=400, detail="Pullback lower bound must be <= pullback upper bound")
-    if pu is not None and bc is not None and pu >= bc:
-        raise HTTPException(status_code=400, detail="Pullback upper bound must be strictly below breakout confirmation")
-    
+    # 1. Structural Validation (Hard constraints)
     from decimal import Decimal
-    if bc is not None and na is not None:
-        if Decimal(str(bc)) == Decimal(str(na)):
-            warnings.append("⚠️ Breakout and Next ADD share the same threshold.")
-            validation_status = "WARNING_DUPLICATE_THRESHOLD"
+    
+    if sb is not None and pl is not None and sb >= pl:
+        reasons.append("STRUCTURE_BREAK_ABOVE_PULLBACK")
+    if pl is not None and pu is not None and pl > pu:
+        reasons.append("PULLBACK_LOWER_ABOVE_UPPER")
+    if pu is not None and bc is not None and pu >= bc:
+        reasons.append("PULLBACK_UPPER_ABOVE_BREAKOUT")
+    if bc is not None and na is not None and Decimal(str(bc)) > Decimal(str(na)):
+        reasons.append("BREAKOUT_ABOVE_NEXT_ADD")
         
     prices = [p for p in [sb, pl, pu, bc, na] if p is not None]
     if any(p <= 0 for p in prices):
-        raise HTTPException(status_code=400, detail="Prices must be positive")
+        reasons.append("NEGATIVE_OR_ZERO_PRICE")
+
+    # If any structural violations exist, it's INVALID
+    if reasons:
+        return {"validation_status": "INVALID", "validation_reasons": reasons}
         
-    # Check for any duplicate non-null values
+    # 2. Completeness Validation & Logical Warnings (Soft constraints)
+    
+    # Base mandatory levels
+    if sb is None:
+        reasons.append("MISSING_STRUCTURE_BREAK")
+    if pl is None or pu is None:
+        reasons.append("MISSING_PULLBACK_ZONE")
+        
+    # Tranche-dependent levels
+    if tranche < 5:
+        if bc is None:
+            reasons.append("MISSING_BREAKOUT")
+        if na is None:
+            reasons.append("MISSING_NEXT_ADD")
+        if bc is not None and na is not None and Decimal(str(bc)) == Decimal(str(na)):
+            reasons.append("BREAKOUT_EQUALS_NEXT_ADD")
+            
+    # Check for any exact duplicate non-null values
     values = [val for key, val in config.items() if val is not None and "price" in key]
     if len(values) != len(set(values)):
-        warnings.append("⚠️ Multiple alerts share the same price threshold.")
+        if "BREAKOUT_EQUALS_NEXT_ADD" not in reasons:
+            reasons.append("MULTIPLE_ALERTS_SHARE_THRESHOLD")
+
+    if reasons:
+        status = "REVIEW_REQUIRED"
         
-    return warnings, validation_status
+    return {"validation_status": status, "validation_reasons": reasons}
 
 def create_kite_alert_payloads(symbol: str, config: dict) -> List[dict]:
     payloads = []
