@@ -24,7 +24,7 @@ def run_smoke_test():
     cur = conn.cursor()
     
     # Get the admin client ID
-    cur.execute("SELECT id FROM clients WHERE role = 'admin' LIMIT 1")
+    cur.execute("SELECT id FROM clients WHERE is_admin = TRUE LIMIT 1")
     admin = cur.fetchone()
     if not admin:
         print("❌ Error: Admin client not found in DB")
