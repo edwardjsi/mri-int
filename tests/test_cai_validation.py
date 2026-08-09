@@ -332,3 +332,120 @@ def test_approve_sync_adapter_failure():
         
         update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status = 'APPROVED'" in call[0][0]]
         assert len(update_calls) == 0
+
+def test_sync_failed_is_actionable():
+    from api.cai_alert_orchestrator import get_alert_configs
+    from unittest.mock import MagicMock
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    # Mock admin client
+    mock_cur.fetchone.return_value = {"id": "admin-id"}
+    
+    # Mock versions with SYNC_FAILED
+    mock_cur.fetchall.return_value = [
+        {"id": "failed-id", "status": "SYNC_FAILED", "pullback_lower_bound": 720}
+    ]
+    
+    result = get_alert_configs("HSCL", mock_conn)
+    
+    # SYNC_FAILED should be exposed as draft
+    assert result["draft"] is not None
+    assert result["draft"]["status"] == "SYNC_FAILED"
+    assert result["approved"] is None
+
+def test_approve_sync_retry_sync_failed():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    # Mock data for approve_and_sync
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},
+        {"id": "pos-id"},
+        {
+            "id": "draft-id",
+            "symbol": "HSCL",
+            "status": "SYNC_FAILED", # Current status in DB
+            "pullback_lower_bound": 720.0,
+            "pullback_upper_bound": 730.0,
+            "breakout_confirmation_price": 800.0,
+            "next_add_price": 820.0,
+            "structural_break_price": 670.0
+        }
+    ]
+    mock_cur.fetchall.return_value = [] # No obsolete mappings
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as MockKite:
+        adapter_instance = MockKite.return_value
+        
+        def strict_create_alert(alert_name, symbol, condition, price, alert_type="simple"):
+            return {"data": {"alert_uuid": f"mock-{alert_name}"}}
+            
+        adapter_instance.create_alert.side_effect = strict_create_alert
+        
+        response = client.post("/api/cai/alerts/HSCL/approve-sync")
+        
+        assert response.status_code == 200
+        assert adapter_instance.create_alert.call_count == 4
+        
+        # Check transitions: SYNC_FAILED -> SYNC_IN_PROGRESS -> APPROVED
+        update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status =" in call[0][0]]
+        assert len(update_calls) == 2
+        assert "SYNC_IN_PROGRESS" in update_calls[0][0][0]
+        assert "APPROVED" in update_calls[1][0][0]
+
+def test_approve_sync_retry_sync_failed_failure_remains_failed():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},
+        {"id": "pos-id"},
+        {
+            "id": "draft-id",
+            "symbol": "HSCL",
+            "status": "SYNC_FAILED",
+            "pullback_lower_bound": 720.0,
+            "pullback_upper_bound": 730.0,
+            "breakout_confirmation_price": 800.0,
+            "next_add_price": 820.0,
+            "structural_break_price": 670.0
+        }
+    ]
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as MockKite:
+        adapter_instance = MockKite.return_value
+        adapter_instance.create_alert.side_effect = Exception("Kite API Error during Retry")
+        
+        response = client.post("/api/cai/alerts/HSCL/approve-sync")
+        
+        assert response.status_code == 500
+        assert "Kite API Error during Retry" in response.json()["detail"]
+        
+        # Verify it went to SYNC_IN_PROGRESS then back to SYNC_FAILED
+        update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status =" in call[0][0]]
+        assert len(update_calls) == 2
+        assert "SYNC_IN_PROGRESS" in update_calls[0][0][0]
+        assert "SYNC_FAILED" in update_calls[1][0][0]

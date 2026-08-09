@@ -70,7 +70,7 @@ def get_alert_configs(symbol: str, conn = Depends(get_db)):
     versions = cur.fetchall()
     
     approved = next((v for v in versions if v["status"] == "APPROVED"), None)
-    draft = next((v for v in versions if v["status"] == "DRAFT"), None)
+    draft = next((v for v in versions if v["status"] in ["DRAFT", "SYNC_FAILED"]), None)
     
     # Sync status
     sync_count = 0
@@ -93,8 +93,8 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     cur = conn.cursor()
     client_id = _get_admin_client(cur)
     
-    # Delete existing draft
-    cur.execute("DELETE FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'DRAFT'", (client_id, symbol))
+    # Delete existing draft or failed sync
+    cur.execute("DELETE FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status IN ('DRAFT', 'SYNC_FAILED')", (client_id, symbol))
     
     # Insert new draft
     cur.execute("""
@@ -188,7 +188,7 @@ def preview_sync(symbol: str, conn = Depends(get_db)):
     cur = conn.cursor()
     client_id = _get_admin_client(cur)
     
-    cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'DRAFT'", (client_id, symbol))
+    cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status IN ('DRAFT', 'SYNC_FAILED') ORDER BY created_at DESC LIMIT 1", (client_id, symbol))
     draft = cur.fetchone()
     if not draft:
         raise HTTPException(status_code=404, detail="No draft configuration found for symbol")
@@ -217,7 +217,7 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     client_id = _get_admin_client(cur)
     pos_id = _get_position_id(cur, symbol)
     
-    cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'DRAFT'", (client_id, symbol))
+    cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status IN ('DRAFT', 'SYNC_FAILED') ORDER BY created_at DESC LIMIT 1", (client_id, symbol))
     draft = cur.fetchone()
     if not draft:
         raise HTTPException(status_code=400, detail="No draft configuration available to approve.")
