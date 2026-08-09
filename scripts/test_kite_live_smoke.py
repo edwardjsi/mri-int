@@ -60,11 +60,19 @@ def run_smoke_test():
     
     # 4. Modify the alert (PUT)
     print(f"Modifying alert {alert_uuid} price to 9998.0...")
-    success = adapter.modify_alert(alert_uuid, new_condition="<=", new_price=9998.0, new_name=f"{test_name}-MOD")
+    success = adapter.modify_alert(alert_uuid, new_condition=">=", new_price=9998.0, new_name=f"{test_name}-MOD")
     if not success:
         print(f"❌ Error: Failed to modify alert {alert_uuid}")
         sys.exit(1)
     print("✅ Modified alert successfully")
+    
+    # 4.5 Retrieve it again to confirm modification
+    print(f"Retrieving alert {alert_uuid} again to confirm modification...")
+    retrieved_mod = adapter.retrieve_alert(alert_uuid)
+    if not retrieved_mod:
+        print(f"❌ Error: Could not retrieve alert {alert_uuid} after modification")
+        sys.exit(1)
+    print(f"✅ Confirmed modification. Name is now: {retrieved_mod['name']}, Price: {retrieved_mod.get('rhs_constant', 'unknown')}")
     
     # 5. Delete the alert
     print(f"Deleting alert {alert_uuid}...")
