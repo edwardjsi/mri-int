@@ -134,8 +134,14 @@ class KiteAlertAdapter:
         resp = requests.get(f"{self.BASE_URL}/{alert_uuid}", headers=self._get_headers())
         if resp.status_code == 404:
             return None
-        data = self._handle_response(resp)
-        return data.get("data")
+            
+        try:
+            data = self._handle_response(resp)
+            return data.get("data")
+        except RuntimeError as e:
+            if "Alert not found" in str(e):
+                return None
+            raise
 
     def get_all_alerts(self) -> List[Dict[str, Any]]:
         self.rate_limiter.wait(EndpointCategory.ALERT)
@@ -173,7 +179,14 @@ class KiteAlertAdapter:
         self.rate_limiter.wait(EndpointCategory.ALERT)
         resp = requests.delete(f"{self.BASE_URL}?uuid={alert_uuid}", headers=self._get_headers())
         if resp.status_code == 404:
-            return False
-        self._handle_response(resp)
+            return True
+            
+        try:
+            self._handle_response(resp)
+        except RuntimeError as e:
+            if "Alert not found" in str(e):
+                return True
+            raise
+            
         logging.info(f"KiteAlertAdapter: Deleted alert UUID: {alert_uuid}")
         return True
