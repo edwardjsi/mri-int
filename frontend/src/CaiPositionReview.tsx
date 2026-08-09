@@ -269,12 +269,12 @@ export const CaiPositionReview: React.FC<CaiPositionReviewProps> = ({ positionId
           )}
 
           <div className="flex flex-wrap gap-3 mt-4 items-center">
-            {caiConfig?.status === 'DRAFT' && (
+            {(caiConfig?.status === 'DRAFT' || caiConfig?.status === 'APPROVED') && (
               <button
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
                 onClick={() => setShowEditModal(true)}
               >
-                EDIT DRAFT
+                {caiConfig.status === 'APPROVED' ? 'EDIT / CREATE NEW DRAFT' : 'EDIT DRAFT'}
               </button>
             )}
             <button
