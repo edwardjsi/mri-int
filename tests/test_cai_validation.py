@@ -243,3 +243,92 @@ def test_approve_sync_inactive_position_fails_cleanly():
         mock_kite.assert_not_called()
         
     app.dependency_overrides = {}
+
+def test_approve_sync_adapter_call_signature():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},
+        {"id": "pos-id"},
+        {
+            "id": "draft-id",
+            "symbol": "HSCL",
+            "status": "DRAFT",
+            "pullback_lower_bound": 720.0,
+            "pullback_upper_bound": 730.0,
+            "breakout_confirmation_price": 800.0,
+            "next_add_price": 820.0,
+            "structural_break_price": 670.0
+        }
+    ]
+    mock_cur.fetchall.return_value = []
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as MockKite:
+        adapter_instance = MockKite.return_value
+        
+        def strict_create_alert(alert_name, symbol, condition, price, alert_type="simple"):
+            return {"data": {"alert_uuid": f"mock-{alert_name}"}}
+            
+        adapter_instance.create_alert.side_effect = strict_create_alert
+        
+        response = client.post("/api/cai/alerts/HSCL/approve-sync")
+        
+        assert response.status_code == 200
+        assert adapter_instance.create_alert.call_count == 4
+        
+        update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status =" in call[0][0]]
+        assert len(update_calls) == 2
+        assert "SYNC_IN_PROGRESS" in update_calls[0][0][0]
+        assert "APPROVED" in update_calls[1][0][0]
+
+def test_approve_sync_adapter_failure():
+    from fastapi.testclient import TestClient
+    from unittest.mock import MagicMock, patch
+    from api.main import app
+    from api.cai_alert_orchestrator import get_db
+
+    client = TestClient(app)
+    
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+    
+    mock_cur.fetchone.side_effect = [
+        {"id": "admin-id"},
+        {"id": "pos-id"},
+        {
+            "id": "draft-id",
+            "symbol": "HSCL",
+            "status": "DRAFT",
+            "pullback_lower_bound": 720.0,
+            "pullback_upper_bound": 730.0,
+            "breakout_confirmation_price": 800.0,
+            "next_add_price": 820.0,
+            "structural_break_price": 670.0
+        }
+    ]
+    
+    app.dependency_overrides[get_db] = lambda: mock_conn
+    
+    with patch("api.cai_alert_orchestrator.KiteAlertAdapter") as MockKite:
+        adapter_instance = MockKite.return_value
+        adapter_instance.create_alert.side_effect = Exception("Kite API Error")
+        
+        response = client.post("/api/cai/alerts/HSCL/approve-sync")
+        
+        assert response.status_code == 500
+        assert "Kite API Error" in response.json()["detail"]
+        
+        update_calls = [call for call in mock_cur.execute.call_args_list if "UPDATE cai_alert_config_versions SET status = 'APPROVED'" in call[0][0]]
+        assert len(update_calls) == 0

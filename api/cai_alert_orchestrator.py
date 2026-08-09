@@ -239,7 +239,7 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     try:
         # 2. Create new alerts on Kite FIRST
         for p in payloads:
-            resp = adapter.create_alert(name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
+            resp = adapter.create_alert(alert_name=p["name"], symbol=symbol, condition=p["condition"], price=p["price"])
             uuid_created = resp["data"]["alert_uuid"] if "data" in resp else resp.get("alert_uuid", "mock_uuid")
             created_alerts.append({
                 "role": p["role"],
