@@ -415,8 +415,8 @@ async def get_weekly_chart(symbol: str, years: int = 3):
     """Fetch weekly candlestick data for CAI Review UI charts."""
     candles = generate_weekly_candles(symbol.upper().strip(), years)
     if not candles:
-        raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
-    return {"symbol": symbol.upper(), "data": candles}
+        return {"symbol": symbol.upper(), "status": "insufficient_history", "data": []}
+    return {"symbol": symbol.upper(), "status": "ready", "data": candles}
 
 @router.get("/candidate/{symbol}")
 async def get_candidate_review(symbol: str, client=Depends(get_current_client)):

@@ -14,6 +14,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   const [error, setError] = useState<string | null>(null);
   const [showMriLevels, setShowMriLevels] = useState(false);
   const [latestDate, setLatestDate] = useState<string | null>(null);
+  const [insufficientHistory, setInsufficientHistory] = useState(false);
 
   useEffect(() => {
     let chart: IChartApi | null = null;
@@ -30,6 +31,10 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         }
         
         const json = await res.json();
+        if (json.status === 'insufficient_history') {
+          setInsufficientHistory(true);
+          return;
+        }
         const data = json.data;
 
         if (!chartContainerRef.current) return;
@@ -85,11 +90,11 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
 
         const candles = data.map((d: any) => ({
           time: formatTime(d.time),
-          open: d.open,
-          high: d.high,
-          low: d.low,
-          close: d.close,
-        }));
+          open: Number(d.open),
+          high: Number(d.high),
+          low: Number(d.low),
+          close: Number(d.close),
+        })).sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
         if (candles.length > 0) {
           setLatestDate(candles[candles.length - 1].time);
@@ -114,7 +119,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         if (positionData && showMriLevels) {
           if (positionData.entry_price) {
             candlestickSeries.createPriceLine({
-              price: positionData.entry_price,
+              price: Number(positionData.entry_price),
               color: '#3B82F6',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
@@ -124,7 +129,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           }
           if (positionData.add_level) {
             candlestickSeries.createPriceLine({
-              price: positionData.add_level,
+              price: Number(positionData.add_level),
               color: '#10B981',
               lineWidth: 1,
               lineStyle: LineStyle.Dotted,
@@ -134,7 +139,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           }
           if (positionData.pullback_level) {
             candlestickSeries.createPriceLine({
-              price: positionData.pullback_level,
+              price: Number(positionData.pullback_level),
               color: '#8b5cf6',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
@@ -144,7 +149,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           }
           if (positionData.alert_level) {
             candlestickSeries.createPriceLine({
-              price: positionData.alert_level,
+              price: Number(positionData.alert_level),
               color: '#F59E0B',
               lineWidth: 1,
               lineStyle: LineStyle.Dotted,
@@ -154,7 +159,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           }
           if (positionData.structure_level) {
             candlestickSeries.createPriceLine({
-              price: positionData.structure_level,
+              price: Number(positionData.structure_level),
               color: '#F97316',
               lineWidth: 1,
               lineStyle: LineStyle.Solid,
@@ -164,7 +169,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           }
           if (positionData.quit_level) {
             candlestickSeries.createPriceLine({
-              price: positionData.quit_level,
+              price: Number(positionData.quit_level),
               color: '#EF4444',
               lineWidth: 1,
               lineStyle: LineStyle.Solid,
@@ -177,7 +182,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         if (caiConfig) {
           if (caiConfig.pullback_upper_bound) {
             candlestickSeries.createPriceLine({
-              price: caiConfig.pullback_upper_bound,
+              price: Number(caiConfig.pullback_upper_bound),
               color: '#22c55e',
               lineWidth: 2,
               lineStyle: LineStyle.Solid,
@@ -186,7 +191,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
             });
             if (caiConfig.pullback_lower_bound) {
                candlestickSeries.createPriceLine({
-                 price: caiConfig.pullback_lower_bound,
+                 price: Number(caiConfig.pullback_lower_bound),
                  color: '#22c55e',
                  lineWidth: 2,
                  lineStyle: LineStyle.Solid,
@@ -198,7 +203,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           
           if (caiConfig.breakout_confirmation_price) {
             const bcLine = {
-              price: caiConfig.breakout_confirmation_price,
+              price: Number(caiConfig.breakout_confirmation_price),
               color: '#3b82f6',
               lineWidth: 2 as const,
               lineStyle: LineStyle.Solid,
@@ -210,7 +215,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           
           if (caiConfig.next_add_price) {
             const naLine = {
-              price: caiConfig.next_add_price,
+              price: Number(caiConfig.next_add_price),
               color: '#a855f7',
               lineWidth: 2 as const,
               lineStyle: LineStyle.Dotted,
@@ -222,7 +227,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           
           if (caiConfig.structural_break_price) {
             candlestickSeries.createPriceLine({
-              price: caiConfig.structural_break_price,
+              price: Number(caiConfig.structural_break_price),
               color: '#ef4444',
               lineWidth: 3,
               lineStyle: LineStyle.Solid,
@@ -263,7 +268,23 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   }, [symbol]);
 
   if (error) {
-    return <div className="p-4 text-red-500 bg-red-500/10 rounded-lg">{error}</div>;
+    return (
+      <div className="flex flex-col space-y-2 relative w-full h-[650px] md:h-[750px] mb-8">
+        <div className="relative w-full h-[400px] md:h-[600px] bg-gray-900 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center">
+          <div className="p-4 text-red-500 font-medium">Unable to load chart data. Please retry.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (insufficientHistory) {
+    return (
+      <div className="flex flex-col space-y-2 relative w-full h-[650px] md:h-[750px] mb-8">
+        <div className="relative w-full h-[400px] md:h-[600px] bg-gray-900 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center">
+          <div className="text-gray-400 font-medium">Insufficient market history to render weekly chart.</div>
+        </div>
+      </div>
+    );
   }
 
   return (
