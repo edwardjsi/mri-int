@@ -9,6 +9,7 @@ interface PositionData {
   tranche: number;
   config_status: string;
   validation_status: string | null;
+  validation_reasons: string[] | null;
   pullback_lower: number | null;
   pullback_upper: number | null;
   breakout: number | null;
@@ -119,7 +120,6 @@ export const CaiSaturdayReviewPage: React.FC = () => {
             <tbody className="divide-y divide-gray-800">
               {data.positions.map((pos) => {
                 const isUnconfigured = pos.config_status === 'UNCONFIGURED';
-                const hasDuplicateWarning = pos.validation_status === 'WARNING_DUPLICATE_THRESHOLD';
                 const isSynced = pos.zerodha_sync_status === 'SYNCED';
                 
                 return (
