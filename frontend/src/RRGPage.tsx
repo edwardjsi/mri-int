@@ -233,11 +233,11 @@ export const RRGPage = () => {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-800/50 text-slate-400 uppercase tracking-wider text-xs border-b border-slate-800">
                 <tr>
-                  {visibleColumns.rank && <th className="px-6 py-4 font-medium text-center w-16">Rank</th>}
-                  {visibleColumns.owned && <th className="px-4 py-4 font-medium text-center w-20">Owned</th>}
+                  {visibleColumns.rank && <th className="px-6 py-4 font-medium text-center cursor-pointer hover:text-slate-200 w-16" onClick={() => handleSort('rank')}>Rank {getSortIcon('rank')}</th>}
+                  {visibleColumns.owned && <th className="px-4 py-4 font-medium text-center cursor-pointer hover:text-slate-200 w-20" onClick={() => handleSort('owned')}>Owned {getSortIcon('owned')}</th>}
                   {visibleColumns.symbol && <th className="px-6 py-4 font-medium cursor-pointer hover:text-slate-200 w-32" onClick={() => handleSort('symbol')}>Symbol {getSortIcon('symbol')}</th>}
                   {visibleColumns.company && <th className="px-6 py-4 font-medium cursor-pointer hover:text-slate-200 min-w-[200px]" onClick={() => handleSort('company_name')}>Company Name {getSortIcon('company_name')}</th>}
-                  {visibleColumns.quadrant && <th className="px-6 py-4 font-medium text-center">Quadrant</th>}
+                  {visibleColumns.quadrant && <th className="px-6 py-4 font-medium text-center cursor-pointer hover:text-slate-200" onClick={() => handleSort('quadrant')}>Quadrant {getSortIcon('quadrant')}</th>}
                   {visibleColumns.rs_ratio && <th className="px-6 py-4 font-medium text-right cursor-pointer hover:text-slate-200" onClick={() => handleSort('rs_ratio')}>RS Ratio {getSortIcon('rs_ratio')}</th>}
                   {visibleColumns.rs_momentum && <th className="px-6 py-4 font-medium text-right cursor-pointer hover:text-slate-200" onClick={() => handleSort('rs_momentum')}>RS Momentum {getSortIcon('rs_momentum')}</th>}
                   {visibleColumns.heading && <th className="px-6 py-4 font-medium text-right cursor-pointer hover:text-slate-200" onClick={() => handleSort('heading')}>Heading {getSortIcon('heading')}</th>}
