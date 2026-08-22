@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from './api';
+import { RrgScatterPlot } from './RrgScatterPlot';
 
 const DEFAULT_COLUMNS = {
   rank: true,
@@ -222,6 +223,9 @@ export const RRGPage = () => {
             </div>
           )}
         </div>
+
+        {/* RRG Scatter Plot */}
+        <RrgScatterPlot data={filteredData} onDotClick={(symbol: string) => navigate(`/company/${symbol}`)} />
 
         {/* Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-2xl">
