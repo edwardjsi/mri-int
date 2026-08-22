@@ -45,11 +45,12 @@ def get_rrg_screener(
     max_date = None
     
     for r in results:
-        # Filter by quadrant early
-        if quadrant and quadrant.lower() != "all" and r.status.lower() != quadrant.lower():
-            continue
-            
         payload = r.payload or {}
+        item_quadrant = payload.get("quadrant", "UNKNOWN")
+
+        # Filter by quadrant early
+        if quadrant and quadrant.lower() != "all" and item_quadrant.lower() != quadrant.lower():
+            continue
         
         # Track latest date
         if r.evaluation_date:
@@ -61,7 +62,7 @@ def get_rrg_screener(
             "company_name": company_names.get(r.symbol, r.symbol),
             "owned": r.symbol in owned_symbols,
             "rrg": {
-                "quadrant": r.status,
+                "quadrant": item_quadrant,
                 "heading": payload.get("heading"),
                 "rs_ratio": payload.get("rs_ratio"),
                 "rs_momentum": payload.get("rs_momentum"),
