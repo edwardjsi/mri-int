@@ -30,54 +30,49 @@ def ingest_missing_symbols_sync(symbols, user_id='admin', user_email=None, user_
     clean_symbols = list(set([str(s).upper().strip() for s in symbols if str(s).strip()]))
     logger.info(f"[INGEST] Starting bulk sync ingestion for: {clean_symbols}")
     
-    pending_symbols = set(clean_symbols)
+    pending_symbols = clean_symbols.copy()
     successful_symbols = []
 
-    # --- Tier 1: Bulk NSE (.NS) in batches of 20 ---
-    BATCH_SIZE = 20
+    # --- Tier 1: Bulk NSE (.NS) ---
     if pending_symbols:
-        pending_list = list(pending_symbols)
-        for i in range(0, len(pending_list), BATCH_SIZE):
-            batch = pending_list[i:i+BATCH_SIZE]
-            nse_tickers = [f"{s}.NS" for s in batch]
-            try:
-                logger.info(f"[INGEST] Strategy 1: Batch NSE fetch for {len(nse_tickers)} symbols (batch {i//BATCH_SIZE + 1})")
-                data = yf.download(nse_tickers, period="3mo", progress=False, auto_adjust=True, group_by='ticker')
+        nse_tickers = [f"{s}.NS" for s in pending_symbols]
+        try:
+            logger.info(f"[INGEST] Strategy 1: Bulk NSE fetch for {len(nse_tickers)} symbols")
+            # 2y period ensures we have enough data for EMA-200 / SMA-200
+            data = yf.download(nse_tickers, period="2y", progress=False, auto_adjust=True, group_by='ticker')
+            
+            for sym in pending_symbols[:]:
+                ticker = f"{sym}.NS"
+                # Extract the ticker's DataFrame. In newer yfinance versions, it always returns a MultiIndex when group_by='ticker'.
+                sym_data = data[ticker] if isinstance(data.columns, pd.MultiIndex) else data
+                
+                if not sym_data.empty and sym_data.dropna(subset=['Close']).shape[0] > 0:
+                    process_and_save_yf_df(sym_data, sym)
+                    successful_symbols.append(sym)
+                    pending_symbols.remove(sym)
+        except Exception as e:
+            logger.warning(f"[INGEST] Bulk NSE fetch failed: {e}")
 
-                for sym in list(batch):
-                    ticker = f"{sym}.NS"
-                    sym_data = data[ticker] if len(nse_tickers) > 1 else data
-
-                    if not sym_data.empty and sym_data.dropna(subset=['Close']).shape[0] > 0:
-                        process_and_save_yf_df(sym_data, sym)
-                        successful_symbols.append(sym)
-                        pending_symbols.discard(sym)
-            except Exception as e:
-                logger.warning(f"[INGEST] Batch NSE fetch failed: {e}")
-
-    # --- Tier 2: Bulk BSE (.BO) for remainders in batches ---
+    # --- Tier 2: Bulk BSE (.BO) for remainders ---
     if pending_symbols:
-        pending_list = list(pending_symbols)
-        for i in range(0, len(pending_list), BATCH_SIZE):
-            batch = pending_list[i:i+BATCH_SIZE]
-            bse_tickers = [f"{s}.BO" for s in batch]
-            try:
-                logger.info(f"[INGEST] Strategy 2: Batch BSE fetch for {len(bse_tickers)} symbols (batch {i//BATCH_SIZE + 1})")
-                data = yf.download(bse_tickers, period="3mo", progress=False, auto_adjust=True, group_by='ticker')
-
-                for sym in list(batch):
-                    ticker = f"{sym}.BO"
-                    sym_data = data[ticker] if len(bse_tickers) > 1 else data
-                    if not sym_data.empty and sym_data.dropna(subset=['Close']).shape[0] > 0:
-                        process_and_save_yf_df(sym_data, sym)
-                        successful_symbols.append(sym)
-                        pending_symbols.discard(sym)
-            except Exception as e:
-                logger.warning(f"[INGEST] Batch BSE fetch failed: {e}")
+        bse_tickers = [f"{s}.BO" for s in pending_symbols]
+        try:
+            logger.info(f"[INGEST] Strategy 2: Bulk BSE fetch for {len(bse_tickers)} symbols")
+            data = yf.download(bse_tickers, period="2y", progress=False, auto_adjust=True, group_by='ticker')
+            
+            for sym in pending_symbols[:]:
+                ticker = f"{sym}.BO"
+                sym_data = data[ticker] if isinstance(data.columns, pd.MultiIndex) else data
+                if not sym_data.empty and sym_data.dropna(subset=['Close']).shape[0] > 0:
+                    process_and_save_yf_df(sym_data, sym)
+                    successful_symbols.append(sym)
+                    pending_symbols.remove(sym)
+        except Exception as e:
+            logger.warning(f"[INGEST] Bulk BSE fetch failed: {e}")
 
     # --- Tier 3: Individual Numeric Overrides ---
     if pending_symbols:
-        for sym in list(pending_symbols):
+        for sym in pending_symbols[:]:
             numeric_code = BSE_OVERRIDES.get(sym)
             if numeric_code:
                 ticker = f"{numeric_code}.BO"
@@ -87,7 +82,7 @@ def ingest_missing_symbols_sync(symbols, user_id='admin', user_email=None, user_
                     if not raw.empty:
                         process_and_save_yf_df(raw, sym)
                         successful_symbols.append(sym)
-                        pending_symbols.discard(sym)
+                        pending_symbols.remove(sym)
                 except Exception as e:
                     logger.error(f"[INGEST] Numeric override failed for {sym}: {e}")
 
