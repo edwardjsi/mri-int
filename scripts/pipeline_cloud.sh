@@ -47,6 +47,10 @@ symbols = df['Symbol'].dropna().unique().tolist()
 load_stocks(symbols)
 PY
 
+# Step 1b: Data Freshness Gate
+echo "[1b/10] Checking Data Freshness..." | tee -a "$LOG_FILE"
+python scripts/check_freshness.py 2>&1 | tee -a "$LOG_FILE"
+
 # Step 2: Compute indicators
 echo "[2/10] Running Indicator Engine..." | tee -a "$LOG_FILE"
 python engine_core/indicator_engine.py 2>&1 | tee -a "$LOG_FILE"

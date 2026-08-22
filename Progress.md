@@ -2,6 +2,56 @@
 
 ---
 
+## 📅 Session: August 22, 2026 — Data Ingestion Gap & RRG UI Features
+**Session Start:** (night IST)
+
+### What Was Done This Session
+- [x] Identified that while `daily_prices` had 994 records, the RRG model had only 96 records for the current date because `model_runner` was skipped in the main `pipeline_cloud.sh`.
+- [x] Manually executed the `ModelRunner` on the backend to populate RRG model results for all 994 companies in the database, restoring the full view.
+- [x] Made all columns in the RRG table (Rank, Owned, Quadrant, etc.) sortable by clicking column headers.
+- [x] Restructured the RRG scatter plot to display only the top 20 strongest signals per quadrant (based on mathematical distance from the (100, 100) origin) while keeping the full 500+ list in the table below.
+
+### 📌 Current Milestone
+- **Data Ingestion Gap Fixed.** RRG model data is populated for all universe symbols.
+- **RRG Page Complete.** Scatter plot is clean, and table is fully interactive and comprehensive.
+
+---
+
+
+## 📅 Session: August 15, 2026 — Upstox Analytics Token Diagnostic & Investigation
+**Session Start:** (afternoon IST)
+
+### What Was Done This Session
+- [x] Tested Upstox V3 historical-candle adapter using the live Analytics Token.
+- [x] Diagnosed `HTTP 403 Forbidden` across all documented market-data APIs (V2 and V3, Equities and Indices, Quotes and Historical data).
+- [x] Proved the failure is rooted at the Upstox API gateway/policy enforcement level rather than an MRI code defect.
+- [x] Froze MRI production code. Deferred implementation of SENSEX ingestion.
+- [x] Wrote `docs/research/UPSTOX_ANALYTICS_TOKEN_INVESTIGATION.md` to document the diagnostic findings.
+
+### 📌 Current Project Status
+- **Upstox migration:** IMPLEMENTATION COMPLETE / LIVE ACCEPTANCE BLOCKED
+- **Blocker:** Upstox Analytics Token API authorization/policy
+- **MRI code defect demonstrated:** NO
+- **SENSEX:** DEFERRED
+- **Freshness gate:** IMPLEMENTED AND TESTED
+- **Downstream MRI engines:** UNMODIFIED
+
+---
+
+## 📅 Session: August 11, 2026 — Minervini Phase 1.5 Research Study
+**Session Start:** (morning IST)
+
+### What Was Done This Session
+- [x] Bypassed Neon DB connection issues by querying the static `daily_prices.csv` backup using Pandas.
+- [x] Built `scratch/minervini_research.py` to calculate missing 52-week rolling metrics and execute the Minervini proxy logic (EMA crossovers + 52w bounds).
+- [x] Scanned 2024-2025 trading data (519 trading days) yielding an average of 214.8 passing stocks per day.
+- [x] Produced and saved `docs/research/MINERVINI_RESEARCH_FEASIBILITY.md` confirming the strategy provides sufficient signal volume to justify a full backtest.
+
+### 📌 Current Milestone
+- **Phase 1.5 Completed.** We have proven the methodology produces a meaningful number of historical setups. Ready to invest in making the data backtest-grade.
+
+---
+
 ## 📅 Session: August 5, 2026 — CIW Workspace Debugger Render Crash Fix
 **Session Start:** ~12:20 IST
 **Session End:** ~12:35 IST

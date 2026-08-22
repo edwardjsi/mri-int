@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CrosshairMode, IChartApi, LineStyle } from 'lightweight-charts';
+import { createChart, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts';
 import { getAuthHeaders } from './api';
 
 interface CaiWeeklyChartProps {
@@ -15,11 +15,11 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
   const [showMriLevels, setShowMriLevels] = useState(false);
   const [latestDate, setLatestDate] = useState<string | null>(null);
   const [insufficientHistory, setInsufficientHistory] = useState(false);
+  const [chartData, setChartData] = useState<any>(null);
 
   useEffect(() => {
-    let chart: IChartApi | null = null;
-    
-    const fetchAndRender = async () => {
+    let active = true;
+    const fetchData = async () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/portfolio-review/chart/${symbol}`, {
@@ -31,56 +31,13 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         }
         
         const json = await res.json();
+        if (!active) return;
+
         if (json.status === 'insufficient_history') {
           setInsufficientHistory(true);
           return;
         }
         const data = json.data;
-
-        if (!chartContainerRef.current) return;
-        
-        chart = createChart(chartContainerRef.current, {
-          layout: {
-            background: { type: ColorType.Solid, color: '#111827' },
-            textColor: '#d1d5db',
-          },
-          grid: {
-            vertLines: { color: '#374151' },
-            horzLines: { color: '#374151' },
-          },
-          crosshair: {
-            mode: CrosshairMode.Normal,
-          },
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
-          timeScale: {
-            timeVisible: true,
-            borderColor: '#374151',
-          },
-          rightPriceScale: {
-            borderColor: '#374151',
-          }
-        });
-
-        const candlestickSeries = chart.addCandlestickSeries({
-          upColor: '#10b981',
-          downColor: '#ef4444',
-          borderVisible: false,
-          wickUpColor: '#10b981',
-          wickDownColor: '#ef4444',
-        });
-
-        const ema10Series = chart.addLineSeries({
-          color: '#3b82f6',
-          lineWidth: 2,
-          title: 'EMA 10',
-        });
-
-        const ema40Series = chart.addLineSeries({
-          color: '#8b5cf6',
-          lineWidth: 2,
-          title: 'EMA 40',
-        });
 
         const formatTime = (t: any) => {
           if (typeof t === 'string') return t.split('T')[0];
@@ -110,141 +67,190 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
           value: d.ema40
         }));
 
-        candlestickSeries.setData(candles);
-        ema10Series.setData(ema10);
-        ema40Series.setData(ema40);
-        
-        chart.timeScale().fitContent();
-
-        if (positionData && showMriLevels) {
-          if (positionData.entry_price) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.entry_price),
-              color: '#3B82F6',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dashed,
-              axisLabelVisible: true,
-              title: 'ENTRY',
-            });
-          }
-          if (positionData.add_level) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.add_level),
-              color: '#10B981',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dotted,
-              axisLabelVisible: true,
-              title: 'NEXT TRANCHE',
-            });
-          }
-          if (positionData.pullback_level) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.pullback_level),
-              color: '#8b5cf6',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dashed,
-              axisLabelVisible: true,
-              title: 'PULLBACK ENTRY',
-            });
-          }
-          if (positionData.alert_level) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.alert_level),
-              color: '#F59E0B',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dotted,
-              axisLabelVisible: true,
-              title: 'ALERT',
-            });
-          }
-          if (positionData.structure_level) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.structure_level),
-              color: '#F97316',
-              lineWidth: 1,
-              lineStyle: LineStyle.Solid,
-              axisLabelVisible: true,
-              title: 'STRUCTURE BREAK',
-            });
-          }
-          if (positionData.quit_level) {
-            candlestickSeries.createPriceLine({
-              price: Number(positionData.quit_level),
-              color: '#EF4444',
-              lineWidth: 1,
-              lineStyle: LineStyle.Solid,
-              axisLabelVisible: true,
-              title: 'QUIT',
-            });
-          }
-        }
-        
-        if (caiConfig) {
-          if (caiConfig.pullback_upper_bound) {
-            candlestickSeries.createPriceLine({
-              price: Number(caiConfig.pullback_upper_bound),
-              color: '#22c55e',
-              lineWidth: 2,
-              lineStyle: LineStyle.Solid,
-              axisLabelVisible: true,
-              title: `PULLBACK ZONE HIGH ${caiConfig.pullback_upper_bound}`,
-            });
-            if (caiConfig.pullback_lower_bound) {
-               candlestickSeries.createPriceLine({
-                 price: Number(caiConfig.pullback_lower_bound),
-                 color: '#22c55e',
-                 lineWidth: 2,
-                 lineStyle: LineStyle.Solid,
-                 axisLabelVisible: true,
-                 title: `PULLBACK ZONE LOW ${caiConfig.pullback_lower_bound}`,
-               });
-            }
-          }
-          
-          if (caiConfig.breakout_confirmation_price) {
-            const bcLine = {
-              price: Number(caiConfig.breakout_confirmation_price),
-              color: '#3b82f6',
-              lineWidth: 2 as const,
-              lineStyle: LineStyle.Solid,
-              axisLabelVisible: true,
-              title: `BREAKOUT ${caiConfig.breakout_confirmation_price}`,
-            };
-            candlestickSeries.createPriceLine(bcLine);
-          }
-          
-          if (caiConfig.next_add_price) {
-            const naLine = {
-              price: Number(caiConfig.next_add_price),
-              color: '#a855f7',
-              lineWidth: 2 as const,
-              lineStyle: LineStyle.Dotted,
-              axisLabelVisible: true,
-              title: `NEXT ADD ${caiConfig.next_add_price}`,
-            };
-            candlestickSeries.createPriceLine(naLine);
-          }
-          
-          if (caiConfig.structural_break_price) {
-            candlestickSeries.createPriceLine({
-              price: Number(caiConfig.structural_break_price),
-              color: '#ef4444',
-              lineWidth: 3,
-              lineStyle: LineStyle.Solid,
-              axisLabelVisible: true,
-              title: `STRUCTURE ${caiConfig.structural_break_price}`,
-            });
-          }
-        }
-        
+        setChartData({ candles, ema10, ema40 });
       } catch (err: any) {
-        setError(err.message);
+        if (active) setError(err.message);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
-    fetchAndRender();
+    fetchData();
+    return () => { active = false; };
+  }, [symbol]);
+
+  useEffect(() => {
+    if (!chartData || !chartContainerRef.current || insufficientHistory) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { type: ColorType.Solid, color: '#111827' },
+        textColor: '#d1d5db',
+      },
+      grid: {
+        vertLines: { color: '#374151' },
+        horzLines: { color: '#374151' },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
+      timeScale: {
+        timeVisible: true,
+        borderColor: '#374151',
+      },
+      rightPriceScale: {
+        borderColor: '#374151',
+      }
+    });
+
+    const candlestickSeries = chart.addCandlestickSeries({
+      upColor: '#10b981',
+      downColor: '#ef4444',
+      borderVisible: false,
+      wickUpColor: '#10b981',
+      wickDownColor: '#ef4444',
+    });
+
+    const ema10Series = chart.addLineSeries({
+      color: '#3b82f6',
+      lineWidth: 2,
+      title: 'EMA 10',
+    });
+
+    const ema40Series = chart.addLineSeries({
+      color: '#8b5cf6',
+      lineWidth: 2,
+      title: 'EMA 40',
+    });
+
+    candlestickSeries.setData(chartData.candles);
+    ema10Series.setData(chartData.ema10);
+    ema40Series.setData(chartData.ema40);
+    
+    chart.timeScale().fitContent();
+
+    if (positionData && showMriLevels) {
+      if (positionData.entry_price) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.entry_price),
+          color: '#3B82F6',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: 'ENTRY',
+        });
+      }
+      if (positionData.add_level) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.add_level),
+          color: '#10B981',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: 'NEXT TRANCHE',
+        });
+      }
+      if (positionData.pullback_level) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.pullback_level),
+          color: '#8b5cf6',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: 'PULLBACK ENTRY',
+        });
+      }
+      if (positionData.alert_level) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.alert_level),
+          color: '#F59E0B',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: 'ALERT',
+        });
+      }
+      if (positionData.structure_level) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.structure_level),
+          color: '#F97316',
+          lineWidth: 1,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: 'STRUCTURE BREAK',
+        });
+      }
+      if (positionData.quit_level) {
+        candlestickSeries.createPriceLine({
+          price: Number(positionData.quit_level),
+          color: '#EF4444',
+          lineWidth: 1,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: 'QUIT',
+        });
+      }
+    }
+    
+    if (caiConfig) {
+      if (caiConfig.pullback_upper_bound) {
+        candlestickSeries.createPriceLine({
+          price: Number(caiConfig.pullback_upper_bound),
+          color: '#22c55e',
+          lineWidth: 2,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: `PULLBACK ZONE HIGH ${caiConfig.pullback_upper_bound}`,
+        });
+        if (caiConfig.pullback_lower_bound) {
+           candlestickSeries.createPriceLine({
+             price: Number(caiConfig.pullback_lower_bound),
+             color: '#22c55e',
+             lineWidth: 2,
+             lineStyle: LineStyle.Solid,
+             axisLabelVisible: true,
+             title: `PULLBACK ZONE LOW ${caiConfig.pullback_lower_bound}`,
+           });
+        }
+      }
+      
+      if (caiConfig.breakout_confirmation_price) {
+        const bcLine = {
+          price: Number(caiConfig.breakout_confirmation_price),
+          color: '#3b82f6',
+          lineWidth: 2 as const,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: `BREAKOUT ${caiConfig.breakout_confirmation_price}`,
+        };
+        candlestickSeries.createPriceLine(bcLine);
+      }
+      
+      if (caiConfig.next_add_price) {
+        const naLine = {
+          price: Number(caiConfig.next_add_price),
+          color: '#a855f7',
+          lineWidth: 2 as const,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: `NEXT ADD ${caiConfig.next_add_price}`,
+        };
+        candlestickSeries.createPriceLine(naLine);
+      }
+      
+      if (caiConfig.structural_break_price) {
+        candlestickSeries.createPriceLine({
+          price: Number(caiConfig.structural_break_price),
+          color: '#ef4444',
+          lineWidth: 3,
+          lineStyle: LineStyle.Solid,
+          axisLabelVisible: true,
+          title: `STRUCTURE ${caiConfig.structural_break_price}`,
+        });
+      }
+    }
 
     const resizeObserver = new ResizeObserver(() => {
       if (chart && chartContainerRef.current) {
@@ -265,7 +271,7 @@ export const CaiWeeklyChart: React.FC<CaiWeeklyChartProps> = ({ symbol, position
         chart.remove();
       }
     };
-  }, [symbol]);
+  }, [chartData, showMriLevels, caiConfig, positionData, insufficientHistory]);
 
   if (error) {
     return (

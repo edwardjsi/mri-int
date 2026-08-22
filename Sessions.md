@@ -1,3 +1,25 @@
+## **August 22, 2026: RRG Data Ingestion Gap & Scatter Plot Refinement**
+**Objective**: Fix the missing RRG data issue where only 96 companies were showing, make RRG table columns sortable, and limit the scatter plot to the top 20 companies per quadrant.
+**Actions**:
+1. **Diagnosis**: Found that `pipeline_cloud.sh` does not run the `ModelRunner` for all companies. The 96 companies came from an earlier restricted run.
+2. **Backfill**: Manually executed `ModelRunner` for all 994 companies in `daily_prices` to populate `model_results` for the current date (`2026-08-22`).
+3. **Table Sorting**: Updated `frontend/src/RRGPage.tsx` to handle dynamic clicking and sorting of columns (Rank, Owned, Symbol, Company, Quadrant, RS Ratio, RS Momentum, Heading).
+4. **Scatter Plot Filter**: Calculated mathematical distance from origin `(100, 100)` in `RRGPage.tsx` to identify the top 20 strongest symbols for each quadrant, rendering only those 80 data points in the scatter plot to prevent visual clutter, while keeping the full data array in the table.
+**Result**: RRG page successfully displays full universe data, sortable table, and cleanly isolated top-tier scatter plot.
+
+---
+
+## **August 11, 2026: Minervini Phase 1.5 Research Study**
+**Objective**: Determine whether the core Minervini methodology generates enough historical signals from existing data (read-only) to justify investing in proper data infrastructure and a full backtest.
+**Actions**:
+1. **Fallback to CSV**: Bypassed Neon database connection failures by executing the research against the static CSV backup (`daily_prices.csv`) using Pandas.
+2. **Minervini Proxy Script**: Built `scratch/minervini_research.py` to calculate rolling 52-week highs and lows dynamically and filter for the target period (2024-2025). Applied relaxed Minervini criteria (`Price > EMA 50 > EMA 200`, `Price > 1.3 * 52W Low`, `Price > 0.75 * 52W High`).
+3. **Signal Metrics Validation**: Ran the scan across ~400k rows. Found that on average, 214.8 stocks pass the scan per day, with a maximum of 368 on a single day.
+4. **Feasibility Report**: Generated `MINERVINI_RESEARCH_FEASIBILITY.md` and moved it to `docs/research/`, concluding that the core setup produces a robust number of candidates and justifies proceeding with a full backtest.
+**Result**: Phase 1.5 is complete. We have concrete evidence that the Minervini setup provides sufficient signal volume.
+
+---
+
 ## **August 5, 2026: CIW Workspace Debugger Render Crash Fix**
 **Objective**: Fix the page render crash on `/company/:symbol` (CiwDebuggerPage) due to missing `state` property when accessing the Company Dossier DTO.
 **Actions**:

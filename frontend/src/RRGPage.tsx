@@ -118,6 +118,29 @@ export const RRGPage = () => {
     }));
   }, [filteredData]);
 
+  // Top 20 per quadrant for Scatter Plot
+  const scatterPlotData = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    
+    filteredData.forEach(item => {
+      const q = item.rrg?.quadrant?.toUpperCase() || 'UNKNOWN';
+      if (!groups[q]) groups[q] = [];
+      groups[q].push(item);
+    });
+
+    const result: any[] = [];
+    Object.values(groups).forEach(group => {
+      const sorted = [...group].sort((a, b) => {
+        const distA = Math.pow((a.rrg?.rs_ratio || 100) - 100, 2) + Math.pow((a.rrg?.rs_momentum || 100) - 100, 2);
+        const distB = Math.pow((b.rrg?.rs_ratio || 100) - 100, 2) + Math.pow((b.rrg?.rs_momentum || 100) - 100, 2);
+        return distB - distA; // descending
+      });
+      result.push(...sorted.slice(0, 20));
+    });
+
+    return result;
+  }, [filteredData]);
+
   // Summary strip counts
   const counts = useMemo(() => {
     const c = { LEADING: 0, IMPROVING: 0, WEAKENING: 0, LAGGING: 0 };
@@ -225,7 +248,7 @@ export const RRGPage = () => {
         </div>
 
         {/* RRG Scatter Plot */}
-        <RrgScatterPlot data={filteredData} onDotClick={(symbol: string) => navigate(`/company/${symbol}`)} />
+        <RrgScatterPlot data={scatterPlotData} onDotClick={(symbol: string) => navigate(`/company/${symbol}`)} />
 
         {/* Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-2xl">

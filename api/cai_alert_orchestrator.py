@@ -54,7 +54,7 @@ def _get_position_id(cur, symbol):
     """, (symbol,))
     row = cur.fetchone()
     if not row:
-        raise HTTPException(status_code=400, detail=f"No active MRI position found for {symbol}")
+        return None
     return str(row["id"]) if isinstance(row, dict) else str(row[0])
 
 @router.get("/{symbol}")
@@ -96,8 +96,9 @@ def upsert_draft(symbol: str, req: CAIConfigDraft, conn=Depends(get_db)):
     cur.execute("SELECT tranche FROM cai_position WHERE symbol = %s AND status = 'ACTIVE'", (symbol,))
     pos_row = cur.fetchone()
     if not pos_row:
-        raise HTTPException(status_code=404, detail="Active position not found for symbol")
-    tranche = pos_row["tranche"] or 1
+        tranche = 1
+    else:
+        tranche = pos_row["tranche"] or 1
     
     validation_result = validate_config(draft_data, tranche)
     if validation_result["validation_status"] == "INVALID":
@@ -235,7 +236,12 @@ def preview_sync(symbol: str, conn = Depends(get_db)):
     if not draft:
         raise HTTPException(status_code=404, detail="No draft configuration found for symbol")
     
-    warnings, val_status = validate_config(draft)
+    cur.execute("SELECT tranche FROM cai_position WHERE symbol = %s AND status = 'ACTIVE'", (symbol,))
+    pos_row = cur.fetchone()
+    tranche = pos_row["tranche"] or 1 if pos_row else 1
+
+    validation_result = validate_config(draft, tranche)
+    val_status = validation_result["validation_status"]
     
     cur.execute("SELECT * FROM cai_alert_config_versions WHERE client_id = %s AND symbol = %s AND status = 'APPROVED'", (client_id, symbol))
     approved = cur.fetchone()
@@ -264,7 +270,12 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     if not draft:
         raise HTTPException(status_code=400, detail="No draft configuration available to approve.")
         
-    warnings, val_status = validate_config(draft)
+    cur.execute("SELECT tranche FROM cai_position WHERE symbol = %s AND status = 'ACTIVE'", (symbol,))
+    pos_row = cur.fetchone()
+    tranche = pos_row["tranche"] or 1 if pos_row else 1
+
+    validation_result = validate_config(draft, tranche)
+    val_status = validation_result["validation_status"]
     
     if val_status == 'WARNING_DUPLICATE_THRESHOLD':
         raise HTTPException(status_code=400, detail="Cannot approve and sync because Breakout equals Next ADD. Please manually resolve duplicate thresholds.")
@@ -280,8 +291,12 @@ def approve_and_sync(symbol: str, conn = Depends(get_db)):
     payloads = create_kite_alert_payloads(symbol, draft)
     
     # Pre-sync: fetch all active mappings
-    cur.execute("SELECT * FROM cai_alert_mappings WHERE client_id = %s AND cai_position_id = %s AND active = TRUE", (client_id, pos_id))
-    active_mappings = cur.fetchall()
+    if pos_id:
+        cur.execute("SELECT * FROM cai_alert_mappings WHERE client_id = %s AND cai_position_id = %s AND active = TRUE", (client_id, pos_id))
+        active_mappings = cur.fetchall()
+    else:
+        # Without pos_id, we can only fall back to looking up by config_version_id, or we just assume no mappings exist for this draft
+        active_mappings = []
     
     try:
         active_zerodha_alerts = adapter.get_all_alerts()
