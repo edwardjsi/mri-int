@@ -31,7 +31,7 @@ export const RrgScatterPlot = ({ data, onDotClick }: RrgScatterPlotProps) => {
     };
   }, [plotData]);
 
-  if (plotData.length === 0) return null;
+
 
   return (
     <div className="w-full aspect-square md:aspect-[2/1] relative bg-slate-900 border border-slate-700 rounded-lg overflow-hidden mb-6 select-none shadow-xl">
