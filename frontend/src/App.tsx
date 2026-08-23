@@ -35,6 +35,7 @@ import { CompanyKnowledgePage } from './CompanyKnowledgePage';
 import { CompanyDossier } from './CompanyDossier';
 import DarvasScreener from './DarvasScreener';
 import RRGPage from './RRGPage';
+import ConsolidatedSignals from './ConsolidatedSignals';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
@@ -2889,7 +2890,7 @@ function App() {
               <Route path="/extractor" element={<AkeDashboard />} />
               
               {/* Restored routes */}
-              <Route path="/signals" element={<DashboardPage onSelectStock={setSelectedStock} />} />
+              <Route path="/signals" element={<ConsolidatedSignals onSelectStock={setSelectedStock} />} />
               <Route path="/caidashboard" element={<CaiDashboard />} />
               <Route path="/caiportfolio" element={<CaiPortfolioPage />} />
               <Route path="/caiportfolio/init" element={<CaiPortfolioInit />} />
