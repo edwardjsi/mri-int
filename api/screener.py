@@ -179,3 +179,32 @@ def save_scan(req: SaveScanRequest, client: dict = Depends(get_current_client)):
     finally:
         if conn:
             conn.close()
+
+@router.get("/chart/{symbol}")
+def get_chart(symbol: str):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT date, close, high, low, open 
+                FROM daily_prices 
+                WHERE symbol = %s 
+                ORDER BY date ASC 
+                LIMIT 252
+            """, (symbol,))
+            rows = cur.fetchall()
+            results = []
+            for row in rows:
+                results.append({
+                    "date": str(row['date']),
+                    "close": float(row['close']),
+                    "high": float(row['high']),
+                    "low": float(row['low']),
+                    "open": float(row['open'])
+                })
+            return {"symbol": symbol, "data": results}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

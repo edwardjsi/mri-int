@@ -1,9 +1,16 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 
 export default function DarvasScreener() {
   const [data, setData] = useState<{ scan_name: string, total_count: number, results: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<any[] | null>(null);
+  const [chartLoading, setChartLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/v1/screener/darvas', {
@@ -45,6 +52,48 @@ export default function DarvasScreener() {
     .catch(() => alert("Error saving scan"));
   };
 
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const toggleChart = (symbol: string) => {
+    if (expandedSymbol === symbol) {
+      setExpandedSymbol(null);
+      setChartData(null);
+      return;
+    }
+    setExpandedSymbol(symbol);
+    setChartLoading(true);
+    fetch(`/api/v1/screener/chart/${symbol}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('mri_token')}`
+      }
+    })
+    .then(res => res.json())
+    .then(resData => {
+      setChartData(resData.data);
+      setChartLoading(false);
+    })
+    .catch(() => {
+      setChartLoading(false);
+    });
+  };
+
+  const sortedResults = data?.results ? [...data.results].sort((a, b) => {
+    if (!sortConfig) return 0;
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  }) : [];
+
   if (loading) return <div className="p-4" style={{ color: 'white' }}>Loading Darvas Screener...</div>;
   if (error) return <div className="p-4" style={{ color: 'red' }}>Error: {error}</div>;
   if (!data) return null;
@@ -73,33 +122,54 @@ export default function DarvasScreener() {
 
       <div>
         <h3>Results: {data.total_count} stocks</h3>
-        <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-          {data.results.map((r, i) => (
-            <div key={i} style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #334155' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{r.symbol}</span>
-                <span style={{ color: '#94a3b8' }}>{r.company_name}</span>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '12px' }}>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Close Price</div>
-                  <div>₹{r.close?.toFixed(2)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Market Cap</div>
-                  <div>₹{r.market_cap_cr?.toFixed(0)} Cr</div>
-                </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid #1e293b', paddingTop: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Why it passed:</div>
-                {r.explanation.map((exp: string, idx: number) => (
-                  <div key={idx} style={{ fontSize: '13px', color: '#22c55e' }}>{exp}</div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div style={{ marginTop: '16px', overflowX: 'auto', background: '#0f172a', borderRadius: '8px', border: '1px solid #334155' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #334155' }}>
+                <th style={{ padding: '12px', cursor: 'pointer', color: '#94a3b8' }} onClick={() => handleSort('symbol')}>Symbol {sortConfig?.key === 'symbol' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+                <th style={{ padding: '12px', cursor: 'pointer', color: '#94a3b8' }} onClick={() => handleSort('company_name')}>Name {sortConfig?.key === 'company_name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+                <th style={{ padding: '12px', cursor: 'pointer', color: '#94a3b8' }} onClick={() => handleSort('close')}>Close {sortConfig?.key === 'close' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+                <th style={{ padding: '12px', cursor: 'pointer', color: '#94a3b8' }} onClick={() => handleSort('market_cap_cr')}>Mcap (Cr) {sortConfig?.key === 'market_cap_cr' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedResults.map((r, i) => (
+                <React.Fragment key={i}>
+                  <tr style={{ borderBottom: '1px solid #1e293b' }}>
+                    <td style={{ padding: '12px', color: '#3b82f6', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => toggleChart(r.symbol)}>{r.symbol}</td>
+                    <td style={{ padding: '12px' }}>{r.company_name}</td>
+                    <td style={{ padding: '12px' }}>₹{r.close?.toFixed(2)}</td>
+                    <td style={{ padding: '12px' }}>₹{r.market_cap_cr?.toFixed(0)}</td>
+                  </tr>
+                  {expandedSymbol === r.symbol && (
+                    <tr>
+                      <td colSpan={4} style={{ padding: '16px', background: '#1e293b' }}>
+                        <div style={{ fontSize: '14px', marginBottom: '12px', color: '#22c55e' }}>
+                           {r.explanation.map((e: string, idx: number) => <div key={idx}>{e}</div>)}
+                        </div>
+                        <div style={{ height: '300px', width: '100%' }}>
+                          {chartLoading ? <div>Loading chart...</div> : 
+                           chartData && chartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="date" stroke="#94a3b8" tickFormatter={(t) => t.substring(5)} />
+                                <YAxis stroke="#94a3b8" domain={['auto', 'auto']} />
+                                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                                <Line type="monotone" dataKey="close" stroke="#3b82f6" dot={false} strokeWidth={2} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div>No chart data available.</div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
