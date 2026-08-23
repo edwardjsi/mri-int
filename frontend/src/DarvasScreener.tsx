@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { api } from './api';
+import { useState, useEffect } from 'react';
 
 export default function DarvasScreener() {
   const [data, setData] = useState<{ scan_name: string, total_count: number, results: any[] } | null>(null);
@@ -43,7 +42,7 @@ export default function DarvasScreener() {
         alert("Failed to save scan: " + resData.error);
       }
     })
-    .catch(err => alert("Error saving scan"));
+    .catch(() => alert("Error saving scan"));
   };
 
   if (loading) return <div className="p-4" style={{ color: 'white' }}>Loading Darvas Screener...</div>;
