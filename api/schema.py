@@ -69,12 +69,14 @@ def ensure_required_tables(conn) -> None:
     try:
         cur.execute("ALTER TABLE client_external_holdings DROP CONSTRAINT IF EXISTS client_external_holdings_client_id_symbol_key;")
     except Exception:
-        pass
+        conn.rollback()
+        cur = conn.cursor()
     
     try:
         cur.execute("ALTER TABLE client_external_holdings ADD CONSTRAINT client_external_holdings_client_id_symbol_account_source_key UNIQUE (client_id, symbol, account_source);")
     except Exception:
-        pass
+        conn.rollback()
+        cur = conn.cursor()
 
     # 3. Watchlist
     cur.execute(
@@ -1501,6 +1503,58 @@ def ensure_cai_tables(cur) -> None:
             END IF;
         END
         $$;
+        """
+    )
+
+    # Darvas Screener: NIFTY 500 Universe tracking
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.nifty500_universe (
+            symbol TEXT PRIMARY KEY,
+            constituent_from DATE NOT NULL,
+            constituent_to DATE,
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+
+    # Darvas Screener: Market Cap History
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.market_cap_history (
+            id SERIAL PRIMARY KEY,
+            symbol TEXT NOT NULL,
+            date DATE NOT NULL,
+            market_cap_cr NUMERIC(15,4),
+            source TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(symbol, date)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_market_cap_history_symbol_date ON public.market_cap_history(symbol, date);")
+
+    # Darvas Screener: Saved Scans
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.saved_scans (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            scan_type TEXT NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        """
+    )
+    
+    # Darvas Screener: Alert State
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public.darvas_alert_state (
+            symbol VARCHAR(20) PRIMARY KEY,
+            last_alerted_date DATE NOT NULL
+        );
         """
     )
 

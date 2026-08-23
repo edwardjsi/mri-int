@@ -67,6 +67,40 @@ def fetch_nifty500_symbols() -> list[str]:
         logger.error(f"Failed to fetch Nifty 500 list: {e}")
         raise
 
+def update_nifty500_universe(current_symbols: list[str]):
+    """Update the historical tracking table of NIFTY 500 constituents."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            today = datetime.today().strftime("%Y-%m-%d")
+            
+            # 1. Close out symbols that are no longer in the index
+            cur.execute("""
+                UPDATE nifty500_universe 
+                SET constituent_to = %(today)s, updated_at = NOW() 
+                WHERE constituent_to IS NULL AND symbol != ALL(%(current_symbols)s)
+            """, {"today": today, "current_symbols": current_symbols})
+            
+            # 2. Insert new symbols or reactivate ones that came back
+            insert_query = """
+                INSERT INTO nifty500_universe (symbol, constituent_from, constituent_to)
+                VALUES (%(symbol)s, %(today)s, NULL)
+                ON CONFLICT (symbol) DO UPDATE SET
+                    constituent_to = NULL,
+                    updated_at = NOW();
+            """
+            from psycopg2.extras import execute_batch
+            records = [{"symbol": sym, "today": today} for sym in current_symbols]
+            execute_batch(cur, insert_query, records, page_size=500)
+            
+            conn.commit()
+            logger.info("Updated nifty500_universe tracking table.")
+    except Exception as e:
+        logger.error(f"Error updating universe table: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
 
 def get_already_ingested_symbols() -> set[str]:
     """Return the set of symbols that already have at least 200 rows in daily_prices."""
@@ -152,6 +186,9 @@ def run():
 
     # Step 1: Get all target symbols
     nifty500 = fetch_nifty500_symbols()
+    
+    # Step 1.5: Update historical universe table
+    update_nifty500_universe(nifty500)
 
     # Step 2: Skip symbols we already have sufficient data for
     already_done = get_already_ingested_symbols()

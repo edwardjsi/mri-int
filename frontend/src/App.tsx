@@ -33,6 +33,7 @@ import { ResearchInbox } from './ResearchInbox';
 import { AkeDashboard } from './AkeDashboard';
 import { CompanyKnowledgePage } from './CompanyKnowledgePage';
 import { CompanyDossier } from './CompanyDossier';
+import DarvasScreener from './DarvasScreener';
 import RRGPage from './RRGPage';
 import './App.css';
 
@@ -2783,6 +2784,7 @@ function Navigation() {
           <Link to="/caidashboard" className={`nav-link ${page === 'caidashboard' ? 'active' : ''}`}><span className="nav-icon">🧠</span> CAI Dashboard</Link>
           <Link to="/caiportfolio" className={`nav-link ${page === 'caiportfolio' ? 'active' : ''}`}><span className="nav-icon">💼</span> CAI Portfolio</Link>
           <Link to="/shadow" className={`nav-link ${page === 'shadow' ? 'active' : ''}`}><span className="nav-icon">🔄</span> Swing Momentum</Link>
+          <Link to="/darvas" className={`nav-link ${page === 'darvas' ? 'active' : ''}`}><span className="nav-icon">📊</span> Darvas Screener</Link>
           <Link to="/breakout" className={`nav-link ${page === 'breakout' ? 'active' : ''}`}><span className="nav-icon">🚀</span> Breakout Radar</Link>
           <Link to="/trend" className={`nav-link ${page === 'trend' ? 'active' : ''}`}><span className="nav-icon">📉</span> Trend Screen</Link>
           <Link to="/112co" className={`nav-link ${page === '112co' ? 'active' : ''}`}><span className="nav-icon">🦅</span> 112Co</Link>
@@ -2815,6 +2817,7 @@ function Navigation() {
         <Link to="/caidashboard" className={`mobile-nav-link ${page === 'caidashboard' ? 'active' : ''}`} title="CAI">🧠</Link>
         <Link to="/caiportfolio" className={`mobile-nav-link ${page === 'caiportfolio' ? 'active' : ''}`} title="CAI Port">💼</Link>
         <Link to="/shadow" className={`mobile-nav-link ${page === 'shadow' ? 'active' : ''}`} title="Swing Momentum">🔄</Link>
+        <Link to="/darvas" className={`mobile-nav-link ${page === 'darvas' ? 'active' : ''}`} title="Darvas Screener">📊</Link>
         <Link to="/ledger" className={`mobile-nav-link ${page === 'ledger' ? 'active' : ''}`} title="History">📋</Link>
         <Link to="/riskaudit" className={`mobile-nav-link ${page === 'riskaudit' ? 'active' : ''}`} title="Risk Audit">🛡️</Link>
         <Link to="/watchlist" className={`mobile-nav-link ${page === 'watchlist' ? 'active' : ''}`} title="Watchlist">👀</Link>
@@ -2894,6 +2897,7 @@ function App() {
               <Route path="/cai/saturday-review" element={<CaiSaturdayReviewPage />} />
               <Route path="/caidebug/:symbol" element={<CaiDebugPage />} />
               <Route path="/shadow" element={<ShadowMomentumPage onSelectStock={setSelectedStock} />} />
+              <Route path="/darvas" element={<DarvasScreener />} />
               <Route path="/riskaudit" element={<RiskAuditPage onSelectStock={setSelectedStock} />} />
               <Route path="/watchlist" element={<WatchlistPage onSelectStock={setSelectedStock} />} />
               <Route path="/112co" element={<One12CoDashboard onViewResearch={() => {}} />} />
