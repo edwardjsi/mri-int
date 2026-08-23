@@ -8,7 +8,7 @@ export default function DarvasScreener() {
   useEffect(() => {
     fetch('/api/v1/screener/darvas', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('mri_auth_token')}`
+        'Authorization': `Bearer ${localStorage.getItem('mri_token')}`
       }
     })
     .then(res => {
@@ -30,7 +30,7 @@ export default function DarvasScreener() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('mri_auth_token')}`
+        'Authorization': `Bearer ${localStorage.getItem('mri_token')}`
       },
       body: JSON.stringify({ name: "Daily Darvas Scan" })
     })
