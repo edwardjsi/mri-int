@@ -24,9 +24,10 @@ def get_connection():
             import urllib.parse
             parsed = urllib.parse.urlparse(database_url)
             
-            # Neon requires endpoint ID in options for pooler connections
+            # Neon requires endpoint ID in options for pooler connections. 
+            # We must pass exactly what SNI provides to prevent mismatch.
             if parsed.hostname and "neon.tech" in parsed.hostname and "options=" not in database_url.lower():
-                endpoint = parsed.hostname.split(".")[0].replace("-pooler", "")
+                endpoint = parsed.hostname.split(".")[0]  # Do not strip -pooler
                 separator = "&" if "?" in database_url else "?"
                 database_url = f"{database_url}{separator}options=endpoint%3D{endpoint}"
             
