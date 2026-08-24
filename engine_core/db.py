@@ -24,12 +24,19 @@ def get_connection():
             import urllib.parse
             parsed = urllib.parse.urlparse(database_url)
             
-            # Neon requires endpoint ID in options for pooler connections. 
-            # We must pass exactly what SNI provides to prevent mismatch.
-            if parsed.hostname and "neon.tech" in parsed.hostname and "options=" not in database_url.lower():
-                endpoint = parsed.hostname.split(".")[0]  # Do not strip -pooler
-                separator = "&" if "?" in database_url else "?"
-                database_url = f"{database_url}{separator}options=endpoint%3D{endpoint}"
+            # Neon pooled connections require the endpoint ID in the password field for some psycopg2 setups
+            if parsed.hostname and "neon.tech" in parsed.hostname:
+                endpoint = parsed.hostname.split(".")[0].replace("-pooler", "")
+                
+                if parsed.password and not parsed.password.startswith("endpoint="):
+                    # Unquote existing password just in case, then prepend endpoint, then re-quote
+                    new_password = f"endpoint={endpoint};{urllib.parse.unquote(parsed.password)}"
+                    new_password_encoded = urllib.parse.quote(new_password, safe="")
+                    
+                    port_str = f":{parsed.port}" if parsed.port else ""
+                    new_netloc = f"{parsed.username}:{new_password_encoded}@{parsed.hostname}{port_str}"
+                    parsed = parsed._replace(netloc=new_netloc)
+                    database_url = urllib.parse.urlunparse(parsed)
             
             if "sslmode" not in database_url.lower():
                 separator = "&" if "?" in database_url else "?"
