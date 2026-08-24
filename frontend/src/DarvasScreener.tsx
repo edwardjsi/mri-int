@@ -122,7 +122,7 @@ export default function DarvasScreener() {
 
       <div>
         <h3>Results: {data.total_count} stocks</h3>
-        <div style={{ marginTop: '16px', overflowX: 'auto', background: '#0f172a', borderRadius: '8px', border: '1px solid #334155' }}>
+        <div style={{ marginTop: '16px', overflowX: 'auto', maxHeight: 'calc(100vh - 300px)', overflowY: 'auto', background: '#0f172a', borderRadius: '8px', border: '1px solid #334155' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #334155' }}>
