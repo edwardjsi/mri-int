@@ -21,9 +21,19 @@ def get_connection():
 
     if database_url:
         try:
+            import urllib.parse
+            parsed = urllib.parse.urlparse(database_url)
+            
+            # Neon requires endpoint ID in options for pooler connections
+            if parsed.hostname and "neon.tech" in parsed.hostname and "options=" not in database_url.lower():
+                endpoint = parsed.hostname.split(".")[0].replace("-pooler", "")
+                separator = "&" if "?" in database_url else "?"
+                database_url = f"{database_url}{separator}options=endpoint%3D{endpoint}"
+            
             if "sslmode" not in database_url.lower():
                 separator = "&" if "?" in database_url else "?"
                 database_url = f"{database_url}{separator}sslmode=require"
+                
             conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
             logger.debug("Connected using DATABASE_URL")
             return conn
