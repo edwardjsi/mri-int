@@ -1,3 +1,12 @@
+## **August 27, 2026: 112co Data Coverage Fix**
+**Objective**: Fix the missing data issue on the 112co page where half the companies showed no data.
+**Actions**:
+1. **Diagnosis**: Identified that `api/one12co.py` was filtering rows by joining `daily_prices` strictly on the absolute maximum date `MAX(date)` across the entire table, causing symbols with slightly older data to drop out.
+2. **SQL Refactor**: Updated queries across `/api/112co/breakouts`, `/api/112co/summary`, and `/api/112co/research/{symbol}` to use PostgreSQL's `DISTINCT ON (symbol)` pattern, dynamically fetching the most recent available data row for each active universe symbol instead of a global date.
+**Result**: The 112co dashboard and API endpoints now properly reflect the latest available metrics for all active companies instead of marking them as "MISSING".
+
+---
+
 ## **August 22, 2026: RRG Data Ingestion Gap & Scatter Plot Refinement**
 **Objective**: Fix the missing RRG data issue where only 96 companies were showing, make RRG table columns sortable, and limit the scatter plot to the top 20 companies per quadrant.
 **Actions**:

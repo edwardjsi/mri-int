@@ -53,9 +53,16 @@ def get_112co_breakouts(conn=Depends(get_db)):
             dp.rs_90d,
             dp.date AS last_date
         FROM universe_112co u
-        LEFT JOIN daily_prices dp ON dp.symbol = u.symbol
-            AND dp.date = (SELECT MAX(date) FROM daily_prices)
-        LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol AND ss.date = dp.date
+        LEFT JOIN (
+            SELECT DISTINCT ON (symbol) *
+            FROM daily_prices
+            ORDER BY symbol, date DESC
+        ) dp ON dp.symbol = u.symbol
+        LEFT JOIN (
+            SELECT DISTINCT ON (symbol) *
+            FROM stock_scores
+            ORDER BY symbol, date DESC
+        ) ss ON ss.symbol = dp.symbol
         WHERE u.is_active = TRUE
         ORDER BY
             CASE COALESCE(dp.breakout_state, 'MISSING')
@@ -91,8 +98,11 @@ def get_112co_summary(conn=Depends(get_db)):
                 COALESCE(dp.breakout_state, 'MISSING') AS state,
                 COUNT(*) AS count
             FROM universe_112co u
-            LEFT JOIN daily_prices dp ON dp.symbol = u.symbol
-                AND dp.date = (SELECT MAX(date) FROM daily_prices)
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, breakout_state
+                FROM daily_prices
+                ORDER BY symbol, date DESC
+            ) dp ON dp.symbol = u.symbol
             WHERE u.is_active = TRUE
             GROUP BY COALESCE(dp.breakout_state, 'MISSING')
             ORDER BY state
@@ -212,10 +222,13 @@ def email_112co_report(
             SELECT dp.close, dp.volume, dp.ema_50, dp.ema_200,
                    dp.breakout_state, COALESCE(ss.total_score, 0) AS mri_score
             FROM daily_prices dp
-            LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol
-                AND ss.date = (SELECT MAX(date) FROM stock_scores)
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) symbol, date, total_score
+                FROM stock_scores
+                ORDER BY symbol, date DESC
+            ) ss ON ss.symbol = dp.symbol
             WHERE dp.symbol = %s
-              AND dp.date = (SELECT MAX(date) FROM daily_prices)
+            ORDER BY dp.date DESC
             LIMIT 1
         """, (sym,))
         row = cur.fetchone()
@@ -364,10 +377,13 @@ def get_research_report(symbol: str, conn=Depends(get_db)):
                    COALESCE(ss.condition_breakout_10d, FALSE) AS gate_breakout_10d,
                    COALESCE(ss.condition_price_quality, FALSE) AS gate_price_quality
             FROM daily_prices dp
-            LEFT JOIN stock_scores ss ON ss.symbol = dp.symbol
-                AND ss.date = (SELECT MAX(date) FROM stock_scores)
+            LEFT JOIN (
+                SELECT DISTINCT ON (symbol) *
+                FROM stock_scores
+                ORDER BY symbol, date DESC
+            ) ss ON ss.symbol = dp.symbol
             WHERE dp.symbol = %s
-              AND dp.date = (SELECT MAX(date) FROM daily_prices)
+            ORDER BY dp.date DESC
             LIMIT 1
         """, (sym,))
         tech = cur.fetchone()

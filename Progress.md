@@ -2,6 +2,19 @@
 
 ---
 
+## 📅 Session: August 27, 2026 — 112co Data Coverage Fix
+**Session Start:** (afternoon IST)
+
+### What Was Done This Session
+- [x] Diagnosed missing data on 112co dashboard caused by strict `MAX(date)` filtering in the API.
+- [x] Refactored `api/one12co.py` to use `DISTINCT ON (symbol)` to fetch the most recent data for each symbol.
+- [x] Verified queries across the breakouts, summary, and research endpoints.
+
+### 📌 Current Milestone
+- **112co Data Fix Complete.** 112co dashboard correctly displays data for all symbols without unnecessarily filtering out symbols with lagging ingestion.
+
+---
+
 ## 📅 Session: August 22, 2026 — Data Ingestion Gap & RRG UI Features
 **Session Start:** (night IST)
 
