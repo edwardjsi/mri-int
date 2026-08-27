@@ -42,9 +42,9 @@ export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: 
       
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '24px' }}>
         {activeTab === 'shadow' && <ShadowMomentumPage onSelectStock={onSelectStock} />}
-        {activeTab === '112co' && <One12CoDashboard onViewResearch={(symbol: string) => onSelectStock({ symbol })} />}
+        {activeTab === '112co' && <One12CoDashboard onViewResearch={(payload: any) => onSelectStock(typeof payload === 'string' ? { symbol: payload } : payload)} />}
         {activeTab === 'darvas' && <DarvasScreener />}
-        {activeTab === 'radar' && <BreakoutRadarPage onViewResearch={(symbol: string) => onSelectStock({ symbol })} />}
+        {activeTab === 'radar' && <BreakoutRadarPage onViewResearch={(payload: any) => onSelectStock(typeof payload === 'string' ? { symbol: payload } : payload)} />}
       </div>
     </div>
   );
