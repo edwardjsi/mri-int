@@ -37,6 +37,7 @@ import DarvasScreener from './DarvasScreener';
 import RRGPage from './RRGPage';
 import ConsolidatedSignals from './ConsolidatedSignals';
 import ShadowMomentumPage from './ShadowMomentumPage';
+import { ModelBadgeGroup } from './components/ModelBadge';
 import './App.css';
 
 /* ─── Score Breakdown Component ─── */
