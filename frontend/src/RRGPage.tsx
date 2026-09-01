@@ -37,7 +37,12 @@ export const RRGPage = () => {
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem('rrg.columns');
-      return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Ensure new columns like 'select' are visible even if older state is cached
+        return { ...DEFAULT_COLUMNS, ...parsed, select: parsed.select ?? DEFAULT_COLUMNS.select };
+      }
+      return DEFAULT_COLUMNS;
     } catch {
       return DEFAULT_COLUMNS;
     }
