@@ -186,9 +186,10 @@ export const api = {
     getRegime: () => apiFetch('/signals/regime'),
     getTodaySignals: () => apiFetch('/signals/today'),
     getShadowSignals: () => apiFetch('/signals/shadow'),
-    getRRG: (sort: string = 'rs_ratio', order: string = 'desc', quadrant: string = 'All') => {
+    getRRG: (sort: string = 'rs_ratio', order: string = 'desc', quadrant: string = 'All', universe: string = 'All') => {
         let qs = `?sort=${sort}&order=${order}`;
         if (quadrant && quadrant !== 'All') qs += `&quadrant=${quadrant}`;
+        if (universe && universe !== 'All') qs += `&universe=${universe}`;
         return apiFetch(`/v1/screener/rrg${qs}`);
     },
     getPendingSignals: () => apiFetch('/signals/pending'),

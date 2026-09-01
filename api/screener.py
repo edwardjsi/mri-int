@@ -12,6 +12,7 @@ def get_rrg_screener(
     sort: str = Query("rs_ratio"),
     order: str = Query("desc"),
     quadrant: Optional[str] = Query(None),
+    universe: Optional[str] = Query(None),
     client: dict = Depends(get_current_client)
 ):
     model_repo = ModelResultRepository()
@@ -36,6 +37,13 @@ def get_rrg_screener(
             cur.execute("SELECT symbol FROM client_external_holdings WHERE client_id = %s", (str(client["id"]),))
             for row in cur.fetchall():
                 owned_symbols.add(row['symbol'])
+                
+            # Filter by universe if provided
+            if universe == "112co":
+                cur.execute("SELECT symbol FROM universe_112co")
+                allowed_symbols = {row['symbol'] for row in cur.fetchall()}
+                results = [r for r in results if r.symbol in allowed_symbols]
+                
     except Exception as e:
         print(f"Error fetching RRG metadata: {e}")
     finally:

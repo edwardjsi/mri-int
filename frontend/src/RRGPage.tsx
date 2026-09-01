@@ -4,6 +4,7 @@ import { api } from './api';
 import { RrgScatterPlot } from './RrgScatterPlot';
 
 const DEFAULT_COLUMNS = {
+  select: true,
   rank: true,
   owned: true,
   symbol: true,
@@ -23,12 +24,14 @@ export const RRGPage = () => {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedSymbols, setSelectedSymbols] = useState<Set<string>>(new Set());
 
   // Extract from URL or defaults
   const quadrantFilter = searchParams.get('quadrant') || 'All';
   const sortKey = searchParams.get('sort') || 'rs_ratio';
   const sortOrder = searchParams.get('order') || 'desc';
   const searchQuery = searchParams.get('search') || '';
+  const universeFilter = searchParams.get('universe') || 'All';
 
   // Column chooser state (localStorage)
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
@@ -52,7 +55,7 @@ export const RRGPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    api.getRRG(sortKey, sortOrder, quadrantFilter)
+    api.getRRG(sortKey, sortOrder, quadrantFilter, universeFilter)
       .then((res: any) => {
         if (res && res.results) {
           setData(res.results);
@@ -68,7 +71,7 @@ export const RRGPage = () => {
       })
       .catch((err: any) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [sortKey, sortOrder, quadrantFilter]);
+  }, [sortKey, sortOrder, quadrantFilter, universeFilter]);
 
   const handleSort = (key: string) => {
     const newOrder = (sortKey === key && sortOrder === 'desc') ? 'asc' : 'desc';
@@ -118,8 +121,12 @@ export const RRGPage = () => {
     }));
   }, [filteredData]);
 
-  // Top 20 per quadrant for Scatter Plot
+  // Top 20 per quadrant for Scatter Plot (or selected symbols if any)
   const scatterPlotData = useMemo(() => {
+    if (selectedSymbols.size > 0) {
+      return data.filter(item => selectedSymbols.has(item.symbol));
+    }
+    
     const groups: Record<string, any[]> = {};
     
     filteredData.forEach(item => {
@@ -139,7 +146,7 @@ export const RRGPage = () => {
     });
 
     return result;
-  }, [filteredData]);
+  }, [filteredData, data, selectedSymbols]);
 
   // Summary strip counts
   const counts = useMemo(() => {
@@ -226,11 +233,25 @@ export const RRGPage = () => {
         {/* Summary Strip & Controls */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
+            <span className="text-slate-400 self-center text-sm mr-2 font-medium">Universe:</span>
+            {['All', '112co'].map(u => (
+              <button
+                key={u}
+                onClick={() => setSearchParams(prev => { if (u === 'All') prev.delete('universe'); else prev.set('universe', u); return prev; })}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${universeFilter === u ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/50' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'}`}
+              >
+                {u}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="text-slate-400 self-center text-sm mr-2 font-medium">Quadrant:</span>
             {['All', 'LEADING', 'IMPROVING', 'WEAKENING', 'LAGGING'].map(q => (
               <button
                 key={q}
                 onClick={() => setQuadrantFilter(q)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${quadrantFilter === q ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'}`}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${quadrantFilter === q ? 'bg-slate-700 border-slate-500 text-white shadow-lg shadow-slate-900/50' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-slate-200'}`}
               >
                 {q === 'All' ? q : q.charAt(0) + q.slice(1).toLowerCase()}
               </button>
@@ -256,6 +277,7 @@ export const RRGPage = () => {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-800/50 text-slate-400 uppercase tracking-wider text-xs border-b border-slate-800">
                 <tr>
+                  {visibleColumns.select && <th className="px-4 py-4 w-12 text-center">Select</th>}
                   {visibleColumns.rank && <th className="px-6 py-4 font-medium text-center cursor-pointer hover:text-slate-200 w-16" onClick={() => handleSort('rank')}>Rank {getSortIcon('rank')}</th>}
                   {visibleColumns.owned && <th className="px-4 py-4 font-medium text-center cursor-pointer hover:text-slate-200 w-20" onClick={() => handleSort('owned')}>Owned {getSortIcon('owned')}</th>}
                   {visibleColumns.symbol && <th className="px-6 py-4 font-medium cursor-pointer hover:text-slate-200 w-32" onClick={() => handleSort('symbol')}>Symbol {getSortIcon('symbol')}</th>}
@@ -270,9 +292,33 @@ export const RRGPage = () => {
                 {rankedData.map((row) => (
                   <tr 
                     key={row.symbol} 
-                    className="hover:bg-slate-800/30 transition-colors cursor-pointer group"
+                    className={`hover:bg-slate-800/30 transition-colors cursor-pointer group ${selectedSymbols.has(row.symbol) ? 'bg-emerald-900/20' : ''}`}
                     onClick={() => navigate(`/company/${row.symbol}`)}
                   >
+                    {visibleColumns.select && (
+                      <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          className="accent-emerald-500 w-4 h-4 cursor-pointer"
+                          checked={selectedSymbols.has(row.symbol)}
+                          onChange={() => {
+                            setSelectedSymbols(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(row.symbol)) {
+                                newSet.delete(row.symbol);
+                              } else {
+                                if (newSet.size >= 10) {
+                                  alert("You can select up to 10 stocks at a time to plot.");
+                                  return prev;
+                                }
+                                newSet.add(row.symbol);
+                              }
+                              return newSet;
+                            });
+                          }}
+                        />
+                      </td>
+                    )}
                     {visibleColumns.rank && <td className="px-6 py-4 text-slate-500 font-mono text-center">{row.computed_rank}</td>}
                     {visibleColumns.owned && (
                       <td className="px-4 py-4 text-center">
