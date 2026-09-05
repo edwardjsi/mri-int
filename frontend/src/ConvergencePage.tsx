@@ -63,7 +63,7 @@ export default function ConvergencePage({ onSelectStock }: { onSelectStock: (sto
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {row.signals.map((sig: str) => (
+                    {row.signals.map((sig: string) => (
                       <span key={sig} style={{
                         background: '#334155',
                         color: '#cbd5e1',
