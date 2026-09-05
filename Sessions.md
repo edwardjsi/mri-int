@@ -1,3 +1,13 @@
+## **September 5, 2026: Pre-Breakout Scanner & Convergence Signal**
+**Objective**: Introduce a Pre-Breakout scanner and aggregate 5 conviction models into a unified Convergence signal.
+**Actions**:
+1. **Pre-Breakout Scanner**: Created a new daily NSE cash-market scanner querying stocks near 52-week highs with healthy momentum (RSI 55-70) and proper moving average alignments (`scripts/scanner_pre_breakout.py`). Added to the Signals Dashboard UI.
+2. **Convergence Signal**: Engineered `scripts/scanner_convergence.py` to hit the 5 core model endpoints (Shadow Momentum, 112 CO, Darvas, Breakout Radar, Pre-Breakout) and aggregate the results to find stocks appearing in at least 3 distinct scans. Added as the 6th tab to the Signals Dashboard.
+3. **Repository Cleanup**: Cleared out 750MB+ of uncompressed `.pkl` and `.csv` files from `scratch/` that were accidentally staged and rejecting GitHub pushes.
+**Result**: The web app now features a robust "Convergence" view allowing rapid cross-referencing of conviction setups.
+
+---
+
 ## **August 27, 2026: 112co Data Coverage Fix**
 **Objective**: Fix the missing data issue on the 112co page where half the companies showed no data.
 **Actions**:

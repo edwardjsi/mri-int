@@ -2742,3 +2742,11 @@ Date: 2026-08-01
 Decision: Transition CAI from binary buy/sell recommendations to a tiered decision state machine (ADD, HOLD, ALERT, STRUCTURE, QUIT). Establish strict precedence (QUIT > STRUCTURE > ADD > HOLD) for conflict resolution and require exhaustive explainability (confidence, stability, expiry, "Why Not Add") for each evaluation. Create distinct DB schemas for threshold definitions and a persistent decision ledger.
 Reason: Supports true portfolio lifecycle management and explains the precise operational state of each position. Enables the tracking of decision quality over time and improves investor discipline by separating states from price thresholds. See `docs/CAI_DECISION_LADDER_V2.1_PLAN_2026-08-01.md`.
 Status: DRAFT — execution plan awaiting user approval.
+
+---
+
+## Decision 110 — Convergence Signal Aggregation
+Date: 2026-09-05
+Decision: Introduce a Convergence Signal that aggregates outputs across all 5 core conviction models (Shadow Momentum, 112 CO, Darvas, Breakout Radar, Pre-Breakout) and surfaces stocks that trigger 3 or more signals simultaneously.
+Reason: To provide a high-conviction meta-screener that leverages the combined strengths of multiple distinct technical/fundamental models.
+Status: FINAL.
