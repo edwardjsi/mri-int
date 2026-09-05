@@ -216,3 +216,55 @@ def get_chart(symbol: str):
     finally:
         if conn:
             conn.close()
+
+@router.get("/pre-breakout")
+def get_pre_breakout():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT MAX(date) as max_date FROM daily_prices")
+            res = cur.fetchone()
+            if not res or not res['max_date']:
+                return {"error": "No price data found"}
+            latest_date = res['max_date']
+
+            query = """
+                SELECT p.symbol, p.close, p.rolling_high_52w, p.ema_20, p.ema_50, p.ema_200, p.rsi_14, p.avg_volume_20d
+                FROM daily_prices p
+                WHERE p.date = %s
+                  AND p.close > 0.95 * p.rolling_high_52w
+                  AND p.close < p.rolling_high_52w
+                  AND p.close > p.ema_20
+                  AND p.close > p.ema_50
+                  AND p.close > p.ema_200
+                  AND p.ema_20 > p.ema_50
+                  AND p.rsi_14 > 55
+                  AND p.rsi_14 < 70
+                  AND p.avg_volume_20d > 100000
+                  AND p.close < 1.08 * p.ema_20
+                ORDER BY p.rsi_14 DESC
+            """
+            cur.execute(query, (latest_date,))
+            results = cur.fetchall()
+            
+            mapped = []
+            for row in results:
+                mapped.append({
+                    "symbol": row["symbol"],
+                    "close": float(row["close"]),
+                    "high": float(row["rolling_high_52w"]),
+                    "ema_20": float(row["ema_20"]),
+                    "rsi_14": float(row["rsi_14"]),
+                    "vol_20d": float(row["avg_volume_20d"])
+                })
+            
+            return {
+                "last_updated": latest_date.isoformat(),
+                "total_count": len(mapped),
+                "results": mapped
+            }
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

@@ -11,6 +11,7 @@ import One12CoDashboard from './One12CoDashboard';
 import AdminDashboard from './AdminDashboard';
 import { PerxScoreboard } from './PerxScoreboard';
 import AaeDashboard from './AaeDashboard';
+import PreBreakoutPage from './PreBreakoutPage';
 import { UnifiedScan } from './UnifiedScan';
 import GuidanceCheck from './GuidanceCheck';
 import { CanslimScreener } from './CanslimScreener';
@@ -2805,10 +2806,10 @@ function App() {
               <Route path="/conviction" element={<ConvictionEngine onSelectStock={setSelectedStock} />} />
               <Route path="/admin" element={<AdminDashboard onSelectStock={setSelectedStock} />} />
               <Route path="/research" element={<ResearchReport symbol="" onBack={() => {}} />} />
-              
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/pre-breakout" element={<PreBreakoutPage onSelectStock={setSelectedStock} />} />
               <Route path="/canslim" element={<CanslimScreener />} />
               <Route path="/rrg" element={<RRGPage />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
         </main>

@@ -3,9 +3,10 @@ import ShadowMomentumPage from './ShadowMomentumPage';
 import One12CoDashboard from './One12CoDashboard';
 import DarvasScreener from './DarvasScreener';
 import BreakoutRadarPage from './BreakoutRadarPage';
+import PreBreakoutPage from './PreBreakoutPage';
 
 export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  const [activeTab, setActiveTab] = useState<'shadow' | '112co' | 'darvas' | 'radar'>('shadow');
+  const [activeTab, setActiveTab] = useState<'shadow' | '112co' | 'darvas' | 'prebreakout' | 'radar'>('shadow');
 
   const tabStyle = (isActive: boolean) => ({
     padding: '12px 24px',
@@ -37,6 +38,9 @@ export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: 
           <button style={tabStyle(activeTab === 'radar')} onClick={() => setActiveTab('radar')}>
             📡 Breakout Radar
           </button>
+          <button style={tabStyle(activeTab === 'prebreakout')} onClick={() => setActiveTab('prebreakout')}>
+            🚀 Pre-Breakout
+          </button>
         </div>
       </div>
       
@@ -44,6 +48,7 @@ export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: 
         {activeTab === 'shadow' && <ShadowMomentumPage onSelectStock={onSelectStock} />}
         {activeTab === '112co' && <One12CoDashboard onViewResearch={(payload: any) => onSelectStock(typeof payload === 'string' ? { symbol: payload } : payload)} />}
         {activeTab === 'darvas' && <DarvasScreener />}
+        {activeTab === 'prebreakout' && <PreBreakoutPage onSelectStock={onSelectStock} />}
         {activeTab === 'radar' && <BreakoutRadarPage onViewResearch={(payload: any) => onSelectStock(typeof payload === 'string' ? { symbol: payload } : payload)} />}
       </div>
     </div>
