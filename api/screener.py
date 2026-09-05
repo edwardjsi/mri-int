@@ -4,8 +4,14 @@ from pydantic import BaseModel
 from engine_core.model_results_repository import ModelResultRepository
 from engine_core.db import get_connection
 from api.auth import get_current_client
+from scripts.scanner_convergence import fetch_signals
 
 router = APIRouter(prefix="/api/v1/screener", tags=["Screener"])
+
+@router.get("/convergence")
+def get_convergence_screener(client: dict = Depends(get_current_client)):
+    """Fetch the convergence signal."""
+    return fetch_signals()
 
 @router.get("/rrg")
 def get_rrg_screener(

@@ -4,9 +4,10 @@ import One12CoDashboard from './One12CoDashboard';
 import DarvasScreener from './DarvasScreener';
 import BreakoutRadarPage from './BreakoutRadarPage';
 import PreBreakoutPage from './PreBreakoutPage';
+import ConvergencePage from './ConvergencePage';
 
 export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: (stock: any) => void }) {
-  const [activeTab, setActiveTab] = useState<'shadow' | '112co' | 'darvas' | 'prebreakout' | 'radar'>('shadow');
+  const [activeTab, setActiveTab] = useState<'shadow' | '112co' | 'darvas' | 'prebreakout' | 'radar' | 'convergence'>('shadow');
 
   const tabStyle = (isActive: boolean) => ({
     padding: '12px 24px',
@@ -41,6 +42,9 @@ export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: 
           <button style={tabStyle(activeTab === 'prebreakout')} onClick={() => setActiveTab('prebreakout')}>
             🚀 Pre-Breakout
           </button>
+          <button style={tabStyle(activeTab === 'convergence')} onClick={() => setActiveTab('convergence')}>
+            🌟 Convergence
+          </button>
         </div>
       </div>
       
@@ -50,6 +54,7 @@ export default function ConsolidatedSignals({ onSelectStock }: { onSelectStock: 
         {activeTab === 'darvas' && <DarvasScreener />}
         {activeTab === 'prebreakout' && <PreBreakoutPage onSelectStock={onSelectStock} />}
         {activeTab === 'radar' && <BreakoutRadarPage onViewResearch={(payload: any) => onSelectStock(typeof payload === 'string' ? { symbol: payload } : payload)} />}
+        {activeTab === 'convergence' && <ConvergencePage onSelectStock={onSelectStock} />}
       </div>
     </div>
   );

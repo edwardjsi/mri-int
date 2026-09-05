@@ -1,0 +1,185 @@
+import pandas as pd
+import numpy as np
+import os
+
+print("Loading events...")
+events = pd.read_csv('cai_backtest_events.csv')
+d2_events = events[events['strategy'] == 'D2'].copy()
+d2_events['signal_date'] = pd.to_datetime(d2_events['signal_date'])
+
+print("Loading daily prices...")
+prices_df = pd.read_csv('backups/20260304/daily_prices.csv', low_memory=False)
+prices_df['date'] = pd.to_datetime(prices_df['date'])
+
+def compute_atr(sdf, window):
+    prev_close = sdf['close'].shift(1)
+    tr1 = sdf['high'] - sdf['low']
+    tr2 = (sdf['high'] - prev_close).abs()
+    tr3 = (sdf['low'] - prev_close).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    return tr.rolling(window, min_periods=1).mean()
+
+nifty = prices_df[prices_df['symbol'] == 'NIFTY50'].copy().set_index('date')
+nifty['idx_ret_90d'] = nifty['close'] / nifty['close'].shift(90) - 1.0
+def get_regime(ret):
+    if pd.isna(ret): return np.nan
+    if ret > 0.03: return 'Positive (>3%)'
+    elif ret < -0.03: return 'Negative (<-3%)'
+    else: return 'Near Zero (-3% to 3%)'
+nifty['nifty_regime'] = nifty['idx_ret_90d'].apply(get_regime)
+nifty_regimes = nifty[['nifty_regime']].dropna()
+
+d2_events = d2_events.merge(nifty_regimes, left_on='signal_date', right_index=True, how='left')
+
+results = []
+for sym, sdf in prices_df.groupby('symbol'):
+    sym_d2 = d2_events[d2_events['symbol'] == sym]
+    if len(sym_d2) == 0: continue
+    
+    sdf = sdf.sort_values('date').copy()
+    sdf.set_index('date', inplace=True)
+    
+    wdf = sdf.resample('W-FRI').agg({'high': 'max', 'low': 'min', 'close': 'last'})
+    wdf['w_low_4'] = wdf['low'].rolling(4, min_periods=1).min().shift(1)
+    wdf['w_ema_20'] = wdf['close'].ewm(span=20, adjust=False).mean().shift(1)
+    wdf['w_ema_50'] = wdf['close'].ewm(span=50, adjust=False).mean().shift(1)
+    wdf['w_atr_14'] = compute_atr(wdf, 14).shift(1)
+    wdf = wdf[['w_low_4', 'w_ema_20', 'w_ema_50', 'w_atr_14']]
+    
+    sdf = sdf.merge(wdf, left_index=True, right_index=True, how='left')
+    sdf[['w_low_4', 'w_ema_20', 'w_ema_50', 'w_atr_14']] = sdf[['w_low_4', 'w_ema_20', 'w_ema_50', 'w_atr_14']].ffill()
+    sdf['w_anchor'] = sdf['w_low_4'].combine_first(sdf['w_ema_50']).combine_first(sdf['w_ema_20'])
+    sdf['w_quit_lvl'] = sdf['w_anchor'] - (0.5 * sdf['w_atr_14'])
+    
+    sdf['d_ema_50'] = sdf['close'].ewm(span=50, adjust=False).mean().shift(1)
+    sdf['d_ema_200'] = sdf['close'].ewm(span=200, adjust=False).mean().shift(1)
+    sdf['d_atr_14'] = compute_atr(sdf, 14).shift(1)
+    sdf['d2_anchor'] = sdf['d_ema_50'].combine_first(sdf['d_ema_200'])
+    sdf['d2_quit_lvl'] = sdf['d2_anchor'] - (0.5 * sdf['d_atr_14'])
+    
+    sdf['next_open'] = sdf['open'].shift(-1)
+    sdf = sdf.reset_index()
+    
+    for _, row in sym_d2.iterrows():
+        dt = row['signal_date']
+        regime = row['nifty_regime']
+        
+        future_mask = sdf['date'] >= dt
+        if not future_mask.any(): continue
+        pos = sdf[future_mask].index[0]
+        
+        if pos >= len(sdf): continue
+        sig_row = sdf.iloc[pos]
+        exec_price = sig_row['next_open']
+        if pd.isna(exec_price): continue
+        
+        rs_90d = sig_row.get('rs_90d', np.nan)
+        vol = sig_row.get('volume', np.nan)
+        avg_vol = sig_row.get('avg_volume_20d', np.nan)
+        vol_ratio = vol / avg_vol if avg_vol and avg_vol > 0 else np.nan
+        ema_200_slope = sig_row.get('ema_200_slope_20', np.nan)
+        ema_50 = sig_row.get('ema_50', np.nan)
+        dist_ema_50 = (sig_row['close'] / ema_50) - 1 if ema_50 and ema_50 > 0 else np.nan
+        
+        fut_slice = sdf.iloc[pos+1 : pos+253]
+        if len(fut_slice) == 0: continue
+        
+        df_126 = fut_slice.iloc[:126]
+        df_252 = fut_slice
+        
+        r50_target = exec_price * 1.50
+        r100_target = exec_price * 2.00
+        
+        r50_hit_idx = df_126.index[df_126['close'] >= r50_target].tolist()
+        r100_hit_idx = df_252.index[df_252['close'] >= r100_target].tolist()
+        
+        hit_r50 = len(r50_hit_idx) > 0
+        hit_r100 = len(r100_hit_idx) > 0
+        
+        w_validated = False
+        time_to_w = np.nan
+        for _, fut_row in fut_slice.iterrows():
+            if pd.notna(fut_row['d2_quit_lvl']) and fut_row['close'] < fut_row['d2_quit_lvl']:
+                break
+            if fut_row['date'].weekday() == 4 and pd.notna(fut_row['w_quit_lvl']) and fut_row['close'] > fut_row['w_quit_lvl']:
+                w_validated = True
+                time_to_w = (fut_row['date'] - dt).days
+                break
+                
+        if hit_r100: outcome = 'R100'
+        elif hit_r50: outcome = 'R50-Only'
+        else: outcome = 'Failure'
+        
+        results.append({
+            'symbol': sym,
+            'regime': regime,
+            'outcome': outcome,
+            'rs_90d': rs_90d,
+            'dist_ema_50': dist_ema_50,
+            'ema_200_slope': ema_200_slope,
+            'vol_ratio': vol_ratio,
+            'hit_r50': hit_r50,
+            'hit_r100': hit_r100,
+            'is_d2_w': w_validated,
+            'time_to_w': time_to_w
+        })
+
+df = pd.DataFrame(results)
+
+def get_bucket(t, is_w):
+    if not is_w: return 'Never'
+    if pd.isna(t): return 'Never'
+    if t <= 7: return '0-5' 
+    if t <= 14: return '6-10'
+    if t <= 28: return '11-20'
+    if t <= 56: return '21-40'
+    return '>40'
+
+df['w_bucket'] = df.apply(lambda row: get_bucket(row['time_to_w'], row['is_d2_w']), axis=1)
+df['w_bucket'] = pd.Categorical(df['w_bucket'], categories=['0-5', '6-10', '11-20', '21-40', '>40', 'Never'], ordered=True)
+
+def analyze(data, title):
+    res = []
+    for bucket in df['w_bucket'].cat.categories:
+        bdf = data[data['w_bucket'] == bucket]
+        n = len(bdf)
+        if n == 0: continue
+        r50 = bdf['hit_r50'].sum()
+        r100 = bdf['hit_r100'].sum()
+        hr50 = (r50 / n) * 100
+        hr100 = (r100 / n) * 100
+        
+        rs90 = bdf['rs_90d'].median()
+        ema50 = bdf['dist_ema_50'].median()
+        ema200 = bdf['ema_200_slope'].median()
+        vol = bdf['vol_ratio'].median()
+        
+        res.append({
+            'Bucket': bucket,
+            'N': n,
+            'RS90 Med': rs90,
+            'EMA50 Dist Med': f"{ema50*100:.1f}%" if pd.notna(ema50) else 'NaN',
+            'EMA200 Slope Med': ema200,
+            'Vol Ratio Med': vol,
+            'R50 Hit Rate': f"{hr50:.1f}%",
+            'R100 Hit Rate': f"{hr100:.1f}%"
+        })
+    return pd.DataFrame(res)
+
+global_res = analyze(df, "ALL")
+
+regime_res = []
+for r in sorted(df['regime'].dropna().unique()):
+    rdf = analyze(df[df['regime'] == r], r)
+    rdf.insert(0, 'Regime', r)
+    regime_res.append(rdf)
+
+all_regime = pd.concat(regime_res)
+
+with open('scratch/w_val_study_tables.md', 'w') as f:
+    f.write("### Global Timing Analysis\n\n")
+    f.write(global_res.to_markdown(index=False, floatfmt=".2f"))
+    f.write("\n\n### Regime-Controlled Analysis\n\n")
+    f.write(all_regime.to_markdown(index=False, floatfmt=".2f"))
+
+print("Done.")

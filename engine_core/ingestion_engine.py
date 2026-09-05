@@ -88,10 +88,24 @@ def load_stocks(symbols):
     logger.info(f"📡 [engine_core] Processing {len(symbols)} stocks (CSV list)...")
     
     def fetch_stock(symbol):
+        TICKER_MAP = {
+            "ADITYAINFO": "CPPLUS",
+            "CAPRICAP": "CGCL",
+            "JEENASIKHO": "JSLL",
+            "JUBLINGREV": "JUBLINGREA",
+            "MACFOS": "ROBU",
+            "KWALITYWALLS": "HINDUNILVR"
+        }
+        
         try:
-            # Suffix handle for NSE
-            ticker = symbol if symbol.endswith(".NS") or symbol.endswith(".BO") or "^" in symbol else f"{symbol}.NS"
+            mapped = TICKER_MAP.get(symbol.upper(), symbol)
+            ticker = mapped if mapped.endswith(".NS") or mapped.endswith(".BO") or "^" in mapped else f"{mapped}.NS"
             df = yf.download(ticker, period="300d", auto_adjust=True, progress=False).reset_index()
+            
+            if df.empty and not mapped.endswith(".BO") and "^" not in mapped:
+                ticker_bo = f"{mapped}.BO" if not mapped.endswith(".NS") else mapped.replace(".NS", ".BO")
+                df = yf.download(ticker_bo, period="300d", auto_adjust=True, progress=False).reset_index()
+
             
             # Normalize columns first
             if isinstance(df.columns, pd.MultiIndex):
