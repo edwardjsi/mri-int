@@ -147,7 +147,13 @@ def check_nifty50(conn, expected: date, verbose: bool) -> tuple[bool, dict]:
         }
 
     # How many weekdays behind?
-    days_behind = (expected - latest).days
+    days_behind = 0
+    curr = latest + timedelta(days=1)
+    while curr <= expected:
+        if curr.weekday() < 5:
+            days_behind += 1
+        curr += timedelta(days=1)
+    
     if days_behind <= HOLIDAY_GRACE_DAYS:
         # Could be an NSE holiday — warn but do not block
         return True, {

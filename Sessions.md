@@ -3497,3 +3497,10 @@ The system successfully integrates the deterministic analytical core with the vi
 
 ## 2026-08-24
 - Fixed Neon database authentication failure by injecting endpoint ID into connection string options in db.py
+
+### 2026-10-06 (Bug Fixes)
+- Diagnosed why GitHub Action pipeline failed on `check_freshness.py`.
+- Found that `days_behind` used calendar days (`(expected - latest).days`) which falsely triggered `STALE` failure over weekends.
+- Replaced with a `while` loop to properly count weekdays.
+- Fixed `FutureWarning` log spam from pandas in `ingestion_engine.py`.
+- Checked in code and pushed.

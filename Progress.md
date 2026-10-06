@@ -3766,3 +3766,7 @@ The system successfully integrates the deterministic analytical core with the vi
 - [x] **Backend Updates**: Updated `engine_core/cai_position_review.py` to return key Decision Ladder thresholds (`add_level`, `alert_level`, `structure_level`, `quit_level`) and calculated the healthy pullback entry (`ema_20`).
 - [x] **Chart Price Lines**: Updated `frontend/src/CaiWeeklyChart.tsx` to accept the position payload and natively draw semantic price lines for all decision thresholds on the canvas using `lightweight-charts`.
 - [x] **Selectable Text Box**: Added a floating HTML overlay containing all these key levels (Entry, Next Tranche, Pullback, Alert, Structure, Quit) styled with `.select-text` so the user can natively select and copy them.
+
+## 2026-10-06
+- **fix:** Corrected `days_behind` calculation in `check_freshness.py` to count weekdays instead of calendar days. This resolves false-positive freshness check failures on Mondays.
+- **fix:** Added `fill_method=None` to `pct_change()` in `ingestion_engine.py` to suppress massive `FutureWarning` log spam.

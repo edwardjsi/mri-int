@@ -75,7 +75,7 @@ def validate_data(symbol, df):
         
     # 3. Check for impossible price spikes (>50% in one day for non-penny stocks)
     if len(df) > 1:
-        pct_change = df['close'].pct_change().abs()
+        pct_change = df['close'].pct_change(fill_method=None).abs()
         # If price > 50 and change > 50% in one day, it's likely a data error or split not handled
         if ((df['close'] > 50) & (pct_change > 0.50)).any():
             return False, "Detected suspicious >50% price spike"
