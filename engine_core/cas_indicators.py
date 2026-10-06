@@ -59,6 +59,7 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
 
 logger = logging.getLogger(__name__)
 

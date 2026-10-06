@@ -3770,3 +3770,5 @@ The system successfully integrates the deterministic analytical core with the vi
 ## 2026-10-06
 - **fix:** Corrected `days_behind` calculation in `check_freshness.py` to count weekdays instead of calendar days. This resolves false-positive freshness check failures on Mondays.
 - **fix:** Added `fill_method=None` to `pct_change()` in `ingestion_engine.py` to suppress massive `FutureWarning` log spam.
+
+- **fix:** Added `pd.set_option("future.no_silent_downcasting", True)` to `cas_indicators.py` to suppress another massive `FutureWarning` log spam.

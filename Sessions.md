@@ -3504,3 +3504,6 @@ The system successfully integrates the deterministic analytical core with the vi
 - Replaced with a `while` loop to properly count weekdays.
 - Fixed `FutureWarning` log spam from pandas in `ingestion_engine.py`.
 - Checked in code and pushed.
+
+- Fixed `FutureWarning` log spam from pandas downcasting in `cas_indicators.py`.
+- Checked in code and pushed.
